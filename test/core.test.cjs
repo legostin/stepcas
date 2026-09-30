@@ -152,7 +152,7 @@ test('Q exact roots and BigInt helpers', () => {
     assert.throws(() => E.bigIroot(-16n, 4), E.MathError);
 });
 
-test('MathError carries both languages and a position', () => {
+test('MathError carries its message in every language and a position', () => {
     const e = new E.MathError({ ru: 'Ошибка', en: 'Error' }, 3, 2, 'syntax');
     assert.ok(e instanceof Error);
     assert.equal(e.message, 'Error');
@@ -164,7 +164,9 @@ test('MathError carries both languages and a position', () => {
     const f = new E.MathError('plain', { pos: 1, code: 'x' });
     assert.equal(f.pos, 1);
     assert.equal(f.code, 'x');
-    assert.equal(f.msg.ru, 'plain');
+    assert.equal(f.text('ru'), 'plain');
+    assert.equal(f.text('en'), 'plain');
+    assert.equal(new E.MathError(E.msg('core.parse.empty_input')).message, 'Empty input');
 });
 
 // ---------------------------------------------------------------- ast

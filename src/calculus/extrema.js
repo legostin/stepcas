@@ -17,12 +17,12 @@ import { solveEquation } from '../solve/index.js';
 import { numFindRoots } from '../numbers/numeric/index.js';
 import { step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { msg, notation, eachLanguage } from '../i18n/index.js';
+import { msg, notation, eachLanguage, decimalIn } from '../i18n/index.js';
 
 const asNode = (x) => (typeof x === 'string' ? parse(x) : typeof x === 'number' ? num(x) : x);
 const texOf = (n, l) => toTex(n, { lang: l });
-const sepL = (l) => (notation(l).listTex);
-const fmt = (x, l) => { const s = String(+x.toPrecision(6)); return l === 'ru' ? s.replace('.', '{,}') : s; };
+const sepL = (l) => notation(l).listTex;
+const fmt = (x, l) => decimalIn(String(+x.toPrecision(6)), l);
 
 // A float → an exact node when it is a simple number: p/q, (p/q)·π, ±√n/q, else null.
 export function exactGuess(x) {
@@ -86,7 +86,7 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     // 1. the derivative
     const d = derivative(f, v, { steps: wantSteps });
     const df = d.result;
-    if (wantSteps) steps.push(step({ title: msg('calculus.extrema.derivative'), tex: `f'(${x}) = ${texOf(df, 'ru')}`, sub: d.steps }));
+    if (wantSteps) steps.push(step({ title: msg('calculus.extrema.derivative'), tex: eachLanguage((l) => `f'(${x}) = ${texOf(df, l)}`), sub: d.steps }));
 
     // 2. critical points inside
     const inside = (t) => t > a + 1e-12 * Math.max(1, Math.abs(a)) && t < b - 1e-12 * Math.max(1, Math.abs(b));
@@ -143,7 +143,7 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     if (wantSteps) {
         steps.push(step({
             title: msg('calculus.extrema.critical_points_inside_segment'),
-            tex: crit.length ? crit.map((c) => `${x} = ${texOf(c.x, 'ru')}`).join(sepL('ru')) : undefined,
+            tex: crit.length ? eachLanguage((l) => crit.map((c) => `${x} = ${texOf(c.x, l)}`).join(sepL(l))) : undefined,
             text: crit.length
                 ? msg('calculus.extrema.solve_and_keep_roots_inside', { x, A: (lng) => texOf(A, lng), B: (lng) => texOf(B, lng) })
                 : msg('calculus.extrema.inside_segment_derivative_has_no_zeros'),
@@ -209,7 +209,7 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
     const df = d.result;
     const dc = compile(df, [v]);
     const steps = [];
-    if (wantSteps) steps.push(step({ title: msg('calculus.extrema.derivative'), tex: `f'(${v}) = ${texOf(df, 'ru')}`, sub: d.steps }));
+    if (wantSteps) steps.push(step({ title: msg('calculus.extrema.derivative'), tex: eachLanguage((l) => `f'(${v}) = ${texOf(df, l)}`), sub: d.steps }));
     let pts = [];
     let solved;
     try { solved = solveEquation(rel('=', df, num(0)), v, { steps: wantSteps }); } catch { solved = null; }
@@ -236,7 +236,7 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
     if (wantSteps) {
         steps.push(step({
             title: msg('calculus.extrema.critical_points'),
-            tex: out.critical.length ? out.critical.map((c) => `${v} = ${texOf(c.x, 'ru')}`).join(sepL('ru')) : undefined,
+            tex: out.critical.length ? eachLanguage((l) => out.critical.map((c) => `${v} = ${texOf(c.x, l)}`).join(sepL(l))) : undefined,
             text: out.critical.length ? msg('calculus.extrema.solve', { v }) : msg('calculus.extrema.derivative_is_never_zero_there_are'),
             sub: solved?.steps,
         }));

@@ -7,6 +7,7 @@ import { Q, bigGcd, bigLcm, MathError } from '../../core/rational.js';
 import { Poly } from '../../core/poly.js';
 import { combineFractions, expand } from '../../core/expand.js';
 import { N0, N1, NM1, agree, calcTex, isNum, negLeading, prettyForm } from './display.js';
+import { DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- the clean form
 
@@ -199,7 +200,7 @@ function collectFns(X, v) {
 }
 
 export function score(n) {
-    return calcTex(n, 'ru').replace(/\\left|\\right|\\operatorname|\s+/g, '').length;
+    return calcTex(n, DEFAULT_LANGUAGE).replace(/\\left|\\right|\\operatorname|\s+/g, '').length;
 }
 
 /** One fraction P/Q with a readable sign (−P/Q rather than (−P)/Q); variants of P: expanded, common factor out, collected, factored. */

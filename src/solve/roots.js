@@ -7,7 +7,7 @@ import { toText } from '../core/print.js';
 import { approxC, approxOf, approxTex, close, exactZero, simpOr, tex } from './common.js';
 import { IntervalSet, intervalTex, intervalText, parseIntervalSet } from './intervals.js';
 import { N_SYM, familiesTex } from './trig.js';
-import { msg, notation, eachLanguage } from '../i18n/index.js';
+import { msg, notation, eachLanguage, decimalIn, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- roots and their TeX
 
@@ -94,7 +94,7 @@ export function sameRoot(a, b) {
 function approxText(z, lang) {
     const f = (x) => {
         const t = String(Number(x.toFixed(4)));
-        return lang === 'ru' ? t.replace('.', ',') : t;
+        return decimalIn(t, lang, { tex: false });
     };
     if (typeof z === 'number') return f(z);
     if (Math.abs(z.im) < 1e-12) return f(z.re);
@@ -129,7 +129,7 @@ export function answerOf(res, v) {
     }
 }
 
-export function toIntervalOpt(iv, lang = 'ru') {
+export function toIntervalOpt(iv, lang = DEFAULT_LANGUAGE) {
     if (!iv) return null;
     let set;
     if (iv instanceof IntervalSet) set = iv;

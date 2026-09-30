@@ -1,6 +1,7 @@
 // complex — complex numbers on doubles (principal branches everywhere).
 
 import { Q } from './rational.js';
+import { DEFAULT_LANGUAGE, notation, MACHINE } from '../i18n/index.js';
 
 const fmt = (x, digits, comma) => {
     if (Number.isNaN(x)) return 'NaN';
@@ -225,14 +226,16 @@ export class Complex {
         return Complex.ONE.add(this).log().sub(Complex.ONE.sub(this).log()).mul(0.5);
     }
 
-    /** "3 + 2i", "-i", "2,5 - 1,5i" (RU); digits = max fractional digits. */
-    toString(lang = 'en', digits = 6) {
-        return this._fmt(lang, digits, lang === 'ru' ? ',' : null, 'i');
+    /** "3 + 2i", "-i", "2.5 - 1.5i" — in a language's notation ("2,5 - 1,5i" in Russian); digits = max fractional digits. */
+    toString(lang = MACHINE, digits = 6) {
+        const sep = notation(lang).decimalText;
+        return this._fmt(lang, digits, sep === '.' ? null : sep, 'i');
     }
 
-    /** TeX: "3 + 2i", RU decimal comma as {,}. */
-    toTex(lang = 'ru', digits = 6) {
-        return this._fmt(lang, digits, lang === 'ru' ? '{,}' : null, 'i');
+    /** TeX: "3 + 2i", with the language's decimal separator (2{,}5 in Russian). */
+    toTex(lang = DEFAULT_LANGUAGE, digits = 6) {
+        const sep = notation(lang).decimalTex;
+        return this._fmt(lang, digits, sep === '.' ? null : sep, 'i');
     }
 
     _fmt(lang, digits, comma, unit) {

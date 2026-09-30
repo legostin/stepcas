@@ -1,4 +1,4 @@
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, DEFAULT_LANGUAGE, inLanguage, MACHINE } from '../i18n/index.js';
 // rational — exact rational numbers on BigInt, BigInt helpers, and MathError (used by the whole engine).
 //
 //   new Q(3n, 4n)            normalised: reduced, denominator > 0
@@ -9,15 +9,17 @@ import { msg, notation } from '../i18n/index.js';
 /** Error with a bilingual message and an optional position in the parsed text. */
 export class MathError extends Error {
     /**
-     * @param {{ru: string, en: string}|string} msg
+     * @param {import('../i18n/index.js').Msg|string|Object<string, string>} msg  a message, a string or {lang: text}
      * @param {number|{pos?: number, len?: number, code?: string}} [pos]
      * @param {number} [len]
      * @param {string} [code]  short machine-readable id ('div0', 'syntax', 'too-big', …)
      */
     constructor(msg, pos = null, len = null, code = null) {
         // a message (from i18n) stays language-neutral; strings and {ru, en} objects are taken as they are
-        const m = typeof msg === 'string' ? { ru: msg, en: msg } : typeof msg?.in === 'function' ? msg : { ru: msg?.ru ?? msg?.en ?? '', en: msg?.en ?? msg?.ru ?? '' };
-        super(m.en);
+        // a message (i18n), a string (the same in every language) or a {lang: text} object is kept as it is;
+        // Error.message is its machine (English) text
+        const m = msg ?? '';
+        super(inLanguage(m, MACHINE));
         if (pos !== null && typeof pos === 'object') ({ pos = null, len = null, code = null } = pos);
         this.name = 'MathError';
         this.msg = m;
@@ -27,8 +29,8 @@ export class MathError extends Error {
     }
 
     /** Message in the given language. */
-    text(lang = 'ru') {
-        return this.msg[lang] ?? this.msg.en;
+    text(lang = DEFAULT_LANGUAGE) {
+        return inLanguage(this.msg, lang);
     }
 }
 
@@ -438,7 +440,7 @@ export class Q {
      * Decimal string rounded (half away from zero) to at most `digits` fractional digits, trailing
      * zeros removed: Q(1,3).toDecimalString(4) → "0.3333"; RU uses a decimal comma.
      */
-    toDecimalString(digits = 10, lang = 'en') {
+    toDecimalString(digits = 10, lang = MACHINE) {
         digits = Math.max(0, Math.floor(digits));
         const scale = 10n ** BigInt(digits);
         const a = this.abs();
@@ -477,7 +479,7 @@ export class Q {
     }
 
     /** "0,1(6)" (RU) / "0.1(6)" (EN); null when the period is too long. */
-    toPeriodicString(lang = 'en', maxDigits = 200) {
+    toPeriodicString(lang = MACHINE, maxDigits = 200) {
         const p = this.toPeriodic(maxDigits);
         if (!p) return null;
         const sep = notation(lang).decimalText;
@@ -486,7 +488,7 @@ export class Q {
     }
 
     /** "\frac{3}{4}", "-\frac{1}{2}", "2" (the language does not matter for fractions). */
-    toTex(lang = 'ru') {
+    toTex(lang = DEFAULT_LANGUAGE) {
         void lang;
         if (this.d === 1n) return this.n.toString();
         const s = `\\frac{${this.n < 0n ? -this.n : this.n}}{${this.d}}`;

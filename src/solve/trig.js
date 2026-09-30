@@ -199,7 +199,7 @@ export function basicTrig(F, u, a, ctx) {
     const shift = simpOr(div(neg(s), kn));
     const group = { size: fams.length, tex: null };
     const xTex = (l) => {
-        if (general && F === 'sin' && l === 'ru') {
+        if (general && F === 'sin' && notation(l).combinedSine) {
             let Ak = simpOr(div(A, kn));
             let sgn = '(-1)^{n}';
             if (approxOf(Ak) < 0) {
@@ -218,7 +218,7 @@ export function basicTrig(F, u, a, ctx) {
     for (const f of fams) f.group = group;
     const uTex = (l) => {
         const us = tex(u, l);
-        if (general && F === 'sin' && l === 'ru') return `${us} = (-1)^{n}${tex(A, l)} + \\pi n`;
+        if (general && F === 'sin' && notation(l).combinedSine) return `${us} = (-1)^{n}${tex(A, l)} + \\pi n`;
         if (general && F === 'cos') return `${us} = \\pm ${tex(A, l)} + 2\\pi n`;
         return uf.map(([b, P]) => `${us} = ${plusTex([simpOr(b), periodN(simpOr(P))], l)}`).join(notation(l).listWideTex);
     };
@@ -657,9 +657,9 @@ function equalTrig(E, ctx) {
     const pm = sgn > 0 ? '' : '-';
     if (key === 'tan,tan' || key === 'cot,cot') {
         rels = [{ X: A, Y: B, c: N0, s: sgn, P: PI }];
-        const f = key === 'tan,tan' ? 'tg' : 'ctg';
+        const f = key === 'tan,tan' ? 'tan' : 'cot';
         rule = eachLanguage((l) => {
-            const F = l === 'ru' ? `\\operatorname{${f}}` : key === 'tan,tan' ? '\\tan' : '\\cot';
+            const F = notation(l).fnTex?.[f] ?? `\\${f}`;
             return msg('solve.trig.where_both_sides_are_defined_which', { F, p: (lng) => sgn < 0 ? msg('solve.trig.here_2', { F }).in(lng) : '' }).in(l);
         });
     } else if (key === 'tan,cot' || key === 'cot,tan') {

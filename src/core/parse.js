@@ -17,7 +17,7 @@
 
 import { Q, MathError } from './rational.js';
 import { num, sym, add, mul, div, neg, pow, fn, rel, chain, list } from './ast.js';
-import { msg } from '../i18n/index.js';
+import { msg, notation, resolveLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- vocabulary
 
@@ -148,7 +148,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
         if (!commas.length) continue;
         const groups = commas.map((c, idx) => s.slice(c + 1, commas[idx + 1] ?? j));
         const lead = s.slice(k, commas[0]);
-        const thousands = lead.length <= 3 && lead[0] !== '0' && groups.every((g) => g.length === 3) && (commas.length >= 2 || opts.lang === 'en');
+        const thousands = lead.length <= 3 && lead[0] !== '0' && groups.every((g) => g.length === 3) && (commas.length >= 2 || notation(opts.lang).thousandsComma);
         if (thousands) for (const c of commas) thousandCommas.add(c);
         else if (commas.length >= 2) for (const c of commas) listCommas.add(c);
     }
@@ -1105,7 +1105,8 @@ function expandPlusMinus(toks) {
  * Parse user input into an AST node. Throws MathError (bilingual message, pos, len).
  * opts: { vars?: string[] — extra variable names (multi-letter, or constants like 'i'/'e' used as variables),
  *         foldCase?: boolean — read X as x, Sin as sin, maxLength?: number (default 2000),
- *         lang?: 'ru' | 'en' — with 'en' a comma before exactly three digits is a thousands separator (1,000) }
+ *         lang?: a registered language — in one whose notation has thousandsComma (English) a comma before exactly three
+ *         digits is a thousands separator (1,000) }
  */
 export function parse(text, opts = {}) {
     if (typeof text !== 'string') throw err(msg('core.parse.input_must_be_string'), 0, 0, 'empty');
@@ -1114,7 +1115,7 @@ export function parse(text, opts = {}) {
     const vars = (opts.vars ?? []).map(String);
     const o = {
         foldCase: !!opts.foldCase,
-        lang: opts.lang === 'en' ? 'en' : 'ru',
+        lang: resolveLanguage(opts.lang),
         _declared: new Set(vars),
         _declaredLong: vars.filter((v) => v.length > 1 && !/^[A-Za-z]+$/.test(v)).sort((a, b) => b.length - a.length),
     };

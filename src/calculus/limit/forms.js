@@ -12,7 +12,7 @@ import { Q } from '../../core/rational.js';
 import { evaluate } from '../../core/evaluate.js';
 import { E_, HALF, N0, N1, N2, NM1, chainEq, fin, infV, isNum, isZeroN, isZeroV, limTex, lt, negLeadNode, paren, paren2, qn2, simp, trySimp, tx } from './common.js';
 import { ev, splitNumDen } from './evaluator.js';
-import { msg, eachLanguage } from '../../i18n/index.js';
+import { msg, eachLanguage, notation, joined, sameText, DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- indeterminate forms
 
@@ -122,7 +122,7 @@ function mRational(n, C, form) {
         val: L,
         title: msg('calculus.limit.forms.factor_and_cancel'),
         tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)}${showFactor ? ` = ${limTex(P, v, Lg)} \\frac{${fN(Lg)}}{${fD(Lg)}}` : ''} = ${limTex(P, v, Lg)} ${lt(reduced, Lg)} = ${vTex(L, Lg)}`),
-        text: msg('calculus.limit.forms.both_numerator_and_denominator_vanish_at', { v, P: plainNum(P) }),
+        text: msg('calculus.limit.forms.both_numerator_and_denominator_vanish_at', { v, P: (lng) => plainNum(P, lng) }),
         rule: 'factor-cancel',
     };
 }
@@ -149,9 +149,10 @@ function supd(k) {
     return k === 1 ? '' : String(k).split('').map((c) => S[c]).join('');
 }
 
-export function plainNum(P) {
+/** The point a as readable text in a language (π, √, ·), for the explanations. */
+export function plainNum(P, lang = DEFAULT_LANGUAGE) {
     try {
-        return toText(prettyForm(P.a), { lang: 'en' }).replace(/\bpi\b/g, 'π').replace(/sqrt\(/g, '√(').replace(/\*/g, '·');
+        return toText(prettyForm(P.a), { lang }).replace(/\bpi\b/g, 'π').replace(/sqrt\(/g, '√(').replace(/\*/g, '·');
     } catch {
         return String(P.x);
     }
@@ -178,8 +179,8 @@ function factorTex(Pl, v) {
 // ---- equivalent infinitesimals
 
 const EQUIV_FN = new Set(['sin', 'tan', 'asin', 'atan', 'sinh', 'tanh', 'asinh', 'atanh']);
-const FN_RU = { sin: 'sin', tan: 'tg', asin: 'arcsin', atan: 'arctg', sinh: 'sh', tanh: 'th', asinh: 'arsh', atanh: 'arth' };
-const FN_EN = { sin: 'sin', tan: 'tan', asin: 'arcsin', atan: 'arctan', sinh: 'sinh', tanh: 'tanh', asinh: 'arsinh', atanh: 'artanh' };
+// a function's name in a language's notation (tg or tan), for the equivalence laws
+const fnName = (name, lang) => notation(lang).fnText?.[name] ?? name;
 
 function tendsTo(n, target, C) {
     const L = ev(n, { ...C, log: [], depth: C.depth + 1 });
@@ -188,16 +189,16 @@ function tendsTo(n, target, C) {
     return d !== null && isZeroN(d);
 }
 
-/** Equivalent of an infinitesimal factor F: {E, ru, en} or null. */
+/** Equivalent of an infinitesimal factor F: {E, law} (the law as text per language) or null. */
 function equivalentOf(F, C) {
     if (F.type === 'fn' && EQUIV_FN.has(F.name) && tendsTo(F.args[0], N0, C)) {
-        return { E: F.args[0], ru: `${FN_RU[F.name]} u ~ u`, en: `${FN_EN[F.name]} u ~ u` };
+        return { E: F.args[0], law: eachLanguage((l) => `${fnName(F.name, l)} u ~ u`) };
     }
     if (F.type === 'fn' && (F.name === 'ln' || F.name === 'lg') && tendsTo(F.args[0], N1, C)) {
         const E = add(F.args[0], NM1);
-        return F.name === 'ln' ? { E, ru: 'ln(1 + u) ~ u', en: 'ln(1 + u) ~ u' } : { E: div(E, fn('ln', num(10))), ru: 'lg(1 + u) ~ u/ln 10', en: 'log₁₀(1 + u) ~ u/ln 10' };
+        return F.name === 'ln' ? { E, law: 'ln(1 + u) ~ u' } : { E: div(E, fn('ln', num(10))), law: eachLanguage((l) => `${notation(l).log10Text}(1 + u) ~ u/ln 10`) };
     }
-    if (F.type === 'fn' && F.name === 'log' && tendsTo(F.args[1], N1, C)) return { E: div(add(F.args[1], NM1), fn('ln', F.args[0])), ru: 'logₐ(1 + u) ~ u/ln a', en: 'logₐ(1 + u) ~ u/ln a' };
+    if (F.type === 'fn' && F.name === 'log' && tendsTo(F.args[1], N1, C)) return { E: div(add(F.args[1], NM1), fn('ln', F.args[0])), law: 'logₐ(1 + u) ~ u/ln a' };
     if (F.type === 'add' && F.args.length === 2) {
         const kIdx = F.args.findIndex((t) => isNum(t));
         if (kIdx < 0) return null;
@@ -207,19 +208,19 @@ function equivalentOf(F, C) {
         const Y = trySimp(div(t1, num(k.neg())));
         if (!Y) return null;
         const outer = num(k.neg());
-        const wrap = (E, ru, en) => ({ E: k.eq(-1) ? E : mul(outer, E), ru, en });
+        const wrap = (E, law) => ({ E: k.eq(-1) ? E : mul(outer, E), law });
         if (Y.type === 'pow' && !containsVar(Y.base, C.v) && tendsTo(Y.exp, N0, C)) {
             const isE = isConst(Y.base) && Y.base.name === 'e';
-            return wrap(isE ? Y.exp : mul(Y.exp, fn('ln', Y.base)), isE ? 'eᵘ − 1 ~ u' : 'aᵘ − 1 ~ u·ln a', isE ? 'eᵘ − 1 ~ u' : 'aᵘ − 1 ~ u·ln a');
+            return wrap(isE ? Y.exp : mul(Y.exp, fn('ln', Y.base)), isE ? 'eᵘ − 1 ~ u' : 'aᵘ − 1 ~ u·ln a');
         }
         if (Y.type === 'fn' && Y.name === 'cos' && tendsTo(Y.args[0], N0, C)) {
-            return wrap(neg(div(pow(Y.args[0], N2), N2)), '1 − cos u ~ u²/2', '1 − cos u ~ u²/2');
+            return wrap(neg(div(pow(Y.args[0], N2), N2)), '1 − cos u ~ u²/2');
         }
         if (Y.type === 'pow' && isNum(Y.exp) && tendsTo(Y.base, N1, C)) {
-            return wrap(mul(Y.exp, add(Y.base, NM1)), '(1 + u)ᵃ − 1 ~ a·u', '(1 + u)ᵃ − 1 ~ a·u');
+            return wrap(mul(Y.exp, add(Y.base, NM1)), '(1 + u)ᵃ − 1 ~ a·u');
         }
         if (Y.type === 'fn' && Y.name === 'cosh' && tendsTo(Y.args[0], N0, C)) {
-            return wrap(div(pow(Y.args[0], N2), N2), 'ch u − 1 ~ u²/2', 'cosh u − 1 ~ u²/2');
+            return wrap(div(pow(Y.args[0], N2), N2), eachLanguage((l) => `${fnName('cosh', l)} u − 1 ~ u²/2`));
         }
     }
     return null;
@@ -248,7 +249,7 @@ function mEquivalents(n, C) {
             continue;
         }
         changed = true;
-        used.push({ from: base, to: trySimp(eq.E) ?? eq.E, ru: eq.ru, en: eq.en });
+        used.push({ from: base, to: trySimp(eq.E) ?? eq.E, law: eq.law });
         out.push(e ? pow(eq.E, e) : eq.E);
     }
     if (!changed) return null;
@@ -257,13 +258,12 @@ function mEquivalents(n, C) {
     const C2 = { ...C, depth: C.depth + 1 };
     const L = limSub(next, C2);
     if (!L) return null;
-    const laws = [...new Set(used.map((u) => u.ru))];
-    const lawsEn = [...new Set(used.map((u) => u.en))];
+    const laws = used.map((u) => u.law).filter((x, i, all) => all.findIndex((y) => sameText(x, y)) === i);
     return {
         val: L,
         title: msg('calculus.limit.forms.equivalent_infinitesimals'),
         tex: eachLanguage((Lg) => `${used.map((u) => `${tx(u.from, Lg)} \\sim ${tx(u.to, Lg)}`).join(',\\quad ')};\\qquad ${limTex(P, v, Lg)} ${lt(n, Lg)} = ${containsVar(next, v) ? `${limTex(P, v, Lg)} ${paren2(tx(next, Lg), next)} = ` : ''}${vTex(L, Lg)}`),
-        text: msg('calculus.limit.forms.replace_infinitesimal_factors_by_equivalent_ones', { p: laws.join('; '), p2: lawsEn.join('; ') }),
+        text: msg('calculus.limit.forms.replace_infinitesimal_factors_by_equivalent_ones', { laws: joined(laws, '; ') }),
         rule: 'equivalents',
     };
 }
@@ -486,7 +486,7 @@ function mDivideDominant(n, C) {
             val,
             title: msg('calculus.limit.forms.divide_by_dominant_term'),
             tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${tx(a, Lg)}}{${tx(b, Lg)}} = ${vTex(val, Lg)}`),
-            text: msg('calculus.limit.forms.divide_numerator_and_denominator_by_fastest', { p: toText(prettyForm(T), { lang: 'ru' }), p2: toText(prettyForm(T), { lang: 'en' }) }),
+            text: msg('calculus.limit.forms.divide_numerator_and_denominator_by_fastest', { term: (lng) => toText(prettyForm(T), { lang: lng }) }),
             rule: 'divide-dominant',
             sub: C2.log,
         };

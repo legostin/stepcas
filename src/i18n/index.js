@@ -24,6 +24,8 @@ const catalogs = new Map(); // lang → flat Map(key → template)
 const bases = new Map(); // lang → base lang
 export const LANGUAGES = [];
 export const DEFAULT_LANGUAGE = 'ru';
+/** The notation of machine-readable plain text: ASCII names, a decimal point, ', ' between items. */
+export const MACHINE = 'en';
 
 /** Flatten nested catalog objects into dotted keys: {solve: {trig: {x: '…'}}} → 'solve.trig.x'. */
 function flatten(obj, prefix = '', out = new Map()) {
@@ -102,6 +104,25 @@ export function notation(lang = DEFAULT_LANGUAGE) {
     }
     notations.set(lang, Object.freeze(n));
     return n;
+}
+
+/** A decimal written with a point ("2.5") in a language's notation: 2{,}5 in Russian TeX, "2,5" in its plain text. */
+export function decimalIn(s, lang = DEFAULT_LANGUAGE, { tex = true } = {}) {
+    const n = notation(lang);
+    return String(s).replace('.', tex ? n.decimalTex : n.decimalText);
+}
+
+/**
+ * Words people type in answers for a notion ('none', 'all', 'or', 'infinity', 'sum'), in every registered language,
+ * as a regular-expression alternation (longest first, spaces flexible).
+ */
+export function wordsPattern(notion) {
+    const all = new Set();
+    for (const l of LANGUAGES) for (const w of notation(l).words?.[notion] ?? []) all.add(w);
+    return [...all]
+        .sort((a, b) => b.length - a.length)
+        .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'))
+        .join('|');
 }
 
 /** The language if it is registered, else the default one. */

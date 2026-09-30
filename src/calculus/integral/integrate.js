@@ -8,7 +8,7 @@ import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
 import { NM1, asNode, checkAnti, iTex, isNum, isVar, simp, surelyPositive, trySimp, tx } from './common.js';
 import { I } from './engine.js';
-import { msg, eachLanguage } from '../../i18n/index.js';
+import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- non-elementary integrals
 
@@ -136,7 +136,7 @@ export function integrate(node, v = 'x', opts = {}) {
         steps.push(start);
         steps.push(r.step);
         const rawTex = (L) => tx(simp(r.F), L);
-        if (rawTex('ru') !== tx(F, 'ru')) {
+        if (rawTex(DEFAULT_LANGUAGE) !== tx(F, DEFAULT_LANGUAGE)) {
             const raw = simp(r.F);
             const dropped = raw.type === 'add' && raw.args.some((t) => !containsVar(t, v));
             const atanTan = nodeSome(raw, (m) => m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan');

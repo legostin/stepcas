@@ -22,7 +22,7 @@ function sortVars(vs) {
         const ia = VAR_ORDER.indexOf(a);
         const ib = VAR_ORDER.indexOf(b);
         if (ia >= 0 || ib >= 0) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-        return a.localeCompare(b, 'en', { numeric: true });
+        return a.localeCompare(b, 'en', { numeric: true }); // the collation of variable names, not a language of text
     });
 }
 
@@ -170,7 +170,7 @@ function sysAddition(rows0, vars) {
         const parts = (l) => [what(m0, 0, l), what(m1, 1, l)].filter(Boolean).join(msg('solve.systems.and').in(l));
         steps.push(S(eachLanguage((l) => {
             const p0 = parts(l);
-            return l === 'ru' ? p0.charAt(0).toUpperCase() + p0.slice(1) : p0.charAt(0).toUpperCase() + p0.slice(1);
+            return p0.charAt(0).toUpperCase() + p0.slice(1);
         }), {
             tex: systemTexB(scaled, vars),
             text: msg('solve.systems.now_coefficients_of_are_opposite', { p: vars[j] }),
@@ -218,8 +218,8 @@ function withSystems(steps, rows, vars) {
     });
 }
 
-// text is always {ru, en} (a one-unknown answer reads the same in both languages, but callers pick text[lang])
-const bothLang = (f) => ({ ru: f('ru'), en: f('en') });
+// text is always {lang: …} (a one-unknown answer reads the same in every language, but callers pick text[lang])
+const bothLang = (f) => eachLanguage(f, { compact: false });
 function sysAnswer(res, vars) {
     if (res.kind === 'unique') {
         if (vars.length === 1) {

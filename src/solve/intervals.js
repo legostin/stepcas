@@ -3,9 +3,9 @@
 import { Q, MathError } from '../core/rational.js';
 import { num, numValue, add, neg, nodeSome } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { toText } from '../core/print.js';
+import { toText, plainText } from '../core/print.js';
 import { approxNode, approxOf, exactZero, isConstNode, simp, tex } from './common.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, DEFAULT_LANGUAGE, wordsPattern } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- IntervalSet
 
@@ -201,18 +201,18 @@ export class IntervalSet {
         });
     }
 
-    toTex(lang = 'ru') {
+    toTex(lang = DEFAULT_LANGUAGE) {
         return intervalTex(this, lang);
     }
 
-    toText(lang = 'ru') {
+    toText(lang = DEFAULT_LANGUAGE) {
         return intervalText(this, lang);
     }
 
     toJSON() {
         return this.parts.map((p) => ({
-            lo: p.lo === null ? '-inf' : toText(p.lo.node, { lang: 'en' }),
-            hi: p.hi === null ? '+inf' : toText(p.hi.node, { lang: 'en' }),
+            lo: p.lo === null ? '-inf' : plainText(p.lo.node),
+            hi: p.hi === null ? '+inf' : plainText(p.hi.node),
             loClosed: p.loC,
             hiClosed: p.hiC,
         }));
@@ -242,23 +242,24 @@ function setPieces(set, endTex, inf, sep, empty, cup, braces) {
 }
 
 /** TeX of a set: (-\infty;\,2] \cup (3;\,+\infty) in RU, (-\infty, 2] \cup (3, +\infty) in EN; \varnothing. */
-export function intervalTex(set, lang = 'ru') {
+export function intervalTex(set, lang = DEFAULT_LANGUAGE) {
     return setPieces(set, (e) => tex(e.node, lang, e.approx ? { decimals: true } : {}), INF_TEX, notation(lang).intervalTex, '\\varnothing', ' \\cup ', (s) => `\\{${s}\\}`);
 }
 
 /** Plain text of a set: (-∞; 2] ∪ (3; +∞) in RU, (-∞, 2] ∪ (3, +∞) in EN; ∅. */
-export function intervalText(set, lang = 'ru') {
+export function intervalText(set, lang = DEFAULT_LANGUAGE) {
     return setPieces(set, (e) => (e.approx ? String(Number(e.x.toFixed(5))).replace('.', notation(lang).decimalText) : toText(e.node, { lang })), { lo: '-∞', hi: '+∞' }, notation(lang).listText, '∅', ' ∪ ', (s) => `{${s}}`);
 }
 
 // ---------------------------------------------------------------- reading sets typed by people
 
 const SET_ERR = (text) => new MathError(msg('solve.intervals.could_not_read_set', { text }), 0, String(text).length, 'interval');
-const INF_RE = /^([+-]?)\s*(?:∞|inf|infty|infinity|oo|бесконечность)$/i;
+// built on use, so that languages registered later add their words
+const infRe = () => new RegExp(`^([+-]?)\\s*(?:∞|${wordsPattern('infinity')})$`, 'i');
 
 function readEnd(s, v) {
     const t = s.trim().replace(/[−–—]/g, '-');
-    const m = INF_RE.exec(t);
+    const m = infRe().exec(t);
     if (m) return m[1] === '-' ? '-inf' : '+inf';
     let node;
     try {
@@ -272,6 +273,9 @@ function readEnd(s, v) {
     return e;
 }
 
+// in a language with a decimal comma (Russian) a comma inside a number is not a separator
+const commaIsDecimal = (lang) => notation(lang).decimalText === ',';
+
 function splitPair(inner, lang) {
     if (inner.includes(';')) return inner.split(';');
     const commas = [...inner.matchAll(/,/g)].map((m) => m.index);
@@ -280,7 +284,7 @@ function splitPair(inner, lang) {
         const k = inner.search(/,\s/);
         return [inner.slice(0, k), inner.slice(k + 1)];
     }
-    if (lang === 'en' || commas.length !== 3) return inner.split(',');
+    if (!commaIsDecimal(lang) || commas.length !== 3) return inner.split(',');
     return [inner.slice(0, commas[1]), inner.slice(commas[1] + 1)]; // 1,5,2,5 in RU
 }
 
@@ -351,13 +355,13 @@ function readPiece(piece, lang, v) {
     if (!s) throw SET_ERR(piece);
     s = s.replace(new RegExp(`^${v}\\s*(?:∈|\\\\in\\b|in\\b)\\s*`, 'i'), '').trim();
     const low = s.toLowerCase();
-    if (/^(∅|ø|\\varnothing|\\emptyset|\{\s*\}|нет решений|нет корней|решений нет|корней нет|no solutions?|no roots|none|empty)$/.test(low)) return IntervalSet.empty();
-    if (/^(r|ℝ|все|любое|любое число|x\s*[-—–]\s*любое(\s+число)?|all|any|all reals?|all real numbers|\(\s*-\s*∞\s*[;,]\s*\+?\s*∞\s*\))$/.test(low)) return IntervalSet.all();
+    if (new RegExp(`^(∅|ø|\\\\varnothing|\\\\emptyset|\\{\\s*\\}|${wordsPattern('none')})$`).test(low)) return IntervalSet.empty();
+    if (new RegExp(`^(r|ℝ|(?:x\\s*[-—–]\\s*)?(?:${wordsPattern('all')})|\\(\\s*-\\s*∞\\s*[;,]\\s*\\+?\\s*∞\\s*\\))$`).test(low)) return IntervalSet.all();
     // {a; b; c}
     const br = /^\\?\{(.*?)\\?\}$/.exec(s);
     if (br) {
         const inner = br[1];
-        const items = inner.includes(';') ? inner.split(';') : lang === 'en' || /,\s/.test(inner) ? inner.split(/,\s*/) : [inner];
+        const items = inner.includes(';') ? inner.split(';') : !commaIsDecimal(lang) || /,\s/.test(inner) ? inner.split(/,\s*/) : [inner];
         return IntervalSet.points(items.filter((x) => x.trim()).map((x) => {
             const e = readEnd(x, v);
             if (typeof e === 'string') throw SET_ERR(piece);
@@ -388,7 +392,7 @@ function readPiece(piece, lang, v) {
  * Read a set typed as an answer: "(-∞; 2] ∪ (3; +∞)", "(-inf, 2] U (3, +inf)", "[1, 3)" (EN), "[1; 3)",
  * "{1; 2}", "x < 2", "-1 < x <= 3", "x < 2 или x > 3", "x ≠ 1", "∅", "R". Throws MathError('interval').
  */
-export function parseIntervalSet(text, lang = 'ru', v = 'x') {
+export function parseIntervalSet(text, lang = DEFAULT_LANGUAGE, v = 'x') {
     if (text instanceof IntervalSet) return text;
     if (typeof text !== 'string' || !text.trim()) throw SET_ERR(text ?? '');
     let s = text.trim()
@@ -401,11 +405,11 @@ export function parseIntervalSet(text, lang = 'ru', v = 'x') {
         .replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=')
         .replace(/\\mathbb\s*\{?R\}?/g, 'ℝ');
     // union words and a Latin U between brackets
-    s = s.replace(/\s+(?:или|or)\s+/gi, ' ∪ ').replace(/([)\]}])\s*[Uu]\s*(?=[([{\\])/g, '$1 ∪ ');
+    s = s.replace(new RegExp(`\\s+(?:${wordsPattern('or')})\\s+`, 'gi'), ' ∪ ').replace(/([)\]}])\s*[Uu]\s*(?=[([{\\])/g, '$1 ∪ ');
     let pieces = s.split('∪');
     // "x < -1; x > 3" — alternatives written with a separator
     if (pieces.length === 1 && !/^[([{\\]/.test(s) && /[<>=]/.test(s)) {
-        const alt = s.split(lang === 'en' ? /[;,]\s*(?=[a-zA-Z\d(-])/ : /;\s*/);
+        const alt = s.split(commaIsDecimal(lang) ? /;\s*/ : /[;,]\s*(?=[a-zA-Z\d(-])/);
         if (alt.length > 1 && alt.every((a) => new RegExp(`(^|[^a-zA-Z])${v}($|[^a-zA-Z])`).test(a))) pieces = alt;
     }
     let set = IntervalSet.empty();
@@ -414,7 +418,7 @@ export function parseIntervalSet(text, lang = 'ru', v = 'x') {
 }
 
 /** Same set? a, b: IntervalSet or text (read with parseIntervalSet in `lang`). */
-export function intervalEquals(a, b, lang = 'ru', tol = 1e-9) {
+export function intervalEquals(a, b, lang = DEFAULT_LANGUAGE, tol = 1e-9) {
     try {
         const A = a instanceof IntervalSet ? a : parseIntervalSet(a, lang);
         const B = b instanceof IntervalSet ? b : parseIntervalSet(b, lang);

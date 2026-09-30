@@ -7,13 +7,13 @@ import { Q, bigGcd } from '../core/rational.js';
 import { simplify } from '../core/simplify.js';
 import { expand, collectTerms } from '../core/expand.js';
 import { evaluate } from '../core/evaluate.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, decimalIn, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- small helpers
 
 export const T = (ru, en = ru) => ({ ru, en });
 export const pick = (x, lang) => (typeof x === 'string' ? x : x?.[lang] ?? '');
-export const tex = (node, lang = 'ru', o = {}) => toTex(node, { ...o, lang });
+export const tex = (node, lang = DEFAULT_LANGUAGE, o = {}) => toTex(node, { ...o, lang });
 export const texB = (node, o = {}) => eachLanguage((l) => tex(node, l, o));
 
 export function S(title, o = {}) {
@@ -122,13 +122,13 @@ export function termScale(node, complex) {
     return s;
 }
 
-/** Number TeX for approximate values: 1{,}2346 in RU, 1.2346 in EN. */
+/** Number TeX for approximate values in the language's notation: 1{,}2346 or 1.2346. */
 export function approxTex(x, lang, digits = 4) {
     if (!Number.isFinite(x)) return '\\text{—}';
     let s = Number(x.toFixed(digits)).toString();
     if (s === '-0') s = '0';
     if (/e/.test(s)) s = x.toExponential(3);
-    return lang === 'ru' ? s.replace('.', '{,}') : s;
+    return decimalIn(s, lang);
 }
 
 export const sq = (n) => fn('sqrt', n);
@@ -137,7 +137,7 @@ export const sq = (n) => fn('sqrt', n);
 export const qGcd = (a, b) => new Q(bigGcd(a.n * b.d, b.n * a.d), a.d * b.d);
 
 /** TeX of a rational in brackets when negative (for substitutions): (-5), \left(-\frac{1}{2}\right). */
-export function parQ(q, lang = 'ru') {
+export function parQ(q, lang = DEFAULT_LANGUAGE) {
     const t = tex(num(q), lang);
     if (!q.isNeg()) return t;
     return q.isInt() ? `(${t})` : `\\left(${t}\\right)`;

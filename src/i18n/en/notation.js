@@ -7,8 +7,17 @@ export default {
     listText: ', ',
     listWideTex: ',\\quad ',
     intervalTex: ',\\ ',
+    log10Text: 'log₁₀',
     log10Tex: '\\log_{10}',
+    combinedSine: false, // sin x = a: two families, arcsin a + 2πn and π − arcsin a + 2πn
     identity: 'I',
+    words: {
+        none: ['no solutions', 'no solution', 'no roots', 'none', 'empty'],
+        all: ['all real numbers', 'all reals', 'all real', 'all', 'any'],
+        or: ['or'],
+        infinity: ['infinity', 'infty', 'inf', 'oo'],
+        sum: ['sum'],
+    },
     fnTex: {
         tan: '\\tan',
         cot: '\\cot',

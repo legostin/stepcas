@@ -17,7 +17,7 @@
 
 import { Q } from './rational.js';
 import { mul, num, pow, isConst, freeVars, nodeSome } from './ast.js';
-import { notation, resolveLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
+import { notation, resolveLanguage, DEFAULT_LANGUAGE, MACHINE } from '../i18n/index.js';
 
 // TeX of the functions: the neutral defaults; a language overrides some in its notation (tg for tan in Russian)
 const FN_TEX = {
@@ -182,7 +182,7 @@ function texNum(n, o) {
         }
     }
     if (o.decimals && !q.isInt() && q.isFiniteDecimal()) {
-        return q.toDecimalString(40, 'en').replace('.', o.n.decimalTex);
+        return q.toDecimalString(40, MACHINE).replace('.', o.n.decimalTex);
     }
     return q.toTex(o.lang);
 }
@@ -603,6 +603,11 @@ function text(n, o) {
     }
 }
 
+/** The language-neutral plain text of a node — ASCII names, a decimal point, ", " between items — for machines. */
+export function plainText(node) {
+    return toText(node, { lang: MACHINE });
+}
+
 /**
  * Plain text that parse() reads back (x^2 - 5x + 6, sqrt(x), log_2(x), root(x; 3), 3x/4).
  * RU uses a decimal comma and "; " between list items, EN a point and ", ".
@@ -639,7 +644,7 @@ export function texNumber(value, lang = DEFAULT_LANGUAGE, opts = {}) {
     };
     if (value instanceof Q) {
         if (value.isInt()) return fix(value.toString());
-        if (opts.decimal) return fix(value.toDecimalString(digits, 'en'));
+        if (opts.decimal) return fix(value.toDecimalString(digits, MACHINE));
         return value.toTex(lang);
     }
     if (typeof value === 'bigint') return fix(value.toString());

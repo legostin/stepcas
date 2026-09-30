@@ -7,7 +7,7 @@ import { canonContext } from '../../core/simplify.js';
 import { toTex, toText } from '../../core/print.js';
 import { rng } from '../../core/random.js';
 import { evaluate } from '../../core/evaluate.js';
-import { msg, eachLanguage } from '../../i18n/index.js';
+import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 export const N0 = num(0);
 export const N1 = num(1);
@@ -249,7 +249,7 @@ function fixAbsInLog(s) {
  * TeX of a node in the calculus style (prettyForm, and \ln|u| instead of \ln(|u|)). Fractional powers print
  * as roots (toTex {roots: true}) — the same shapes prettyForm builds for the plain-text step lines.
  */
-export function calcTex(node, lang = 'ru') {
+export function calcTex(node, lang = DEFAULT_LANGUAGE) {
     return fixAbsInLog(toTex(prettyForm(node), { lang, roots: true }));
 }
 

@@ -188,8 +188,8 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             steps.push(step({
                 title: msg('calculus.limit.limit.where_function_is_defined'),
                 text: domainSide === 'right'
-                    ? msg('calculus.limit.limit.left_of_function_is_undefined_so', { v, P: plainNum(P) })
-                    : msg('calculus.limit.limit.right_of_function_is_undefined_so', { v, P: plainNum(P) }),
+                    ? msg('calculus.limit.limit.left_of_function_is_undefined_so', { v, P: (lng) => plainNum(P, lng) })
+                    : msg('calculus.limit.limit.right_of_function_is_undefined_so', { v, P: (lng) => plainNum(P, lng) }),
                 rule: 'domain-side',
             }));
         }
@@ -266,7 +266,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             steps.push(step({
                 title: msg('calculus.limit.limit.substitute'),
                 tex: eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`),
-                text: msg('calculus.limit.limit.function_is_defined_and_continuous_at', { v, P: plainNum(P) }),
+                text: msg('calculus.limit.limit.function_is_defined_and_continuous_at', { v, P: (lng) => plainNum(P, lng) }),
                 rule: 'substitution',
             }));
         } else if (result.C && result.C.log && !result.split) {

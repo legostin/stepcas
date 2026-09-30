@@ -10,15 +10,15 @@
 import { Q, MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, containsVar, substitute, numValue, freeVars } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { toTex, toText } from '../core/print.js';
+import { toTex, plainText } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
 import { numDen } from '../core/expand.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, DEFAULT_LANGUAGE, wordsPattern } from '../i18n/index.js';
 
-const tex = (n, l = 'ru') => toTex(n, { lang: l });
+const tex = (n, l = DEFAULT_LANGUAGE) => toTex(n, { lang: l });
 const N0 = num(0);
 const N1 = num(1);
 const INF = sym('inf');
@@ -43,7 +43,7 @@ function splitTop(s) {
 }
 function readInput(input) {
     const s = String(input).trim();
-    const m = s.match(/^(?:sum|Σ|сумма)\s*\(([\s\S]*)\)$/i);
+    const m = s.match(new RegExp(`^(?:Σ|${wordsPattern('sum')})\\s*\\(([\\s\\S]*)\\)$`, 'i'));
     if (!m) throw new MathError(msg('calculus.series.write_it_as_sum_term_k'));
     const parts = splitTop(m[1]);
     if (parts.length !== 4) throw new MathError(msg('calculus.series.four_parts_are_needed_sum_term'));
@@ -361,14 +361,13 @@ function powerRate(term, k) {
 function pSeries(term, k) {
     const r = powerRate(term, k);
     if (!r || r.p.gt(Q.ONE)) return null;
-    const pT = r.p.toTex('ru');
     return {
         diverges: true,
         type: 'p-series',
         steps: [step({
             title: msg('calculus.series.comparison_with'),
             tex: eachLanguage((l) => `${tex(term, l)} \\sim \\frac{c}{${k}^{${r.p.toTex(l)}}},\\quad p = ${r.p.toTex(l)} \\le 1`),
-            text: msg('calculus.series.terms_keep_one_sign_and_decay', { pT, p: r.p.toTex('en') }),
+            text: msg('calculus.series.terms_keep_one_sign_and_decay', { p: r.p.toTex() }),
         })],
     };
 }
@@ -440,5 +439,5 @@ export function sumSeries(input, opts = {}) {
     const value = trySimplify(r.value);
     const steps = [head, ...r.steps, step({ title: msg('calculus.series.answer'), tex: eachLanguage((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(value, l)}`) })];
     steps[steps.length - 1].final = true;
-    return { kind: 'value', value, approx: approx(value), type: r.type, steps, text: toText(value, { lang: 'en' }) };
+    return { kind: 'value', value, approx: approx(value), type: r.type, steps, text: plainText(value) };
 }

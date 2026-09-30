@@ -1,7 +1,7 @@
 // theory/common — tiny helpers: reading integers and fractions, bilingual steps.
 
 import { MathError, Q } from '../../core/rational.js';
-import { msg, notation } from '../../i18n/index.js';
+import { msg, notation, decimalIn } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- tiny internal helpers
 
@@ -36,11 +36,11 @@ export function sn(n) {
     const s = String(n);
     return s[0] === '-' ? '−' + grp(s.slice(1), '\u202f') : grp(s, '\u202f');
 }
-/** A decimal approximation: comma in Russian, point in English; `tex` gives {,}. */
+/** A decimal approximation in the language's notation (2,5 or 2.5); `tex` gives 2{,}5. */
 export function dec(x, digits, lang, tex = false) {
     let s = Number(x).toFixed(digits);
     if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
-    if (lang === 'ru') s = s.replace('.', tex ? '{,}' : ',');
+    s = decimalIn(s, lang, { tex });
     return tex ? s : s.replace('-', '−');
 }
 const SUBS = '₀₁₂₃₄₅₆₇₈₉';

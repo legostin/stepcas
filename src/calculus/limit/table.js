@@ -3,7 +3,7 @@
 import { step } from '../../core/steps.js';
 import { HS, atPoint, evalAt } from './common.js';
 import { plainNum } from './forms.js';
-import { msg, eachLanguage } from '../../i18n/index.js';
+import { msg, eachLanguage, decimalIn } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric table and check
 
@@ -113,7 +113,7 @@ export function fmtNum(x, L) {
         s = x.toPrecision(8);
         if (s.includes('.')) s = s.replace(/\.?0+$/, '');
     }
-    return L === 'ru' ? s.replace('.', '{,}') : s;
+    return decimalIn(s, L);
 }
 
 export function tableStep(rows, v, P, n) {
@@ -126,7 +126,7 @@ export function tableStep(rows, v, P, n) {
         title: msg('calculus.limit.table.table_of_values'),
         tex,
         text: Number.isFinite(P.x)
-            ? msg('calculus.limit.table.values_of_function_closer_and_closer', { v, P: plainNum(P), p: (lng) => P.side === 'both' ? msg('calculus.limit.table.from_both_sides').in(lng) : P.side === 'left' ? msg('calculus.limit.table.from_left').in(lng) : msg('calculus.limit.table.from_right').in(lng) })
+            ? msg('calculus.limit.table.values_of_function_closer_and_closer', { v, P: (lng) => plainNum(P, lng), p: (lng) => P.side === 'both' ? msg('calculus.limit.table.from_both_sides').in(lng) : P.side === 'left' ? msg('calculus.limit.table.from_left').in(lng) : msg('calculus.limit.table.from_right').in(lng) })
             : msg('calculus.limit.table.values_of_function_for_larger_and', { v }),
         rule: 'table',
     });

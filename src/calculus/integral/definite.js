@@ -11,7 +11,7 @@ import { step } from '../../core/steps.js';
 import { niceForm, prettyForm } from '../derivative/index.js';
 import { N0, PI, asNode, isNum, paren, simp, trySimp, tx } from './common.js';
 import { answerStep, checkExpr, integrate } from './integrate.js';
-import { msg, notation, eachLanguage } from '../../i18n/index.js';
+import { msg, notation, eachLanguage, decimalIn } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- definite integrals
 
@@ -347,7 +347,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                 }));
             }
             for (const x of parts) {
-                const lim = (e, pt, sideSign) => (e.how === 'limit' ? `\\lim_{${v} \\to ${Number.isFinite(pt.x) ? `{${tx(pt.node, 'en')}}^{${sideSign}}` : boundTex(pt, 'en')}} F(${v})` : null);
+                const lim = (e, pt, sideSign, L) => (e.how === 'limit' ? `\\lim_{${v} \\to ${Number.isFinite(pt.x) ? `{${tx(pt.node, L)}}^{${sideSign}}` : boundTex(pt, L)}} F(${v})` : null);
                 const val = (e) => (e.kind === 'fin' ? null : e.kind === 'inf' ? '+\\infty' : e.kind === '-inf' ? '-\\infty' : '?');
                 const isLim = x.top.how === 'limit' || x.bot.how === 'limit';
                 steps.push(step({
@@ -355,8 +355,8 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                     tex: eachLanguage((L) => {
                         const upper = x.top.kind === 'fin' ? tx(x.top.node, L) : val(x.top);
                         const lower = x.bot.kind === 'fin' ? tx(x.bot.node, L) : val(x.bot);
-                        const lu = lim(x.top, x.r, '-') ?? `F\\left(${boundTex(x.r, L)}\\right)`;
-                        const ll = lim(x.bot, x.p, '+') ?? `F\\left(${boundTex(x.p, L)}\\right)`;
+                        const lu = lim(x.top, x.r, '-', L) ?? `F\\left(${boundTex(x.r, L)}\\right)`;
+                        const ll = lim(x.bot, x.p, '+', L) ?? `F\\left(${boundTex(x.p, L)}\\right)`;
                         const both = x.top.kind === 'fin' && x.bot.kind === 'fin' ? trySimp(add(x.top.node, neg(x.bot.node))) : null;
                         return `\\int_{${boundTex(x.p, L)}}^{${boundTex(x.r, L)}} f\\,d${v} = ${lu} - ${ll} = ${upper} - ${/^-/.test(lower) ? `\\left(${lower}\\right)` : lower}${both ? ` = ${tx(niceForm(both), L)}` : ''}`;
                     }),
@@ -460,7 +460,7 @@ function fmtNum(x, L) {
     let s = x.toFixed(6);
     if (s.includes('.')) s = s.replace(/\.?0+$/, '');
     if (s === '-0') s = '0';
-    return L === 'ru' ? s.replace('.', '{,}') : s;
+    return decimalIn(s, L);
 }
 
 /**

@@ -9,7 +9,7 @@ import { fmatSvd } from './float.js';
 import { intPrimitive, padd, pdeg, pdiv, pmul, psub, ptex, ptrim, quadFactor, quadRoots, rationalRootsQ, surdTex, toPoly } from './qpoly.js';
 import { nullspaceFrom, reduce } from './reduce.js';
 import { PARAMS, matInverse } from './systems.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, decimalIn } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- characteristic polynomial and eigenvalues
 
@@ -190,7 +190,7 @@ export function matEigen(A, opts = {}) {
             approxVals.push({ kind: 'approx', re: z.re, im: z.im, multiplicity: 1, approx: true });
         }
         for (const v of approxVals) {
-            const f = (x, l) => { let s = x.toFixed(6).replace(/0+$/, '').replace(/\.$/, ''); if (s === '-0') s = '0'; return l === 'ru' ? s.replace('.', '{,}') : s; };
+            const f = (x, l) => { let s = x.toFixed(6).replace(/0+$/, '').replace(/\.$/, ''); if (s === '-0') s = '0'; return decimalIn(s, l); };
             v.tex = eachLanguage((l) => `\\approx ${v.im === 0 ? f(v.re, l) : `${f(v.re, l)} ${v.im < 0 ? '-' : '+'} ${f(Math.abs(v.im), l)}\\,i`}`);
             if (v.im === 0 && v.multiplicity === 1) v.vectorsApprox = [realNullVector(Af, v.re)];
             values.push(v);

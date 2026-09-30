@@ -5,7 +5,7 @@ import { num, sym, add, mul, pow, isConst, numValue } from './ast.js';
 import { expand } from './expand.js';
 import { toTex } from './print.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
-import { msg } from '../i18n/index.js';
+import { msg, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 const MAX_DEG = 10000;
 const DIV0 = msg('core.poly.division_by_zero_polynomial');
@@ -647,7 +647,7 @@ export class Poly {
         return terms.length === 1 ? terms[0] : add(terms);
     }
 
-    toTex(varName = 'x', lang = 'ru') {
+    toTex(varName = 'x', lang = DEFAULT_LANGUAGE) {
         return toTex(this.toNode(varName), { lang });
     }
 

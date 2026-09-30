@@ -15,10 +15,10 @@ import { limit } from '../calculus/limit/index.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from '../calculus/derivative/derivative.js';
-import { msg, eachLanguage, joined } from '../i18n/index.js';
+import { msg, eachLanguage, joined, DEFAULT_LANGUAGE, MACHINE } from '../i18n/index.js';
 
 const N0 = num(0);
-const tex = (n, l = 'ru') => toTex(n, { lang: l });
+const tex = (n, l = DEFAULT_LANGUAGE) => toTex(n, { lang: l });
 const exactRoots = (r) => r && (r.kind === 'none' || (r.kind === 'roots' && !r.families?.length && !r.roots.some((z) => z.approxOnly)));
 const rootNodes = (r) => (r.kind === 'none' ? [] : r.roots.map((z) => z.node));
 
@@ -280,5 +280,5 @@ export function solveWithParameter(input, opts = {}) {
     const answerTex = eachLanguage((l) => `${a} \\in ${intervalTex(set, l)}`);
     steps.push(step({ title: msg('solve.parameter.answer'), tex: answerTex }));
     steps[steps.length - 1].final = true;
-    return { kind: 'set', set, method: r.method, steps, answer: { tex: answerTex, text: eachLanguage((l) => set.toText(l)) }, text: set.toText('en') };
+    return { kind: 'set', set, method: r.method, steps, answer: { tex: answerTex, text: eachLanguage((l) => set.toText(l)) }, text: set.toText(MACHINE) };
 }

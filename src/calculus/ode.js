@@ -10,7 +10,7 @@
 import { Q, MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, fn, rel, freeVars, containsVar, substitute, numValue, nodeSome } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { toTex, toText } from '../core/print.js';
+import { toTex, toText, plainText } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { integrate } from './integral/index.js';
 import { solveEquation } from '../solve/index.js';
@@ -18,7 +18,7 @@ import { expand } from '../core/expand.js';
 import { mapNode } from '../core/ast.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from './derivative/derivative.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 const YP = 'yp';
 const YPP = 'ypp';
@@ -43,7 +43,7 @@ const dropAbsInLn = (n) => mapNode(n, (m) => (m.type === 'fn' && m.name === 'ln'
 const E_ = sym('e');
 
 /** TeX with the primes shown as primes. */
-function tex(n, lang = 'ru') {
+function tex(n, lang = DEFAULT_LANGUAGE) {
     return toTex(n, { lang }).replace(/\\mathrm\{([a-z])('+)\}/g, '$1$2');
 }
 
@@ -308,7 +308,7 @@ function linearFirst(p, q, x, y, cond, steps) {
     steps.push(step({
         title: msg('calculus.ode.first_order_linear_equation'),
         tex: eachLanguage((l) => {
-            const negP = tex(p, 'en').startsWith('-');
+            const negP = tex(p).startsWith('-');
             const py = trySimplify(mul(negP ? trySimplify(neg(p)) : p, sym(y)));
             return tex(rel('=', add(sym(`${y}'`), negP ? neg(py) : py), q), l);
         }),
@@ -693,6 +693,6 @@ export function solveOde(input, opts = {}) {
         type: r.type,
         steps,
         tex: answerTex,
-        text: toText(answer, { lang: 'en' }),
+        text: plainText(answer),
     };
 }
