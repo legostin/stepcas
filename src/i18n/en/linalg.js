@@ -81,7 +81,7 @@ export default {
         not_all_eigenvalues_are_rational_they: "Not all eigenvalues are rational. They are distinct, so the matrix is diagonalisable over %{p}, but P will contain irrational%{p2} numbers.",
         not_all_eigenvalues_are_rational: "Not all eigenvalues are rational.",
         not_enough_eigenvectors: "Not enough eigenvectors",
-        has_multiplicity_but_only_independent_eigenvector: "λ = %{p} has multiplicity %{multiplicity} but only %{geometric} independent eigenvector%{p2}. There are %{total} < %{n} independent vectors in total, so no eigenbasis exists and the matrix is not diagonalisable (it has a Jordan block).",
+        has_multiplicity_but_only_independent_eigenvector: "λ = %{p} has multiplicity %{multiplicity} but only %{geometric} independent %{geometric|eigenvector|eigenvectors}. There are %{total} < %{n} independent vectors in total, so no eigenbasis exists and the matrix is not diagonalisable (it has a Jordan block).",
         matrices_p_and_d: "The matrices P and D",
         columns_of_p_are_eigenvectors_and: "The columns of P are eigenvectors, and the diagonal of D holds the matching eigenvalues (in the same order). In the eigenbasis A simply stretches along each vector.",
         check: "Check",

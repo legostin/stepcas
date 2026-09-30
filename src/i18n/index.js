@@ -44,6 +44,7 @@ export function registerLanguage(lang, catalog, opts = {}) {
     catalogs.set(lang, flat);
     if (opts.base) bases.set(lang, opts.base);
     notations.clear();
+    lookalikeCache = null;
     if (!LANGUAGES.includes(lang)) {
         LANGUAGES.push(lang);
         Object.defineProperty(Msg.prototype, lang, {
@@ -123,6 +124,15 @@ export function wordsPattern(notion) {
         .sort((a, b) => b.length - a.length)
         .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'))
         .join('|');
+}
+
+let lookalikeCache = null;
+/** Letters of other keyboard layouts that look like Latin ones ({а: 'a', …}), from every registered language. */
+export function lookalikes() {
+    if (lookalikeCache) return lookalikeCache;
+    lookalikeCache = {};
+    for (const l of LANGUAGES) Object.assign(lookalikeCache, notation(l).lookalikes ?? {});
+    return lookalikeCache;
 }
 
 /** The language if it is registered, else the default one. */

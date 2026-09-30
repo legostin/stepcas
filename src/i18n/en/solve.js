@@ -221,7 +221,6 @@ export default {
         could_not_read_set: "Could not read the set \"%{text}\"",
     },
     logarithmic: {
-        "10": "\\log_{10}",
         take_out_of_brackets: "Take $%{F}$ out of the brackets",
         exponential_is_always_positive_so_this: "An exponential is always positive: $%{F} > 0$, so this factor is never zero and we may divide by it: $%{rest} = 0$.",
         take_logarithm_of_both_sides: "Take the logarithm of both sides",

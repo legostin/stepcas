@@ -17,7 +17,7 @@
 
 import { Q, MathError } from './rational.js';
 import { num, sym, add, mul, div, neg, pow, fn, rel, chain, list } from './ast.js';
-import { msg, notation, resolveLanguage } from '../i18n/index.js';
+import { msg, notation, resolveLanguage, lookalikes } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- vocabulary
 
@@ -52,9 +52,8 @@ const GREEK_CHARS = {
     Φ: 'Phi', Ψ: 'Psi', Ω: 'Omega',
 };
 
-// Cyrillic letters that look like Latin ones (a Russian keyboard layout left on).
-const CYR = { а: 'a', в: 'b', е: 'e', к: 'k', м: 'm', о: 'o', р: 'p', с: 'c', т: 't', у: 'y', х: 'x',
-    А: 'A', В: 'B', Е: 'E', К: 'K', М: 'M', Н: 'H', О: 'O', Р: 'P', С: 'C', Т: 'T', У: 'Y', Х: 'X' };
+// letters of other layouts that look like Latin ones (a Russian keyboard left on): the language packs list them
+const lookalike = (c) => lookalikes()[c];
 
 const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
     '⁺': '+', '⁻': '-', '⁽': '(', '⁾': ')', 'ⁿ': 'n', 'ˣ': 'x', 'ⁱ': 'i', 'ᵏ': 'k', 'ᵐ': 'm', '˙': '' };
@@ -85,7 +84,7 @@ const TEX_WORD = new Set(['operatorname', 'mathrm', 'text', 'mathit', 'textrm'])
 
 const isDigit = (c) => c >= '0' && c <= '9';
 const isLatin = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-const isLetterish = (c) => isLatin(c) || CYR[c] !== undefined;
+const isLetterish = (c) => isLatin(c) || lookalike(c) !== undefined;
 
 function levenshtein(a, b) {
     const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
@@ -254,7 +253,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             const start = i;
             let word = '';
             while (i < n && isLetterish(s[i])) {
-                word += CYR[s[i]] ?? s[i];
+                word += lookalike(s[i]) ?? s[i];
                 i++;
             }
             if (opts.foldCase) word = word.toLowerCase();
@@ -558,7 +557,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             } else if (isDigit(s[j] ?? '')) {
                 while (j < n && isDigit(s[j])) subs += s[j++];
             } else if (isLetterish(s[j] ?? '')) {
-                subs = CYR[s[j]] ?? s[j];
+                subs = lookalike(s[j]) ?? s[j];
                 j++;
             } else throw err(msg('core.parse.subscript_is_expected_after'), offset + from, 1);
         } else if (SUB[s[j]] !== undefined) {

@@ -16,7 +16,7 @@ import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { msg, eachLanguage, inLanguage, joined, sameText } from '../i18n/index.js';
+import { msg, eachLanguage, inLanguage, joined, sameText, notation } from '../i18n/index.js';
 
 const TRIG = new Set(['sin', 'cos', 'tan', 'cot']);
 const qv = (n) => numValue(n);
@@ -404,8 +404,8 @@ function ruleDenest(n) {
 
 /* ------------------------------------------------------------------ trigonometry */
 
-const FN_TEX = { sin: '\\sin', cos: '\\cos', tan: '\\operatorname{tg}', cot: '\\operatorname{ctg}' };
-const FN_TEX_EN = { sin: '\\sin', cos: '\\cos', tan: '\\tan', cot: '\\cot' };
+// a trigonometric function's TeX name in a language's notation (\\operatorname{tg} or \\tan)
+const fnTex = (name, lang) => notation(lang).fnTex?.[name] ?? `\\${name}`;
 // In degree mode (the input wrote 135°) angles stay k·π/180, printed back as k°.
 let DEG = false;
 const isDegNode = (n) => n.type === 'div' && n.den.type === 'num' && n.den.value.eq(180) && n.num.type === 'mul' && n.num.args.length === 2 && n.num.args[0].type === 'num' && n.num.args[1].type === 'sym' && n.num.args[1].name === 'pi';
@@ -441,7 +441,7 @@ function trigChain(name, q) {
         a = a.neg();
         if (odd) sign = -sign;
         chain.push(at(piNode(a)));
-        notes.push(odd ? msg('algebra.values.oddness', { p: FN_TEX[name], p2: FN_TEX_EN[name] }) : msg('algebra.values.evenness'));
+        notes.push(odd ? msg('algebra.values.oddness', { f: (lng) => fnTex(name, lng) }) : msg('algebra.values.evenness'));
     }
     const period = name === 'tan' || name === 'cot' ? Q.ONE : new Q(2n);
     if (a.ge(period)) {

@@ -62,7 +62,7 @@ export default {
         square_of_sum: "Квадрат суммы",
         perfect_square_under_root: "Выделяем полный квадрат под корнем",
         as_and_root_is: "$%{p}$: $%{p2} + %{p3} = %{a}$, $2 \\cdot %{p4} = %{p5}$. Так как $\\sqrt{c^2} = |c|$ и $%{inner} \\ge 0$, корень равен $%{inner}$.",
-        oddness: "нечётность: $%{p}(-\\alpha) = -%{p}\\,\\alpha$",
+        oddness: "нечётность: $%{f}(-\\alpha) = -%{f}\\,\\alpha$",
         evenness: "чётность: $\\cos(-\\alpha) = \\cos\\alpha$",
         period: "период %{p}",
         reduction_formula: "формула приведения",

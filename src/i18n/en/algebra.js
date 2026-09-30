@@ -62,7 +62,7 @@ export default {
         square_of_sum: "The square of a sum",
         perfect_square_under_root: "A perfect square under the root",
         as_and_root_is: "$%{p}$: $%{p2} + %{p3} = %{a}$, $2 \\cdot %{p4} = %{p5}$. As $\\sqrt{c^2} = |c|$ and $%{inner} \\ge 0$, the root is $%{inner}$.",
-        oddness: "oddness: $%{p2}(-\\alpha) = -%{p2}\\,\\alpha$",
+        oddness: "oddness: $%{f}(-\\alpha) = -%{f}\\,\\alpha$",
         evenness: "evenness: $\\cos(-\\alpha) = \\cos\\alpha$",
         period: "the period %{p}",
         reduction_formula: "a reduction formula",

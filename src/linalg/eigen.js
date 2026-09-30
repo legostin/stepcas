@@ -264,7 +264,7 @@ export function matDiagonalize(A, opts = {}) {
         const bad = e.values.find((v) => v.geometric < v.multiplicity);
         if (opts.steps) {
             st.push(S(msg('linalg.eigen.not_enough_eigenvectors'), null,
-                msg('linalg.eigen.has_multiplicity_but_only_independent_eigenvector', { p: qs(bad.value), multiplicity: bad.multiplicity, geometric: bad.geometric, total, n, p2: bad.geometric === 1 ? '' : 's' }),
+                msg('linalg.eigen.has_multiplicity_but_only_independent_eigenvector', { p: qs(bad.value), multiplicity: bad.multiplicity, geometric: bad.geometric, total, n }),
                 { rule: 'answer' }));
         }
         return fin({ diagonalizable: false, reason: 'defective', eigen: e });

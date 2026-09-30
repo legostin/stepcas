@@ -221,7 +221,6 @@ export default {
         could_not_read_set: "Не удалось прочитать множество «%{text}»",
     },
     logarithmic: {
-        "10": "\\lg",
         take_out_of_brackets: "Выносим $%{F}$ за скобки",
         exponential_is_always_positive_so_this: "Показательная функция всегда положительна: $%{F} > 0$, поэтому этот множитель нулю не равен и на него можно разделить: $%{rest} = 0$.",
         take_logarithm_of_both_sides: "Логарифмируем обе части",
