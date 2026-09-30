@@ -8,6 +8,7 @@
 // Level 1: small integers; level 2: wider ranges and the usual traps (an extraneous root, a negative leading
 // coefficient); level 3: fractions and longer forms.
 import { Q } from '../core/rational.js';
+import { msg } from '../i18n/index.js';
 
 /* ------------------------------------------------------------------ randomness */
 
@@ -91,7 +92,7 @@ function fromRoots(roots, k = 1) {
 const setText = (parts) => parts.join(' U ');
 const iv = (a, b, lc, hc) => `${lc ? '[' : '('}${a === null ? '-inf' : qs(a)}; ${b === null ? '+inf' : qs(b)}${hc ? ']' : ')'}`;
 const P = (ru, en) => ({ ru, en });
-const SOLVE = P('Решите уравнение', 'Solve the equation');
+const SOLVE = msg('generate.tasks.solve_equation');
 
 /* ------------------------------------------------------------------ generators */
 
@@ -164,7 +165,7 @@ const GEN = {
         const closed = op.length === 2;
         const inside = (op[0] === '<') === k > 0;
         const ans = inside ? iv(r1, r2, closed, closed) : setText([iv(null, r1, false, closed), iv(r2, null, closed, false)]);
-        return { op: 'ineq', task: `${poly(c)} ${op} 0`, answer: { set: ans }, prompt: P('Решите неравенство', 'Solve the inequality') };
+        return { op: 'ineq', task: `${poly(c)} ${op} 0`, answer: { set: ans }, prompt: msg('generate.tasks.solve_inequality') };
     },
     'rat-ineq'(g) {
         const [p, s] = g.distinct(2, -7, 7);
@@ -174,7 +175,7 @@ const GEN = {
         const cl = (x) => closedP && x === p;
         const inside = op[0] === '<';
         const ans = inside ? iv(lo, hi, cl(lo), cl(hi)) : setText([iv(null, lo, false, cl(lo)), iv(hi, null, cl(hi), false)]);
-        return { op: 'ineq', task: `(${lin(p)})/(${lin(s)}) ${op} 0`, answer: { set: ans }, prompt: P('Решите неравенство', 'Solve the inequality') };
+        return { op: 'ineq', task: `(${lin(p)})/(${lin(s)}) ${op} 0`, answer: { set: ans }, prompt: msg('generate.tasks.solve_inequality') };
     },
     'log-value'(g) {
         const b = g.pick([2, 3, 5, 6, 7]);
@@ -183,12 +184,12 @@ const GEN = {
             // log_b(b^m·c) − log_b(c) = m
             const m = g.int(1, 3);
             const c = g.pick([3, 5, 7, 11, 13].filter((x) => x !== b));
-            return { op: 'value', task: `log_${b}(${b ** m * c}) - log_${b}(${c})`, answer: { value: String(m) }, prompt: P('Найдите значение выражения', 'Find the value') };
+            return { op: 'value', task: `log_${b}(${b ** m * c}) - log_${b}(${c})`, answer: { value: String(m) }, prompt: msg('generate.tasks.find_value') };
         }
         if (kind === 1) {
             // (b^2)^(log_b c) = c²
             const c = g.int(2, 9);
-            return { op: 'value', task: `${b * b}^(log_${b}(${c}))`, answer: { value: String(c * c) }, prompt: P('Найдите значение выражения', 'Find the value') };
+            return { op: 'value', task: `${b * b}^(log_${b}(${c}))`, answer: { value: String(c * c) }, prompt: msg('generate.tasks.find_value') };
         }
         if (kind === 2) {
             // log_b(p) + log_b(r) with p·r = b^m
@@ -196,12 +197,12 @@ const GEN = {
             const divs = [];
             for (let d = 2; d < b ** m; d++) if ((b ** m) % d === 0) divs.push(d);
             const p = g.pick(divs);
-            return { op: 'value', task: `log_${b}(${p}) + log_${b}(${b ** m / p})`, answer: { value: String(m) }, prompt: P('Найдите значение выражения', 'Find the value') };
+            return { op: 'value', task: `log_${b}(${p}) + log_${b}(${b ** m / p})`, answer: { value: String(m) }, prompt: msg('generate.tasks.find_value') };
         }
         // b^(log_b c + k) = c·b^k
         const c = g.int(2, 9);
         const k = g.int(1, 2);
-        return { op: 'value', task: `${b}^(log_${b}(${c}) + ${k})`, answer: { value: String(c * b ** k) }, prompt: P('Найдите значение выражения', 'Find the value') };
+        return { op: 'value', task: `${b}^(log_${b}(${c}) + ${k})`, answer: { value: String(c * b ** k) }, prompt: msg('generate.tasks.find_value') };
     },
     'power-value'(g) {
         const a = g.pick([2, 3, 5]);
@@ -212,20 +213,20 @@ const GEN = {
             const m = g.int(1, 2 * n - 1);
             const total = g.int(1, 3);
             const p = total * n - m;
-            return { op: 'value', task: `${a}^(${m}/${n}) * ${a}^(${p}/${n})`, answer: { value: String(a ** total) }, prompt: P('Найдите значение выражения', 'Find the value') };
+            return { op: 'value', task: `${a}^(${m}/${n}) * ${a}^(${p}/${n})`, answer: { value: String(a ** total) }, prompt: msg('generate.tasks.find_value') };
         }
         if (kind === 1) {
             // (a^k)^(m/n) with k·m/n integer: 8^(2/3), 27^(4/3)
             const k = g.pick([2, 3]);
             const m = g.int(1, 3);
-            return { op: 'value', task: `${a ** k}^(${m}/${k})`, answer: { value: String(a ** m) }, prompt: P('Найдите значение выражения', 'Find the value') };
+            return { op: 'value', task: `${a ** k}^(${m}/${k})`, answer: { value: String(a ** m) }, prompt: msg('generate.tasks.find_value') };
         }
         // a^(u)·(a^2)^(v)/a^(w)
         const u = g.int(1, 6);
         const v = g.int(1, 3);
         const w = g.int(1, u + 2 * v - 1);
         const e = u + 2 * v - w;
-        return { op: 'value', task: `${a}^${u} * ${a * a}^${v} / ${a}^${w}`, answer: { value: String(a ** e) }, prompt: P('Найдите значение выражения', 'Find the value') };
+        return { op: 'value', task: `${a}^${u} * ${a * a}^${v} / ${a}^${w}`, answer: { value: String(a ** e) }, prompt: msg('generate.tasks.find_value') };
     },
     'trig-value'(g) {
         // k·sqrt(2)·sin/cos(±45° + 180°n) and friends with integer answers
@@ -248,7 +249,7 @@ const GEN = {
         // k·root·f(θ) = k·(root·value) where root·(√2/2) → the rows keep value·root² = integer/2
         const value = row.root ? q(k).mul(row.v).mul(q(row.root === 'sqrt(2)' ? 2 : 3)) : q(k).mul(row.v);
         const task = `${k}${row.root ? row.root : ''} ${row.f}(${theta}°)`;
-        return { op: 'value', task, answer: { value: qs(value.mul(q(exactSign))) }, prompt: P('Найдите значение выражения', 'Find the value') };
+        return { op: 'value', task, answer: { value: qs(value.mul(q(exactSign))) }, prompt: msg('generate.tasks.find_value') };
     },
     extremum(g, level) {
         // f' = 3(x − p)(x − s): f = x³ − (3/2)(p + s)x² + 3ps·x + c, p + s even
@@ -270,7 +271,7 @@ const GEN = {
             answer: { value: String(value) },
             kind,
             segment: [String(lo), String(hi)],
-            prompt: kind === 'max' ? P(`Найдите наибольшее значение функции на отрезке [${lo}; ${hi}]`, `Find the greatest value on [${lo}; ${hi}]`) : P(`Найдите наименьшее значение функции на отрезке [${lo}; ${hi}]`, `Find the least value on [${lo}; ${hi}]`),
+            prompt: kind === 'max' ? msg('generate.tasks.find_greatest_value_on', { lo, hi }) : msg('generate.tasks.find_least_value_on', { lo, hi }),
         };
     },
     'definite-integral'(g, level) {
@@ -282,7 +283,7 @@ const GEN = {
         // ∫ Σ c_i x^(deg−i) = Σ c_i x^(deg−i+1)/(deg−i+1)
         const F = (x) => cs.reduce((acc, c, i) => acc.add(q(c).mul(q(x).pow(deg - i + 1)).div(q(deg - i + 1))), Q.ZERO);
         const value = F(b).sub(F(a));
-        return { op: 'integral', task: poly(cs), bounds: [String(a), String(b)], answer: { value: qs(value) }, prompt: P(`Вычислите интеграл от ${a} до ${b}`, `Compute the integral from ${a} to ${b}`) };
+        return { op: 'integral', task: poly(cs), bounds: [String(a), String(b)], answer: { value: qs(value) }, prompt: msg('generate.tasks.compute_integral_from_to', { a, b }) };
     },
     'linear-system'(g) {
         const x0 = g.int(-6, 6);
@@ -295,26 +296,26 @@ const GEN = {
             [a1, b1, a2, b2] = [g.nz(-5, 5), g.nz(-5, 5), g.nz(-5, 5), g.nz(-5, 5)];
         } while (a1 * b2 - a2 * b1 === 0);
         const eq = (a, b) => `${poly([a, 0])}${b < 0 ? ` - ${Math.abs(b) === 1 ? '' : Math.abs(b)}y` : ` + ${b === 1 ? '' : b}y`} = ${a * x0 + b * y0}`;
-        return { op: 'system', task: [eq(a1, b1), eq(a2, b2)].join('; '), answer: { solutions: [[String(x0), String(y0)]] }, prompt: P('Решите систему уравнений', 'Solve the system') };
+        return { op: 'system', task: [eq(a1, b1), eq(a2, b2)].join('; '), answer: { solutions: [[String(x0), String(y0)]] }, prompt: msg('generate.tasks.solve_system') };
     },
     factor(g, level) {
         const rs = g.distinct(level >= 2 ? 3 : 2, -6, 6);
         const k = level >= 3 ? g.pick([2, 3, -1]) : 1;
         const c = fromRoots(rs, k);
         const expr = `${k === 1 ? '' : k === -1 ? '-' : `${k}*`}${rs.map((r) => `(${lin(r)})`).join('*')}`;
-        return { op: 'factor', task: poly(c), answer: { expr }, prompt: P('Разложите на множители', 'Factor') };
+        return { op: 'factor', task: poly(c), answer: { expr }, prompt: msg('generate.tasks.factor') };
     },
     'reduce-fraction'(g) {
         const [r1, r2, r3] = g.distinct(3, -6, 6);
         const top = fromRoots([r1, r2]);
         const bottom = fromRoots([r1, r3]);
-        return { op: 'simplify', task: `(${poly(top)})/(${poly(bottom)})`, answer: { expr: `(${lin(r2)})/(${lin(r3)})` }, prompt: P('Сократите дробь', 'Reduce the fraction') };
+        return { op: 'simplify', task: `(${poly(top)})/(${poly(bottom)})`, answer: { expr: `(${lin(r2)})/(${lin(r3)})` }, prompt: msg('generate.tasks.reduce_fraction') };
     },
     ode(g, level) {
         if (level === 1) {
             const k = g.nz(-3, 3);
             const c = g.nz(-5, 5);
-            return { op: 'ode', task: `y' = ${k === 1 ? '' : k === -1 ? '-' : k}y; y(0) = ${c}`, answer: { expr: `${c}e^(${k}x)` }, prompt: P('Решите задачу Коши', 'Solve the initial value problem') };
+            return { op: 'ode', task: `y' = ${k === 1 ? '' : k === -1 ? '-' : k}y; y(0) = ${c}`, answer: { expr: `${c}e^(${k}x)` }, prompt: msg('generate.tasks.solve_initial_value_problem') };
         }
         const [r1, r2] = g.distinct(2, -3, 3);
         const A = g.nz(-3, 3);
@@ -322,7 +323,7 @@ const GEN = {
         const s = r1 + r2;
         const p = r1 * r2;
         const lhs = `y''${s === 0 ? '' : s > 0 ? ` - ${s === 1 ? '' : s}y'` : ` + ${-s === 1 ? '' : -s}y'`}${p === 0 ? '' : p > 0 ? ` + ${p === 1 ? '' : p}y` : ` - ${-p === 1 ? '' : -p}y`}`;
-        return { op: 'ode', task: `${lhs} = 0; y(0) = ${A + B}; y'(0) = ${A * r1 + B * r2}`, answer: { expr: `${A}e^(${r1}x) + ${B}e^(${r2}x)` }, prompt: P('Решите задачу Коши', 'Solve the initial value problem') };
+        return { op: 'ode', task: `${lhs} = 0; y(0) = ${A + B}; y'(0) = ${A * r1 + B * r2}`, answer: { expr: `${A}e^(${r1}x) + ${B}e^(${r2}x)` }, prompt: msg('generate.tasks.solve_initial_value_problem') };
     },
     'geometric-series'(g) {
         const den = g.pick([2, 3, 4, 5]);
@@ -331,28 +332,28 @@ const GEN = {
         const c = g.nz(-4, 4);
         const s = g.int(0, 2);
         const value = q(c).mul(ratio.pow(s)).div(Q.ONE.sub(ratio));
-        return { op: 'series', task: `sum(${c}*(${num}/${den})^k, k, ${s}, inf)`, answer: { value: qs(value) }, prompt: P('Найдите сумму ряда', 'Find the sum of the series') };
+        return { op: 'series', task: `sum(${c}*(${num}/${den})^k, k, ${s}, inf)`, answer: { value: qs(value) }, prompt: msg('generate.tasks.find_sum_of_series') };
     },
     'param-two-roots'(g) {
         if (g.r() < 0.5) {
             const c = g.int(1, 6);
-            return { op: 'param', task: `x^2 - 2a x + ${c * c} = 0`, param: 'a', want: 'two-roots', answer: { set: setText([iv(null, -c, false, false), iv(c, null, false, false)]) }, prompt: P('При каких a уравнение имеет два корня?', 'For which a are there two roots?') };
+            return { op: 'param', task: `x^2 - 2a x + ${c * c} = 0`, param: 'a', want: 'two-roots', answer: { set: setText([iv(null, -c, false, false), iv(c, null, false, false)]) }, prompt: msg('generate.tasks.for_which_are_there_two_roots') };
         }
         const b = 2 * g.nz(-4, 4);
-        return { op: 'param', task: `x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x + a = 0`, param: 'a', want: 'two-roots', answer: { set: iv(null, (b * b) / 4, false, false) }, prompt: P('При каких a уравнение имеет два корня?', 'For which a are there two roots?') };
+        return { op: 'param', task: `x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x + a = 0`, param: 'a', want: 'two-roots', answer: { set: iv(null, (b * b) / 4, false, false) }, prompt: msg('generate.tasks.for_which_are_there_two_roots') };
     },
     limit(g) {
         const kind = g.int(0, 2);
         if (kind === 0) {
             const r = g.nz(-6, 6);
-            return { op: 'limit', task: `(x^2 - ${r * r})/(${lin(r)})`, at: String(r), answer: { value: String(2 * r) }, prompt: P(`Найдите предел при x → ${r}`, `Find the limit as x → ${r}`) };
+            return { op: 'limit', task: `(x^2 - ${r * r})/(${lin(r)})`, at: String(r), answer: { value: String(2 * r) }, prompt: msg('generate.tasks.find_limit_as_x', { r }) };
         }
         if (kind === 1) {
             const [a, d] = [g.nz(-6, 6), g.nz(-6, 6)];
-            return { op: 'limit', task: `(${poly([a, g.int(-5, 5), g.int(-5, 5)])})/(${poly([d, g.int(-5, 5), g.nz(-5, 5)])})`, at: 'inf', answer: { value: qs(q(a).div(q(d))) }, prompt: P('Найдите предел при x → ∞', 'Find the limit as x → ∞') };
+            return { op: 'limit', task: `(${poly([a, g.int(-5, 5), g.int(-5, 5)])})/(${poly([d, g.int(-5, 5), g.nz(-5, 5)])})`, at: 'inf', answer: { value: qs(q(a).div(q(d))) }, prompt: msg('generate.tasks.find_limit_as_x_2') };
         }
         const [k, m] = [g.nz(1, 7), g.nz(1, 7)];
-        return { op: 'limit', task: `sin(${k}x)/(${m}x)`, at: '0', answer: { value: qs(q(k).div(q(m))) }, prompt: P('Найдите предел при x → 0', 'Find the limit as x → 0') };
+        return { op: 'limit', task: `sin(${k}x)/(${m}x)`, at: '0', answer: { value: qs(q(k).div(q(m))) }, prompt: msg('generate.tasks.find_limit_as_x_0') };
     },
     'trig-eq-interval'(g) {
         // k(t − c₁)(t − c₂) = 0 with t = cos x or sin x and table values; the roots on [Aπ; Bπ]
@@ -384,7 +385,7 @@ const GEN = {
             const num = r.n === 1n ? '' : r.n === -1n ? '-' : String(r.n);
             return r.isZero() ? '0' : r.isInt() ? `${num}pi` : `${num}pi/${r.d}`;
         };
-        return { op: 'solve', task, interval: [piText(lo), piText(hi)], answer: { roots: roots.sort((u, v) => u - v).map(piText) }, prompt: P(`Решите уравнение и найдите корни на отрезке [${piText(lo)}; ${piText(hi)}]`, `Solve and find the roots on [${piText(lo)}; ${piText(hi)}]`) };
+        return { op: 'solve', task, interval: [piText(lo), piText(hi)], answer: { roots: roots.sort((u, v) => u - v).map(piText) }, prompt: msg('generate.tasks.solve_and_find_roots_on', { lo: piText(lo), hi: piText(hi) }) };
     },
     'log-ineq'(g) {
         const small = g.r() < 0.4;
@@ -403,7 +404,7 @@ const GEN = {
         let ans;
         if (a > 0) ans = up ? iv(w, null, closed, false) : iv(z, w, false, closed);
         else ans = up ? iv(null, w, false, closed) : iv(w, z, closed, false);
-        return { op: 'ineq', task: `log_(${base})(${poly([a, c])}) ${op} ${k}`, answer: { set: ans }, prompt: P('Решите неравенство', 'Solve the inequality') };
+        return { op: 'ineq', task: `log_(${base})(${poly([a, c])}) ${op} ${k}`, answer: { set: ans }, prompt: msg('generate.tasks.solve_inequality') };
     },
     'exp-ineq'(g) {
         const small = g.r() < 0.4;
@@ -420,7 +421,7 @@ const GEN = {
         const w = q(k - c).div(q(a));
         const right = up === a > 0; // x above w
         const ans = right ? iv(w, null, closed, false) : iv(null, w, false, closed);
-        return { op: 'ineq', task: `${base}^(${poly([a, c])}) ${op} ${rhs}`, answer: { set: ans }, prompt: P('Решите неравенство', 'Solve the inequality') };
+        return { op: 'ineq', task: `${base}^(${poly([a, c])}) ${op} ${rhs}`, answer: { set: ans }, prompt: msg('generate.tasks.solve_inequality') };
     },
     'rational-eq'(g) {
         // (x − r)(x − s)/(x − r) = 0 written expanded: the root r is extraneous
@@ -432,7 +433,7 @@ const GEN = {
         const [u, w] = g.distinct(2, -6, 6);
         const s = u + w;
         const p = u * w;
-        return { op: 'system', task: `x + y = ${s}; x y = ${p}`, answer: { solutions: [[String(u), String(w)], [String(w), String(u)]] }, prompt: P('Решите систему уравнений', 'Solve the system') };
+        return { op: 'system', task: `x + y = ${s}; x y = ${p}`, answer: { solutions: [[String(u), String(w)], [String(w), String(u)]] }, prompt: msg('generate.tasks.solve_system') };
     },
     'abs-eq'(g) {
         if (g.r() < 0.5) {
@@ -463,7 +464,7 @@ const GEN = {
             `ln(x)`, // x ln x − x
         ];
         const f = g.pick(level >= 2 ? shapes : shapes.slice(0, 4));
-        return { op: 'integrate', task: f, answer: {}, prompt: P('Найдите первообразную', 'Find an antiderivative') };
+        return { op: 'integrate', task: f, answer: {}, prompt: msg('generate.tasks.find_antiderivative') };
     },
 };
 

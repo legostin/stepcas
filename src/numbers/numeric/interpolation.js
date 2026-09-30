@@ -2,6 +2,7 @@
 
 import { fail } from './common.js';
 import { pointsOf } from './statistics.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- interpolation and polynomials
 
@@ -9,10 +10,10 @@ import { pointsOf } from './statistics.js';
 export function numLagrange(points) {
     const P = pointsOf(points);
     const n = P.length;
-    if (!n) throw fail('Нужна хотя бы одна точка.', 'At least one point is required.', 'range');
+    if (!n) throw fail(msg('numbers.numeric.interpolation.at_least_one_point_is_required'), 'range');
     const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]);
     for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-        if (xs[i] === xs[j]) throw fail('У двух точек одинаковый x — через них не провести график функции.', 'Two points share the same x, so no function passes through both.', 'degenerate');
+        if (xs[i] === xs[j]) throw fail(msg('numbers.numeric.interpolation.two_points_share_same_x_so'), 'degenerate');
     }
     // barycentric weights for evaluation
     const w = xs.map((xi, i) => 1 / xs.reduce((prod, xj, j) => (j === i ? prod : prod * (xi - xj)), 1));

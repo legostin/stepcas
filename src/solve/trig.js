@@ -8,13 +8,14 @@ import { splitCoeff } from '../core/simplify.js';
 import { N0, N1, PI, S, T, approxOf, byLang, exactZero, expd, isConstNode, orTex, outermost, pick, replaceNode, simpOr, tex } from './common.js';
 import { isZeroNode, nodeQuadRoots, solveAnyPoly, sumNode } from './polynomial.js';
 import { mkRoot, rootsTex } from './roots.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- trigonometric equations
 
 export const TRIG_FN = ['sin', 'cos', 'tan', 'cot'];
 const PH = { sin: '__s', cos: '__c', tan: '__t', cot: '__k' };
 export const N_SYM = sym('n');
-export const ZZ = (l) => (l === 'ru' ? ',\\ n \\in \\mathbb{Z}' : ',\\ n \\in \\mathbb{Z}');
+export const ZZ = (l) => (msg('solve.trig.n_z').in(l));
 
 /** u = k·x + s with rational k ≠ 0 and a constant s → {k, s}. */
 function linArg(u, v) {
@@ -68,7 +69,7 @@ export function familiesTex(fams, v, lang, sep) {
         if (f.group && done.has(f.group)) continue;
         lines.push(familyTex(f, v, lang));
     }
-    return lines.join(sep ?? (lang === 'ru' ? ';\\quad ' : ',\\quad ')) + ZZ(lang);
+    return lines.join(sep ?? (notation(lang).listWideTex)) + ZZ(lang);
 }
 
 export function familiesToRoots(fams) {
@@ -114,7 +115,7 @@ export function mergeFamilies(fams) {
     return out.sort((a, b) => a.p - b.p || a.b - b.b);
 }
 
-const TRIG_NAME = { sin: T('синус', 'sine'), cos: T('косинус', 'cosine'), tan: T('тангенс', 'tangent'), cot: T('котангенс', 'cotangent') };
+const TRIG_NAME = { sin: msg('solve.trig.sine'), cos: msg('solve.trig.cosine'), tan: msg('solve.trig.tangent'), cot: msg('solve.trig.cotangent') };
 
 /** F(u) = a for u = kx + s → {families, steps}. */
 export function basicTrig(F, u, a, ctx) {
@@ -125,11 +126,11 @@ export function basicTrig(F, u, a, ctx) {
     const av = approxOf(aS);
     if (!Number.isFinite(av)) return null;
     const eqT = (l) => `${tex(fn(F, u), l)} = ${tex(aS, l)}`;
-    const title = byLang((l) => (l === 'ru' ? `Решаем $${eqT(l)}$` : `Solve $${eqT(l)}$`));
+    const title = byLang((l) => (msg('solve.trig.solve', { l: eqT(l) }).in(l)));
     if ((F === 'sin' || F === 'cos') && Math.abs(av) > 1 + 1e-12) {
         return {
             families: [],
-            steps: [S(title, { text: T(`${F === 'sin' ? 'Синус' : 'Косинус'} принимает значения только от $-1$ до $1$, а $|${tex(aS)}| > 1$ — корней нет.`, `The ${TRIG_NAME[F].en} only takes values from $-1$ to $1$, and $|${tex(aS, 'en')}| > 1$: no roots.`) })],
+            steps: [S(title, { text: msg('solve.trig.only_takes_values_from_to_and', { p: F === 'sin' ? 'Синус' : 'Косинус', aS: (lng) => tex(aS, lng), p2: TRIG_NAME[F].en }) })],
         };
     }
     const is = (x) => Math.abs(av - x) < 1e-12 && exactZero(add(aS, num(-x))) !== false;
@@ -140,33 +141,33 @@ export function basicTrig(F, u, a, ctx) {
     let rule;
     let general = false;
     if (F === 'sin') {
-        if (is(0)) [uf, rule] = [[[N0, PI]], T('Частный случай: $\\sin t = 0 \\Leftrightarrow t = \\pi n$.', 'A special case: $\\sin t = 0 \\Leftrightarrow t = \\pi n$.')];
-        else if (is(1)) [uf, rule] = [[[halfPi, twoPi]], T('Частный случай: $\\sin t = 1 \\Leftrightarrow t = \\frac{\\pi}{2} + 2\\pi n$.', 'A special case: $\\sin t = 1 \\Leftrightarrow t = \\frac{\\pi}{2} + 2\\pi n$.')];
-        else if (is(-1)) [uf, rule] = [[[neg(halfPi), twoPi]], T('Частный случай: $\\sin t = -1 \\Leftrightarrow t = -\\frac{\\pi}{2} + 2\\pi n$.', 'A special case: $\\sin t = -1 \\Leftrightarrow t = -\\frac{\\pi}{2} + 2\\pi n$.')];
+        if (is(0)) [uf, rule] = [[[N0, PI]], msg('solve.trig.special_case')];
+        else if (is(1)) [uf, rule] = [[[halfPi, twoPi]], msg('solve.trig.special_case_2')];
+        else if (is(-1)) [uf, rule] = [[[neg(halfPi), twoPi]], msg('solve.trig.special_case_3')];
         else {
             A = simpOr(fn('asin', aS));
             uf = [[A, twoPi], [add(PI, neg(A)), twoPi]];
             general = true;
-            rule = T('Формула корней: $\\sin t = a \\Leftrightarrow t = (-1)^n \\arcsin a + \\pi n$ (при $|a| \\le 1$).', 'The root formula: $\\sin t = a \\Leftrightarrow t = \\arcsin a + 2\\pi n$ or $t = \\pi - \\arcsin a + 2\\pi n$ (for $|a| \\le 1$).');
+            rule = msg('solve.trig.root_formula_or_for');
         }
     } else if (F === 'cos') {
-        if (is(0)) [uf, rule] = [[[halfPi, PI]], T('Частный случай: $\\cos t = 0 \\Leftrightarrow t = \\frac{\\pi}{2} + \\pi n$.', 'A special case: $\\cos t = 0 \\Leftrightarrow t = \\frac{\\pi}{2} + \\pi n$.')];
-        else if (is(1)) [uf, rule] = [[[N0, twoPi]], T('Частный случай: $\\cos t = 1 \\Leftrightarrow t = 2\\pi n$.', 'A special case: $\\cos t = 1 \\Leftrightarrow t = 2\\pi n$.')];
-        else if (is(-1)) [uf, rule] = [[[PI, twoPi]], T('Частный случай: $\\cos t = -1 \\Leftrightarrow t = \\pi + 2\\pi n$.', 'A special case: $\\cos t = -1 \\Leftrightarrow t = \\pi + 2\\pi n$.')];
+        if (is(0)) [uf, rule] = [[[halfPi, PI]], msg('solve.trig.special_case_4')];
+        else if (is(1)) [uf, rule] = [[[N0, twoPi]], msg('solve.trig.special_case_5')];
+        else if (is(-1)) [uf, rule] = [[[PI, twoPi]], msg('solve.trig.special_case_6')];
         else {
             A = simpOr(fn('acos', aS));
             uf = [[A, twoPi], [neg(A), twoPi]];
             general = true;
-            rule = T('Формула корней: $\\cos t = a \\Leftrightarrow t = \\pm\\arccos a + 2\\pi n$ (при $|a| \\le 1$).', 'The root formula: $\\cos t = a \\Leftrightarrow t = \\pm\\arccos a + 2\\pi n$ (for $|a| \\le 1$).');
+            rule = msg('solve.trig.root_formula_for');
         }
     } else if (F === 'tan') {
         A = simpOr(fn('atan', aS));
         uf = [[A, PI]];
-        rule = T('Формула корней: $\\operatorname{tg} t = a \\Leftrightarrow t = \\operatorname{arctg} a + \\pi n$.', 'The root formula: $\\tan t = a \\Leftrightarrow t = \\arctan a + \\pi n$.');
+        rule = msg('solve.trig.root_formula');
     } else {
         A = simpOr(fn('acot', aS));
         uf = [[A, PI]];
-        rule = T('Формула корней: $\\operatorname{ctg} t = a \\Leftrightarrow t = \\operatorname{arcctg} a + \\pi n$.', 'The root formula: $\\cot t = a \\Leftrightarrow t = \\operatorname{arccot} a + \\pi n$.');
+        rule = msg('solve.trig.root_formula_2');
     }
     // arctg(2 − √3) = π/12 and the like: a rational multiple of π with a small denominator
     let recognized = null;
@@ -187,7 +188,7 @@ export function basicTrig(F, u, a, ctx) {
     }
     if (recognized) {
         const f = recognized;
-        rule = T(`${rule.ru} Здесь $${tex(f.from)} = ${tex(f.to)}$.`, `${rule.en} Here $${tex(f.from, 'en')} = ${tex(f.to, 'en')}$.`);
+        rule = msg('solve.trig.here', { p: (lng) => rule[lng], p2: (lng) => tex(f.from, lng), p3: (lng) => tex(f.to, lng) });
     }
     const k = la.k;
     const s = la.s;
@@ -211,7 +212,7 @@ export function basicTrig(F, u, a, ctx) {
             const Ak = simpOr(div(A, num(k.abs())));
             return `${v} = \\pm ${tex(Ak, l)}${signedTex(plusTex([shift, periodN(fams[0].period)], l))}`;
         }
-        return fams.map((f) => familyTex(f, v, l)).join(l === 'ru' ? ';\\quad ' : ',\\quad ');
+        return fams.map((f) => familyTex(f, v, l)).join(notation(l).listWideTex);
     };
     group.tex = byLang(xTex);
     for (const f of fams) f.group = group;
@@ -219,7 +220,7 @@ export function basicTrig(F, u, a, ctx) {
         const us = tex(u, l);
         if (general && F === 'sin' && l === 'ru') return `${us} = (-1)^{n}${tex(A, l)} + \\pi n`;
         if (general && F === 'cos') return `${us} = \\pm ${tex(A, l)} + 2\\pi n`;
-        return uf.map(([b, P]) => `${us} = ${plusTex([simpOr(b), periodN(simpOr(P))], l)}`).join(l === 'ru' ? ';\\quad ' : ',\\quad ');
+        return uf.map(([b, P]) => `${us} = ${plusTex([simpOr(b), periodN(simpOr(P))], l)}`).join(notation(l).listWideTex);
     };
     const texLines = byLang((l) => (isX ? xTex(l) : `${uTex(l)} \\;\\Rightarrow\\; ${xTex(l)}`) + ZZ(l));
     return { families: fams, steps: [S(title, { tex: texLines, text: rule })] };
@@ -306,16 +307,16 @@ function trigPolyOne(P, F, u, ctx, extraText) {
     const tName = 't';
     const polyT = polyNodeFrom(ct, tName);
     const Fu = (l) => tex(fn(F, u), l);
-    steps.push(S(byLang((l) => (l === 'ru' ? `Замена $t = ${Fu(l)}$` : `Substitute $t = ${Fu(l)}$`)), {
+    steps.push(S(byLang((l) => (msg('solve.trig.substitute', { l: Fu(l) }).in(l))), {
         tex: byLang((l) => `${tex(polyT, l)} = 0`),
-        text: extraText ? extraText.text : (F === 'sin' || F === 'cos' ? T('Уравнение стало алгебраическим относительно $t$; помним, что $-1 \\le t \\le 1$.', 'The equation is now algebraic in $t$; remember that $-1 \\le t \\le 1$.') : T('Уравнение стало алгебраическим относительно $t$.', 'The equation is now algebraic in $t$.')),
+        text: extraText ? extraText.text : (F === 'sin' || F === 'cos' ? msg('solve.trig.equation_is_now_algebraic_in_remember') : msg('solve.trig.equation_is_now_algebraic_in')),
     }));
     const rr = rootsOfNodePoly(ct, tName);
     if (!rr) return null;
-    steps.push(S(byLang((l) => (l === 'ru' ? `Решаем $${tex(polyT, l)} = 0$` : `Solve $${tex(polyT, l)} = 0$`)), { tex: byLang((l) => rootsTex(rr.roots, 't', l)), sub: rr.steps }));
+    steps.push(S(byLang((l) => (msg('solve.trig.solve_2', { polyT: tex(polyT, l) }).in(l))), { tex: byLang((l) => rootsTex(rr.roots, 't', l)), sub: rr.steps }));
     for (const t of rr.roots) {
         if ((F === 'sin' || F === 'cos') && Math.abs(t.approx) > 1 + 1e-12) {
-            steps.push(S(byLang((l) => `$t = ${tex(t.node, l)}$`), { text: T(`Не подходит: $|${F === 'sin' ? '\\sin' : '\\cos'} x| \\le 1$.`, `Rejected: $|${F === 'sin' ? '\\sin' : '\\cos'} x| \\le 1$.`) }));
+            steps.push(S(byLang((l) => `$t = ${tex(t.node, l)}$`), { text: msg('solve.trig.rejected', { p: F === 'sin' ? '\\sin' : '\\cos' }) }));
             continue;
         }
         const b = basicTrig(F, u, t.node, ctx);
@@ -348,9 +349,9 @@ function trigFraction(E, ctx) {
     if (splitCoeff(nd.num).coef.isNeg()) nd = { num: simpOr(neg(nd.num)), den: nd.den };
     const r = trigCore(nd.num, { ...ctx, trigFrac: true });
     if (!r) return null;
-    const steps = [S(T('Дробь равна нулю, когда числитель равен нулю, а знаменатель — нет', 'A fraction is zero when its numerator is zero and its denominator is not'), {
+    const steps = [S(msg('solve.trig.fraction_is_zero_when_its_numerator'), {
         tex: byLang((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
-        text: T('Решаем уравнение «числитель = 0», а корни, при которых знаменатель обращается в ноль, отбросим по ОДЗ.', 'Solve "numerator = 0"; the roots where the denominator vanishes are dropped by the domain.'),
+        text: msg('solve.trig.solve_numerator_0_roots_where_denominator'),
     })];
     return { families: r.families, steps: [...steps, ...r.steps] };
 }
@@ -383,7 +384,7 @@ function trigCore0(E, ctx) {
         nameSet.delete('cot');
         nameSet.add('sin');
         nameSet.add('cos');
-        pre.push(S(T('Выражаем тангенс и котангенс через синус и косинус', 'Write the tangent and cotangent through sine and cosine'), {
+        pre.push(S(msg('solve.trig.write_tangent_and_cotangent_through_sine'), {
             text: T('$\\operatorname{tg} t = \\frac{\\sin t}{\\cos t}$, $\\operatorname{ctg} t = \\frac{\\cos t}{\\sin t}$.', '$\\tan t = \\frac{\\sin t}{\\cos t}$, $\\cot t = \\frac{\\cos t}{\\sin t}$.'),
         }));
     }
@@ -401,9 +402,9 @@ function trigCore0(E, ctx) {
             const k = -mn;
             P = expd(mul(P, pow(sym(PH[name]), num(k))));
             if (!P) return null;
-            pre.push(S(T(`Умножаем обе части на $${Uf(name)('ru')}${k > 1 ? `^{${k}}` : ''}$`, `Multiply both sides by $${Uf(name)('en')}${k > 1 ? `^{${k}}` : ''}$`), {
+            pre.push(S(msg('solve.trig.multiply_both_sides_by', { p: (lng) => Uf(name)(lng), p2: k > 1 ? `^{${k}}` : '' }), {
                 tex: byLang((l) => `${tex(simpOr(replaceNode(replaceNode(replaceNode(replaceNode(P, sym(PH.sin), fn('sin', u)), sym(PH.cos), fn('cos', u)), sym(PH.tan), fn('tan', u)), sym(PH.cot), fn('cot', u))), l)} = 0`),
-                text: T('Он стоит в знаменателе, поэтому по ОДЗ не равен нулю — равносильность не нарушается.', 'It stands in a denominator, so by the domain it is not zero and the equation stays equivalent.'),
+                text: msg('solve.trig.it_stands_in_denominator_so_by'),
             }));
         }
     }
@@ -435,9 +436,9 @@ function trigSingle(P, names, u, ctx) {
         for (const [d, c] of [...ct]) if (isZeroNode(c)) ct.delete(d);
         if (!ct.size) return null;
         const polyT = polyNodeFrom(ct, PH.tan);
-        const pre = S(T(`Заменяем $\\operatorname{ctg} = \\frac{1}{\\operatorname{tg}}$ и умножаем на $\\operatorname{tg}${mj > 1 ? `^${mj}` : ''}$`, `Replace $\\cot = \\frac{1}{\\tan}$ and multiply by $\\tan${mj > 1 ? `^${mj}` : ''}$`), {
+        const pre = S(msg('solve.trig.replace_and_multiply_by', { p: mj > 1 ? `^${mj}` : '' }), {
             tex: byLang((l) => `${tex(simpOr(replaceNode(polyT, sym(PH.tan), fn('tan', u))), l)} = 0`),
-            text: T('Раз котангенс определён, $\\operatorname{tg} \\ne 0$ — умножать можно, но корень $\\operatorname{tg} = 0$ придётся отбросить.', 'Since the cotangent is defined, $\\tan \\ne 0$: the multiplication is fine, but a root $\\tan = 0$ must be dropped.'),
+            text: msg('solve.trig.since_cotangent_is_defined_multiplication_is'),
         });
         const r = trigPolyOne(polyT, 'tan', u, ctx);
         if (!r) return null;
@@ -478,9 +479,9 @@ function sinCosCore(bv, u, ctx, depth) {
         }
         const fac = simpOr(mul(pow(fn('sin', u), num(a)), pow(fn('cos', u), num(b))));
         const redNode = bvNode(red, u);
-        const steps = [S(T('Выносим общий множитель за скобки', 'Take the common factor out of the brackets'), {
+        const steps = [S(msg('solve.trig.take_common_factor_out_of_brackets'), {
             tex: byLang((l) => `${tex(fac, l)}\\left(${tex(redNode, l)}\\right) = 0`),
-            text: T('Произведение равно нулю, когда один из множителей равен нулю.', 'A product is zero when one of the factors is zero.'),
+            text: msg('solve.trig.product_is_zero_when_one_of'),
         })];
         const families = [];
         if (a > 0) {
@@ -518,9 +519,9 @@ function sinCosCore(bv, u, ctx, depth) {
         const P2 = expd(sumNode(terms));
         if (!P2) return null;
         const r = trigPolyOne(P2, F, u, ctx);
-        const pre = S(T(`Заменяем $${Ut(G)('ru')}^2$ на $1 - ${Ut(F)('ru')}^2$`, `Replace $${Ut(G)('en')}^2$ with $1 - ${Ut(F)('en')}^2$`), {
+        const pre = S(msg('solve.trig.replace_with', { p: (lng) => Ut(G)(lng), p2: (lng) => Ut(F)(lng) }), {
             tex: byLang((l) => `${tex(simpOr(replaceNode(P2, sym(other), fn(F, u))), l)} = 0`),
-            text: T('Основное тригонометрическое тождество: $\\sin^2 t + \\cos^2 t = 1$. Теперь в уравнении одна функция.', 'The Pythagorean identity $\\sin^2 t + \\cos^2 t = 1$ leaves one function in the equation.'),
+            text: msg('solve.trig.pythagorean_identity_leaves_one_function_in'),
         });
         return done(r, [pre]);
     }
@@ -534,9 +535,9 @@ function sinCosCore(bv, u, ctx, depth) {
         if (c0) {
             h.set(2, simpOr(add(h.get(2) ?? N0, c0)));
             h.set(0, simpOr(add(h.get(0) ?? N0, c0)));
-            pre.push(S(T('Записываем число как $a(\\sin^2 + \\cos^2)$', 'Write the number as $a(\\sin^2 + \\cos^2)$'), {
+            pre.push(S(msg('solve.trig.write_number_as'), {
                 tex: byLang((l) => `${tex(simpOr(sumNode([...h.entries()].filter(([, c]) => !isZeroNode(c)).map(([i, c]) => mul(c, pow(fn('sin', u), num(i)), pow(fn('cos', u), num(d - i)))))), l)} = 0`),
-                text: T('Так все слагаемые получают одинаковую степень — уравнение становится однородным.', 'Now every term has the same degree: the equation becomes homogeneous.'),
+                text: msg('solve.trig.now_every_term_has_same_degree'),
             }));
         }
         for (const [i, c] of [...h]) if (isZeroNode(simpOr(c))) h.delete(i);
@@ -545,8 +546,8 @@ function sinCosCore(bv, u, ctx, depth) {
         const families = [];
         const steps = [...pre];
         if (m > 0) {
-            steps.push(S(T(`Выносим $\\cos${m > 1 ? `^${m}` : ''}$ за скобки`, `Take $\\cos${m > 1 ? `^${m}` : ''}$ out of the brackets`), {
-                text: T(`Одна из возможностей: $${Ut('cos')('ru')} = 0$.`, `One possibility: $${Ut('cos')('en')} = 0$.`),
+            steps.push(S(msg('solve.trig.take_out_of_brackets', { p: m > 1 ? `^${m}` : '' }), {
+                text: msg('solve.trig.one_possibility', { p: (lng) => Ut('cos')(lng) }),
             }));
             const b = basicTrig('cos', u, N0, ctx);
             if (!b) return null;
@@ -558,9 +559,9 @@ function sinCosCore(bv, u, ctx, depth) {
             const ct = new Map();
             for (const [i, c] of h) ct.set(i, c);
             const polyT = polyNodeFrom(ct, PH.tan);
-            steps.push(S(T(`Однородное уравнение: делим на $\\cos${dd > 1 ? `^${dd}` : ''} ${tex(u).length > 1 ? `(${tex(u)})` : tex(u)}$`, `A homogeneous equation: divide by $\\cos${dd > 1 ? `^${dd}` : ''} ${tex(u, 'en').length > 1 ? `(${tex(u, 'en')})` : tex(u, 'en')}$`), {
+            steps.push(S(msg('solve.trig.homogeneous_equation_divide_by', { p: dd > 1 ? `^${dd}` : '', p2: (lng) => tex(u, lng).length > 1 ? `(${tex(u, lng)})` : tex(u, lng) }), {
                 tex: byLang((l) => `${tex(simpOr(replaceNode(polyT, sym(PH.tan), fn('tan', u))), l)} = 0`),
-                text: T(`Делить можно: если $${Ut('cos')('ru')} = 0$, то $${Ut('sin')('ru')} = \\pm 1$, и уравнение даёт $${tex(h.get(dd))} = 0$ — неверно.`, `This is allowed: if $${Ut('cos')('en')} = 0$ then $${Ut('sin')('en')} = \\pm 1$ and the equation gives $${tex(h.get(dd), 'en')} = 0$, which is false.`),
+                text: msg('solve.trig.this_is_allowed_if_then_and', { p: (lng) => Ut('cos')(lng), p2: (lng) => Ut('sin')(lng), p3: (lng) => tex(h.get(dd), lng) }),
             }));
             const r = trigPolyOne(polyT, 'tan', u, ctx);
             if (!r) return null;
@@ -580,10 +581,9 @@ function sinCosCore(bv, u, ctx, depth) {
         if (approxOf(b) < 0) phi = simpOr(neg(phi));
         const u2 = simpOr(add(u, phi));
         const rhs2 = simpOr(div(cRight, R));
-        const pre = S(T('Метод вспомогательного угла', 'The auxiliary angle method'), {
+        const pre = S(msg('solve.trig.auxiliary_angle_method'), {
             tex: byLang((l) => `${tex(simpOr(add(mul(a, fn('sin', u)), mul(b, fn('cos', u)))), l)} = ${tex(R, l)}\\sin\\left(${tex(u2, l)}\\right)`),
-            text: T(`$a\\sin t + b\\cos t = R\\sin(t + \\varphi)$, где $R = \\sqrt{a^2 + b^2} = ${tex(R)}$, $\\cos\\varphi = \\frac{a}{R}$, $\\sin\\varphi = \\frac{b}{R}$; здесь $\\varphi = ${tex(phi)}$.`,
-                `$a\\sin t + b\\cos t = R\\sin(t + \\varphi)$ with $R = \\sqrt{a^2 + b^2} = ${tex(R, 'en')}$, $\\cos\\varphi = \\frac{a}{R}$, $\\sin\\varphi = \\frac{b}{R}$; here $\\varphi = ${tex(phi, 'en')}$.`),
+            text: msg('solve.trig.with_here', { R: (lng) => tex(R, lng), phi: (lng) => tex(phi, lng) }),
         });
         const r = basicTrig('sin', u2, rhs2, ctx);
         return done(r, [pre]);
@@ -617,12 +617,12 @@ function sumToProduct(E, ctx) {
     const dif = half(add(A.u, neg(B.u)));
     if (!linArg(sum, v) || !linArg(dif, v)) return null;
     const [G1, G2] = A.F === 'sin' ? (plus ? ['sin', 'cos'] : ['cos', 'sin']) : plus ? ['cos', 'cos'] : ['sin', 'sin'];
-    const name = A.F === 'sin' ? (plus ? T('Сумма синусов', 'A sum of sines') : T('Разность синусов', 'A difference of sines')) : plus ? T('Сумма косинусов', 'A sum of cosines') : T('Разность косинусов', 'A difference of cosines');
+    const name = A.F === 'sin' ? (plus ? msg('solve.trig.sum_of_sines') : msg('solve.trig.difference_of_sines')) : plus ? msg('solve.trig.sum_of_cosines') : msg('solve.trig.difference_of_cosines');
     const lhsT = (l) => `${tex(fn(A.F, A.u), l)} ${plus ? '+' : '-'} ${tex(fn(B.F, B.u), l)}`;
     const prodT = (l) => `${A.F === 'cos' && !plus ? '-' : ''}2${tex(fn(G1, sum), l)}${tex(fn(G2, dif), l)}`;
-    const steps = [S(T(`${name.ru}: переходим к произведению`, `${name.en}: turn it into a product`), {
+    const steps = [S(msg('solve.trig.turn_it_into_product', { p: (lng) => name[lng] }), {
         tex: byLang((l) => `${lhsT(l)} = ${prodT(l)} = 0`),
-        text: T('Произведение равно нулю, когда один из множителей равен нулю.', 'A product is zero when one of the factors is zero.'),
+        text: msg('solve.trig.product_is_zero_when_one_of'),
     })];
     const families = [];
     for (const [G, w] of [[G1, sum], [G2, dif]]) {
@@ -660,22 +660,20 @@ function equalTrig(E, ctx) {
         const f = key === 'tan,tan' ? 'tg' : 'ctg';
         rule = byLang((l) => {
             const F = l === 'ru' ? `\\operatorname{${f}}` : key === 'tan,tan' ? '\\tan' : '\\cot';
-            return l === 'ru'
-                ? `$${F} a = ${F} b \\Leftrightarrow a = b + \\pi n$ (там, где обе части определены — это проверим по ОДЗ).${sgn < 0 ? ` Здесь $-${F} b = ${F}(-b)$.` : ''}`
-                : `$${F} a = ${F} b \\Leftrightarrow a = b + \\pi n$ (where both sides are defined, which the domain check takes care of).${sgn < 0 ? ` Here $-${F} b = ${F}(-b)$.` : ''}`;
+            return msg('solve.trig.where_both_sides_are_defined_which', { F, p: (lng) => sgn < 0 ? msg('solve.trig.here_2', { F }).in(lng) : '' }).in(l);
         });
     } else if (key === 'tan,cot' || key === 'cot,tan') {
         const [X, Y] = key === 'tan,cot' ? [A, B] : [B, A];
         rels = [{ X, Y, c: half, s: -sgn, P: PI }];
-        rule = T('$\\operatorname{ctg} b = \\operatorname{tg}\\left(\\frac{\\pi}{2} - b\\right)$, а $\\operatorname{tg} a = \\operatorname{tg} c \\Leftrightarrow a = c + \\pi n$.', '$\\cot b = \\tan\\left(\\frac{\\pi}{2} - b\\right)$, and $\\tan a = \\tan c \\Leftrightarrow a = c + \\pi n$.');
+        rule = msg('solve.trig.and');
     } else if (key === 'sin,cos' || key === 'cos,sin') {
         const [X, Y] = key === 'sin,cos' ? [A, B] : [B, A];
         rels = sgn > 0
             ? [{ X, Y, c: half, s: -1, P: twoPi }, { X, Y, c: half, s: 1, P: twoPi }]
             : [{ X, Y, c: neg(half), s: 1, P: twoPi }, { X, Y, c: mul(num(new Q(3n, 2n)), PI), s: -1, P: twoPi }];
         rule = sgn > 0
-            ? T('$\\cos b = \\sin\\left(\\frac{\\pi}{2} - b\\right)$, а $\\sin a = \\sin c \\Leftrightarrow a = c + 2\\pi n$ или $a = \\pi - c + 2\\pi n$.', '$\\cos b = \\sin\\left(\\frac{\\pi}{2} - b\\right)$, and $\\sin a = \\sin c \\Leftrightarrow a = c + 2\\pi n$ or $a = \\pi - c + 2\\pi n$.')
-            : T('$-\\cos b = \\sin\\left(b - \\frac{\\pi}{2}\\right)$, а $\\sin a = \\sin c \\Leftrightarrow a = c + 2\\pi n$ или $a = \\pi - c + 2\\pi n$.', '$-\\cos b = \\sin\\left(b - \\frac{\\pi}{2}\\right)$, and $\\sin a = \\sin c \\Leftrightarrow a = c + 2\\pi n$ or $a = \\pi - c + 2\\pi n$.');
+            ? msg('solve.trig.and_or')
+            : msg('solve.trig.and_or_2');
     } else return null;
     const families = [];
     const lines = [];
@@ -693,11 +691,11 @@ function equalTrig(E, ctx) {
     }
     const eqT = (l) => `${tex(fn(P.F, A), l)} = ${pm}${tex(fn(R.F, B), l)}`;
     const steps = [
-        S(byLang((l) => (l === 'ru' ? `Приравниваем аргументы: $${eqT(l)}$` : `Compare the arguments: $${eqT(l)}$`)), {
+        S(byLang((l) => (msg('solve.trig.compare_arguments', { l: eqT(l) }).in(l))), {
             tex: byLang((l) => lines.map((f) => f(l)).join(`${orTex(l)} `) + ZZ(l)),
             text: rule,
         }),
-        S(T(`Выражаем $${v}$`, `Solve for $${v}$`), { tex: byLang((l) => families.map((f) => familyTex(f, v, l)).join(l === 'ru' ? ';\\quad ' : ',\\quad ') + ZZ(l)) }),
+        S(msg('solve.trig.solve_for', { v }), { tex: byLang((l) => families.map((f) => familyTex(f, v, l)).join(notation(l).listWideTex) + ZZ(l)) }),
     ];
     return { families, steps };
 }
@@ -739,9 +737,9 @@ function doubleAngle(E, tn, args, ctx) {
     }
     const E3 = expd(E2);
     if (!E3) return null;
-    const pre = S(T('Формулы двойного угла', 'Double-angle formulas'), {
+    const pre = S(msg('solve.trig.double_angle_formulas'), {
         tex: byLang((l) => reps.map(([t, r]) => `${tex(t, l)} = ${tex(r, l)}`).join(';\\quad ') + `\\;\\Rightarrow\\; ${tex(E3, l)} = 0`),
-        text: T('Переходим к одному аргументу.', 'Now there is a single argument.'),
+        text: msg('solve.trig.now_there_is_single_argument'),
     });
     const r = trigCore(E3, { ...ctx, trigDepth: 1 });
     return r && { families: r.families, steps: [pre, ...r.steps] };

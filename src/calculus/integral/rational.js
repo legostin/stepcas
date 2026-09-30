@@ -9,6 +9,7 @@ import { Poly } from '../../core/poly.js';
 import { HALF, N0, N1, N2, T_, bt, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';
 import { I } from './engine.js';
 import { canonicalRational } from './trig.js';
+import { msg } from '../../i18n/index.js';
 
 // ---- rational functions
 
@@ -111,9 +112,9 @@ export function mRational(f, ctx) {
         const rp = I(P0, ctx);
         if (!rp) return null;
         return { ...rp, step: step({
-            title: T_('Упрощаем дробь', 'Simplify the fraction'),
+            title: msg('calculus.integral.rational.simplify_fraction'),
             tex: bt((L) => `${tx(f, L)} = ${tx(P0, L)}`),
-            text: T_('Дробь сокращается, под интегралом остаётся многочлен.', 'The fraction cancels, leaving a polynomial under the integral.'),
+            text: msg('calculus.integral.rational.fraction_cancels_leaving_polynomial_under_integral'),
             rule: 'simplify',
             sub: [rp.step],
         }) };
@@ -189,9 +190,9 @@ export function mRational(f, ctx) {
     const fNode = div(P.toNode(v), D.toNode(v));
     if (!polyPart.isZero()) {
         steps.push(step({
-            title: T_('Выделяем целую часть', 'Divide the polynomials'),
+            title: msg('calculus.integral.rational.divide_polynomials'),
             tex: bt((L) => `${tx(fNode, L)} = ${tx(polyPart.toNode(v), L)}${rem.isZero() ? '' : (() => { const r = tx(fracPiece(rem, D.toNode(v), v), L); return r.startsWith('-') ? ' - ' + r.slice(1) : ' + ' + r; })()}`),
-            text: T_('Степень числителя не меньше степени знаменателя, поэтому сначала делим многочлены уголком: дробь = целая часть + правильная дробь.', 'The numerator has at least the degree of the denominator, so first divide the polynomials: fraction = polynomial part + proper fraction.'),
+            text: msg('calculus.integral.rational.numerator_has_at_least_degree_of'),
             rule: 'division',
         }));
     }
@@ -199,28 +200,27 @@ export function mRational(f, ctx) {
     const simpleDen = factors.length === 1 && factors[0].mult === 1;
     if (!rem.isZero() && !simpleDen) {
         steps.push(step({
-            title: T_('Раскладываем знаменатель', 'Factor the denominator'),
+            title: msg('calculus.integral.rational.factor_denominator'),
             tex: bt((L) => `${tx(D.toNode(v), L)} = ${tx(factoredD, L)}`),
-            text: T_('Находим корни знаменателя и раскладываем его на линейные множители и квадратные трёхчлены без действительных корней.', 'Find the roots of the denominator and split it into linear factors and quadratics without real roots.'),
+            text: msg('calculus.integral.rational.find_roots_of_denominator_and_split'),
             rule: 'factor',
         }));
         steps.push(step({
-            title: T_('Простейшие дроби', 'Partial fractions'),
+            title: msg('calculus.integral.rational.partial_fractions'),
             tex: bt((L) => `${tx(fracPiece(rem, D.toNode(v), v), L)} = ${pieceNodes.map((n, i) => {
                 const s = tx(n, L);
                 return i === 0 ? s : (s.startsWith('-') ? ' - ' + s.slice(1) : ' + ' + s);
             }).join('')}`),
-            text: T_('Раскладываем правильную дробь в сумму простейших: каждому множителю (x − a)ᵏ соответствуют дроби A/(x − a), …, A/(x − a)ᵏ, а квадратному трёхчлену — (Bx + C)/(…). Коэффициенты находим, приводя к общему знаменателю и приравнивая коэффициенты числителей (метод неопределённых коэффициентов).',
-                'Split the proper fraction into partial fractions: a factor (x − a)ᵏ gives A/(x − a), …, A/(x − a)ᵏ, and a quadratic gives (Bx + C)/(…). The coefficients come from bringing everything to the common denominator and matching the numerators (undetermined coefficients).'),
+            text: msg('calculus.integral.rational.split_proper_fraction_into_partial_fractions'),
             rule: 'partial-fractions',
         }));
     }
     if (steps.length === 0 && subs.length === 1) {
         // a single simple fraction: its own step says everything
-        return { F, method: 'rational', step: { ...subs[0], title: T_('Рациональная дробь', 'Rational function'), rule: 'rational' } };
+        return { F, method: 'rational', step: { ...subs[0], title: msg('calculus.integral.rational.rational_function'), rule: 'rational' } };
     }
     steps.push(step({
-        title: T_('Интегрируем каждую дробь', 'Integrate each fraction'),
+        title: msg('calculus.integral.rational.integrate_each_fraction'),
         tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
         rule: 'sum',
         sub: subs,
@@ -229,9 +229,9 @@ export function mRational(f, ctx) {
         F,
         method: 'rational',
         step: step({
-            title: T_('Рациональная дробь', 'Rational function'),
+            title: msg('calculus.integral.rational.rational_function'),
             tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
-            text: T_('Подынтегральная функция — отношение многочленов. Такие интегралы всегда берутся: выделяем целую часть и раскладываем остаток на простейшие дроби.', 'The integrand is a ratio of polynomials. Such integrals can always be done: take out the polynomial part and split the rest into partial fractions.'),
+            text: msg('calculus.integral.rational.integrand_is_ratio_of_polynomials_such'),
             rule: 'rational',
             sub: steps,
         }),
@@ -298,10 +298,9 @@ export function mBiquadratic(f, ctx) {
         const one = add(N1, sign > 0 ? div(r, x2) : neg(div(r, x2)));
         const inner = add([x2, ...(p.isZero() ? [] : [qn(p)]), div(qn(qq), x2)]);
         subs.push(step({
-            title: sign > 0 ? T_(`Замена $t = ${tx(tView, 'ru')}$`, `Substitute $t = ${tx(tView, 'en')}$`) : T_(`Замена $t = ${tx(tView, 'ru')}$`, `Substitute $t = ${tx(tView, 'en')}$`),
+            title: sign > 0 ? msg('calculus.integral.rational.substitute', { tView: (lng) => tx(tView, lng) }) : msg('calculus.integral.rational.substitute', { tView: (lng) => tx(tView, lng) }),
             tex: bt((L) => `\\int \\frac{${tx(numN, L)}}{${tx(denNode, L)}}\\,d${v} = \\int \\frac{${tx(one, L)}}{${tx(inner, L)}}\\,d${v} = \\int \\frac{dt}{${tx(simp(add(pow(T0, N2), m)), L)}} = ${tx(simp(Gt), L)} = ${tx(G, L)}`),
-            text: T_(`Делим числитель и знаменатель на $${v}^2$. Тогда $dt = \\left(${tx(one, 'ru')}\\right)d${v}$, а $${tx(inner, 'ru')} = t^2 ${mv >= 0 ? '+' : '-'} ${tx(simp(sign > 0 || mv >= 0 ? m : neg(m)), 'ru')}$.`,
-                `Divide the numerator and the denominator by $${v}^2$. Then $dt = \\left(${tx(one, 'en')}\\right)d${v}$ and $${tx(inner, 'en')} = t^2 ${mv >= 0 ? '+' : '-'} ${tx(simp(sign > 0 || mv >= 0 ? m : neg(m)), 'en')}$.`),
+            text: msg('calculus.integral.rational.divide_numerator_and_denominator_by_then', { v, one: (lng) => tx(one, lng), inner: (lng) => tx(inner, lng), p: mv >= 0 ? '+' : '-', p2: (lng) => tx(simp(sign > 0 || mv >= 0 ? m : neg(m)), lng) }),
             rule: 'substitution',
         }));
     };
@@ -312,27 +311,26 @@ export function mBiquadratic(f, ctx) {
     const split = add([...(isZ(A) ? [] : [mul(A, div(add(x2, r), denNode))]), ...(isZ(B) ? [] : [mul(B, div(add(x2, neg(r)), denNode))])]);
     const fNorm = div(P.scale(a4.inv()).toNode(v), denNode);
     const steps = [];
-    if (!a4.isOne()) steps.push(step({ title: T_('Выносим старший коэффициент', 'Take out the leading coefficient'), tex: bt((L) => `${tx(f, L)} = ${tx(qn(a4.inv()), L)}\\cdot ${tx(div(P.toNode(v), denNode), L)}`), rule: 'const' }));
+    if (!a4.isOne()) steps.push(step({ title: msg('calculus.integral.rational.take_out_leading_coefficient'), tex: bt((L) => `${tx(f, L)} = ${tx(qn(a4.inv()), L)}\\cdot ${tx(div(P.toNode(v), denNode), L)}`), rule: 'const' }));
     if (subs.length > 1 || !(isZ(B) ? P.coeff(0).isZero() : false)) {
         steps.push(step({
-            title: T_(`Раскладываем числитель по $${v}^2 \\pm ${tx(r, 'ru')}$`, `Split the numerator along $${v}^2 \\pm ${tx(r, 'en')}$`),
+            title: msg('calculus.integral.rational.split_numerator_along', { v, r: (lng) => tx(r, lng) }),
             tex: bt((L) => `${tx(fNorm, L)} = ${tx(split, L)}`),
-            text: T_(`Знаменатель не раскладывается над рациональными числами. Приём: $${tx(denNode, 'ru')}$ делим на $${v}^2$ и замечаем, что $\\left(${v} \\mp \\frac{${tx(r, 'ru')}}{${v}}\\right)^2 = ${v}^2 + \\frac{${tx(qn(qq), 'ru')}}{${v}^2} \\mp ${tx(simp(mul(N2, r)), 'ru')}$, а производные этих скобок — $1 \\pm \\frac{${tx(r, 'ru')}}{${v}^2}$.`,
-                `The denominator does not factor over the rationals. The trick: divide $${tx(denNode, 'en')}$ by $${v}^2$ and note that $\\left(${v} \\mp \\frac{${tx(r, 'en')}}{${v}}\\right)^2 = ${v}^2 + \\frac{${tx(qn(qq), 'en')}}{${v}^2} \\mp ${tx(simp(mul(N2, r)), 'en')}$, and the derivatives of the brackets are $1 \\pm \\frac{${tx(r, 'en')}}{${v}^2}$.`),
+            text: msg('calculus.integral.rational.denominator_does_not_factor_over_rationals', { denNode: (lng) => tx(denNode, lng), v, r: (lng) => tx(r, lng), p: (lng) => tx(qn(qq), lng), p2: (lng) => tx(simp(mul(N2, r)), lng) }),
             rule: 'split',
         }));
     }
     steps.push(...subs);
     steps.push(step({
-        title: T_('Собираем ответ', 'Put it together'),
+        title: msg('calculus.integral.rational.put_it_together'),
         tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)} + C`),
-        text: T_(`Первообразная годится на каждом из промежутков $${v} < 0$ и $${v} > 0$ (в нуле замена не определена).`, `The antiderivative holds on each of $${v} < 0$ and $${v} > 0$ (the substitution is undefined at zero).`),
+        text: msg('calculus.integral.rational.antiderivative_holds_on_each_of_and', { v }),
         rule: 'sum',
     }));
     return {
         F: mul(qn(a4.inv()), F),
         method: 'biquadratic',
-        step: step({ title: T_('Дробь со знаменателем $x^4 + px^2 + q$', 'A fraction over $x^4 + px^2 + q$'), tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)}`), rule: 'biquadratic', sub: steps }),
+        step: step({ title: msg('calculus.integral.rational.fraction_over'), tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)}`), rule: 'biquadratic', sub: steps }),
     };
 }
 
@@ -351,10 +349,8 @@ function pieceStep(node, Fp, pc, v) {
             : T_('∫A/(ax + b)ᵏ dx = −A/(a(k − 1)(ax + b)ᵏ⁻¹) + C.', '∫A/(ax + b)ᵏ dx = −A/(a(k − 1)(ax + b)ᵏ⁻¹) + C.');
     } else {
         text = pc.t.k === 1
-            ? T_('Выделяем в числителе производную знаменателя: (Bx + C) = (B/2a)(2ax + b) + (C − Bb/2a). Первая часть даёт логарифм, вторая после выделения полного квадрата в знаменателе — арктангенс (или логарифм, если у трёхчлена есть действительные корни).',
-                'Split off the derivative of the denominator in the numerator: (Bx + C) = (B/2a)(2ax + b) + (C − Bb/2a). The first part gives a logarithm, the second, after completing the square, an arctangent (or a logarithm if the quadratic has real roots).')
-            : T_('Выделяем производную знаменателя в числителе и полный квадрат в знаменателе; оставшийся интеграл ∫dt/(t² + m²)ᵏ понижаем формулой приведения.',
-                'Split off the derivative of the denominator and complete the square; the remaining ∫dt/(t² + m²)ᵏ is reduced step by step.');
+            ? msg('calculus.integral.rational.split_off_derivative_of_denominator_in')
+            : msg('calculus.integral.rational.split_off_derivative_of_denominator_and');
     }
     let middle = null;
     if (pc.t.poly.degree === 2 && pc.t.k === 1) {
@@ -383,7 +379,7 @@ function pieceStep(node, Fp, pc, v) {
         };
     }
     return step({
-        title: T_('Простейшая дробь', 'Partial fraction'),
+        title: msg('calculus.integral.rational.partial_fraction'),
         tex: bt((L) => `${iTex(node, v, L)} = ${middle ? middle(L) + ' = ' : ''}${tx(trySimp(Fp) ?? Fp, L)}`),
         text,
         rule: 'partial-fraction',

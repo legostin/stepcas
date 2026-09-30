@@ -2,6 +2,7 @@
 
 import { Q, bigIsqrt } from '../../core/rational.js';
 import { L, S, T, babs, big, dec, doubleExact, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- continued fractions
 
@@ -28,11 +29,11 @@ function floorDiv(a, b) {
 export function ntContinuedFraction(x, opts = {}) {
     if (x && typeof x === 'object' && !(x instanceof Q) && 'sqrt' in x) {
         const n = big(x.sqrt);
-        if (n < 0n) throw fail('Корень из отрицательного числа.', 'Square root of a negative number.');
+        if (n < 0n) throw fail(msg('numbers.theory.fractions.square_root_of_negative_number'));
         const a0 = bigIsqrt(n);
         if (a0 * a0 === n) {
             const res = { terms: [a0], a0, period: [], exact: true, periodic: false, tex: `\\sqrt{${tn(n)}} = ${tn(a0)}` };
-            if (opts.steps) res.steps = [S(L('Точный квадрат', 'A perfect square'), res.tex, L('Корень извлекается нацело — цепная дробь из одного числа.', 'The root is an integer, so the continued fraction is a single number.'), { rule: 'answer' })];
+            if (opts.steps) res.steps = [S(msg('numbers.theory.fractions.perfect_square'), res.tex, msg('numbers.theory.fractions.root_is_integer_so_continued_fraction'), { rule: 'answer' })];
             return res;
         }
         const period = [];
@@ -44,31 +45,29 @@ export function ntContinuedFraction(x, opts = {}) {
             a = (a0 + mm) / d;
             period.push(a);
             rows.push({ m: mm, d, a });
-            if (period.length > 200000) throw fail('Слишком длинный период.', 'The period is too long.', 'too-big');
+            if (period.length > 200000) throw fail(msg('numbers.theory.fractions.period_is_too_long'), 'too-big');
         } while (a !== 2n * a0);
         const res = { terms: [a0, ...period], a0, period, exact: true, periodic: true, tex: `\\sqrt{${tn(n)}} = ${cfTex([a0], period)}` };
         if (opts.steps) {
-            const st = [S(L('Целая часть', 'The integer part'), `${tn(a0)}^2 = ${tn(a0 * a0)} < ${tn(n)} < ${tn((a0 + 1n) ** 2n)} = ${tn(a0 + 1n)}^2 \\;\\Rightarrow\\; a_0 = ${tn(a0)}`,
-                L(`√${sn(n)} лежит между ${sn(a0)} и ${sn(a0 + 1n)}, так что его целая часть — ${sn(a0)}.`, `√${sn(n)} lies between ${sn(a0)} and ${sn(a0 + 1n)}, so its integer part is ${sn(a0)}.`), { rule: 'cf-int' })];
+            const st = [S(msg('numbers.theory.fractions.integer_part'), `${tn(a0)}^2 = ${tn(a0 * a0)} < ${tn(n)} < ${tn((a0 + 1n) ** 2n)} = ${tn(a0 + 1n)}^2 \\;\\Rightarrow\\; a_0 = ${tn(a0)}`,
+                msg('numbers.theory.fractions.lies_between_and_so_its_integer', { n: sn(n), a0: sn(a0), p: sn(a0 + 1n) }), { rule: 'cf-int' })];
             const sq = Math.sqrt(Number(n));
             rows.slice(0, 20).forEach((r, i) => {
                 const xv = (sq + Number(r.m)) / Number(r.d);
                 const xt = r.d === 1n ? `\\sqrt{${tn(n)}} + ${tn(r.m)}` : `\\frac{\\sqrt{${tn(n)}} + ${tn(r.m)}}{${tn(r.d)}}`;
-                st.push(S(L(`Элемент a${subscript(i + 1)}`, `Term a${subscript(i + 1)}`),
+                st.push(S(msg('numbers.theory.fractions.term', { p: subscript(i + 1) }),
                     T((l) => `x_{${i + 1}} = ${xt} \\approx ${dec(xv, 3, l, true)} \\;\\Rightarrow\\; a_{${i + 1}} = ${tn(r.a)}`),
-                    i === 0 ? L(`Переворачиваем дробную часть: x₁ = 1/(√${sn(n)} − ${sn(a0)}) и избавляемся от корня в знаменателе, домножив на сопряжённое. Целая часть результата — следующий элемент; дальше повторяем то же с x₂, x₃, …`,
-                        `Flip the fractional part, x₁ = 1/(√${sn(n)} − ${sn(a0)}), and clear the root from the denominator by multiplying by the conjugate. The integer part of the result is the next term; then repeat with x₂, x₃, …`) : null,
+                    i === 0 ? msg('numbers.theory.fractions.flip_fractional_part_x_1_and', { n: sn(n), a0: sn(a0) }) : null,
                     { rule: 'cf-term' }));
             });
-            st.push(S(L('Период', 'The period'), res.tex,
-                L(`Как только элемент стал равен 2a₀ = ${sn(2n * a0)}, всё повторяется. У квадратного корня из неквадрата цепная дробь всегда периодическая (теорема Лагранжа).`,
-                    `Once a term equals 2a₀ = ${sn(2n * a0)}, everything repeats. The continued fraction of the square root of a non-square is always periodic (Lagrange's theorem).`), { rule: 'answer' }));
+            st.push(S(msg('numbers.theory.fractions.period'), res.tex,
+                msg('numbers.theory.fractions.once_term_equals_2a_everything_repeats', { p: sn(2n * a0) }), { rule: 'answer' }));
             res.steps = st;
         }
         return res;
     }
     if (typeof x === 'number' && !Number.isInteger(x)) {
-        if (!Number.isFinite(x)) throw fail('Нужно конечное число.', 'A finite number is required.', 'nan');
+        if (!Number.isFinite(x)) throw fail(msg('numbers.theory.fractions.finite_number_is_required'), 'nan');
         const max = opts.max ?? 40;
         let { num: a, den: b } = doubleExact(x);
         const terms = [];
@@ -97,15 +96,14 @@ export function ntContinuedFraction(x, opts = {}) {
     }
     const res = { terms, exact: true, tex: cfTex(terms) };
     if (opts.steps) {
-        const st = [S(L('Идея', 'The idea'), null,
-            L('Выделяем целую часть, оставшуюся правильную дробь переворачиваем — и повторяем. Это тот же алгоритм Евклида: неполные частные и есть элементы цепной дроби.',
-                "Take the integer part, flip the remaining proper fraction, and repeat. It is Euclid's algorithm in disguise: the partial quotients are the terms of the continued fraction."), { rule: 'cf-idea' })];
+        const st = [S(msg('numbers.theory.fractions.idea'), null,
+            msg('numbers.theory.fractions.take_integer_part_flip_remaining_proper'), { rule: 'cf-idea' })];
         rows.forEach((r, i) => {
-            st.push(S(i === 0 ? L('Целая часть', 'The integer part') : L(`Переворачиваем: ${sn(r.a)}/${sn(r.b)}`, `Flip: ${sn(r.a)}/${sn(r.b)}`),
+            st.push(S(i === 0 ? msg('numbers.theory.fractions.integer_part') : msg('numbers.theory.fractions.flip', { p: sn(r.a), p2: sn(r.b) }),
                 r.r === 0n ? `\\frac{${tn(r.a)}}{${tn(r.b)}} = ${tn(r.q)}` : `\\frac{${tn(r.a)}}{${tn(r.b)}} = ${tn(r.q)} + \\frac{${tn(r.r)}}{${tn(r.b)}}`,
                 null, { rule: 'cf-term' }));
         });
-        st.push(S(L('Ответ', 'Answer'), `\\frac{${tn(num)}}{${tn(den)}} = ${terms.length <= 12 && terms.length > 1 ? nestedTex(terms) + ' = ' : ''}${cfTex(terms)}`, null, { rule: 'answer' }));
+        st.push(S(msg('numbers.theory.fractions.answer'), `\\frac{${tn(num)}}{${tn(den)}} = ${terms.length <= 12 && terms.length > 1 ? nestedTex(terms) + ' = ' : ''}${cfTex(terms)}`, null, { rule: 'answer' }));
         res.steps = st;
     }
     return res;
@@ -139,7 +137,7 @@ export function ntConvergents(cf, opts = {}) {
 /** The best rational approximation p/q of x with 1 ≤ q ≤ maxDen (x: number or rational) → {p, q}. */
 export function ntBestApprox(x, maxDen) {
     const N = big(maxDen);
-    if (N < 1n) throw fail('Знаменатель должен быть не меньше 1.', 'The denominator bound must be at least 1.');
+    if (N < 1n) throw fail(msg('numbers.theory.fractions.denominator_bound_must_be_at_least'));
     const isFloat = typeof x === 'number' && !Number.isInteger(x);
     const cf = ntContinuedFraction(x, isFloat ? { max: 60 } : {});
     const exact = isFloat ? null : ratOf(x);
@@ -166,7 +164,7 @@ export function ntBestApprox(x, maxDen) {
 /** Greedy (Fibonacci–Sylvester) Egyptian fraction of 0 < x ≤ 1 → denominators (BigInt[]). */
 export function ntEgyptian(x, opts = {}) {
     let { num, den } = ratOf(x);
-    if (num <= 0n || num > den) throw fail('Нужна дробь больше 0 и не больше 1.', 'A fraction greater than 0 and at most 1 is required.', 'range');
+    if (num <= 0n || num > den) throw fail(msg('numbers.theory.fractions.fraction_greater_than_0_and_at'), 'range');
     const r0 = { num, den };
     const out = [];
     const st = [];
@@ -176,19 +174,18 @@ export function ntEgyptian(x, opts = {}) {
         const nn = num * n - den, nd = den * n;
         const g = gcdCore(nn, nd) || 1n;
         if (opts.steps) {
-            st.push(S(L(`Берём 1/${sn(n)}`, `Take 1/${sn(n)}`),
+            st.push(S(msg('numbers.theory.fractions.take_1', { n: sn(n) }),
                 `\\frac{${tn(num)}}{${tn(den)}} - \\frac{1}{${tn(n)}} = ${nn === 0n ? '0' : `\\frac{${tn(nn / g)}}{${tn(nd / g)}}`}`,
-                num === 1n ? L('Осталась дробь с числителем 1 — она и есть последнее слагаемое.', 'What is left has numerator 1: it is the last term.')
-                    : L(`Самая большая дробь вида 1/n, не превосходящая ${sn(num)}/${sn(den)}: n = ⌈${sn(den)} / ${sn(num)}⌉ = ${sn(n)}. Вычитаем её и повторяем с остатком.`,
-                        `The largest fraction 1/n not exceeding ${sn(num)}/${sn(den)} has n = ⌈${sn(den)} / ${sn(num)}⌉ = ${sn(n)}. Subtract it and repeat with the rest.`),
+                num === 1n ? msg('numbers.theory.fractions.what_is_left_has_numerator_1')
+                    : msg('numbers.theory.fractions.largest_fraction_1_n_not_exceeding', { num: sn(num), den: sn(den), n: sn(n) }),
                 { rule: 'greedy' }));
         }
         num = nn / g;
         den = nd / g;
-        if (out.length > 40) throw fail('Слишком много слагаемых.', 'Too many terms.', 'too-big');
+        if (out.length > 40) throw fail(msg('numbers.theory.fractions.too_many_terms'), 'too-big');
     }
     if (!opts.steps) return out;
-    st.push(S(L('Ответ', 'Answer'), `\\frac{${tn(r0.num)}}{${tn(r0.den)}} = ${out.map((n) => `\\frac{1}{${tn(n)}}`).join(' + ')}`,
-        L('Жадный алгоритм Фибоначчи всегда заканчивается: числитель остатка каждый раз строго уменьшается.', "Fibonacci's greedy algorithm always stops: the numerator of the remainder strictly decreases every time."), { rule: 'answer' }));
+    st.push(S(msg('numbers.theory.fractions.answer'), `\\frac{${tn(r0.num)}}{${tn(r0.den)}} = ${out.map((n) => `\\frac{1}{${tn(n)}}`).join(' + ')}`,
+        msg('numbers.theory.fractions.fibonacci_s_greedy_algorithm_always_stops'), { rule: 'answer' }));
     return { value: out, steps: st };
 }

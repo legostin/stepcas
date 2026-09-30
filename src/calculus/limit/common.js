@@ -6,6 +6,7 @@ import { parse } from '../../core/parse.js';
 import { simplify } from '../../core/simplify.js';
 import { calcTex } from '../derivative/index.js';
 import { evaluate } from '../../core/evaluate.js';
+import { msg } from '../../i18n/index.js';
 
 export const N0 = num(0);
 export const N1 = num(1);
@@ -70,7 +71,7 @@ export function makePoint(aNode, side) {
     if (isConst(s) && s.name === 'inf') return { a: null, x: Infinity, side: 'left' };
     if (s.type === 'mul' && s.args.length === 2 && isNum(s.args[0]) && s.args[0].value.isNeg() && isConst(s.args[1]) && s.args[1].name === 'inf') return { a: null, x: -Infinity, side: 'right' };
     const x = evaluate(s);
-    if (!Number.isFinite(x)) throw new MathError({ ru: 'Точка должна быть числом или ±∞', en: 'The point must be a number or ±∞' }, null, null, 'range');
+    if (!Number.isFinite(x)) throw new MathError(msg('calculus.limit.common.point_must_be_number_or'), null, null, 'range');
     return { a: s, x, side };
 }
 

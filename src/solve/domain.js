@@ -10,6 +10,7 @@ import { complexApproxNode } from './polynomial.js';
 import { approxComplexTex } from './roots.js';
 import { signSet } from './signs.js';
 import { ZZ, basicTrig, mergeFamilies, mkFamily, periodN, plusTex } from './trig.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- ОДЗ (the domain of an equation)
 
@@ -100,15 +101,15 @@ export function condTex(c, lang) {
 }
 
 const WHY = {
-    den: T('знаменатель не равен нулю', 'a denominator is not zero'),
-    root: T('под корнем чётной степени — неотрицательное число', 'an even root needs a non-negative radicand'),
-    log: T('под логарифмом — положительное число', 'a logarithm needs a positive argument'),
-    logbase: T('основание логарифма положительно и не равно 1', 'the base of a logarithm is positive and not 1'),
-    powbase: T('основание степени с переменным показателем положительно', 'a power with a variable exponent needs a positive base'),
-    powfrac: T('степень с дробным показателем определена для неотрицательного основания', 'a power with a fractional exponent needs a non-negative base'),
-    tan: T('тангенс определён, когда косинус не равен нулю', 'the tangent needs a non-zero cosine'),
-    cot: T('котангенс определён, когда синус не равен нулю', 'the cotangent needs a non-zero sine'),
-    arc: T('аргумент арксинуса и арккосинуса лежит в $[-1; 1]$', 'arcsin and arccos need an argument in $[-1, 1]$'),
+    den: msg('solve.domain.denominator_is_not_zero'),
+    root: msg('solve.domain.even_root_needs_non_negative_radicand'),
+    log: msg('solve.domain.logarithm_needs_positive_argument'),
+    logbase: msg('solve.domain.base_of_logarithm_is_positive_and'),
+    powbase: msg('solve.domain.power_with_variable_exponent_needs_positive'),
+    powfrac: msg('solve.domain.power_with_fractional_exponent_needs_non'),
+    tan: msg('solve.domain.tangent_needs_non_zero_cosine'),
+    cot: msg('solve.domain.cotangent_needs_non_zero_sine'),
+    arc: msg('solve.domain.arcsin_and_arccos_need_argument_in'),
 };
 
 /** Does the condition hold at the root {node, approx}? */
@@ -264,13 +265,13 @@ export function checkRel(r, v, root, opts = {}) {
         ? `${v} \\approx ${typeof root.approx === 'number' ? approxTex(root.approx, lang) : approxComplexTex(root.approx, lang)}`
         : `${v} = ${tex(val, lang)}`);
     const text = ok
-        ? T('Верное равенство — корень подходит.', 'A true equality: the root fits.')
+        ? msg('solve.domain.true_equality_root_fits')
         : reason === 'odz'
-            ? T('Значение не входит в ОДЗ — выражение не имеет смысла, это посторонний корень.', 'The value is outside the domain, the expression makes no sense there: an extraneous root.')
+            ? msg('solve.domain.value_is_outside_domain_expression_makes')
             : reason === 'undefined'
-                ? T('При этом значении выражение не имеет смысла — посторонний корень.', 'The expression is not defined at this value: an extraneous root.')
-                : T('Равенство неверно — это посторонний корень.', 'The equality is false: an extraneous root.');
-    const ineqText = r.op !== '=' ? (ok ? T('Неравенство верно.', 'The inequality holds.') : T('Неравенство неверно.', 'The inequality fails.')) : text;
+                ? msg('solve.domain.expression_is_not_defined_at_this')
+                : msg('solve.domain.equality_is_false_extraneous_root');
+    const ineqText = r.op !== '=' ? (ok ? msg('solve.domain.inequality_holds') : msg('solve.domain.inequality_fails')) : text;
     return {
         ok,
         defined: defined && inDomain,
@@ -282,7 +283,7 @@ export function checkRel(r, v, root, opts = {}) {
         rhsApprox: rr,
         tex: texOut,
         text: ineqText,
-        steps: [S(T(`Подставляем $${valTex('ru')}$`, `Substitute $${valTex('en')}$`), { tex: texOut, text: ineqText })],
+        steps: [S(msg('solve.domain.substitute', { p: (lng) => valTex(lng) }), { tex: texOut, text: ineqText })],
     };
 }
 
@@ -307,7 +308,7 @@ function asRelation(input, v) {
  */
 export function checkRoot(input, v = 'x', value, opts = {}) {
     const r = asRelation(input, v);
-    if (r.type !== 'rel') throw new MathError(T('Нужно уравнение или неравенство', 'An equation or an inequality is needed'), null, null, 'not-rel');
+    if (r.type !== 'rel') throw new MathError(msg('solve.domain.equation_or_inequality_is_needed'), null, null, 'not-rel');
     if (typeof value === 'number' && Number.isFinite(value) && !Number.isInteger(value) && Number(value.toPrecision(12)) !== value) {
         // a double like 1.000000000272059 (a numeric root) is an approximation: checked numerically, shown rounded
         return checkRel(r, v, { node: approxNode(value, 16), approx: value, approxOnly: true }, opts);
@@ -351,7 +352,7 @@ export function odzInfo(conds, v) {
         return t;
     };
     const tx = byLang(texOf);
-    const text = T(`Условия: ${whys.map((w) => WHY[w].ru).join('; ')}.`, `Conditions: ${whys.map((w) => WHY[w].en).join('; ')}.`);
+    const text = msg('solve.domain.conditions', { p: (lng) => whys.map((w) => WHY[w][lng]).join('; ') });
     return {
         conds,
         set: partial && set.isAll() ? null : set,
@@ -359,7 +360,7 @@ export function odzInfo(conds, v) {
         exclusions: excl,
         tex: tx,
         text,
-        step: S(T('Область допустимых значений (ОДЗ)', 'The domain (admissible values)'), { tex: tx, text }),
+        step: S(msg('solve.domain.domain_admissible_values'), { tex: tx, text }),
     };
 }
 

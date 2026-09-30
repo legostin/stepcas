@@ -9,6 +9,7 @@ import { reject } from './equation.js';
 import { IntervalSet } from './intervals.js';
 import { multOf, nodeQuadRoots, partStep, polyTex, solveAnyPoly } from './polynomial.js';
 import { hasI, mergeRoots, mkRoot, mkRootC } from './roots.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- rational equations
 
@@ -59,9 +60,9 @@ export function solveRational(lhs, rhs, E, ctx) {
     N = N.scale(k);
     const steps = [];
     const Lnode = factoredNode(Lp, v);
-    steps.push(S(T('Переносим всё влево и приводим к общему знаменателю', 'Move everything to the left and bring to a common denominator'), {
+    steps.push(S(msg('solve.rational.move_everything_to_left_and_bring'), {
         tex: byLang((l) => `\\frac{${polyTex(N, v, l)}}{${tex(Lnode, l)}} = 0`),
-        text: T('Дробь равна нулю, когда числитель равен нулю, а знаменатель — нет.', 'A fraction is zero when its numerator is zero and its denominator is not.'),
+        text: msg('solve.rational.fraction_is_zero_when_its_numerator'),
     }));
     const poles = Lp.degree >= 1 ? solveAnyPoly(Lp, { v, domain: 'real' }).roots : [];
     const res = N.degree >= 1 ? solveAnyPoly(N, { ...ctx }) : { kind: N.isZero() ? 'all' : 'none', roots: [], cplx: [], steps: [] };
@@ -73,18 +74,18 @@ export function solveRational(lhs, rhs, E, ctx) {
     if (bad.length) {
         reject(ctx, bad, 'pole');
         roots = roots.filter((r) => !bad.includes(r));
-        steps.push(S(T('Исключаем корни, при которых знаменатель равен нулю', 'Drop the roots that make the denominator zero'), {
+        steps.push(S(msg('solve.rational.drop_roots_that_make_denominator_zero'), {
             tex: byLang((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
-            text: T('При этих значениях знаменатель обращается в ноль — дробь не имеет смысла, поэтому это не корни.', 'At these values the denominator is zero and the fraction makes no sense, so they are not roots.'),
+            text: msg('solve.rational.at_these_values_denominator_is_zero'),
         }));
     }
     if (N.degree < 1) {
         if (N.isZero()) {
             const set = IntervalSet.all().minus(IntervalSet.points(poles.map((p) => p.node)));
-            steps.push(S(T('Числитель тождественно равен нулю', 'The numerator is identically zero'), { text: T('Равенство верно при всех допустимых значениях переменной.', 'The equality holds for all admissible values.') }));
+            steps.push(S(msg('solve.rational.numerator_is_identically_zero'), { text: msg('solve.rational.equality_holds_for_all_admissible_values') }));
             return { kind: 'all', roots: [], set, steps, type: 'rational' };
         }
-        steps.push(S(T('Числитель — ненулевое число', 'The numerator is a non-zero number'), { text: T('Дробь с ненулевым числителем нулю не равна — корней нет.', 'A fraction with a non-zero numerator is never zero: no roots.') }));
+        steps.push(S(msg('solve.rational.numerator_is_non_zero_number'), { text: msg('solve.rational.fraction_with_non_zero_numerator_is') }));
         return { kind: 'none', roots: [], steps, type: 'rational' };
     }
     return { kind: roots.length ? 'roots' : 'none', roots, complexRoots: mergeRoots(res.cplx ?? []), steps, numeric: !!res.numeric, type: 'rational' };
@@ -107,20 +108,20 @@ export function solveNodePoly(E, ctx) {
     const c2 = ct.get(2) ?? N0;
     const c1 = ct.get(1) ?? N0;
     const c0 = ct.get(0) ?? N0;
-    const steps = [S(T('Переносим всё в левую часть', 'Move everything to the left'), { tex: byLang((l) => `${tex(E, l)} = 0`) })];
+    const steps = [S(msg('solve.rational.move_everything_to_left'), { tex: byLang((l) => `${tex(E, l)} = 0`) })];
     const cx = [c0, c1, c2].some(hasI);
     if (!ct.has(2)) {
         if (!ct.has(1)) return null;
         const q = div(neg(c0), c1);
         const r = simpOr(q, cx ? { complex: true } : undefined);
         const shown = cx && nodeKey(r) !== nodeKey(simpOr(q)) ? simpOr(q) : null;
-        steps.push(S(T(`Выражаем $${v}$`, `Solve for $${v}$`), {
+        steps.push(S(msg('solve.rational.solve_for', { v }), {
             tex: byLang((l) => `${v} = ${shown ? `${tex(shown, l)} = ` : ''}${tex(r, l)}`),
-            text: shown ? T('Чтобы разделить на комплексное число, умножаем числитель и знаменатель на сопряжённое к знаменателю.', 'To divide by a complex number, multiply the numerator and the denominator by the conjugate of the denominator.') : undefined,
+            text: shown ? msg('solve.rational.to_divide_by_complex_number_multiply') : undefined,
         }));
         const root = cx ? mkRootC(r) : mkRoot(r);
         if (root.complex && ctx.domain !== 'complex') {
-            steps.push(S(T('Корень не действительный — действительных корней нет', 'The root is not real: no real roots')));
+            steps.push(S(msg('solve.rational.root_is_not_real_no_real')));
             return { kind: 'none', roots: [], complexRoots: [root], steps, type: 'linear' };
         }
         return { kind: 'roots', roots: [root], steps, type: 'linear' };

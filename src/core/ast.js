@@ -11,6 +11,7 @@
 //   {type:'list', items}
 
 import { Q, MathError } from './rational.js';
+import { msg } from '../i18n/index.js';
 
 /** Names of the built-in constants (π, Euler's e, the imaginary unit, infinity). */
 export const CONSTANT_NAMES = new Set(['pi', 'e', 'i', 'inf']);
@@ -83,8 +84,8 @@ export function pow(base, exp) {
 export function fn(name, ...args) {
     const a = argList(args);
     const arity = FUNCTION_NAMES.get(name);
-    if (arity === undefined) throw new MathError({ ru: `Неизвестная функция «${name}»`, en: `Unknown function "${name}"` }, null, null, 'unknown-fn');
-    if (a.length !== arity) throw new MathError({ ru: `У функции ${name} должно быть аргументов: ${arity}`, en: `${name} takes ${arity} argument(s)` }, null, null, 'arity');
+    if (arity === undefined) throw new MathError(msg('core.ast.unknown_function', { name }), null, null, 'unknown-fn');
+    if (a.length !== arity) throw new MathError(msg('core.ast.takes_argument_s', { name, arity }), null, null, 'arity');
     return freeze({ type: 'fn', name, args: freeze(a) });
 }
 

@@ -8,6 +8,7 @@ import { step } from '../../core/steps.js';
 import { calcTex } from '../derivative/index.js';
 import { HALF, N1, N2, T_, bt, iTex, isNum, lnAbs, q, trySimp, tx } from './common.js';
 import { qn, solveQ } from './rational.js';
+import { msg } from '../../i18n/index.js';
 
 // ---- square roots of quadratics
 
@@ -56,10 +57,8 @@ export function mQuadRoot(f, ctx) {
             }
         }
         text = a.isPos()
-            ? T_('Под корнем квадратный трёхчлен с положительным старшим коэффициентом. Выделяем полный квадрат и пользуемся «длинным логарифмом»: ∫dt/√(t² + k) = ln|t + √(t² + k)| + C. Если в числителе есть x, сначала отделяем производную подкоренного выражения.',
-                'A quadratic with a positive leading coefficient under the root. Complete the square and use ∫dt/√(t² + k) = ln|t + √(t² + k)| + C. If x is in the numerator, first split off the derivative of the radicand.')
-            : T_('Под корнем квадратный трёхчлен с отрицательным старшим коэффициентом. Выделяем полный квадрат: получается ∫dt/√(m² − t²) = arcsin(t/m) + C. Если в числителе есть x, сначала отделяем производную подкоренного выражения.',
-                'A quadratic with a negative leading coefficient under the root. Completing the square gives ∫dt/√(m² − t²) = arcsin(t/m) + C. If x is in the numerator, first split off the derivative of the radicand.');
+            ? msg('calculus.integral.radicals.quadratic_with_positive_leading_coefficient_under')
+            : msg('calculus.integral.radicals.quadratic_with_negative_leading_coefficient_under');
     } else {
         // ∫(Bx + C)√Q = (B/(3a)) Q^{3/2} + N∫√Q
         if (!M.isZero()) parts.push(mul(qn(B.div(a.mul(3))), pow(radBase, num(q(3, 2)))));
@@ -77,8 +76,7 @@ export function mQuadRoot(f, ctx) {
                 parts.push(mul(qn(Nn), add(half, mul(qn(m2.div(2)), sa, fn('asin', div(tShift, pow(qn(m2), HALF)))))));
             }
         }
-        text = T_('Корень из квадратного трёхчлена: выделяем полный квадрат и пользуемся формулами ∫√(m² − t²)dt = (t/2)√(m² − t²) + (m²/2)arcsin(t/m) + C и ∫√(t² + k)dt = (t/2)√(t² + k) + (k/2)ln|t + √(t² + k)| + C.',
-            'The root of a quadratic: complete the square and use ∫√(m² − t²)dt = (t/2)√(m² − t²) + (m²/2)arcsin(t/m) + C and ∫√(t² + k)dt = (t/2)√(t² + k) + (k/2)ln|t + √(t² + k)| + C.');
+        text = msg('calculus.integral.radicals.root_of_quadratic_complete_square_and');
     }
     if (!parts.length) return null;
     const F = add(parts);
@@ -87,7 +85,7 @@ export function mQuadRoot(f, ctx) {
         F,
         method: 'quadratic-root',
         step: step({
-            title: T_('Квадратный трёхчлен под корнем', 'A quadratic under the root'),
+            title: msg('calculus.integral.radicals.quadratic_under_root'),
             tex: bt((L) => `${complete ? complete(L) + ',\\quad ' : ''}${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text,
             rule: 'quadratic-root',
@@ -171,10 +169,9 @@ export function mRadicalPoly(f, ctx) {
         F,
         method: 'radical-polynomial',
         step: step({
-            title: T_('Метод неопределённых коэффициентов', 'Undetermined coefficients'),
+            title: msg('calculus.integral.radicals.undetermined_coefficients'),
             tex: bt((L) => `${iTex(f, v, L)} = \\left(${tx(R.toNode(v), L)}\\right)\\sqrt{${tx(rad.base, L)}}${lam.isZero() ? '' : ` ${lam.isNeg() ? '-' : '+'} ${lam.abs().isOne() ? '' : qn(lam.abs()).value.toTex(L)}\\int \\frac{d${v}}{\\sqrt{${tx(rad.base, L)}}}`} = ${tx(trySimp(F) ?? F, L)}`),
-            text: T_(`Многочлен, делённый на корень из квадратного трёхчлена: ∫Pₙ(x)/√Q dx = Rₙ₋₁(x)·√Q + λ∫dx/√Q. Коэффициенты многочлена R степени ${n - 1} и число λ находим, продифференцировав обе части и приравняв коэффициенты при одинаковых степенях x.`,
-                `A polynomial over the root of a quadratic: ∫Pₙ(x)/√Q dx = Rₙ₋₁(x)·√Q + λ∫dx/√Q. The coefficients of R (degree ${n - 1}) and λ come from differentiating both sides and matching the coefficients of equal powers of x.`),
+            text: msg('calculus.integral.radicals.polynomial_over_root_of_quadratic_p', { p: n - 1 }),
             rule: 'radical-polynomial',
         }),
     };

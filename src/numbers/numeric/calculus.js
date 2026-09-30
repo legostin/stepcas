@@ -1,6 +1,7 @@
 // numeric/calculus — numerical derivatives and integrals (adaptive, with error estimates), Riemann sums.
 
 import { EPS, evalSafe, fail, fin, needFn, needInterval } from './common.js';
+import { msg } from '../../i18n/index.js';
 /* eslint-disable no-loss-of-precision -- quadrature nodes and weights are quoted to their published precision */
 
 // ---------------------------------------------------------------- calculus
@@ -20,7 +21,7 @@ export function numDerivative(f, x, opts = {}) {
     needFn(f);
     const order = opts.order ?? 1;
     const D = STENCIL[order];
-    if (!D) throw fail('Порядок производной — от 1 до 4.', 'The derivative order must be 1–4.', 'range');
+    if (!D) throw fail(msg('numbers.numeric.calculus.derivative_order_must_be_1_4'), 'range');
     const g = (t) => evalSafe(f, t);
     let h = opts.h ?? 0.1 * Math.max(1, Math.abs(x)) * (order > 2 ? 2 : 1);
     // near the edge of the domain (log at 0.001) shrink the step until the stencil fits
@@ -159,7 +160,7 @@ export function numIntegrate(f, a, b, opts = {}) {
     needFn(f);
     const tol = opts.tol ?? 1e-10;
     const maxIntervals = opts.maxIntervals ?? 2000;
-    if (Number.isNaN(a) || Number.isNaN(b)) throw fail('Пределы интегрирования — числа.', 'The limits must be numbers.', 'range');
+    if (Number.isNaN(a) || Number.isNaN(b)) throw fail(msg('numbers.numeric.calculus.limits_must_be_numbers'), 'range');
     const pack = (r) => (opts.info ? r : r.value);
     if (a === b) return pack({ value: 0, error: 0, method: 'trivial', evaluations: 0, intervals: [], ...(opts.check ? { ok: true, divergent: false, reason: null, estimate: 0 } : {}) });
     if (a > b) {
@@ -486,7 +487,7 @@ export function numRiemann(f, a, b, n, method = 'left') {
             else if (method === 'right') piece = { x0, x1, h: F(x1) };
             else if (method === 'mid') piece = { x0, x1, h: F((x0 + x1) / 2) };
             else if (method === 'trapezoid') { const y0 = F(x0), y1 = F(x1); piece = { x0, x1, h: (y0 + y1) / 2, y0, y1 }; }
-            else throw fail(`Неизвестный метод «${method}».`, `Unknown method "${method}".`, 'range');
+            else throw fail(msg('numbers.numeric.calculus.unknown_method', { method }), 'range');
             value += piece.h * (x1 - x0);
             pieces.push(piece);
         }

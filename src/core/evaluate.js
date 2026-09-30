@@ -8,8 +8,9 @@
 import { Q, MathError } from './rational.js';
 import { isConst, numValue, nodeChildren } from './ast.js';
 import { Complex } from './complex.js';
+import { msg } from '../i18n/index.js';
 
-const unknownVar = (name) => new MathError({ ru: `Не задано значение переменной ${name}`, en: `No value for the variable ${name}` }, null, null, 'unbound');
+const unknownVar = (name) => new MathError(msg('core.evaluate.no_value_for_variable', { name }), null, null, 'unbound');
 
 function envNumber(v, name) {
     if (typeof v === 'number') return v;
@@ -175,7 +176,7 @@ function evalReal(n, env) {
                 return k && k.isInt() ? rootN(x, k.toNumber()) : rootN(x, evalReal(n.args[1], env));
             }
             const f = REAL_FN[n.name];
-            if (!f) throw new MathError({ ru: `Не умею вычислять ${n.name}`, en: `Cannot evaluate ${n.name}` }, null, null, 'unsupported');
+            if (!f) throw new MathError(msg('core.evaluate.cannot_evaluate', { name: n.name }), null, null, 'unsupported');
             return f(evalReal(n.args[0], env));
         }
         case 'rel':
@@ -283,7 +284,7 @@ function evalComplex(n, env) {
                     return z.isReal() ? new Complex(REAL_FN[n.name](z.re), 0) : C_NAN;
                 default: {
                     const m = z[n.name];
-                    if (typeof m !== 'function') throw new MathError({ ru: `Не умею вычислять ${n.name}`, en: `Cannot evaluate ${n.name}` }, null, null, 'unsupported');
+                    if (typeof m !== 'function') throw new MathError(msg('core.evaluate.cannot_evaluate', { name: n.name }), null, null, 'unsupported');
                     return m.call(z);
                 }
             }
@@ -415,14 +416,14 @@ export function compile(node, vars = ['x']) {
                     return (a) => rootN(x(a), k(a));
                 }
                 const f = REAL_FN[n.name];
-                if (!f) throw new MathError({ ru: `Не умею вычислять ${n.name}`, en: `Cannot evaluate ${n.name}` }, null, null, 'unsupported');
+                if (!f) throw new MathError(msg('core.evaluate.cannot_evaluate', { name: n.name }), null, null, 'unsupported');
                 const g = comp(n.args[0]);
                 return (a) => f(g(a));
             }
             case 'rel':
             case 'chain':
             case 'list':
-                throw new MathError({ ru: 'Нужна формула, а не уравнение или список', en: 'A formula is needed, not an equation or a list' }, null, null, 'not-expr');
+                throw new MathError(msg('core.evaluate.formula_is_needed_not_equation_or'), null, null, 'not-expr');
             default:
                 throw new TypeError(`compile: unknown node ${n?.type}`);
         }

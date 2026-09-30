@@ -5,6 +5,7 @@ import { N0, N1, S, T, approxOf, byLang, exactZero, expd, isolated, simpOr, tex 
 import { reject, subSolve } from './equation.js';
 import { pushPart, sumNode } from './polynomial.js';
 import { termsOfSum } from './rational.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- radicals (irrational equations)
 
@@ -46,26 +47,25 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const f = R.base;
     const steps = [];
     const eqRT = byLang((l) => `${tex(R, l)} = ${tex(g, l)}`);
-    if (!isolated(lhs, rhs, R, g)) steps.push(S(T('Уединяем корень', 'Isolate the root'), { tex: eqRT }));
+    if (!isolated(lhs, rhs, R, g)) steps.push(S(msg('solve.radical.isolate_root'), { tex: eqRT }));
     const even = q % 2n === 0n;
     const gConst = !containsVar(g, v);
     if (even && gConst && approxOf(g) < 0 && exactZero(g) !== true) {
-        steps.push(S(T('Корень чётной степени не бывает отрицательным — корней нет', 'An even root is never negative: no roots')));
+        steps.push(S(msg('solve.radical.even_root_is_never_negative_no')));
         return { kind: 'none', roots: [], steps, type: 'radical' };
     }
     const qn2 = Number(q);
     const lhs2 = expd(p === 1n ? f : pow(f, num(p))) ?? f;
     const rhs2 = expd(pow(g, num(q))) ?? pow(g, num(q));
     const gNonNeg = !gConst && hasRadical(g, v) && termsOfSum(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
-    const powWord = qn2 === 2 ? T('в квадрат', 'squared') : qn2 === 3 ? T('в куб', 'cubed') : T(`в степень ${qn2}`, `to the power ${qn2}`);
-    steps.push(S(T(`Возводим обе части ${powWord.ru}`, `Raise both sides: ${powWord.en}`), {
+    const powWord = qn2 === 2 ? msg('solve.radical.squared') : qn2 === 3 ? msg('solve.radical.cubed') : msg('solve.radical.to_power', { qn2 });
+    steps.push(S(msg('solve.radical.raise_both_sides', { p: (lng) => powWord[lng] }), {
         tex: byLang((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
         text: even
             ? (gConst || gNonNeg
-                ? T('При возведении в чётную степень могут появиться посторонние корни — все найденные корни проверим подстановкой.', 'Raising to an even power may add extraneous roots, so we will check every root by substitution.')
-                : T(`Корень чётной степени неотрицателен, поэтому нужно $${tex(g)} \\ge 0$. Возведение в квадрат может добавить посторонние корни (оно решает сразу и $${tex(R)} = ${tex(g)}$, и $${tex(R)} = -(${tex(g)})$) — их отсеем.`,
-                    `An even root is non-negative, so we need $${tex(g, 'en')} \\ge 0$. Squaring may add extraneous roots (it solves both $${tex(R, 'en')} = ${tex(g, 'en')}$ and $${tex(R, 'en')} = -(${tex(g, 'en')})$), and we will weed them out.`))
-            : T('Нечётная степень — преобразование равносильное, посторонних корней не появится.', 'An odd power is an equivalent transformation: no extraneous roots appear.'),
+                ? msg('solve.radical.raising_to_even_power_may_add')
+                : msg('solve.radical.even_root_is_non_negative_so', { g: (lng) => tex(g, lng), R: (lng) => tex(R, lng) }))
+            : msg('solve.radical.odd_power_is_equivalent_transformation_no'),
     }));
     const sub = subSolve(lhs2, rhs2, ctx);
     if (sub.kind === 'unsupported' || sub.periodic) return null;
@@ -82,9 +82,9 @@ export function solveRadical(lhs, rhs, E, ctx) {
         }
         if (bad.length) {
             reject(ctx, bad, 'sign');
-            steps.push(S(T(`Отбрасываем корни, при которых $${tex(g)} < 0$`, `Drop the roots where $${tex(g, 'en')} < 0$`), {
+            steps.push(S(msg('solve.radical.drop_roots_where', { g: (lng) => tex(g, lng) }), {
                 tex: byLang((l) => bad.map((r) => `${v} = ${tex(r.node, l)}:\\ ${tex(substitute(g, { [v]: r.node }), l)} = ${tex(simpOr(substitute(g, { [v]: r.node })), l)} < 0`).join(';\\ ')),
-                text: T('Это посторонние корни: корень чётной степени не может равняться отрицательному числу.', 'These are extraneous: an even root cannot equal a negative number.'),
+                text: msg('solve.radical.these_are_extraneous_even_root_cannot'),
             }));
         }
         roots = good;

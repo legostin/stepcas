@@ -19,10 +19,11 @@ import { hasRadical, solveRadical } from './radical.js';
 import { solveNodePoly, solveRational } from './rational.js';
 import { answerOf, hasI, rootsOnInterval, rootsTex, sameRoot, toIntervalOpt } from './roots.js';
 import { TRIG_FN, familiesToRoots, familyTex, mergeFamilies, trigCore } from './trig.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric fallback
 
-const rangeTex = (a, b, lang) => `[${a};${lang === 'ru' ? '\\,' : '\\ '}${b}]`.replace(';\\ ', ',\\ ');
+const rangeTex = (a, b, lang) => `[${a}${notation(lang).intervalTex}${b}]`;
 
 function solveNumeric(E, ctx) {
     const v = ctx.v;
@@ -30,7 +31,7 @@ function solveNumeric(E, ctx) {
     try {
         f = compile(E, [v]);
     } catch {
-        return { kind: 'unsupported', roots: [], steps: [], reason: T('Не умею решать такое уравнение.', 'I cannot solve this kind of equation.') };
+        return { kind: 'unsupported', roots: [], steps: [], reason: msg('solve.equation.i_cannot_solve_this_kind_of') };
     }
     const trig = nodeSome(E, (n) => n.type === 'fn' && TRIG_FN.includes(n.name) && containsVar(n, v));
     let range = trig ? [-2 * Math.PI, 2 * Math.PI] : [-10, 10];
@@ -58,12 +59,11 @@ function solveNumeric(E, ctx) {
         maxRun = Math.max(maxRun, run);
     }
     if (maxRun >= 3) {
-        return UNSUP(T('Похоже, равенство выполняется на целых промежутках — точным методом такое уравнение здесь не решается.', 'The equality seems to hold on whole intervals; this equation is not solved exactly here.'));
+        return UNSUP(msg('solve.equation.equality_seems_to_hold_on_whole'));
     }
     const roots = rs.filter((r) => Number.isFinite(r.x)).map((r) => ({ node: approxNode(r.x), approx: r.x, mult: r.multiplicity ?? 1, approxOnly: true }));
-    const steps = [S(T('Точного метода для такого уравнения нет — ищем корни численно', 'No exact method applies here, so we look for the roots numerically'), {
-        text: T(`Рассматриваем $f(${v})$ = левая часть − правая часть на отрезке $${pick(rangeT, 'ru')}$: ищем, где $f$ меняет знак или касается нуля, и уточняем корни. Ответ приближённый${trig ? '; уравнение периодическое, поэтому корни за пределами отрезка тоже могут быть' : ''}.`,
-            `We take $f(${v})$ = left side − right side on $${pick(rangeT, 'en')}$, look for sign changes and touching points, and refine the roots. The answer is approximate${trig ? '; the equation is periodic, so there may be roots outside the interval too' : ''}.`),
+    const steps = [S(msg('solve.equation.no_exact_method_applies_here_so'), {
+        text: msg('solve.equation.we_take_left_side_right_side', { v, rangeT: (lng) => pick(rangeT, lng), p: (lng) => trig ? msg('solve.equation.equation_is_periodic_so_there_may').in(lng) : '' }),
         tex: roots.length ? byLang((l) => rootsTex(roots, v, l)) : undefined,
     })];
     if (!roots.length) {
@@ -74,7 +74,7 @@ function solveNumeric(E, ctx) {
             numeric: true,
             range,
             rangeTex: rangeT,
-            reason: T(`Точного метода нет, а на отрезке $${pick(rangeT, 'ru')}$ корней не нашлось.`, `There is no exact method, and no roots were found on $${pick(rangeT, 'en')}$.`),
+            reason: msg('solve.equation.there_is_no_exact_method_and', { rangeT: (lng) => pick(rangeT, lng) }),
         };
     }
     return { kind: 'roots', roots, steps, numeric: true, range, rangeTex: rangeT, type: 'numeric' };
@@ -86,12 +86,12 @@ const UNSUP = (reason, steps = []) => ({ kind: 'unsupported', roots: [], steps, 
 
 export function solveCore(lhs, rhs, ctx) {
     const v = ctx.v;
-    if (ctx.depth > 8) return UNSUP(T('Слишком много вложенных преобразований.', 'Too many nested transformations.'));
+    if (ctx.depth > 8) return UNSUP(msg('solve.equation.too_many_nested_transformations'));
     let E;
     try {
         E = simplify(add(lhs, neg(rhs)));
     } catch (e) {
-        return UNSUP(e instanceof MathError ? e.msg : T('Не удалось упростить уравнение.', 'Could not simplify the equation.'));
+        return UNSUP(e instanceof MathError ? e.msg : msg('solve.equation.could_not_simplify_equation'));
     }
     if (!containsVar(E, v)) {
         const A = containsVar(lhs, v) || containsVar(rhs, v) ? Poly.fromNode(lhs, v) : null;
@@ -103,9 +103,9 @@ export function solveCore(lhs, rhs, ctx) {
                 kind: 'all',
                 roots: [],
                 type: 'identity',
-                steps: [S(T('Переменная сокращается, получается верное равенство', 'The variable cancels and a true equality remains'), {
+                steps: [S(msg('solve.equation.variable_cancels_and_true_equality_remains'), {
                     tex: byLang((l) => `${tex(E, l)} = 0`),
-                    text: T('Равенство верно при любом допустимом значении переменной.', 'The equality holds for every admissible value.'),
+                    text: msg('solve.equation.equality_holds_for_every_admissible_value'),
                 })],
             };
         }
@@ -113,9 +113,9 @@ export function solveCore(lhs, rhs, ctx) {
             kind: 'none',
             roots: [],
             type: 'identity',
-            steps: [S(T('Переменная сокращается, получается неверное равенство', 'The variable cancels and a false equality remains'), {
+            steps: [S(msg('solve.equation.variable_cancels_and_false_equality_remains'), {
                 tex: byLang((l) => `${tex(E, l)} = 0`),
-                text: T('Корней нет.', 'There are no roots.'),
+                text: msg('solve.equation.there_are_no_roots'),
             })],
         };
     }
@@ -177,10 +177,10 @@ function solveFractionZero(E, ctx) {
         if (!ok) dropped.push(x);
         return ok;
     });
-    const steps = [S(T('Дробь равна нулю, когда числитель равен нулю, а знаменатель — нет', 'A fraction is zero when its numerator is zero and its denominator is not'), {
+    const steps = [S(msg('solve.equation.fraction_is_zero_when_its_numerator'), {
         tex: byLang((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
     }), ...r.steps];
-    if (dropped.length) steps.push(S(T('Отбрасываем корни, где знаменатель равен нулю', 'Drop the roots where the denominator is zero'), { tex: byLang((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')) }));
+    if (dropped.length) steps.push(S(msg('solve.equation.drop_roots_where_denominator_is_zero'), { tex: byLang((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')) }));
     return { kind: roots.length ? 'roots' : 'none', roots, steps, type: r.type ?? 'fraction' };
 }
 
@@ -212,15 +212,15 @@ export function pickVar(node, v) {
 export function solveEquation(input, v = 'x', opts = {}) {
     const node = relOf(input, v);
     const withSteps = opts.steps !== false;
-    if (node.type === 'list') return finish({ ...UNSUP(T('Это система уравнений — для неё есть отдельный решатель.', 'This is a system of equations: it has its own solver.')) }, v, withSteps);
-    if (node.type === 'chain' || node.op !== '=') return finish({ ...UNSUP(T('Это неравенство, а не уравнение.', 'This is an inequality, not an equation.')) }, v, withSteps);
+    if (node.type === 'list') return finish({ ...UNSUP(msg('solve.equation.this_is_system_of_equations_it')) }, v, withSteps);
+    if (node.type === 'chain' || node.op !== '=') return finish({ ...UNSUP(msg('solve.equation.this_is_inequality_not_equation')) }, v, withSteps);
     v = pickVar(node, v);
     const others = freeVars(node).filter((x) => x !== v);
     if (others.length) {
-        return finish(UNSUP(T(`Кроме $${v}$ в уравнении есть другие буквы (${others.join(', ')}) — уравнения с параметрами решатель пока не решает.`, `Besides $${v}$ the equation has other letters (${others.join(', ')}); equations with parameters are not supported yet.`)), v, withSteps);
+        return finish(UNSUP(msg('solve.equation.besides_equation_has_other_letters_equations', { v, p: others.join(', ') })), v, withSteps);
     }
     if (opts.onlyTrig && !nodeSome(node, (n) => n.type === 'fn' && TRIG_FN.includes(n.name))) {
-        return finish(UNSUP(T('В уравнении нет тригонометрических функций.', 'There are no trigonometric functions in the equation.')), v, withSteps);
+        return finish(UNSUP(msg('solve.equation.there_are_no_trigonometric_functions_in')), v, withSteps);
     }
     const ctx = { v, domain: opts.domain === 'complex' ? 'complex' : 'real', depth: 0, rejected: [] };
     const steps = [];
@@ -230,7 +230,7 @@ export function solveEquation(input, v = 'x', opts = {}) {
         odz = odzInfo(conds, v);
         steps.push(odz.step);
         if (odz.set && odz.set.isEmpty()) {
-            steps.push(S(T('ОДЗ пустая — уравнение не имеет смысла ни при каком значении', 'The domain is empty: the equation makes no sense for any value')));
+            steps.push(S(msg('solve.equation.domain_is_empty_equation_makes_no')));
             return finish({ kind: 'none', roots: [], steps, odz, type: 'domain' }, v, withSteps);
         }
     }
@@ -250,9 +250,9 @@ export function solveEquation(input, v = 'x', opts = {}) {
         const f = filterFamilies(core.families, node, v, conds);
         res.check = f.checks.map((c) => ({ root: approxNode(c.x), approx: c.x, n: c.n, ok: c.ok }));
         if (f.dropped.length) {
-            steps.push(S(T('Отбрасываем серии, не входящие в ОДЗ', 'Drop the series outside the domain'), {
+            steps.push(S(msg('solve.equation.drop_series_outside_domain'), {
                 tex: byLang((l) => f.dropped.map((x) => familyTex(x, v, l)).join(';\\quad ')),
-                text: T('В этих точках одна из частей уравнения не определена.', 'At these points a side of the equation is not defined.'),
+                text: msg('solve.equation.at_these_points_side_of_equation'),
             }));
         }
         const fams = mergeFamilies(f.kept);
@@ -260,10 +260,10 @@ export function solveEquation(input, v = 'x', opts = {}) {
         res.roots = familiesToRoots(fams);
         if (!fams.length) res.kind = 'none';
         else {
-            steps.push(S(T('Проверка', 'Check'), {
+            steps.push(S(msg('solve.equation.check'), {
                 text: f.checks.every((c) => c.ok || f.dropped.includes(c.family))
-                    ? T('Подставили в уравнение несколько значений из каждой серии ($n = -2, \\ldots, 2$) — равенство выполняется.', 'We substituted several values from each series ($n = -2, \\ldots, 2$): the equality holds.')
-                    : T('Некоторые значения не подошли и были исключены.', 'Some values did not fit and were excluded.'),
+                    ? msg('solve.equation.we_substituted_several_values_from_each')
+                    : msg('solve.equation.some_values_did_not_fit_and'),
             }));
         }
         const iv = toIntervalOpt(opts.interval, opts.lang);
@@ -271,9 +271,9 @@ export function solveEquation(input, v = 'x', opts = {}) {
             const sel = rootsOnInterval(fams, iv);
             if (sel) {
                 res.inInterval = sel;
-                steps.push(S(byLang((l) => (l === 'ru' ? `Отбираем корни на промежутке $${intervalTex(iv, l)}$` : `Pick the roots in $${intervalTex(iv, l)}$`)), {
-                    tex: byLang((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(l === 'ru' ? ';\\ ' : ',\\ ') : '\\varnothing')),
-                    text: T('Перебираем целые $n$, при которых значение попадает в промежуток.', 'We go through the integers $n$ that put the value into the interval.'),
+                steps.push(S(byLang((l) => (msg('solve.equation.pick_roots_in', { iv: intervalTex(iv, l) }).in(l))), {
+                    tex: byLang((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(notation(l).listTex) : '\\varnothing')),
+                    text: msg('solve.equation.we_go_through_integers_that_put'),
                 }));
             }
         }
@@ -291,12 +291,11 @@ export function solveEquation(input, v = 'x', opts = {}) {
         }
         const needCheck = !['linear', 'quadratic', 'polynomial'].includes(core.type) || bad.length || conds.length;
         if (sub.length) {
-            steps.push(S(T('Проверка подстановкой', 'Check by substitution'), {
+            steps.push(S(msg('solve.equation.check_by_substitution'), {
                 sub,
                 text: bad.length
-                    ? T(`Посторонние корни: $${bad.map(({ r }) => tex(r.node)).join(';\\ ')}$ — ${bad.some((b) => b.ch.reason === 'odz' || b.ch.reason === 'undefined') ? 'не входят в ОДЗ или не удовлетворяют уравнению' : 'не удовлетворяют исходному уравнению'}.`,
-                        `Extraneous roots: $${bad.map(({ r }) => tex(r.node, 'en')).join(',\\ ')}$: ${bad.some((b) => b.ch.reason === 'odz' || b.ch.reason === 'undefined') ? 'outside the domain or not satisfying the equation' : 'they do not satisfy the original equation'}.`)
-                    : needCheck ? T('Все найденные корни подходят.', 'All the roots found fit.') : T('Корни подходят.', 'The roots fit.'),
+                    ? msg('solve.equation.extraneous_roots', { p: (lng) => bad.map(({ r }) => tex(r.node, lng)).join(notation(lng).listTex), p2: (lng) => bad.some((b) => b.ch.reason === 'odz' || b.ch.reason === 'undefined') ? msg('solve.equation.outside_domain_or_not_satisfying_equation').in(lng) : msg('solve.equation.they_do_not_satisfy_original_equation').in(lng) })
+                    : needCheck ? msg('solve.equation.all_roots_found_fit') : msg('solve.equation.roots_fit'),
             }));
         }
         res.roots = kept;
@@ -319,9 +318,9 @@ function finish(res, v, withSteps) {
     const out = { roots: [], steps: [], check: [], ...res, v };
     out.answer = answerOf(out, v);
     if (out.kind !== 'unsupported' && out.kind !== undefined) {
-        out.steps.push(S(T('Ответ', 'Answer'), { tex: out.answer.tex, final: true }));
+        out.steps.push(S(msg('solve.equation.answer'), { tex: out.answer.tex, final: true }));
     } else if (out.reason) {
-        out.steps.push(S(T('Не удалось решить точно', 'Could not solve exactly'), { text: out.reason, final: true }));
+        out.steps.push(S(msg('solve.equation.could_not_solve_exactly'), { text: out.reason, final: true }));
     }
     if (out.odz) out.odz = { tex: out.odz.tex, text: out.odz.text, set: out.odz.set, conditions: out.odz.conds.map((c) => ({ kind: c.kind, expr: c.expr, tex: byLang((l) => condTex(c, l)) })) };
     if (!withSteps) out.steps = [];
@@ -354,10 +353,9 @@ function reductionStep(node) {
     };
     walk(node);
     if (!pairs.length) return null;
-    return S(T('Формулы приведения', 'Reduction formulas'), {
+    return S(msg('solve.equation.reduction_formulas'), {
         tex: byLang((l) => pairs.map(([b, a]) => `${tex(b, l)} = ${tex(a, l)}`).join(',\\quad ')),
-        text: T('Сдвиг аргумента на целое число полуоборотов π или четвертей π/2 убираем по формулам приведения: функция меняется на кофункцию при сдвиге на нечётное число π/2, знак — как у исходной функции в той четверти.',
-            'A shift of the argument by a multiple of π/2 is removed by the reduction formulas: an odd multiple of π/2 turns the function into its cofunction, and the sign is that of the original function in that quadrant.'),
+        text: msg('solve.equation.shift_of_argument_by_multiple_of'),
         rule: 'reduction',
     });
 }

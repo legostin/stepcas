@@ -7,6 +7,7 @@ import { Q, bigGcd } from '../core/rational.js';
 import { simplify } from '../core/simplify.js';
 import { expand, collectTerms } from '../core/expand.js';
 import { evaluate } from '../core/evaluate.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- small helpers
 
@@ -200,4 +201,4 @@ export function linearIn(E, name, v) {
     return { alpha, beta: ct.get(0) ?? N0 };
 }
 
-export const orTex = (l) => (l === 'ru' ? '\\quad\\text{или}\\quad' : '\\quad\\text{or}\\quad');
+export const orTex = (l) => (msg('solve.common.or').in(l));

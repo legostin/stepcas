@@ -21,6 +21,7 @@
 import { Q, MathError, rootExtract, bigIroot, bigBitLength, bigGcd, bigLcm } from './rational.js';
 import { num, sym, isConst, nodeKey, freeVars, nodeSome } from './ast.js';
 import { evaluate } from './evaluate.js';
+import { msg } from '../i18n/index.js';
 
 const freeze = Object.freeze;
 const N0 = num(0);
@@ -40,8 +41,8 @@ const isNum = (n) => n.type === 'num';
 const isC = (n, name) => n.type === 'sym' && !n.var && n.name === name;
 const isZeroNode = (n) => isNum(n) && n.value.isZero();
 
-const DIV0 = { ru: 'Деление на ноль', en: 'Division by zero' };
-const TOO_BIG = { ru: 'Выражение слишком большое для упрощения', en: 'The expression is too large to simplify' };
+const DIV0 = msg('core.simplify.division_by_zero');
+const TOO_BIG = msg('core.simplify.expression_is_too_large_to_simplify');
 const BUDGET = 200000;
 
 function makeCtx(opts = {}) {

@@ -3,6 +3,7 @@
 import { bigIroot, bigIsqrt } from '../../core/rational.js';
 import { needBase } from './bases.js';
 import { L, S, SMALL, SMALL_BIG, T, TRIAL, babs, big, bmod, dec, fail, gcdCore, listText, powmod, sieveBytes, sn, tn } from './common.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- primality
 
@@ -77,10 +78,10 @@ export function ntMillerRabin(n, opts = {}) {
     if (N < 5n || N % 2n === 0n) {
         res.prime = N === 2n || N === 3n;
         if (opts.steps) {
-            st.push(S(L('Тест не нужен', 'No test needed'), null,
-                N < 2n ? L(`${sn(N)} не считается простым: простые числа начинаются с 2.`, `${sn(N)} is not prime: primes start at 2.`)
-                    : res.prime ? L(`${sn(N)} — простое.`, `${sn(N)} is prime.`)
-                        : L(`${sn(N)} чётное и больше 2, значит, составное.`, `${sn(N)} is even and greater than 2, so it is composite.`), { rule: 'answer' }));
+            st.push(S(msg('numbers.theory.primes.no_test_needed'), null,
+                N < 2n ? msg('numbers.theory.primes.is_not_prime_primes_start_at', { N: sn(N) })
+                    : res.prime ? msg('numbers.theory.primes.is_prime', { N: sn(N) })
+                        : msg('numbers.theory.primes.is_even_and_greater_than_2', { N: sn(N) }), { rule: 'answer' }));
             res.steps = st;
         }
         return res;
@@ -101,34 +102,27 @@ export function ntMillerRabin(n, opts = {}) {
     res.prime = res.witness === null;
     res.certain = res.prime ? certain : true;
     if (!opts.steps) return res;
-    st.push(S(L('Идея теста', 'The idea'), `${tn(N)} - 1 = 2^{${s}} \\cdot ${tn(d)}`,
-        L(`Если n простое, то по малой теореме Ферма a^(n−1) ≡ 1 (mod n), а у единицы по простому модулю только два квадратных корня: 1 и −1. Раскладываем n − 1 = 2^${s}·${sn(d)} и строим цепочку a^d, a^(2d), a^(4d), …: каждое число — квадрат предыдущего. У простого n цепочка либо сразу начинается с 1, либо где-то проходит через n − 1, то есть через −1.`,
-            `If n is prime, Fermat's little theorem gives a^(n−1) ≡ 1 (mod n), and modulo a prime 1 has only two square roots, 1 and −1. We write n − 1 = 2^${s}·${sn(d)} and build the chain a^d, a^(2d), a^(4d), …, each number the square of the previous one. For a prime n the chain either starts at 1 or passes through n − 1, that is −1, somewhere.`),
+    st.push(S(msg('numbers.theory.primes.idea'), `${tn(N)} - 1 = 2^{${s}} \\cdot ${tn(d)}`,
+        msg('numbers.theory.primes.if_n_is_prime_fermat_s', { s, d: sn(d) }),
         { rule: 'mr-idea' }));
     for (const r of res.rounds) {
         let text;
         if (r.pass) {
             text = r.seq[0] === 1n
-                ? L(`Цепочка сразу начинается с 1 — основание ${sn(r.a)} не разоблачает число.`, `The chain starts at 1 — base ${sn(r.a)} does not expose a composite.`)
-                : L(`Цепочка проходит через ${sn(N - 1n)} ≡ −1 — так и должно быть у простого числа. Основание ${sn(r.a)} подозрений не вызывает.`,
-                    `The chain passes through ${sn(N - 1n)} ≡ −1, just as it must for a prime. Base ${sn(r.a)} raises no suspicion.`);
+                ? msg('numbers.theory.primes.chain_starts_at_1_base_does', { p: sn(r.a) })
+                : msg('numbers.theory.primes.chain_passes_through_1_just_as', { p: sn(N - 1n), p2: sn(r.a) });
         } else if (r.seq[r.seq.length - 1] === 1n) {
             const prev = r.seq[r.seq.length - 2];
-            text = L(`Появилась 1, но перед ней стоит ${sn(prev)}, а не ±1. Значит, у единицы нашёлся «лишний» квадратный корень, чего по простому модулю не бывает: ${sn(N)} — составное, ${sn(r.a)} — свидетель.`,
-                `We reached 1, but the number before it is ${sn(prev)}, not ±1. So 1 has an extra square root, which never happens modulo a prime: ${sn(N)} is composite and ${sn(r.a)} is a witness.`);
+            text = msg('numbers.theory.primes.we_reached_1_but_number_before', { prev: sn(prev), N: sn(N), p: sn(r.a) });
         } else {
-            text = L(`Цепочка так и не дошла ни до 1, ни до −1. У простого n так быть не может: ${sn(N)} — составное, ${sn(r.a)} — свидетель.`,
-                `The chain never reached 1 or −1, which is impossible for a prime n: ${sn(N)} is composite and ${sn(r.a)} is a witness.`);
+            text = msg('numbers.theory.primes.chain_never_reached_1_or_1', { N: sn(N), p: sn(r.a) });
         }
-        st.push(S(L(`Основание a = ${sn(r.a)}`, `Base a = ${sn(r.a)}`), `${r.seq.map(tn).join(',\\ ')} \\pmod{${tn(N)}}`, text, { rule: r.pass ? 'mr-pass' : 'mr-witness' }));
+        st.push(S(msg('numbers.theory.primes.base', { p: sn(r.a) }), `${r.seq.map(tn).join(',\\ ')} \\pmod{${tn(N)}}`, text, { rule: r.pass ? 'mr-pass' : 'mr-witness' }));
     }
-    st.push(S(L('Вывод', 'Conclusion'), null,
-        !res.prime ? L(`${sn(N)} — составное число. Тест Миллера — Рабина не называет делителей, но составность доказывает.`,
-            `${sn(N)} is composite. The Miller–Rabin test does not name a divisor, but it proves compositeness.`)
-            : res.certain ? L(`${sn(N)} — простое. Для чисел меньше 3,3·10²⁴ такого набора оснований достаточно, ответ точный.`,
-                `${sn(N)} is prime. For numbers below 3.3·10²⁴ this set of bases is known to suffice, so the answer is certain.`)
-                : L(`${sn(N)}, почти наверняка, простое: ни одно из ${res.rounds.length} оснований не оказалось свидетелем. Вероятность ошибки меньше 4^(−${res.rounds.length}).`,
-                    `${sn(N)} is almost certainly prime: none of the ${res.rounds.length} bases is a witness. The chance of error is below 4^(−${res.rounds.length}).`),
+    st.push(S(msg('numbers.theory.primes.conclusion'), null,
+        !res.prime ? msg('numbers.theory.primes.is_composite_miller_rabin_test_does', { N: sn(N) })
+            : res.certain ? msg('numbers.theory.primes.is_prime_for_numbers_below_3', { N: sn(N) })
+                : msg('numbers.theory.primes.is_almost_certainly_prime_none_of', { N: sn(N), length: res.rounds.length }),
         { rule: 'answer' }));
     res.steps = st;
     return res;
@@ -170,8 +164,7 @@ function rho(n) {
             }
             r *= 2;
             if (budget < 0) {
-                throw fail('Число слишком трудно разложить: у него слишком большие простые множители.',
-                    'This number is too hard to factor: its prime factors are too large.', 'too-big');
+                throw fail(msg('numbers.theory.primes.this_number_is_too_hard_to'), 'too-big');
             }
         } while (g === 1n);
         if (g === n) {
@@ -179,7 +172,7 @@ function rho(n) {
         }
         if (g !== n) return g;
     }
-    throw fail('Не удалось разложить число.', 'Could not factor the number.', 'too-big');
+    throw fail(msg('numbers.theory.primes.could_not_factor_number'), 'too-big');
 }
 
 function perfectPower(n) {
@@ -229,11 +222,11 @@ export function ntFactorTex(factors) {
 
 function ruleHint(p, m, lang) {
     const s = m.toString();
-    if (p === 2) return lang === 'ru' ? ' (последняя цифра чётная)' : ' (the last digit is even)';
-    if (p === 5) return lang === 'ru' ? ` (оканчивается на ${s[s.length - 1]})` : ` (it ends in ${s[s.length - 1]})`;
+    if (p === 2) return msg('numbers.theory.primes.last_digit_is_even').in(lang);
+    if (p === 5) return msg('numbers.theory.primes.it_ends_in', { p: s[s.length - 1] }).in(lang);
     if (p === 3 && s.length > 1 && s.length <= 10) {
         const ds = s.split('').reduce((a, c) => a + +c, 0);
-        return lang === 'ru' ? ` (сумма цифр ${s.split('').join(' + ')} = ${ds} делится на 3)` : ` (the digit sum ${s.split('').join(' + ')} = ${ds} is divisible by 3)`;
+        return msg('numbers.theory.primes.digit_sum_is_divisible_by_3', { p: s.split('').join(' + '), ds }).in(lang);
     }
     return '';
 }
@@ -244,7 +237,7 @@ function ruleHint(p, m, lang) {
  */
 export function ntFactor(n, opts = {}) {
     const N = big(n);
-    if (N === 0n) throw fail('Ноль нельзя разложить на простые множители: он делится на всё.', 'Zero cannot be factored into primes: everything divides it.', 'zero');
+    if (N === 0n) throw fail(msg('numbers.theory.primes.zero_cannot_be_factored_into_primes'), 'zero');
     if (!opts.steps) return mapToList(factorMap(N));
 
     const st = [];
@@ -253,16 +246,15 @@ export function ntFactor(n, opts = {}) {
     let skipped = [];
     let reason = null;
     if (N < 0n) {
-        st.push(S(L('Выносим минус', 'Take out the minus sign'), `${tn(N)} = -${tn(m)}`,
-            L('Раскладываем модуль числа, знак пишем отдельно.', 'We factor the absolute value and keep the sign aside.')));
+        st.push(S(msg('numbers.theory.primes.take_out_minus_sign'), `${tn(N)} = -${tn(m)}`,
+            msg('numbers.theory.primes.we_factor_absolute_value_and_keep')));
     }
     if (m === 1n) {
-        st.push(S(L('Единица', 'One'), '1 = 1', L('У единицы нет простых делителей: это пустое произведение.', 'One has no prime factors: it is the empty product.'), { rule: 'answer' }));
+        st.push(S(msg('numbers.theory.primes.one'), '1 = 1', msg('numbers.theory.primes.one_has_no_prime_factors_it'), { rule: 'answer' }));
         return { value: [], tex: '1', ladder: [], steps: st };
     }
-    st.push(S(L('Делим на простые по порядку', 'Divide by primes in order'), null,
-        L('Пробуем простые числа по возрастанию: 2, 3, 5, 7, 11, … Пока число делится — делим, когда перестаёт — берём следующее простое. Так каждый найденный делитель сам оказывается простым.',
-            'We try the primes in increasing order: 2, 3, 5, 7, 11, … While the number divides, we divide; when it stops, we move to the next prime. This way every divisor we find is automatically prime.'),
+    st.push(S(msg('numbers.theory.primes.divide_by_primes_in_order'), null,
+        msg('numbers.theory.primes.we_try_primes_in_increasing_order'),
         { rule: 'trial-division' }));
     const ladder = [];
     for (const p of SMALL_BIG) {
@@ -279,24 +271,20 @@ export function ntFactor(n, opts = {}) {
     for (const gr of groups) {
         const piece = (i) => `${i === 1 ? tn(gr.p) : `${tn(gr.p)}^{${i}}`} \\cdot ${tn(gr.before / gr.p ** BigInt(i))}`;
         const pieces = gr.e <= 5 ? Array.from({ length: gr.e }, (_, i) => piece(i + 1)) : [piece(1), '\\ldots', piece(gr.e)];
-        const skipTxt = (l) => (gr.skipped.length ? (l === 'ru' ? `На ${listText(gr.skipped, l)} не делится. ` : `It is not divisible by ${listText(gr.skipped, l)}. `) : '');
-        const times = (l) => (l === 'ru' ? `${gr.e} ${gr.e % 10 >= 2 && gr.e % 10 <= 4 && (gr.e % 100 < 12 || gr.e % 100 > 14) ? 'раза' : 'раз'}` : `${gr.e} times`);
-        st.push(S(L(`Делим на ${sn(gr.p)}`, `Divide by ${sn(gr.p)}`),
+        const skipTxt = (l) => (gr.skipped.length ? (msg('numbers.theory.primes.it_is_not_divisible_by', { p: listText(gr.skipped, l) }).in(l)) : '');
+        const times = (l) => (msg('numbers.theory.primes.times', { e: gr.e, p: gr.e % 10 >= 2 && gr.e % 10 <= 4 && (gr.e % 100 < 12 || gr.e % 100 > 14) ? 'раза' : 'раз' }).in(l));
+        st.push(S(msg('numbers.theory.primes.divide_by', { p: sn(gr.p) }),
             `${tn(gr.before)} = ${pieces.join(' = ')}`,
-            T((l) => (l === 'ru'
-                ? `${skipTxt(l)}${sn(gr.before)} делится на ${sn(gr.p)}${ruleHint(Number(gr.p), gr.before, l)}. ${gr.e > 1 ? `Делим, пока делится, — ${times(l)}` : 'Делим'}; остаётся ${sn(gr.after)}.`
-                : `${skipTxt(l)}${sn(gr.before)} is divisible by ${sn(gr.p)}${ruleHint(Number(gr.p), gr.before, l)}. ${gr.e > 1 ? `We divide while we can — ${times(l)}` : 'We divide'}; ${sn(gr.after)} is left.`)),
+            T((l) => (msg('numbers.theory.primes.is_divisible_by_is_left', { l: skipTxt(l), p: sn(gr.before), p2: sn(gr.p), p3: ruleHint(Number(gr.p), gr.before, l), p4: (lng) => gr.e > 1 ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng) : msg('numbers.theory.primes.we_divide').in(lng), p5: sn(gr.after) }).in(l))),
             { rule: 'divide', p: gr.p, e: gr.e }));
     }
     const out = new Map(groups.map((g) => [g.p, g.e]));
     if (reason === 'sqrt' && m > 1n) {
         const r = Math.sqrt(Number(m));
         const whole = groups.length === 0;
-        st.push(S(whole ? L('Число простое', 'The number is prime') : L('Остаток — простое число', 'What is left is prime'),
+        st.push(S(whole ? msg('numbers.theory.primes.number_is_prime') : msg('numbers.theory.primes.what_is_left_is_prime'),
             T((l) => `\\sqrt{${tn(m)}} \\approx ${dec(r, 1, l, true)}`),
-            T((l) => (l === 'ru'
-                ? `${whole ? `Проверили все простые до √${sn(m)} ≈ ${dec(r, 1, l)}` : `Осталось ${sn(m)}. Все простые до √${sn(m)} ≈ ${dec(r, 1, l)} мы уже проверили`} — ни одно не делит. Значит, ${sn(m)} простое: у составного числа обязательно есть простой делитель, не больший его корня.`
-                : `${whole ? `We have tried every prime up to √${sn(m)} ≈ ${dec(r, 1, l)}` : `${sn(m)} is left. We have already tried every prime up to √${sn(m)} ≈ ${dec(r, 1, l)}`} and none divides it. So ${sn(m)} is prime: a composite number always has a prime divisor no larger than its square root.`)),
+            T((l) => (msg('numbers.theory.primes.and_none_divides_it_so_is', { p: (lng) => whole ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng) : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng), m: sn(m) }).in(l))),
             { rule: 'sqrt-bound' }));
         out.set(m, (out.get(m) ?? 0) + 1);
         ladder.push({ n: m, p: m });
@@ -307,7 +295,7 @@ export function ntFactor(n, opts = {}) {
         const certain = ps.every(([p]) => p < MR_LIMIT);
         const single = ps.length === 1 && ps[0][1] === 1;
         const digits = m.toString().length;
-        st.push(S(single ? L('Большой простой остаток', 'A large prime cofactor') : L('Большой остаток', 'A large cofactor'),
+        st.push(S(single ? msg('numbers.theory.primes.large_prime_cofactor') : msg('numbers.theory.primes.large_cofactor'),
             `${tn(m)} = ${ntFactorTex(ps.map(([p, e]) => ({ p, e })))}`,
             L(`После простых до ${sn(TRIAL)} осталось ${digits}-значное число ${sn(m)}; перебирать дальше слишком долго. `
                 + (single ? `Тест Миллера — Рабина показывает, что оно простое${certain ? '' : ' (с вероятностью ошибки меньше 4⁻³⁷)'}.`
@@ -324,16 +312,15 @@ export function ntFactor(n, opts = {}) {
     const value = [...out.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([p, e]) => ({ p, e }));
     if (ladder.length > 1 && ladder.length <= 40) {
         const rowsTex = ladder.map(({ n: k, p }) => `${tn(k)} & ${tn(p)}`).join(' \\\\ ') + ' \\\\ 1 & ';
-        st.push(S(L('Лесенка', 'The division ladder'), `\\begin{array}{r|l} ${rowsTex} \\end{array}`,
-            L('Так это записывают в тетради: слева — что осталось, справа — на что делим. Правый столбец — все простые множители.',
-                'The usual notebook layout: on the left what is left, on the right the prime we divide by. The right column lists all the prime factors.'),
+        st.push(S(msg('numbers.theory.primes.division_ladder'), `\\begin{array}{r|l} ${rowsTex} \\end{array}`,
+            msg('numbers.theory.primes.usual_notebook_layout_on_left_what'),
             { rule: 'ladder' }));
     }
     const tex = ntFactorTex(value);
-    st.push(S(L('Ответ', 'Answer'), `${tn(N)} = ${N < 0n ? '-' : ''}${tex}`,
+    st.push(S(msg('numbers.theory.primes.answer'), `${tn(N)} = ${N < 0n ? '-' : ''}${tex}`,
         value.length === 1 && value[0].e === 1
-            ? L(`${sn(babs(N))} — простое число.`, `${sn(babs(N))} is prime.`)
-            : L('По основной теореме арифметики это разложение единственно (с точностью до порядка множителей).', 'By the fundamental theorem of arithmetic this factorisation is unique (up to the order of the factors).'),
+            ? msg('numbers.theory.primes.is_prime_2', { p: sn(babs(N)) })
+            : msg('numbers.theory.primes.by_fundamental_theorem_of_arithmetic_this'),
         { rule: 'answer' }));
     return { value, tex, ladder, steps: st };
 }
@@ -341,7 +328,7 @@ export function ntFactor(n, opts = {}) {
 /** All positive divisors of n, ascending (BigInt). */
 export function ntDivisors(n) {
     const N = big(n);
-    if (N === 0n) throw fail('У нуля бесконечно много делителей.', 'Zero has infinitely many divisors.', 'zero');
+    if (N === 0n) throw fail(msg('numbers.theory.primes.zero_has_infinitely_many_divisors'), 'zero');
     let divs = [1n];
     for (const [p, e] of factorMap(N)) {
         const next = [];
@@ -350,7 +337,7 @@ export function ntDivisors(n) {
             for (let i = 0; i <= e; i++) { next.push(d * pk); pk *= p; }
         }
         divs = next;
-        if (divs.length > 2_000_000) throw fail('Слишком много делителей.', 'Too many divisors.', 'too-big');
+        if (divs.length > 2_000_000) throw fail(msg('numbers.theory.primes.too_many_divisors'), 'too-big');
     }
     return divs.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
@@ -358,7 +345,7 @@ export function ntDivisors(n) {
 /** Number of divisors τ(n). */
 export function ntTau(n) {
     const N = big(n);
-    if (N === 0n) throw fail('У нуля бесконечно много делителей.', 'Zero has infinitely many divisors.', 'zero');
+    if (N === 0n) throw fail(msg('numbers.theory.primes.zero_has_infinitely_many_divisors'), 'zero');
     let t = 1n;
     for (const [, e] of factorMap(N)) t *= BigInt(e + 1);
     return t;
@@ -367,7 +354,7 @@ export function ntTau(n) {
 /** σ_k(n): the sum of the k-th powers of the divisors (k = 1 by default; k = 0 gives τ). */
 export function ntSigma(n, k = 1) {
     const N = big(n);
-    if (N === 0n) throw fail('У нуля бесконечно много делителей.', 'Zero has infinitely many divisors.', 'zero');
+    if (N === 0n) throw fail(msg('numbers.theory.primes.zero_has_infinitely_many_divisors'), 'zero');
     const K = BigInt(k);
     let s = 1n;
     for (const [p, e] of factorMap(N)) {
@@ -381,7 +368,7 @@ export function ntSigma(n, k = 1) {
 /** Möbius function μ(n) ∈ {−1, 0, 1} (a number). */
 export function ntMobius(n) {
     const N = big(n);
-    if (N <= 0n) throw fail('μ(n) определена для натуральных n.', 'μ(n) is defined for positive n.');
+    if (N <= 0n) throw fail(msg('numbers.theory.primes.n_is_defined_for_positive_n'));
     let mu = 1;
     for (const [, e] of factorMap(N)) {
         if (e > 1) return 0;
@@ -393,38 +380,35 @@ export function ntMobius(n) {
 /** Euler's totient φ(n). {steps: true} → {value, steps} (formula, multiplicativity, listing for n ≤ 100). */
 export function ntPhi(n, opts = {}) {
     const N = big(n);
-    if (N <= 0n) throw fail('Функция Эйлера определена для натуральных чисел.', "Euler's function is defined for positive integers.");
+    if (N <= 0n) throw fail(msg('numbers.theory.primes.euler_s_function_is_defined_for'));
     const fs = mapToList(factorMap(N));
     let value = N;
     for (const { p } of fs) value = (value / p) * (p - 1n);
     if (!opts.steps) return value;
     const st = [];
-    st.push(S(L('Что считаем', 'What we count'), `\\varphi(${tn(N)})`,
-        L('φ(n) — сколько чисел от 1 до n взаимно просты с n, то есть не имеют с ним общих делителей, кроме 1.',
-            'φ(n) is how many numbers from 1 to n are coprime to n, that is, share no divisor with it except 1.'), { rule: 'phi-def' }));
+    st.push(S(msg('numbers.theory.primes.what_we_count'), `\\varphi(${tn(N)})`,
+        msg('numbers.theory.primes.n_is_how_many_numbers_from'), { rule: 'phi-def' }));
     if (N === 1n) {
-        st.push(S(L('Ответ', 'Answer'), '\\varphi(1) = 1', L('Единица взаимно проста сама с собой.', 'One is coprime to itself.'), { rule: 'answer' }));
+        st.push(S(msg('numbers.theory.primes.answer'), '\\varphi(1) = 1', msg('numbers.theory.primes.one_is_coprime_to_itself'), { rule: 'answer' }));
         return { value, steps: st };
     }
-    st.push(S(L('Раскладываем на простые множители', 'Factor into primes'), `${tn(N)} = ${ntFactorTex(fs)}`, null, { rule: 'factor', sub: ntFactor(N, { steps: true }).steps }));
+    st.push(S(msg('numbers.theory.primes.factor_into_primes'), `${tn(N)} = ${ntFactorTex(fs)}`, null, { rule: 'factor', sub: ntFactor(N, { steps: true }).steps }));
     const brackets = fs.map(({ p }) => `\\left(1 - \\frac{1}{${tn(p)}}\\right)`).join('');
     const fracs = fs.map(({ p }) => `\\frac{${tn(p - 1n)}}{${tn(p)}}`).join(' \\cdot ');
-    st.push(S(L('Формула Эйлера', "Euler's formula"), `\\varphi(${tn(N)}) = ${tn(N)} ${brackets} = ${tn(N)} \\cdot ${fracs} = ${tn(value)}`,
-        L('Среди любых p подряд идущих чисел ровно одно делится на p. Поэтому множитель (1 − 1/p) отбрасывает числа, кратные p, — и так для каждого простого делителя n. Для разных простых эти отсевы независимы, поэтому множители перемножаются.',
-            'Among any p consecutive numbers exactly one is divisible by p, so the factor (1 − 1/p) discards the multiples of p — once for every prime divisor of n. For different primes these sieves are independent, so the factors multiply.'),
+    st.push(S(msg('numbers.theory.primes.euler_s_formula'), `\\varphi(${tn(N)}) = ${tn(N)} ${brackets} = ${tn(N)} \\cdot ${fracs} = ${tn(value)}`,
+        msg('numbers.theory.primes.among_any_p_consecutive_numbers_exactly'),
         { rule: 'phi-formula' }));
     if (fs.length > 1 || fs[0].e > 1) {
         const alt = fs.map(({ p, e }) => (e === 1 ? `${tn(p - 1n)}` : `(${tn(p ** BigInt(e))} - ${tn(p ** BigInt(e - 1))})`)).join(' \\cdot ');
-        st.push(S(L('Другой путь', 'Another way'), `\\varphi(${tn(N)}) = ${fs.map(({ p, e }) => `\\varphi(${e === 1 ? tn(p) : `${tn(p)}^{${e}}`})`).join('\\,')} = ${alt} = ${tn(value)}`,
-            L('φ мультипликативна: для взаимно простых множителей значения перемножаются, а φ(p^k) = p^k − p^(k−1), потому что из p^k чисел выбрасываем p^(k−1) кратных p.',
-                'φ is multiplicative: for coprime factors the values multiply, and φ(p^k) = p^k − p^(k−1), because out of p^k numbers we drop the p^(k−1) multiples of p.'),
+        st.push(S(msg('numbers.theory.primes.another_way'), `\\varphi(${tn(N)}) = ${fs.map(({ p, e }) => `\\varphi(${e === 1 ? tn(p) : `${tn(p)}^{${e}}`})`).join('\\,')} = ${alt} = ${tn(value)}`,
+            msg('numbers.theory.primes.is_multiplicative_for_coprime_factors_values'),
             { rule: 'phi-multiplicative' }));
     }
     if (N <= 100n) {
         const list = [];
         for (let k = 1n; k <= N; k++) if (gcdCore(k, N) === 1n) list.push(k);
-        st.push(S(L('Проверка перебором', 'Check by listing'), null,
-            L(`Взаимно просты с ${sn(N)}: ${list.map(sn).join(', ')} — их ${list.length}.`, `Coprime to ${sn(N)}: ${list.map(sn).join(', ')} — ${list.length} of them.`), { rule: 'check' }));
+        st.push(S(msg('numbers.theory.primes.check_by_listing'), null,
+            msg('numbers.theory.primes.coprime_to_of_them', { N: sn(N), p: list.map(sn).join(', '), length: list.length }), { rule: 'check' }));
     }
     return { value, steps: st };
 }
@@ -435,7 +419,7 @@ export function ntPhi(n, opts = {}) {
 export function ntPrimesUpTo(n) {
     n = Math.floor(Number(n));
     if (!(n >= 2)) return [];
-    if (n > 1e8) throw fail('Слишком большая граница для решета (не больше 10⁸).', 'The bound is too large for a sieve (at most 10⁸).', 'too-big');
+    if (n > 1e8) throw fail(msg('numbers.theory.primes.bound_is_too_large_for_sieve'), 'too-big');
     const comp = sieveBytes(n);
     const out = [];
     for (let i = 2; i <= n; i++) if (!comp[i]) out.push(i);
@@ -445,7 +429,7 @@ export function ntPrimesUpTo(n) {
 /** Sieve data for widgets: {primes, isPrime: Uint8Array, spf: Int32Array} (spf = smallest prime factor, 0 for 0 and 1). */
 export function ntSieve(n) {
     n = Math.max(1, Math.floor(Number(n)));
-    if (n > 2e7) throw fail('Слишком большая граница (не больше 2·10⁷).', 'The bound is too large (at most 2·10⁷).', 'too-big');
+    if (n > 2e7) throw fail(msg('numbers.theory.primes.bound_is_too_large_at_most'), 'too-big');
     const spf = new Int32Array(n + 1);
     const primes = [];
     for (let i = 2; i <= n; i++) {
@@ -464,7 +448,7 @@ export function ntSieve(n) {
 export function ntPrimePi(n) {
     n = Math.floor(Number(n));
     if (!(n >= 2)) return 0;
-    if (n > 1e11) throw fail('Слишком большое n (не больше 10¹¹).', 'n is too large (at most 10¹¹).', 'too-big');
+    if (n > 1e11) throw fail(msg('numbers.theory.primes.n_is_too_large_at_most'), 'too-big');
     if (n <= 2e6) {
         const c = sieveBytes(n);
         let k = 0;

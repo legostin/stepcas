@@ -8,6 +8,7 @@ import { mapPre, plainish } from './basic.js';
 import { E_, NM1, T_, freshVar, isNum, isOne, isVar, isZero, linearParts, paren, q, simp, trySimp, tx } from './common.js';
 import { qn } from './rational.js';
 import { substResult } from './trig.js';
+import { msg } from '../../i18n/index.js';
 
 // ---- u-substitution g(h(x))·h′(x)
 
@@ -106,10 +107,9 @@ export function mUSub(f, ctx) {
     for (const c of cands.slice(0, 5)) {
         const res = substResult(f, ctx, {
             t, uNode: c.u, g: c.g, rule: 'substitution',
-            title: T_('Замена переменной', 'Substitution'),
+            title: msg('calculus.integral.substitution.substitution'),
             dtTex: (L) => `d${t} = ${isOne(c.du) ? '' : c.du.type === 'add' ? paren(tx(c.du, L)) : tx(c.du, L) + '\\,'}d${v}`,
-            text: T_(`Замечаем, что производная выражения ${plainish(c.u, 'ru')} (с точностью до постоянного множителя) уже стоит множителем под интегралом. Делаем замену ${t} = ${plainish(c.u, 'ru')}: интеграл превращается в более простой.`,
-                `The derivative of ${plainish(c.u, 'en')} is (up to a constant factor) already a factor of the integrand. Substitute ${t} = ${plainish(c.u, 'en')}: the integral becomes simpler.`),
+            text: msg('calculus.integral.substitution.derivative_of_is_up_to_constant', { p: (lng) => plainish(c.u, lng), t }),
         });
         if (res) return res;
     }
@@ -146,9 +146,8 @@ export function mRationalizing(f, ctx) {
     const uNode = pow(base, num(q(1, m)));
     return substResult(f, ctx, {
         t, uNode, g, rule: 'rationalizing',
-        title: T_('Замена, убирающая корень', 'A substitution that removes the root'),
+        title: msg('calculus.integral.substitution.substitution_that_removes_root'),
         dtTex: (L) => `${v} = ${tx(trySimp(xOfT) ?? xOfT, L)},\\ d${v} = ${tx(simp(div(mul(num(m), pow(T, num(m - 1))), lp.k)), L)}\\,d${t}`,
-        text: T_(`Все корни — из одного и того же линейного выражения ${plainish(base, 'ru')}. Заменяем t = ${m === 2 ? '√' : `${m}-й корень из `}(${plainish(base, 'ru')}): корни исчезают, остаётся рациональная дробь от t.`,
-            `All roots are of the same linear expression ${plainish(base, 'en')}. Substitute t = ${m === 2 ? '√' : `the ${m}-th root of `}(${plainish(base, 'en')}): the roots disappear and a rational function of t is left.`),
+        text: msg('calculus.integral.substitution.all_roots_are_of_same_linear', { base: (lng) => plainish(base, lng), p: (lng) => m === 2 ? '√' : msg('calculus.integral.substitution.th_root_of', { m }).in(lng) }),
     });
 }

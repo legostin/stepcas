@@ -17,6 +17,7 @@
 
 import { Q, MathError } from './rational.js';
 import { num, sym, add, mul, div, neg, pow, fn, rel, chain, list } from './ast.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- vocabulary
 
@@ -113,8 +114,8 @@ function suggestFn(word) {
     return bd <= limit ? best : null;
 }
 
-function err(ru, en, pos = null, len = 1, code = 'syntax') {
-    return new MathError({ ru, en }, pos, len, code);
+function err(msg, pos = null, len = 1, code = 'syntax') {
+    return new MathError(msg, pos, len, code);
 }
 
 const show = (s) => (s === '\n' ? '↵' : s);
@@ -196,7 +197,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             const prev2 = toks[toks.length - 2];
             const afterSup = prev2 && prev2.t === 'op' && (prev2.v === '^' || prev2.v === '_');
             if (prev && prev.t === 'num' && !afterSup && spanLen === null) {
-                throw err('Два числа подряд — поставьте знак действия между ними', 'Two numbers in a row: put an operation sign between them', prev.pos, offset + i + 1 - prev.pos);
+                throw err(msg('core.parse.two_numbers_in_row_put_operation'), prev.pos, offset + i + 1 - prev.pos);
             }
             // thousands groups: "1 000 000", "12 345", "1,000,000" (not right after ^ or _: log_2 100 is log base 2 of 100)
             const noGroup = prev && prev.t === 'op' && (prev.v === '^' || prev.v === '_');
@@ -227,7 +228,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
                     i += m[0].length;
                 }
             }
-            if (s[i] === '.' && isDigit(s[i + 1] ?? '')) throw err('Две десятичные точки в одном числе', 'Two decimal points in one number', offset + start, i - start + 2);
+            if (s[i] === '.' && isDigit(s[i + 1] ?? '')) throw err(msg('core.parse.two_decimal_points_in_one_number'), offset + start, i - start + 2);
             const raw = s.slice(start, i).replace(/[\s\u00a0\u202f\u2009]/g, '');
             let q;
             if (period !== null) q = Q.of(`${int || '0'}.${frac}(${period})`);
@@ -259,7 +260,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             if (opts.foldCase) word = word.toLowerCase();
             const lower = word.toLowerCase();
             if (UNSUPPORTED.has(lower) && !declared.has(word)) {
-                throw err(`Функция «${word}» здесь не поддерживается`, `"${word}" is not supported here`, offset + start, word.length, 'unsupported');
+                throw err(msg('core.parse.is_not_supported_here', { word }), offset + start, word.length, 'unsupported');
             }
             const pieces = splitWord(word, declared);
             if (word.length >= 3 && pieces.every((p) => p.kind === 'letter')) {
@@ -268,7 +269,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
                 if (s[j] === '(') {
                     const sug = suggestFn(word);
                     if (sug) {
-                        throw err(`Неизвестная функция «${word}». Может быть, «${sug}»?`, `Unknown function "${word}". Did you mean "${sug}"?`, offset + start, word.length, 'unknown-fn');
+                        throw err(msg('core.parse.unknown_function_did_you_mean', { word, sug }), offset + start, word.length, 'unknown-fn');
                     }
                 }
             }
@@ -296,7 +297,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             const lastPiece = pieces[pieces.length - 1];
             if (lastPiece.kind !== 'fn') i = readSubscript(i);
             else if (s[i] === '_') {
-                if (lastPiece.name !== 'log') throw err('Нижний индекс бывает только у переменной или логарифма', 'Only a variable or a logarithm can have a subscript', offset + i, 1);
+                if (lastPiece.name !== 'log') throw err(msg('core.parse.only_variable_or_logarithm_can_have'), offset + i, 1);
                 push('op', '_', i, 1);
                 i++;
             }
@@ -335,7 +336,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             toks.push(...tokenize(`(${t})`, opts, offset + start, i - start));
             continue;
         }
-        if (SUB[c] !== undefined) throw err('Нижний индекс без переменной', 'A subscript without a variable', offset + i, 1);
+        if (SUB[c] !== undefined) throw err(msg('core.parse.subscript_without_variable'), offset + i, 1);
 
         // ---- LaTeX commands
         if (c === '\\') {
@@ -356,7 +357,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
                     push('bar', '|', start, 2);
                     continue;
                 }
-                throw err(`Непонятная команда «\\${d}»`, `Unknown command "\\${d}"`, offset + start, 2);
+                throw err(msg('core.parse.unknown_command', { d }), offset + start, 2);
             }
             if (TEX_SKIP.has(cmd)) continue;
             if (cmd in TEX_OPS) {
@@ -382,12 +383,12 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             }
             if (TEX_WORD.has(cmd)) {
                 const m = /^\s*\{([^{}]*)\}/.exec(s.slice(i));
-                if (!m) throw err(`После \\${cmd} ждём {…}`, `\\${cmd} needs {…}`, offset + start, i - start);
+                if (!m) throw err(msg('core.parse.needs', { cmd }), offset + start, i - start);
                 const w = m[1].trim();
                 i += m[0].length;
                 if (FN_ALIASES[w]) push('fn', FN_ALIASES[w], start, i - start, { raw: w });
                 else if (/^[A-Za-z]$/.test(w)) push('sym', w, start, i - start);
-                else throw err(`Непонятное имя «${w}»`, `Unknown name "${w}"`, offset + start, i - start, 'unknown-fn');
+                else throw err(msg('core.parse.unknown_name', { w }), offset + start, i - start, 'unknown-fn');
                 continue;
             }
             if (FN_ALIASES[cmd]) {
@@ -408,7 +409,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
                 i = readSubscript(i);
                 continue;
             }
-            throw err(`Непонятная команда «\\${cmd}»`, `Unknown command "\\${cmd}"`, offset + start, i - start, 'unknown-fn');
+            throw err(msg('core.parse.unknown_command_2', { cmd }), offset + start, i - start, 'unknown-fn');
         }
 
         // ---- operators and punctuation
@@ -535,10 +536,10 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             i++;
             continue;
         }
-        if (c === '_') throw err('Нижний индекс без переменной', 'A subscript without a variable', offset + i, 1);
-        if (c === "'" || c === '′') throw err('Штрих (производная) здесь не читается', 'Primes (derivatives) are not read here', offset + i, 1, 'unsupported');
-        if (/\p{L}/u.test(c)) throw err(`Непонятная буква «${c}» — может быть, не та раскладка?`, `Unknown letter "${c}"`, offset + i, 1);
-        throw err(`Непонятный символ «${show(c)}»`, `Unexpected character "${show(c)}"`, offset + i, 1);
+        if (c === '_') throw err(msg('core.parse.subscript_without_variable'), offset + i, 1);
+        if (c === "'" || c === '′') throw err(msg('core.parse.primes_derivatives_are_not_read_here'), offset + i, 1, 'unsupported');
+        if (/\p{L}/u.test(c)) throw err(msg('core.parse.unknown_letter', { c }), offset + i, 1);
+        throw err(msg('core.parse.unexpected_character', { c: show(c) }), offset + i, 1);
     }
     return toks;
 
@@ -551,7 +552,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             j++;
             if (s[j] === '{') {
                 const m = /^\{\s*([A-Za-z0-9]+)\s*\}/.exec(s.slice(j));
-                if (!m) throw err('Индекс в {…} должен состоять из букв и цифр', 'A subscript in {…} must be letters and digits', offset + from, 2);
+                if (!m) throw err(msg('core.parse.subscript_in_must_be_letters_and'), offset + from, 2);
                 subs = m[1];
                 j += m[0].length;
             } else if (isDigit(s[j] ?? '')) {
@@ -559,7 +560,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
             } else if (isLetterish(s[j] ?? '')) {
                 subs = CYR[s[j]] ?? s[j];
                 j++;
-            } else throw err('После «_» ждём индекс', 'A subscript is expected after "_"', offset + from, 1);
+            } else throw err(msg('core.parse.subscript_is_expected_after'), offset + from, 1);
         } else if (SUB[s[j]] !== undefined) {
             while (j < n && SUB[s[j]] !== undefined) subs += SUB[s[j++]];
         } else return j;
@@ -635,7 +636,7 @@ class Parser {
     }
 
     enter(tok) {
-        if (++this.depth > MAX_DEPTH) throw err('Слишком глубокая вложенность', 'Nested too deeply', tok.pos, 1, 'too-big');
+        if (++this.depth > MAX_DEPTH) throw err(msg('core.parse.nested_too_deeply'), tok.pos, 1, 'too-big');
     }
 
     canImplicit(t) {
@@ -659,11 +660,11 @@ class Parser {
             const t = this.peek();
             if (t.t === 'end' || t.t === 'close') {
                 if (s.v === ';' || s.nl) break; // trailing ; or newline
-                throw err('После запятой ничего нет', 'Nothing after the comma', s.pos, 1);
+                throw err(msg('core.parse.nothing_after_comma'), s.pos, 1);
             }
             if (t.t === 'sep') {
                 if (s.nl || t.nl) continue;
-                throw err('Пустой элемент списка', 'An empty list item', t.pos, 1);
+                throw err(msg('core.parse.empty_list_item'), t.pos, 1);
             }
             items.push(this.parseRel());
         }
@@ -676,8 +677,8 @@ class Parser {
         while (this.peek().t === 'rel') {
             const r = this.next();
             const t = this.peek();
-            if (t.t === 'end' || t.t === 'sep' || t.t === 'close') throw err(`После «${r.v}» ничего нет`, `Nothing after "${r.v}"`, r.pos, r.len);
-            if (t.t === 'rel') throw err(`Два знака подряд: «${r.v}» и «${t.v}»`, `Two relation signs in a row: "${r.v}" and "${t.v}"`, t.pos, t.len);
+            if (t.t === 'end' || t.t === 'sep' || t.t === 'close') throw err(msg('core.parse.nothing_after', { v: r.v }), r.pos, r.len);
+            if (t.t === 'rel') throw err(msg('core.parse.two_relation_signs_in_row_and', { v: r.v, v2: t.v }), t.pos, t.len);
             ops.push(r.v);
             items.push(this.parseAdd());
         }
@@ -764,7 +765,7 @@ class Parser {
             const t = this.next();
             this.enter(t);
             const nt = this.peek();
-            if (nt.t === 'end' || nt.t === 'sep' || nt.t === 'close' || nt.t === 'rel') throw err('У степени нет показателя', 'The power has no exponent', t.pos, t.len);
+            if (nt.t === 'end' || nt.t === 'sep' || nt.t === 'close' || nt.t === 'rel') throw err(msg('core.parse.power_has_no_exponent'), t.pos, t.len);
             const e = this.parseExponent();
             this.depth--;
             return pow(base, e);
@@ -809,7 +810,7 @@ class Parser {
         const saved = this.abs;
         this.abs = 0;
         const t = this.peek();
-        if (t.t === 'close') throw err('Пустые скобки', 'Empty brackets', open.pos, t.pos + t.len - open.pos);
+        if (t.t === 'close') throw err(msg('core.parse.empty_brackets'), open.pos, t.pos + t.len - open.pos);
         const inner = this.parseList();
         const c = this.next();
         if (c.t !== 'close') this.unexpected(c, open);
@@ -839,13 +840,13 @@ class Parser {
                 this.abs++;
                 const nt = this.peek();
                 if (nt.t === 'bar' && this.peek(1).t !== 'sym' && this.peek(1).t !== 'num' && this.peek(1).t !== 'open') {
-                    throw err('Пустой модуль |…|', 'Empty absolute value |…|', t.pos, nt.pos + 1 - t.pos);
+                    throw err(msg('core.parse.empty_absolute_value'), t.pos, nt.pos + 1 - t.pos);
                 }
-                if (nt.t === 'end') throw err('Модуль не закрыт: не хватает «|»', 'Absolute value is not closed: "|" is missing', t.pos, 1);
+                if (nt.t === 'end') throw err(msg('core.parse.absolute_value_is_not_closed_is'), t.pos, 1);
                 const inner = this.parseAdd();
                 const c = this.next();
                 if (c.t !== 'bar') {
-                    if (c.t === 'end') throw err('Модуль не закрыт: не хватает «|»', 'Absolute value is not closed: "|" is missing', t.pos, 1);
+                    if (c.t === 'end') throw err(msg('core.parse.absolute_value_is_not_closed_is'), t.pos, 1);
                     this.unexpected(c);
                 }
                 this.abs--;
@@ -856,7 +857,7 @@ class Parser {
                 this.next();
                 const nt = this.peek();
                 if (nt.t === 'end' || nt.t === 'sep' || nt.t === 'close' || nt.t === 'rel' || (nt.t === 'op' && nt.v !== '-' && nt.v !== '+')) {
-                    throw err('Под корнем ничего нет', 'Nothing under the root sign', t.pos, 1);
+                    throw err(msg('core.parse.nothing_under_root_sign'), t.pos, 1);
                 }
                 const a = this.parseExponent();
                 r = t.v === 2 ? fn('sqrt', a) : fn('root', a, num(t.v));
@@ -900,7 +901,7 @@ class Parser {
             this.next();
             return t.t === 'num' ? num(t.v, t.raw) : sym(t.v, !!t.isVar);
         }
-        throw err(`После \\${cmd.v} ждём {…}`, `\\${cmd.v} needs {…}`, cmd.pos, cmd.len);
+        throw err(msg('core.parse.needs_2', { v: cmd.v }), cmd.pos, cmd.len);
     }
 
     parseFunction() {
@@ -913,7 +914,7 @@ class Parser {
             if (this.isOp('^')) {
                 const p = this.next();
                 const nt = this.peek();
-                if (nt.t === 'end' || nt.t === 'sep' || nt.t === 'close' || nt.t === 'rel') throw err('У степени нет показателя', 'The power has no exponent', p.pos, p.len);
+                if (nt.t === 'end' || nt.t === 'sep' || nt.t === 'close' || nt.t === 'rel') throw err(msg('core.parse.power_has_no_exponent'), p.pos, p.len);
                 power = this.parseExponent();
             }
         };
@@ -927,7 +928,7 @@ class Parser {
             } else if (t.t === 'num' || t.t === 'sym') {
                 this.next();
                 base = t.t === 'num' ? num(t.v, t.raw) : sym(t.v, !!t.isVar);
-            } else throw err('После log_ ждём основание', 'A base is expected after log_', u.pos, 1);
+            } else throw err(msg('core.parse.base_is_expected_after_log'), u.pos, 1);
             if (!power) readPower();
         }
         let args;
@@ -938,10 +939,10 @@ class Parser {
         } else if (this.canImplicit(t) || (t.t === 'op' && t.v === '-')) {
             args = [this.parseBareArg()];
         } else {
-            throw err(`Функции «${label}» нужен аргумент: например, ${label}(x)`, `"${label}" needs an argument, e.g. ${label}(x)`, tok.pos, tok.len, 'no-arg');
+            throw err(msg('core.parse.needs_argument_e_g_x', { label }), tok.pos, tok.len, 'no-arg');
         }
         const one = () => {
-            if (args.length !== 1) throw err(`У функции «${label}» один аргумент`, `"${label}" takes one argument`, tok.pos, tok.len, 'arity');
+            if (args.length !== 1) throw err(msg('core.parse.takes_one_argument', { label }), tok.pos, tok.len, 'arity');
             return args[0];
         };
         if (power && INVERSE[name]) {
@@ -959,7 +960,7 @@ class Parser {
                 else node = fn('log', num(10), one());
                 break;
             case 'root':
-                if (args.length !== 2) throw err('Корню нужен показатель: root(x; 3)', 'root needs an index: root(x, 3)', tok.pos, tok.len, 'arity');
+                if (args.length !== 2) throw err(msg('core.parse.root_needs_index_root_x_3'), tok.pos, tok.len, 'arity');
                 node = fn('root', args[0], args[1]);
                 break;
             case 'sqrt':
@@ -977,7 +978,7 @@ class Parser {
     parseArgs(open, label) {
         const saved = this.abs;
         this.abs = 0;
-        if (this.peek().t === 'close') throw err(`Пустые скобки у «${label}»`, `Empty brackets after "${label}"`, open.pos, 2);
+        if (this.peek().t === 'close') throw err(msg('core.parse.empty_brackets_after', { label }), open.pos, 2);
         const args = [this.parseRel()];
         while (this.peek().t === 'sep') {
             this.next();
@@ -1014,24 +1015,24 @@ class Parser {
         const pv = prev ? (prev.raw ?? prev.v) : '';
         switch (t.t) {
             case 'end':
-                if (open) throw err(`Скобка «${open.v}» не закрыта`, `Bracket "${open.v}" is not closed`, open.pos, 1, 'brackets');
-                if (prev) throw err(`Выражение обрывается после «${pv}»`, `The expression ends right after "${pv}"`, prev.pos, prev.len);
-                throw err('Пустой ввод', 'Empty input', 0, 0, 'empty');
+                if (open) throw err(msg('core.parse.bracket_is_not_closed', { v: open.v }), open.pos, 1, 'brackets');
+                if (prev) throw err(msg('core.parse.expression_ends_right_after', { pv }), prev.pos, prev.len);
+                throw err(msg('core.parse.empty_input'), 0, 0, 'empty');
             case 'close':
-                if (prev && prev.t === 'open') throw err('Пустые скобки', 'Empty brackets', prev.pos, t.pos + 1 - prev.pos);
-                if (prev && (prev.t === 'op' || prev.t === 'rel' || prev.t === 'sep')) throw err(`После «${pv}» ждём число или выражение`, `A number or an expression is expected after "${pv}"`, prev.pos, prev.len);
-                throw err(`Лишняя скобка «${t.v}»`, `Unexpected "${t.v}"`, t.pos, 1, 'brackets');
+                if (prev && prev.t === 'open') throw err(msg('core.parse.empty_brackets'), prev.pos, t.pos + 1 - prev.pos);
+                if (prev && (prev.t === 'op' || prev.t === 'rel' || prev.t === 'sep')) throw err(msg('core.parse.number_or_expression_is_expected_after', { pv }), prev.pos, prev.len);
+                throw err(msg('core.parse.unexpected', { v: t.v }), t.pos, 1, 'brackets');
             case 'op':
-                if (prev && prev.t === 'op') throw err(`Два знака подряд: «${pv}${t.v}»`, `Two operators in a row: "${pv}${t.v}"`, prev.pos, t.pos + t.len - prev.pos);
-                throw err(`Перед «${t.v}» не хватает числа или выражения`, `A number or an expression is missing before "${t.v}"`, t.pos, t.len);
+                if (prev && prev.t === 'op') throw err(msg('core.parse.two_operators_in_row', { pv, v: t.v }), prev.pos, t.pos + t.len - prev.pos);
+                throw err(msg('core.parse.number_or_expression_is_missing_before', { v: t.v }), t.pos, t.len);
             case 'rel':
-                throw err(`Перед «${t.v}» не хватает выражения`, `An expression is missing before "${t.v}"`, t.pos, t.len);
+                throw err(msg('core.parse.expression_is_missing_before', { v: t.v }), t.pos, t.len);
             case 'sep':
-                throw err(`Перед «${t.v}» ничего нет`, `Nothing before "${t.v}"`, t.pos, t.len);
+                throw err(msg('core.parse.nothing_before', { v: t.v }), t.pos, t.len);
             case 'bar':
-                throw err('Непарная черта модуля «|»', 'An unpaired "|"', t.pos, 1);
+                throw err(msg('core.parse.unpaired'), t.pos, 1);
             default:
-                throw err(`Неожиданное «${t.raw ?? t.v}»`, `Unexpected "${t.raw ?? t.v}"`, t.pos, t.len);
+                throw err(msg('core.parse.unexpected_2', { p: t.raw ?? t.v }), t.pos, t.len);
         }
     }
 }
@@ -1042,13 +1043,13 @@ function checkBrackets(toks) {
         if (t.t === 'open') stack.push(t);
         else if (t.t === 'close') {
             const o = stack.pop();
-            if (!o) throw err(`Закрывающая скобка «${t.v}» без открывающей`, `Closing "${t.v}" without an opening one`, t.pos, 1, 'brackets');
-            if (OPEN[o.v] !== t.v) throw err(`Скобка «${o.v}» закрыта скобкой «${t.v}»`, `"${o.v}" is closed by "${t.v}"`, o.pos, t.pos + 1 - o.pos, 'brackets');
+            if (!o) throw err(msg('core.parse.closing_without_opening_one', { v: t.v }), t.pos, 1, 'brackets');
+            if (OPEN[o.v] !== t.v) throw err(msg('core.parse.is_closed_by', { v: o.v, v2: t.v }), o.pos, t.pos + 1 - o.pos, 'brackets');
         }
     }
     if (stack.length) {
         const o = stack[stack.length - 1];
-        throw err(`Скобка «${o.v}» не закрыта`, `Bracket "${o.v}" is not closed`, o.pos, 1, 'brackets');
+        throw err(msg('core.parse.bracket_is_not_closed', { v: o.v }), o.pos, 1, 'brackets');
     }
 }
 
@@ -1074,7 +1075,7 @@ function expandPlusMinus(toks) {
     }
     const flush = (sep) => {
         const pms = item.filter(isPm);
-        if (pms.length > 1) throw err('В одном ответе может быть только один знак ±', 'Only one ± per item', pms[1].pos, pms[1].len, 'unsupported');
+        if (pms.length > 1) throw err(msg('core.parse.only_one_per_item'), pms[1].pos, pms[1].len, 'unsupported');
         if (!pms.length) out.push(...item);
         else {
             const signs = pms[0].v === '±' ? ['+', '-'] : ['-', '+'];
@@ -1107,9 +1108,9 @@ function expandPlusMinus(toks) {
  *         lang?: 'ru' | 'en' — with 'en' a comma before exactly three digits is a thousands separator (1,000) }
  */
 export function parse(text, opts = {}) {
-    if (typeof text !== 'string') throw err('Нужна строка', 'Input must be a string', 0, 0, 'empty');
+    if (typeof text !== 'string') throw err(msg('core.parse.input_must_be_string'), 0, 0, 'empty');
     const maxLength = opts.maxLength ?? 2000;
-    if (text.length > maxLength) throw err(`Слишком длинный ввод (больше ${maxLength} символов)`, `The input is too long (over ${maxLength} characters)`, maxLength, text.length - maxLength, 'too-big');
+    if (text.length > maxLength) throw err(msg('core.parse.input_is_too_long_over_characters', { maxLength }), maxLength, text.length - maxLength, 'too-big');
     const vars = (opts.vars ?? []).map(String);
     const o = {
         foldCase: !!opts.foldCase,
@@ -1117,17 +1118,17 @@ export function parse(text, opts = {}) {
         _declared: new Set(vars),
         _declaredLong: vars.filter((v) => v.length > 1 && !/^[A-Za-z]+$/.test(v)).sort((a, b) => b.length - a.length),
     };
-    if (!text.trim()) throw err('Пустой ввод', 'Empty input', 0, 0, 'empty');
+    if (!text.trim()) throw err(msg('core.parse.empty_input'), 0, 0, 'empty');
     let toks;
     try {
         toks = tokenize(text, o);
-        if (!toks.length) throw err('Пустой ввод', 'Empty input', 0, 0, 'empty');
+        if (!toks.length) throw err(msg('core.parse.empty_input'), 0, 0, 'empty');
         checkBrackets(toks);
         toks = expandPlusMinus(toks);
         return new Parser(text, toks).parseTop();
     } catch (e) {
         if (e instanceof MathError) throw e;
-        if (e instanceof RangeError) throw err('Слишком сложное выражение', 'The expression is too complex', 0, text.length, 'too-big');
+        if (e instanceof RangeError) throw err(msg('core.parse.expression_is_too_complex'), 0, text.length, 'too-big');
         throw e;
     }
 }
@@ -1138,7 +1139,7 @@ export function tryParse(text, opts = {}) {
         return { ok: true, node: parse(text, opts) };
     } catch (e) {
         if (e instanceof MathError) return { ok: false, error: e };
-        return { ok: false, error: new MathError({ ru: 'Не удалось разобрать ввод', en: 'Could not read the input' }, 0, 0, 'internal') };
+        return { ok: false, error: new MathError(msg('core.parse.could_not_read_input'), 0, 0, 'internal') };
     }
 }
 
@@ -1181,7 +1182,7 @@ function nameOf(src, opts) {
     return null;
 }
 
-const NOT_FN = { ru: 'Нужна функция: f(x) = …, y = … или просто выражение', en: 'A function is expected: f(x) = …, y = … or just an expression' };
+const NOT_FN = msg('core.parse.function_is_expected_f_x_y');
 
 /**
  * A function as people type it for a solver or a plot: `f(x) = x^2 - 1`, `y = sin x`, `g(t)=t^3`,
@@ -1194,7 +1195,7 @@ const NOT_FN = { ru: 'Нужна функция: f(x) = …, y = … или пр
  * defines no function (x^2 + y^2 = 1, x = x^2), an inequality or a list.
  */
 export function parseFunctionInput(text, opts = {}) {
-    if (typeof text !== 'string') throw err('Нужна строка', 'Input must be a string', 0, 0, 'empty');
+    if (typeof text !== 'string') throw err(msg('core.parse.input_must_be_string'), 0, 0, 'empty');
     const done = (name, vars, body, lhs, at) => {
         if (body.type === 'rel' || body.type === 'chain' || body.type === 'list') throw new MathError(NOT_FN, at, text.length - at, 'not-expr');
         const names = [...freeNames(body)];

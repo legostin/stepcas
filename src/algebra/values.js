@@ -16,6 +16,7 @@ import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
 import { L, step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';
+import { msg } from '../i18n/index.js';
 
 const TRIG = new Set(['sin', 'cos', 'tan', 'cot']);
 const qv = (n) => numValue(n);
@@ -136,7 +137,7 @@ function ruleLogSum(n) {
         const arg = bottom.length ? div(upper, mul(bottom)) : upper;
         const combined = mkLog(first.s.lp.base, arg);
         const rest = terms.filter((x) => !group.includes(x)).map((x) => x.t);
-        return { node: rest.length ? add([combined, ...rest]) : combined, title: L('Сумма и разность логарифмов с одним основанием', 'Logarithms with one base added and subtracted'), text: LOG_RULES };
+        return { node: rest.length ? add([combined, ...rest]) : combined, title: msg('algebra.values.logarithms_with_one_base_added_and'), text: LOG_RULES };
     }
     return null;
 }
@@ -147,7 +148,7 @@ function ruleChangeBase(n) {
     const p = logParts(n.num);
     const q = logParts(n.den);
     if (!p || !q || !same(p.base, q.base)) return null;
-    return { node: mkLog(q.arg, p.arg), title: L('Переход к новому основанию', 'Change of base'), text: L('$\\dfrac{\\log_c b}{\\log_c a} = \\log_a b$.') };
+    return { node: mkLog(q.arg, p.arg), title: msg('algebra.values.change_of_base'), text: L('$\\dfrac{\\log_c b}{\\log_c a} = \\log_a b$.') };
 }
 
 // B^(k·log_c b + r), B = c^m → b^(km) · B^r
@@ -175,10 +176,10 @@ function ruleLogIdentity(n) {
     const node = rest.length ? mul(main, pow(n.base, add(rest))) : main;
     const c = tx(found.lp.base);
     const lines = [];
-    if (!found.m.isOne()) lines.push(L(`Основание степени — степень основания логарифма: $${tx(n.base)} = ${c}^{${qt(found.m)}}$.`, `The base of the power is a power of the log's base: $${tx(n.base)} = ${c}^{${qt(found.m)}}$.`));
-    lines.push(L('$a^{\\log_a b} = b$, поэтому $a^{k\\log_a b} = \\left(a^{\\log_a b}\\right)^k = b^k$.', '$a^{\\log_a b} = b$, so $a^{k\\log_a b} = \\left(a^{\\log_a b}\\right)^k = b^k$.'));
-    if (rest.length) lines.push(L('Сумма в показателе: $a^{x + y} = a^x \\cdot a^y$.', 'A sum in the exponent: $a^{x + y} = a^x \\cdot a^y$.'));
-    return { node, title: L('Основное логарифмическое тождество', 'The basic logarithmic identity'), text: L(lines.map((l) => l.ru).join(' '), lines.map((l) => l.en).join(' ')) };
+    if (!found.m.isOne()) lines.push(msg('algebra.values.base_of_power_is_power_of', { p: tx(n.base), c, p2: qt(found.m) }));
+    lines.push(msg('algebra.values.so'));
+    if (rest.length) lines.push(msg('algebra.values.sum_in_exponent'));
+    return { node, title: msg('algebra.values.basic_logarithmic_identity'), text: L(lines.map((l) => l.ru).join(' '), lines.map((l) => l.en).join(' ')) };
 }
 
 // log_a(a^k) → k: log_2 8 = 3, lg 0.001 = −3, log_{1/4} 8 = −3/2, log_2 √8 = 3/2, ln e³ = 3
@@ -186,8 +187,8 @@ function ruleLogOfPower(n) {
     const lp = logParts(n);
     if (!lp) return null;
     if (isE(lp.base)) {
-        if (isE(lp.arg)) return { node: num(1), title: L('Логарифм основания', 'The log of the base'), text: L('$\\ln e = 1$.') };
-        if (lp.arg.type === 'pow' && isE(lp.arg.base)) return { node: lp.arg.exp, title: L('Логарифм степени основания', 'The log of a power of the base'), text: L('$\\ln e^k = k$.') };
+        if (isE(lp.arg)) return { node: num(1), title: msg('algebra.values.log_of_base'), text: L('$\\ln e = 1$.') };
+        if (lp.arg.type === 'pow' && isE(lp.arg.base)) return { node: lp.arg.exp, title: msg('algebra.values.log_of_power_of_base'), text: L('$\\ln e^k = k$.') };
         return null;
     }
     const b = qv(lp.base);
@@ -199,12 +200,12 @@ function ruleLogOfPower(n) {
     const k0 = logExact(b, a.q);
     if (!k0) return null;
     const k = k0.mul(a.e);
-    if (k.isOne()) return { node: num(1), title: L('Логарифм основания', 'The log of the base'), text: L('$\\log_a a = 1$.') };
-    if (k.isZero()) return { node: num(0), title: L('Логарифм единицы', 'The log of one'), text: L('$\\log_a 1 = 0$.') };
+    if (k.isOne()) return { node: num(1), title: msg('algebra.values.log_of_base'), text: L('$\\log_a a = 1$.') };
+    if (k.isZero()) return { node: num(0), title: msg('algebra.values.log_of_one'), text: L('$\\log_a 1 = 0$.') };
     return {
         node: num(k),
-        title: L('Логарифм степени основания', 'The log of a power of the base'),
-        text: L(`$${tx(lp.arg)} = ${tx(pow(lp.base, num(k)))}$, а $\\log_a a^k = k$.`, `$${tx(lp.arg)} = ${tx(pow(lp.base, num(k)))}$, and $\\log_a a^k = k$.`),
+        title: msg('algebra.values.log_of_power_of_base'),
+        text: msg('algebra.values.and', { p: tx(lp.arg), p2: tx(pow(lp.base, num(k))) }),
     };
 }
 
@@ -245,8 +246,8 @@ function rulePowers(n) {
         const conv = allSame ? [] : [...new Set(bases.filter((b) => !b.eq(p)).map((b) => `${qt(b)} = ${powTex(p, logExact(p, b))}`))];
         return {
             node: rebuild([pow(num(p), add(exps))]),
-            title: allSame ? L('Степени с одним основанием', 'Powers of one base') : L('Приводим степени к одному основанию', 'Bring the powers to one base'),
-            text: L(`${conv.length ? `$${conv.join(',\\ ')}$. ` : ''}При умножении степеней с одним основанием показатели складываются, при делении — вычитаются: $a^x \\cdot a^y = a^{x+y}$, $\\dfrac{a^x}{a^y} = a^{x-y}$.`, `${conv.length ? `$${conv.join(',\\ ')}$. ` : ''}Multiplying powers of one base adds the exponents, dividing subtracts them: $a^x \\cdot a^y = a^{x+y}$, $\\dfrac{a^x}{a^y} = a^{x-y}$.`),
+            title: allSame ? msg('algebra.values.powers_of_one_base') : msg('algebra.values.bring_powers_to_one_base'),
+            text: msg('algebra.values.multiplying_powers_of_one_base_adds', { p: conv.length ? `$${conv.join(',\\ ')}$. ` : '' }),
         };
     }
     const fact = bases.map(primeFactors);
@@ -258,22 +259,22 @@ function rulePowers(n) {
     const conv = [...new Set(bases.flatMap((b, i) => (isPrime(b, i) ? [] : [`${qt(b)} = ${[...fact[i]].map(([pr, e]) => powTex(new Q(pr), new Q(BigInt(e)))).join(' \\cdot ')}`])))];
     return {
         node: rebuild(powers),
-        title: L('Раскладываем основания на простые множители', 'Factor the bases into primes'),
-        text: L(`$${conv.join(',\\ ')}$. Затем $(ab)^x = a^x b^x$, и показатели при одном основании складываются.`, `$${conv.join(',\\ ')}$. Then $(ab)^x = a^x b^x$, and the exponents of one base add up.`),
+        title: msg('algebra.values.factor_bases_into_primes'),
+        text: msg('algebra.values.then_and_exponents_of_one_base', { p: conv.join(',\\ ') }),
     };
 }
 
 // (a^m)^n → a^(mn)
 function rulePowPow(n) {
     if (n.type !== 'pow' || n.base.type !== 'pow') return null;
-    return { node: pow(n.base.base, mul(n.base.exp, n.exp)), title: L('Степень степени', 'A power of a power'), text: L('$(a^m)^n = a^{mn}$.') };
+    return { node: pow(n.base.base, mul(n.base.exp, n.exp)), title: msg('algebra.values.power_of_power'), text: L('$(a^m)^n = a^{mn}$.') };
 }
 
 // (a·b)^k → a^k·b^k when some factor is a root: (2√7)² = 2²·(√7)²
 function rulePowProduct(n) {
     if (n.type !== 'pow' || n.base.type !== 'mul' || !qv(n.exp)?.isInt()) return null;
     if (!n.base.args.some((f) => f.type === 'fn' && f.name === 'sqrt')) return null;
-    return { node: mul(n.base.args.map((f) => pow(f, n.exp))), title: L('Степень произведения', 'A power of a product'), text: L('$(ab)^n = a^n b^n$.') };
+    return { node: mul(n.base.args.map((f) => pow(f, n.exp))), title: msg('algebra.values.power_of_product'), text: L('$(ab)^n = a^n b^n$.') };
 }
 
 // q^(m/n) with an exact root: 27^(2/3) = 3² ; (√a)^k = a^(k/2)
@@ -283,14 +284,14 @@ function ruleRationalPower(n) {
     if (!e) return null;
     if (n.base.type === 'fn' && n.base.name === 'sqrt' && e.isInt()) {
         const half = e.div(2);
-        return { node: half.isOne() ? n.base.args[0] : pow(n.base.args[0], num(half)), title: L('Квадрат корня', 'The square of a root'), text: L('$\\left(\\sqrt{a}\\right)^2 = a$.'), quiet: true };
+        return { node: half.isOne() ? n.base.args[0] : pow(n.base.args[0], num(half)), title: msg('algebra.values.square_of_root'), text: L('$\\left(\\sqrt{a}\\right)^2 = a$.'), quiet: true };
     }
     const b = qv(n.base);
     if (!b || e.isInt() || !b.isPos()) return null;
     const r = b.exactRoot(Number(e.d));
     if (!r) return null;
     const res = e.n === 1n ? num(r) : pow(num(r), num(new Q(e.n)));
-    return { node: res, title: L('Степень с дробным показателем', 'A fractional power'), text: L(`$a^{\\frac{m}{n}} = \\left(\\sqrt[n]{a}\\right)^m$, $\\sqrt[${e.d}]{${qt(b)}} = ${qt(r)}$.`) };
+    return { node: res, title: msg('algebra.values.fractional_power'), text: L(`$a^{\\frac{m}{n}} = \\left(\\sqrt[n]{a}\\right)^m$, $\\sqrt[${e.d}]{${qt(b)}} = ${qt(r)}$.`) };
 }
 
 // √a · √b → √(ab)
@@ -300,7 +301,7 @@ function ruleSqrtProduct(n) {
     if (roots.length < 2) return null;
     const rest = n.args.filter((f) => !roots.includes(f));
     const r = fn('sqrt', mul(roots.map((f) => f.args[0])));
-    return { node: rest.length ? mul([...rest, r]) : r, title: L('Произведение корней', 'A product of roots'), text: L('$\\sqrt{a}\\cdot\\sqrt{b} = \\sqrt{ab}$.') };
+    return { node: rest.length ? mul([...rest, r]) : r, title: msg('algebra.values.product_of_roots'), text: L('$\\sqrt{a}\\cdot\\sqrt{b} = \\sqrt{ab}$.') };
 }
 
 // √q: an exact root, or a square factor taken out (√18 = 3√2)
@@ -309,7 +310,7 @@ function ruleSqrtValue(n) {
     const v = n.args[0].value;
     if (v.isNeg()) return null;
     const r = v.exactRoot(2);
-    if (r) return { node: num(r), title: L('Извлекаем корень', 'Take the root'), text: L(`$${qt(r)}^2 = ${qt(v)}$.`), quiet: true };
+    if (r) return { node: num(r), title: msg('algebra.values.take_root'), text: L(`$${qt(r)}^2 = ${qt(v)}$.`), quiet: true };
     if (!v.isInt()) return null;
     let out = 1n;
     let inner = v.n;
@@ -320,7 +321,7 @@ function ruleSqrtValue(n) {
         }
     }
     if (out === 1n) return null;
-    return { node: mul(num(new Q(out)), fn('sqrt', num(new Q(inner)))), title: L('Выносим множитель из-под корня', 'Take a factor out of the root'), text: L(`$${v.n} = ${out * out} \\cdot ${inner}$, $\\sqrt{a^2 b} = a\\sqrt{b}$.`) };
+    return { node: mul(num(new Q(out)), fn('sqrt', num(new Q(inner)))), title: msg('algebra.values.take_factor_out_of_root'), text: L(`$${v.n} = ${out * out} \\cdot ${inner}$, $\\sqrt{a^2 b} = a\\sqrt{b}$.`) };
 }
 
 // (a − b)(a + b) → a² − b²
@@ -332,7 +333,7 @@ function ruleDiffSquares(n) {
     for (const [[a1, b1], [a2, b2]] of [[u.args, w.args], [w.args, u.args]]) {
         if (same(a1, a2) && same(b1, neg(b2))) {
             const pos = b1.type === 'neg' ? b1.arg : b1;
-            return { node: add(pow(a1, num(2)), neg(pow(pos, num(2)))), title: L('Разность квадратов', 'The difference of squares'), text: L('$(a - b)(a + b) = a^2 - b^2$.') };
+            return { node: add(pow(a1, num(2)), neg(pow(pos, num(2)))), title: msg('algebra.values.difference_of_squares'), text: L('$(a - b)(a + b) = a^2 - b^2$.') };
         }
     }
     return null;
@@ -346,7 +347,7 @@ function ruleFactorSquares(n) {
     const a = sq(p);
     const b = q.type === 'neg' ? sq(q.arg) : null;
     if (!a || !b || qv(a).abs().lt(10)) return null;
-    return { node: mul(add(a, neg(b)), add(a, b)), title: L('Разность квадратов', 'The difference of squares'), text: L('$a^2 - b^2 = (a - b)(a + b)$ — так считать проще.', '$a^2 - b^2 = (a - b)(a + b)$ — easier to compute.') };
+    return { node: mul(add(a, neg(b)), add(a, b)), title: msg('algebra.values.difference_of_squares'), text: msg('algebra.values.easier_to_compute') };
 }
 
 // (a ± b)² with roots → a² ± 2ab + b²
@@ -359,7 +360,7 @@ function ruleSquareSum(n) {
     const mid = mul(num(2), a, b);
     return {
         node: add(pow(a, num(2)), minus ? neg(mid) : mid, pow(b, num(2))),
-        title: minus ? L('Квадрат разности', 'The square of a difference') : L('Квадрат суммы', 'The square of a sum'),
+        title: minus ? msg('algebra.values.square_of_difference') : msg('algebra.values.square_of_sum'),
         text: minus ? L('$(a - b)^2 = a^2 - 2ab + b^2$.') : L('$(a + b)^2 = a^2 + 2ab + b^2$.'),
     };
 }
@@ -396,9 +397,8 @@ function ruleDenest(n) {
     const sq = (lang) => `${toTex(n.args[0], { lang })} = ${toTex(pow(inner, num(2)), { lang })}`;
     return {
         node: inner,
-        title: L('Выделяем полный квадрат под корнем', 'A perfect square under the root'),
-        text: L(`$${sq('ru')}$: $${toTex(pow(rx, num(2)))} + ${toTex(pow(ry, num(2)))} = ${qt(a)}$, $2 \\cdot ${toTex(mul(rx, ry))} = ${toTex(sign > 0 ? t : t.arg)}$. Так как $\\sqrt{c^2} = |c|$ и $${toTex(inner)} \\ge 0$, корень равен $${toTex(inner)}$.`,
-            `$${sq('en')}$: $${toTex(pow(rx, num(2)))} + ${toTex(pow(ry, num(2)))} = ${qt(a)}$, $2 \\cdot ${toTex(mul(rx, ry))} = ${toTex(sign > 0 ? t : t.arg)}$. As $\\sqrt{c^2} = |c|$ and $${toTex(inner)} \\ge 0$, the root is $${toTex(inner)}$.`),
+        title: msg('algebra.values.perfect_square_under_root'),
+        text: msg('algebra.values.as_and_root_is', { p: (lng) => sq(lng), p2: toTex(pow(rx, num(2))), p3: toTex(pow(ry, num(2))), a: qt(a), p4: toTex(mul(rx, ry)), p5: toTex(sign > 0 ? t : t.arg), inner: toTex(inner) }),
     };
 }
 
@@ -441,7 +441,7 @@ function trigChain(name, q) {
         a = a.neg();
         if (odd) sign = -sign;
         chain.push(at(piNode(a)));
-        notes.push(odd ? L(`нечётность: $${FN_TEX[name]}(-\\alpha) = -${FN_TEX[name]}\\,\\alpha$`, `oddness: $${FN_TEX_EN[name]}(-\\alpha) = -${FN_TEX_EN[name]}\\,\\alpha$`) : L('чётность: $\\cos(-\\alpha) = \\cos\\alpha$', 'evenness: $\\cos(-\\alpha) = \\cos\\alpha$'));
+        notes.push(odd ? msg('algebra.values.oddness', { p: FN_TEX[name], p2: FN_TEX_EN[name] }) : msg('algebra.values.evenness'));
     }
     const period = name === 'tan' || name === 'cot' ? Q.ONE : new Q(2n);
     if (a.ge(period)) {
@@ -450,7 +450,7 @@ function trigChain(name, q) {
         chain.push(at(add(piNode(period.mul(k)), piNode(r))));
         a = r;
         chain.push(at(piNode(a)));
-        notes.push(L(`период ${period.eq(1) ? '$\\pi$' : '$2\\pi$'}`, `the period ${period.eq(1) ? '$\\pi$' : '$2\\pi$'}`));
+        notes.push(msg('algebra.values.period', { p: period.eq(1) ? '$\\pi$' : '$2\\pi$' }));
     }
     if (a.gt(new Q(1n, 2n))) {
         let beta;
@@ -477,7 +477,7 @@ function trigChain(name, q) {
         if (flip) sign = -sign;
         a = beta;
         chain.push(at(piNode(a)));
-        notes.push(L('формула приведения', 'a reduction formula'));
+        notes.push(msg('algebra.values.reduction_formula'));
     }
     const val = trySimplify(at(piNode(a)));
     if (nodeSome(val, (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
@@ -492,10 +492,10 @@ function ruleTrigValue(n) {
     const r = trigChain(n.name, q);
     if (!r) return null;
     const texChain = (lang) => [fn(n.name, piNode(q)), ...r.chain].map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
-    if (!r.notes.length) return { node: r.value, title: L('Табличное значение', 'A table value'), text: L(`$${texChain('ru')}$.`, `$${texChain('en')}$.`) };
+    if (!r.notes.length) return { node: r.value, title: msg('algebra.values.table_value'), text: L(`$${texChain('ru')}$.`, `$${texChain('en')}$.`) };
     return {
         node: r.value,
-        title: L('Формулы приведения', 'Reduction formulas'),
+        title: msg('algebra.values.reduction_formulas'),
         text: L(`$${texChain('ru')}$ (${r.notes.map((x) => x.ru).join(', ')}).`, `$${texChain('en')}$ (${r.notes.map((x) => x.en).join(', ')}).`),
     };
 }
@@ -519,8 +519,8 @@ function ruleCofunction(n) {
             const texOf = (lang) => `${toTex(g, { lang })} = ${toTex(via, { lang })} = ${toTex(repl, { lang })}`;
             return {
                 node: mul(fs.map((x) => (x === g ? repl : x))),
-                title: L('Формулы приведения', 'Reduction formulas'),
-                text: L(`$${texOf('ru')}$, так как $\\sin\\left(\\frac{\\pi}{2} - \\alpha\\right) = \\cos\\alpha$, $\\cos\\left(\\frac{\\pi}{2} - \\alpha\\right) = \\sin\\alpha$.`, `$${texOf('en')}$, since $\\sin\\left(\\frac{\\pi}{2} - \\alpha\\right) = \\cos\\alpha$, $\\cos\\left(\\frac{\\pi}{2} - \\alpha\\right) = \\sin\\alpha$.`),
+                title: msg('algebra.values.reduction_formulas'),
+                text: msg('algebra.values.since', { p: (lng) => texOf(lng) }),
             };
         }
     }
@@ -538,14 +538,14 @@ function ruleDoubleAngle(n) {
         if (!k) return null;
         const half = k.div(2);
         const s2 = fn('sin', double(s.args[0]));
-        return { node: half.isOne() ? s2 : mul(num(half), s2), title: L('Синус двойного угла', 'The double-angle sine'), text: L('$2\\sin u \\cos u = \\sin 2u$.') };
+        return { node: half.isOne() ? s2 : mul(num(half), s2), title: msg('algebra.values.double_angle_sine'), text: L('$2\\sin u \\cos u = \\sin 2u$.') };
     }
     if (n.type === 'add' && n.args.length === 2) {
         const sq = (f, name) => (f.type === 'pow' && qv(f.exp)?.eq(2) && f.base.type === 'fn' && f.base.name === name ? f.base.args[0] : null);
         const [p, q] = n.args;
         const u = sq(p, 'cos');
         const w = q.type === 'neg' ? sq(q.arg, 'sin') : null;
-        if (u && w && same(u, w)) return { node: fn('cos', double(u)), title: L('Косинус двойного угла', 'The double-angle cosine'), text: L('$\\cos^2 u - \\sin^2 u = \\cos 2u$.') };
+        if (u && w && same(u, w)) return { node: fn('cos', double(u)), title: msg('algebra.values.double_angle_cosine'), text: L('$\\cos^2 u - \\sin^2 u = \\cos 2u$.') };
     }
     return null;
 }
@@ -560,7 +560,7 @@ function ruleLowerPower(n) {
     const cos = n.base.name === 'cos';
     return {
         node: div(add(num(1), cos ? c2 : neg(c2)), num(2)),
-        title: L('Формула понижения степени', 'Lowering the power'),
+        title: msg('algebra.values.lowering_power'),
         text: cos ? L('$\\cos^2 u = \\dfrac{1 + \\cos 2u}{2}$.') : L('$\\sin^2 u = \\dfrac{1 - \\cos 2u}{2}$.'),
     };
 }
@@ -633,7 +633,7 @@ function rewriteOnce(n) {
     return s && nodeKey(s.node) !== nodeKey(n) ? s : null;
 }
 
-const COMPUTE = L('Считаем', 'Compute');
+const COMPUTE = msg('algebra.values.compute');
 
 /**
  * The value of a numeric expression with school-style steps.
@@ -679,14 +679,14 @@ function run(start, want, maxSteps) {
     // the value: where the steps arrived when the engine agrees it is simpler, else the engine's own form
     const end = trySimplify(cur);
     const value = Number.isFinite(want) && tx(end).length > tx(trySimplify(start)).length ? trySimplify(start) : end;
-    if (tx(value) !== tx(cur)) entries.push({ title: L('Упрощаем', 'Simplify'), texts: [], chain: [cur, value], rule: 'simplify' });
+    if (tx(value) !== tx(cur)) entries.push({ title: msg('algebra.values.simplify'), texts: [], chain: [cur, value], rule: 'simplify' });
     const steps = entries.map((e) => {
         const title = e.quiet && e.chain.length > 2 ? COMPUTE : e.title;
         const text = e.texts.length ? L(e.texts.map((t) => t.ru).join(' '), e.texts.map((t) => t.en).join(' ')) : undefined;
         const chain = (lang) => e.chain.map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
         return step({ title, tex: L(chain('ru'), chain('en')), text, rule: e.rule ?? (e.quiet ? 'arith' : 'rule') });
     });
-    steps.push(step({ title: L('Ответ', 'Answer'), tex: L(`${toTex(start, { lang: 'ru' })} = ${toTex(value, { lang: 'ru' })}`, `${toTex(start, { lang: 'en' })} = ${toTex(value, { lang: 'en' })}`), rule: 'answer' }));
+    steps.push(step({ title: msg('algebra.values.answer'), tex: L(`${toTex(start, { lang: 'ru' })} = ${toTex(value, { lang: 'ru' })}`, `${toTex(start, { lang: 'en' })} = ${toTex(value, { lang: 'en' })}`), rule: 'answer' }));
     steps[steps.length - 1].final = true;
     return { value, approx: want, exact: freeVars(value).length === 0, steps: DEG ? degSteps(steps) : steps };
 }

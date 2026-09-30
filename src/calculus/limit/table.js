@@ -3,6 +3,7 @@
 import { step } from '../../core/steps.js';
 import { HS, T_, atPoint, bt, evalAt } from './common.js';
 import { plainNum } from './forms.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric table and check
 
@@ -122,11 +123,11 @@ export function tableStep(rows, v, P, n) {
     });
     void n;
     return step({
-        title: T_('Таблица значений', 'Table of values'),
+        title: msg('calculus.limit.table.table_of_values'),
         tex,
         text: Number.isFinite(P.x)
-            ? T_(`Значения функции всё ближе к точке ${v} = ${plainNum(P)}${P.side === 'both' ? ' (слева и справа)' : P.side === 'left' ? ' слева' : ' справа'}.`, `Values of the function closer and closer to ${v} = ${plainNum(P)}${P.side === 'both' ? ' (from both sides)' : P.side === 'left' ? ' from the left' : ' from the right'}.`)
-            : T_(`Значения функции при всё больших по модулю ${v}.`, `Values of the function for larger and larger |${v}|.`),
+            ? msg('calculus.limit.table.values_of_function_closer_and_closer', { v, P: plainNum(P), p: (lng) => P.side === 'both' ? msg('calculus.limit.table.from_both_sides').in(lng) : P.side === 'left' ? msg('calculus.limit.table.from_left').in(lng) : msg('calculus.limit.table.from_right').in(lng) })
+            : msg('calculus.limit.table.values_of_function_for_larger_and', { v }),
         rule: 'table',
     });
 }

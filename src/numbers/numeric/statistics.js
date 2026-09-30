@@ -2,14 +2,15 @@
 
 import { fail, fin } from './common.js';
 import { numBrent } from './roots.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- statistics
 
 function nums(xs, min = 1) {
-    if (!Array.isArray(xs) && !ArrayBuffer.isView(xs)) throw fail('Нужен список чисел.', 'A list of numbers is required.', 'type');
+    if (!Array.isArray(xs) && !ArrayBuffer.isView(xs)) throw fail(msg('numbers.numeric.statistics.list_of_numbers_is_required'), 'type');
     const a = Array.from(xs, Number);
-    if (a.length < min) throw fail(`Нужно хотя бы ${min} ${min === 1 ? 'число' : 'числа'}.`, `At least ${min} number${min === 1 ? '' : 's'} required.`, 'range');
-    if (!a.every(fin)) throw fail('В данных есть не числа.', 'The data contain non-numbers.', 'nan');
+    if (a.length < min) throw fail(msg('numbers.numeric.statistics.at_least_number_required', { min, p: (lng) => min === 1 ? msg('numbers.numeric.statistics.formula').in(lng) : msg('numbers.numeric.statistics.s').in(lng) }), 'range');
+    if (!a.every(fin)) throw fail(msg('numbers.numeric.statistics.data_contain_non_numbers'), 'nan');
     return a;
 }
 function sumAccurate(a) {
@@ -60,7 +61,7 @@ export function statStd(xs, kind = 'population') {
 /** Quantile with linear interpolation between order statistics (R type 7, Excel PERCENTILE.INC). */
 export function statQuantile(xs, p) {
     const a = nums(xs).sort((u, v) => u - v);
-    if (!(p >= 0 && p <= 1)) throw fail('Уровень квантиля — число от 0 до 1.', 'The quantile level must be between 0 and 1.', 'range');
+    if (!(p >= 0 && p <= 1)) throw fail(msg('numbers.numeric.statistics.quantile_level_must_be_between_0'), 'range');
     const h = (a.length - 1) * p;
     const lo = Math.floor(h);
     return lo + 1 < a.length ? a[lo] + (h - lo) * (a[lo + 1] - a[lo]) : a[lo];
@@ -69,7 +70,7 @@ export function statQuantile(xs, p) {
 /** Pearson correlation coefficient r. */
 export function statCorrelation(xs, ys) {
     const x = nums(xs, 2), y = nums(ys, 2);
-    if (x.length !== y.length) throw fail('Списки разной длины.', 'The lists have different lengths.', 'range');
+    if (x.length !== y.length) throw fail(msg('numbers.numeric.statistics.lists_have_different_lengths'), 'range');
     const mx = statMean(x), my = statMean(y);
     let sxy = 0, sxx = 0, syy = 0;
     for (let i = 0; i < x.length; i++) {
@@ -82,18 +83,18 @@ export function statCorrelation(xs, ys) {
 
 export function pointsOf(points) {
     const P = Array.from(points, (p) => (Array.isArray(p) ? [Number(p[0]), Number(p[1])] : [Number(p.x), Number(p.y)]));
-    if (!P.every(([x, y]) => fin(x) && fin(y))) throw fail('Точки должны быть парами чисел.', 'Points must be pairs of numbers.', 'type');
+    if (!P.every(([x, y]) => fin(x) && fin(y))) throw fail(msg('numbers.numeric.statistics.points_must_be_pairs_of_numbers'), 'type');
     return P;
 }
 
 /** Least-squares line y = a·x + b → {a, b, r, r2, slope: a, intercept: b}. Points: [[x, y]] or [{x, y}]. */
 export function statLinearRegression(points) {
     const P = pointsOf(points);
-    if (P.length < 2) throw fail('Нужно хотя бы две точки.', 'At least two points are required.', 'range');
+    if (P.length < 2) throw fail(msg('numbers.numeric.statistics.at_least_two_points_are_required'), 'range');
     const mx = statMean(P.map((p) => p[0])), my = statMean(P.map((p) => p[1]));
     let sxy = 0, sxx = 0, syy = 0;
     for (const [x, y] of P) { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; syy += (y - my) ** 2; }
-    if (sxx === 0) throw fail('У всех точек одинаковый x — прямую вида y = ax + b провести нельзя.', 'All points have the same x, so no line y = ax + b fits.', 'degenerate');
+    if (sxx === 0) throw fail(msg('numbers.numeric.statistics.all_points_have_same_x_so'), 'degenerate');
     const a = sxy / sxx, b = my - a * mx;
     const r = syy === 0 ? 1 : sxy / Math.sqrt(sxx * syy);
     return { a, b, r, r2: syy === 0 ? 1 : r * r, slope: a, intercept: b };
@@ -108,7 +109,7 @@ function lstsq(A, y) {
         let norm = 0;
         for (let i = k; i < m; i++) norm += R[i][k] * R[i][k];
         norm = Math.sqrt(norm);
-        if (norm === 0) throw fail('Задача вырождена.', 'The problem is degenerate.', 'degenerate');
+        if (norm === 0) throw fail(msg('numbers.numeric.statistics.problem_is_degenerate'), 'degenerate');
         const alpha = R[k][k] > 0 ? -norm : norm;
         const v = new Array(m).fill(0);
         for (let i = k; i < m; i++) v[i] = R[i][k];
@@ -131,7 +132,7 @@ function lstsq(A, y) {
     for (let i = n - 1; i >= 0; i--) {
         let s = b[i];
         for (let j = i + 1; j < n; j++) s -= R[i][j] * x[j];
-        if (Math.abs(R[i][i]) < 1e-300) throw fail('Задача вырождена.', 'The problem is degenerate.', 'degenerate');
+        if (Math.abs(R[i][i]) < 1e-300) throw fail(msg('numbers.numeric.statistics.problem_is_degenerate'), 'degenerate');
         x[i] = s / R[i][i];
     }
     return x;
@@ -141,8 +142,8 @@ function lstsq(A, y) {
 export function statPolyFit(points, degree) {
     const P = pointsOf(points);
     degree = Math.floor(degree);
-    if (!(degree >= 0)) throw fail('Степень — неотрицательное целое.', 'The degree must be a non-negative integer.', 'range');
-    if (P.length < degree + 1) throw fail(`Для степени ${degree} нужно хотя бы ${degree + 1} точек.`, `Degree ${degree} needs at least ${degree + 1} points.`, 'range');
+    if (!(degree >= 0)) throw fail(msg('numbers.numeric.statistics.degree_must_be_non_negative_integer'), 'range');
+    if (P.length < degree + 1) throw fail(msg('numbers.numeric.statistics.degree_needs_at_least_points', { degree, p: degree + 1 }), 'range');
     const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]);
     const mx = statMean(xs);
     const sx = Math.max(...xs.map((x) => Math.abs(x - mx))) || 1;
@@ -252,7 +253,7 @@ export function probNormalCdf(x, mu = 0, sigma = 1) {
 
 /** Normal quantile: Acklam's approximation polished by Halley's method (full double precision). */
 export function probNormalInv(p, mu = 0, sigma = 1) {
-    if (!(p >= 0 && p <= 1)) throw fail('Вероятность — число от 0 до 1.', 'A probability must be between 0 and 1.', 'range');
+    if (!(p >= 0 && p <= 1)) throw fail(msg('numbers.numeric.statistics.probability_must_be_between_0_and'), 'range');
     if (p === 0) return -Infinity;
     if (p === 1) return Infinity;
     const a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
@@ -292,7 +293,7 @@ export function probChoose(n, k) {
 /** n! as an exact BigInt. */
 export function probFactorial(n) {
     const N = BigInt(n);
-    if (N < 0n) throw fail('Факториал определён для неотрицательных целых.', 'The factorial is defined for non-negative integers.', 'range');
+    if (N < 0n) throw fail(msg('numbers.numeric.statistics.factorial_is_defined_for_non_negative'), 'range');
     let r = 1n;
     for (let i = 2n; i <= N; i++) r *= i;
     return r;
@@ -451,7 +452,7 @@ export function probGeometricCdf(k, p) {
 
 /** Student's t distribution function with df degrees of freedom (df = Infinity → normal). */
 export function probStudentTCdf(t, df) {
-    if (!(df > 0)) throw fail('Число степеней свободы должно быть положительным.', 'The degrees of freedom must be positive.', 'range');
+    if (!(df > 0)) throw fail(msg('numbers.numeric.statistics.degrees_of_freedom_must_be_positive'), 'range');
     if (df === Infinity) return probNormalCdf(t);
     if (t === 0) return 0.5;
     const x = df / (df + t * t);
@@ -464,7 +465,7 @@ export function probStudentTInv(p, df) {
     if (!(p > 0 && p < 1)) {
         if (p === 0) return -Infinity;
         if (p === 1) return Infinity;
-        throw fail('Вероятность — число от 0 до 1.', 'A probability must be between 0 and 1.', 'range');
+        throw fail(msg('numbers.numeric.statistics.probability_must_be_between_0_and'), 'range');
     }
     if (df === Infinity) return probNormalInv(p);
     if (p === 0.5) return 0;

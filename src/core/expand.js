@@ -10,10 +10,11 @@ import { Q, MathError, bigGcd, bigLcm } from './rational.js';
 import { num, div, freeVars, nodeKey, containsVar, isConst } from './ast.js';
 import { splitCoeff, canonContext } from './simplify.js';
 import { Poly } from './poly.js';
+import { msg } from '../i18n/index.js';
 
 const MAX_TERMS = 1000;
 const MAX_WORK = 3000000;
-const TOO_BIG = { ru: 'После раскрытия скобок получится слишком много слагаемых', en: 'Expanding would give too many terms' };
+const TOO_BIG = msg('core.expand.expanding_would_give_too_many_terms');
 
 const N1 = num(1);
 const isNum = (n) => n.type === 'num';

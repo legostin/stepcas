@@ -11,6 +11,7 @@ import { sideValue } from './domain.js';
 import { solveEquation } from './equation.js';
 import { monoNode, solveLinearSchool, sumNode } from './polynomial.js';
 import { rootsTex } from './roots.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- systems of equations
 
@@ -52,7 +53,7 @@ function linEqNode(a, b, vars) {
 
 export const casesTex = (lines) => (lines.length > 1 ? `\\begin{cases} ${lines.join(' \\\\ ')} \\end{cases}` : lines[0]);
 const systemTexB = (rows, vars) => byLang((l) => casesTex(rows.map((r) => tex(linEqNode(r.a, r.b, vars), l))));
-const tupleTex = (items, lang) => `\\left(${items.join(lang === 'ru' ? ';\\ ' : ',\\ ')}\\right)`;
+const tupleTex = (items, lang) => `\\left(${items.join(notation(lang).listTex)}\\right)`;
 const ORD = { ru: ['первого', 'второго', 'третьего'], en: ['first', 'second', 'third'] };
 const ORD_ACC = { ru: ['первое', 'второе', 'третье'], en: ['first', 'second', 'third'] };
 
@@ -79,9 +80,9 @@ function checkSystem(rels, sol) {
     return {
         ok,
         items,
-        step: S(T('Проверка', 'Check'), {
+        step: S(msg('solve.systems.check'), {
             tex: byLang((l) => (items.length > 1 ? `\\begin{aligned} ${items.map((x) => `& ${pick(x.tex, l)}`).join(' \\\\ ')} \\end{aligned}` : pick(items[0].tex, l))),
-            text: ok ? T('Подставили найденные значения в каждое уравнение — все равенства верны.', 'We substituted the values into every equation: all of them hold.') : T('Не все равенства выполняются.', 'Not all the equalities hold.'),
+            text: ok ? msg('solve.systems.we_substituted_values_into_every_equation') : msg('solve.systems.not_all_equalities_hold'),
         }),
     };
 }
@@ -108,32 +109,32 @@ function sysSubstitution(rows, vars) {
     const shown = aij.isOne() ? numer : aij.eq(-1) ? simpOr(neg(numer)) : div(numer, num(aij));
     const expr = simpOr(shown);
     const steps = [];
-    steps.push(S(T(`Выражаем $${vj}$ из ${ORD.ru[i]} уравнения`, `Express $${vj}$ from the ${ORD.en[i]} equation`), { tex: byLang((l) => `${vj} = ${tex(shown, l)}`) }));
+    steps.push(S(msg('solve.systems.express_from_equation', { vj, p: (lng) => ORD[lng][i] }), { tex: byLang((l) => `${vj} = ${tex(shown, l)}`) }));
     const aoj = rows[o].a[j];
     const aok = rows[o].a[k];
     const lhsNode = sumNode([aoj.isZero() ? null : aoj.isOne() ? shown : mul(num(aoj), shown), aok.isZero() ? null : monoNode(aok, vk)].filter(Boolean));
-    steps.push(S(T(`Подставляем ${o === 1 ? 'во' : 'в'} ${ORD_ACC.ru[o]} уравнение`, `Substitute into the ${ORD_ACC.en[o]} equation`), {
+    steps.push(S(msg('solve.systems.substitute_into_equation', { p: o === 1 ? 'во' : 'в', p2: (lng) => ORD_ACC[lng][o] }), {
         tex: byLang((l) => `${tex(lhsNode, l)} = ${tex(num(rows[o].b), l)}`),
-        text: T(`Получилось уравнение с одной неизвестной $${vk}$.`, `This is an equation in one unknown, $${vk}$.`),
+        text: msg('solve.systems.this_is_equation_in_one_unknown', { vk }),
     }));
     const A = Poly.fromNode(lhsNode, vk);
     const B = new Poly([rows[o].b]);
     const sub = solveLinearSchool(lhsNode, num(rows[o].b), A, B, { v: vk, domain: 'real', depth: 1 });
-    steps.push(S(byLang((l) => (l === 'ru' ? `Решаем его` : 'Solve it')), { tex: byLang((l) => (sub.kind === 'roots' ? rootsTex(sub.roots, vk, l) : sub.kind === 'all' ? (l === 'ru' ? '\\text{верно при любом } ' : '\\text{true for every } ') + vk : l === 'ru' ? '\\text{решений нет}' : '\\text{no solutions}')), sub: sub.steps }));
+    steps.push(S(byLang((l) => (msg('solve.systems.solve_it').in(l))), { tex: byLang((l) => (sub.kind === 'roots' ? rootsTex(sub.roots, vk, l) : sub.kind === 'all' ? (msg('solve.systems.true_for_every').in(l)) + vk : msg('solve.systems.no_solutions').in(l))), sub: sub.steps }));
     if (sub.kind === 'none') {
-        steps.push(S(T('Получилось неверное равенство — система решений не имеет', 'A false equality: the system has no solutions'), { text: T('Геометрически это две параллельные прямые.', 'Geometrically these are two parallel lines.') }));
+        steps.push(S(msg('solve.systems.false_equality_system_has_no_solutions'), { text: msg('solve.systems.geometrically_these_are_two_parallel_lines') }));
         return { kind: 'none', steps };
     }
     if (sub.kind === 'all') {
-        steps.push(S(T('Уравнение верно при любом значении — решений бесконечно много', 'The equation holds for any value: infinitely many solutions'), {
+        steps.push(S(msg('solve.systems.equation_holds_for_any_value_infinitely'), {
             tex: byLang((l) => `${vk} \\in \\mathbb{R},\\quad ${vj} = ${tex(expr, l)}`),
-            text: T('Оба уравнения задают одну и ту же прямую.', 'Both equations describe the same line.'),
+            text: msg('solve.systems.both_equations_describe_same_line'),
         }));
         return { kind: 'infinite', steps, general: { [vk]: Y, [vj]: expr }, params: [vk] };
     }
     const yk = sub.roots[0].node;
     const yj = simpOr(substitute(expr, { [vk]: yk }));
-    steps.push(S(T(`Находим $${vj}$`, `Find $${vj}$`), { tex: byLang((l) => `${vj} = ${tex(substitute(shown, { [vk]: yk }), l)} = ${tex(yj, l)}`) }));
+    steps.push(S(msg('solve.systems.find', { vj }), { tex: byLang((l) => `${vj} = ${tex(substitute(shown, { [vk]: yk }), l)} = ${tex(yj, l)}`) }));
     return { kind: 'unique', steps, solution: { [vj]: yj, [vk]: yk } };
 }
 
@@ -144,7 +145,7 @@ function sysAddition(rows0, vars) {
         for (const q of [...r.a, r.b]) den = bigLcm(den, q.d);
         return den > 1n ? { a: r.a.map((q) => q.mul(new Q(den))), b: r.b.mul(new Q(den)), den } : { ...r, den: 1n };
     });
-    if (rows.some((r) => r.den > 1n)) steps.push(S(T('Избавляемся от дробей', 'Clear the fractions'), { tex: systemTexB(rows, vars) }));
+    if (rows.some((r) => r.den > 1n)) steps.push(S(msg('solve.systems.clear_fractions'), { tex: systemTexB(rows, vars) }));
     let pickJ = -1;
     let bestL = null;
     for (let j = 0; j < 2; j++) {
@@ -167,39 +168,39 @@ function sysAddition(rows0, vars) {
     if (a0.isNeg() === a1.isNeg()) m1 = m1.neg();
     const scaled = [{ a: rows[0].a.map((q) => q.mul(m0)), b: rows[0].b.mul(m0) }, { a: rows[1].a.map((q) => q.mul(m1)), b: rows[1].b.mul(m1) }];
     if (!m0.isOne() || !m1.isOne()) {
-        const what = (m, idx, l) => (m.isOne() ? '' : l === 'ru' ? `${ORD_ACC.ru[idx]} уравнение умножаем на $${tex(num(m), l)}$` : `multiply the ${ORD_ACC.en[idx]} equation by $${tex(num(m), l)}$`);
-        const parts = (l) => [what(m0, 0, l), what(m1, 1, l)].filter(Boolean).join(l === 'ru' ? ', ' : ' and ');
+        const what = (m, idx, l) => (m.isOne() ? '' : msg('solve.systems.multiply_equation_by', { p: (lng) => ORD_ACC[lng][idx], p2: tex(num(m), l) }).in(l));
+        const parts = (l) => [what(m0, 0, l), what(m1, 1, l)].filter(Boolean).join(msg('solve.systems.and').in(l));
         steps.push(S(byLang((l) => {
             const p0 = parts(l);
             return l === 'ru' ? p0.charAt(0).toUpperCase() + p0.slice(1) : p0.charAt(0).toUpperCase() + p0.slice(1);
         }), {
             tex: systemTexB(scaled, vars),
-            text: T(`Теперь коэффициенты при $${vars[j]}$ противоположны.`, `Now the coefficients of $${vars[j]}$ are opposite.`),
+            text: msg('solve.systems.now_coefficients_of_are_opposite', { p: vars[j] }),
         }));
     }
     const c = scaled[0].a[k].add(scaled[1].a[k]);
     const d = scaled[0].b.add(scaled[1].b);
-    steps.push(S(T(`Складываем уравнения: $${vars[j]}$ исчезает`, `Add the equations: $${vars[j]}$ cancels`), { tex: byLang((l) => `${tex(monoNode(c, vars[k]), l)} = ${tex(num(d), l)}`) }));
+    steps.push(S(msg('solve.systems.add_equations_cancels', { p: vars[j] }), { tex: byLang((l) => `${tex(monoNode(c, vars[k]), l)} = ${tex(num(d), l)}`) }));
     if (c.isZero()) {
         if (d.isZero()) {
             const pr = rows0[0].a[j].isZero() ? rows0[1] : rows0[0];
             const expr = simpOr(div(add(num(pr.b), mul(num(pr.a[k].neg()), sym(vars[k]))), num(pr.a[j])));
-            steps.push(S(T('Получилось $0 = 0$ — решений бесконечно много', 'We get $0 = 0$: infinitely many solutions'), {
+            steps.push(S(msg('solve.systems.we_get_infinitely_many_solutions'), {
                 tex: byLang((l) => `${vars[k]} \\in \\mathbb{R},\\quad ${vars[j]} = ${tex(expr, l)}`),
-                text: T('Уравнения задают одну и ту же прямую.', 'The equations describe the same line.'),
+                text: msg('solve.systems.equations_describe_same_line'),
             }));
             return { kind: 'infinite', steps, general: { [vars[k]]: sym(vars[k]), [vars[j]]: expr }, params: [vars[k]] };
         }
-        steps.push(S(T(`Получилось $0 = ${tex(num(d))}$ — решений нет`, `We get $0 = ${tex(num(d), 'en')}$: no solutions`), { text: T('Прямые параллельны и не пересекаются.', 'The lines are parallel and never meet.') }));
+        steps.push(S(msg('solve.systems.we_get_no_solutions', { p: (lng) => tex(num(d), lng) }), { text: msg('solve.systems.lines_are_parallel_and_never_meet') }));
         return { kind: 'none', steps };
     }
     const yk = d.div(c);
-    if (!c.isOne()) steps.push(S(T(`Находим $${vars[k]}$`, `Find $${vars[k]}$`), { tex: byLang((l) => `${vars[k]} = ${tex(num(yk), l)}`) }));
+    if (!c.isOne()) steps.push(S(msg('solve.systems.find_2', { p: vars[k] }), { tex: byLang((l) => `${vars[k]} = ${tex(num(yk), l)}`) }));
     const src = rows0[0].a[j].isZero() ? 1 : 0;
     const r = rows0[src];
     const yj = r.b.sub(r.a[k].mul(yk)).div(r.a[j]);
     const substituted = sumNode([monoNode(r.a[j], vars[j]), r.a[k].isZero() ? null : mul(num(r.a[k]), num(yk))].filter(Boolean));
-    steps.push(S(T(`Подставляем $${vars[k]} = ${tex(num(yk))}$ в ${ORD_ACC.ru[src]} уравнение`, `Substitute $${vars[k]} = ${tex(num(yk), 'en')}$ into the ${ORD_ACC.en[src]} equation`), {
+    steps.push(S(msg('solve.systems.substitute_into_equation_2', { p: vars[k], p2: (lng) => tex(num(yk), lng), p3: (lng) => ORD_ACC[lng][src] }), {
         tex: byLang((l) => `${tex(substituted, l)} = ${tex(num(r.b), l)} \\quad\\Rightarrow\\quad ${vars[j]} = ${tex(num(yj), l)}`),
     }));
     return { kind: 'unique', steps, solution: { [vars[j]]: num(yj), [vars[k]]: num(yk) } };
@@ -229,18 +230,18 @@ function sysAnswer(res, vars) {
         }
         return {
             tex: byLang((l) => `${tupleTex(vars, l)} = ${tupleTex(vars.map((x) => tex(res.solution[x], l)), l)}`),
-            text: bothLang((l) => `(${vars.map((x) => toText(res.solution[x], { lang: l })).join(l === 'ru' ? '; ' : ', ')})`),
+            text: bothLang((l) => `(${vars.map((x) => toText(res.solution[x], { lang: l })).join(notation(l).listText)})`),
         };
     }
     if (res.kind === 'infinite') {
         const g = res.general;
         return {
             tex: byLang((l) => `${tupleTex(vars.map((x) => tex(g[x], l)), l)},\\quad ${res.params.join(',\\ ')} \\in \\mathbb{R}`),
-            text: bothLang((l) => `(${vars.map((x) => toText(g[x], { lang: l })).join(l === 'ru' ? '; ' : ', ')}), ${res.params.join(', ')} ∈ R`),
+            text: bothLang((l) => `(${vars.map((x) => toText(g[x], { lang: l })).join(notation(l).listText)}), ${res.params.join(', ')} ∈ R`),
         };
     }
-    if (res.kind === 'none') return { tex: T('\\text{решений нет}', '\\text{no solutions}'), text: T('Решений нет.', 'No solutions.') };
-    return { tex: '', text: res.reason ?? T('Не удалось решить.', 'Could not solve.') };
+    if (res.kind === 'none') return { tex: msg('solve.systems.no_solutions'), text: msg('solve.systems.no_solutions_2') };
+    return { tex: '', text: res.reason ?? msg('solve.systems.could_not_solve') };
 }
 
 /**
@@ -257,20 +258,20 @@ export function solveLinearSystem(input, vars = null, opts = {}) {
     const done = (res) => {
         const out = { vars, steps: [], check: [], ...res };
         out.answer = sysAnswer(out, vars);
-        if (out.kind === 'unsupported') out.steps.push(S(T('Не удалось решить', 'Could not solve'), { text: out.reason, final: true }));
-        else out.steps.push(S(T('Ответ', 'Answer'), { tex: out.answer.tex, final: true }));
+        if (out.kind === 'unsupported') out.steps.push(S(msg('solve.systems.could_not_solve_2'), { text: out.reason, final: true }));
+        else out.steps.push(S(msg('solve.systems.answer'), { tex: out.answer.tex, final: true }));
         if (!withSteps) out.steps = [];
         return out;
     };
-    if (!rels.length || !vars.length) return done({ kind: 'unsupported', reason: T('Нет уравнений с неизвестными.', 'There are no equations with unknowns.') });
+    if (!rels.length || !vars.length) return done({ kind: 'unsupported', reason: msg('solve.systems.there_are_no_equations_with_unknowns') });
     const rows = linearRows(rels, vars);
     if (rows.some((r) => !r)) {
         const pair = rels.length === 2 && vars.length === 2 && rows.some(Boolean);
         return done({
             kind: 'unsupported',
             reason: pair
-                ? T('Одно из уравнений не линейное — такую систему решают подстановкой: выражают неизвестную из линейного уравнения.', 'One of the equations is not linear: such a system is solved by substitution, expressing an unknown from the linear equation.')
-                : T('Не все уравнения линейные, а метод Гаусса и формулы Крамера работают только для линейных систем.', 'Not all the equations are linear, and Gaussian elimination and Cramer’s rule work only for linear systems.'),
+                ? msg('solve.systems.one_of_equations_is_not_linear')
+                : msg('solve.systems.not_all_equations_are_linear_and'),
         });
     }
     const m = rows.length;
@@ -280,13 +281,13 @@ export function solveLinearSystem(input, vars = null, opts = {}) {
     if (method === 'cramer' && (m !== n || n > 3)) method = 'gauss';
     const steps = [];
     const standard = rels.every((r) => r.rhs.type === 'num' && nodeKey(simpOr(r.lhs)) === nodeKey(simpOr(linEqNode(linearRows([r], vars)[0].a, Q.ZERO, vars).lhs)));
-    if (!standard) steps.push(S(T('Приводим каждое уравнение к виду «неизвестные слева, число справа»', 'Bring each equation to the form "unknowns on the left, a number on the right"'), { tex: systemTexB(rows, vars) }));
+    if (!standard) steps.push(S(msg('solve.systems.bring_each_equation_to_form_unknowns'), { tex: systemTexB(rows, vars) }));
     let res = null;
     if (method === 'substitution') res = sysSubstitution(rows, vars);
     else if (method === 'addition') res = sysAddition(rows, vars);
     else if (method === 'cramer') {
         const cr = matSolveCramer(Matrix.from(rows.map((r) => r.a)), rows.map((r) => r.b), { steps: true, vars });
-        if (cr.kind === 'unique') res = { kind: 'unique', steps: cr.steps.filter((s) => s.rule !== 'answer').concat(cr.steps.filter((s) => s.rule === 'answer').map((s) => ({ ...s, title: T('Находим неизвестные', 'Find the unknowns') }))), solution: Object.fromEntries(vars.map((x, j) => [x, num(cr.x[j])])) };
+        if (cr.kind === 'unique') res = { kind: 'unique', steps: cr.steps.filter((s) => s.rule !== 'answer').concat(cr.steps.filter((s) => s.rule === 'answer').map((s) => ({ ...s, title: msg('solve.systems.find_unknowns') }))), solution: Object.fromEntries(vars.map((x, j) => [x, num(cr.x[j])])) };
         else {
             steps.push(...cr.steps);
             method = 'gauss';
@@ -337,46 +338,46 @@ export function solveSystem2(input, vars = null, opts = {}) {
         const out = { vars, steps: [], check: [], solutions: [], ...res };
         if (out.kind === 'solutions') {
             out.answer = {
-                tex: byLang((l) => out.solutions.map((s) => tupleTex(vars.map((x) => tex(s[x], l)), l)).join(l === 'ru' ? ';\\quad ' : ',\\quad ')),
-                text: byLang((l) => out.solutions.map((s) => `(${vars.map((x) => toText(s[x], { lang: l })).join(l === 'ru' ? '; ' : ', ')})`).join(l === 'ru' ? '; ' : ', ')),
+                tex: byLang((l) => out.solutions.map((s) => tupleTex(vars.map((x) => tex(s[x], l)), l)).join(notation(l).listWideTex)),
+                text: byLang((l) => out.solutions.map((s) => `(${vars.map((x) => toText(s[x], { lang: l })).join(notation(l).listText)})`).join(notation(l).listText)),
             };
-        } else if (out.kind === 'none') out.answer = { tex: T('\\text{решений нет}', '\\text{no solutions}'), text: T('Решений нет.', 'No solutions.') };
+        } else if (out.kind === 'none') out.answer = { tex: msg('solve.systems.no_solutions'), text: msg('solve.systems.no_solutions_2') };
         else out.answer = { tex: '', text: out.reason };
-        out.steps.push(out.kind === 'unsupported' ? S(T('Не удалось решить', 'Could not solve'), { text: out.reason, final: true }) : S(T('Ответ', 'Answer'), { tex: out.answer.tex, final: true }));
+        out.steps.push(out.kind === 'unsupported' ? S(msg('solve.systems.could_not_solve_2'), { text: out.reason, final: true }) : S(msg('solve.systems.answer'), { tex: out.answer.tex, final: true }));
         if (!withSteps) out.steps = [];
         return out;
     };
-    if (rels.length !== 2 || vars.length !== 2) return done({ kind: 'unsupported', reason: T('Нужны два уравнения с двумя неизвестными.', 'Two equations in two unknowns are needed.') });
+    if (rels.length !== 2 || vars.length !== 2) return done({ kind: 'unsupported', reason: msg('solve.systems.two_equations_in_two_unknowns_are') });
     const rows = linearRows(rels, vars);
     if (rows.every(Boolean)) {
         const r = solveLinearSystem(rels, vars, opts);
         if (r.kind === 'unique') return done({ kind: 'solutions', solutions: [r.solution], steps: r.steps.slice(0, -1), check: r.check });
         if (r.kind === 'none') return done({ kind: 'none', steps: r.steps.slice(0, -1) });
-        return done({ kind: 'unsupported', reason: T('Решений бесконечно много — это случай линейной системы.', 'Infinitely many solutions: see the linear system solver.'), steps: r.steps.slice(0, -1) });
+        return done({ kind: 'unsupported', reason: msg('solve.systems.infinitely_many_solutions_see_linear_system'), steps: r.steps.slice(0, -1) });
     }
     const li = rows.findIndex(Boolean);
-    if (li < 0) return done({ kind: 'unsupported', reason: T('Ни одно из уравнений не линейное — способ подстановки здесь не сработает.', 'Neither equation is linear, so substitution will not work here.') });
+    if (li < 0) return done({ kind: 'unsupported', reason: msg('solve.systems.neither_equation_is_linear_so_substitution') });
     const other = rels[1 - li];
     const row = rows[li];
     let j = row.a.findIndex((q) => q.abs().isOne());
     if (j < 0) j = row.a.findIndex((q) => !q.isZero());
-    if (j < 0) return done({ kind: 'unsupported', reason: T('Линейное уравнение не содержит неизвестных.', 'The linear equation has no unknowns.') });
+    if (j < 0) return done({ kind: 'unsupported', reason: msg('solve.systems.linear_equation_has_no_unknowns') });
     const k = 1 - j;
     const [vj, vk] = [vars[j], vars[k]];
     const expr = simpOr(div(add(num(row.b), mul(num(row.a[k].neg()), sym(vk))), num(row.a[j])));
-    const steps = [S(T(`Выражаем $${vj}$ из линейного уравнения`, `Express $${vj}$ from the linear equation`), { tex: byLang((l) => `${vj} = ${tex(expr, l)}`) })];
+    const steps = [S(msg('solve.systems.express_from_linear_equation', { vj }), { tex: byLang((l) => `${vj} = ${tex(expr, l)}`) })];
     const subst = rel('=', substitute(other.lhs, { [vj]: expr }), substitute(other.rhs, { [vj]: expr }));
-    steps.push(S(T('Подставляем в другое уравнение', 'Substitute into the other equation'), { tex: byLang((l) => tex(subst, l)), text: T(`Осталась одна неизвестная — $${vk}$.`, `One unknown is left: $${vk}$.`) }));
+    steps.push(S(msg('solve.systems.substitute_into_other_equation'), { tex: byLang((l) => tex(subst, l)), text: msg('solve.systems.one_unknown_is_left', { vk }) }));
     const r = solveEquation(subst, vk, { steps: true });
-    steps.push(S(byLang((l) => (l === 'ru' ? `Решаем уравнение относительно $${vk}$` : `Solve for $${vk}$`)), { tex: r.answer.tex, sub: r.steps.slice(0, -1) }));
+    steps.push(S(byLang((l) => (msg('solve.systems.solve_for', { vk }).in(l))), { tex: r.answer.tex, sub: r.steps.slice(0, -1) }));
     if (r.kind === 'none') return done({ kind: 'none', steps });
     if (r.kind !== 'roots' || r.families || r.roots.some((x) => x.approxOnly)) {
-        return done({ kind: 'unsupported', steps, reason: r.reason ?? T('Не удалось найти точные корни уравнения с одной неизвестной.', 'Could not find exact roots of the equation in one unknown.') });
+        return done({ kind: 'unsupported', steps, reason: r.reason ?? msg('solve.systems.could_not_find_exact_roots_of') });
     }
     const solutions = r.roots.map((x) => ({ [vk]: x.node, [vj]: simpOr(substitute(expr, { [vk]: x.node })) }))
         .sort((a, b) => approxOf(a[vars[0]]) - approxOf(b[vars[0]]) || approxOf(a[vars[1]]) - approxOf(b[vars[1]]));
-    steps.push(S(T(`Находим $${vj}$ для каждого корня`, `Find $${vj}$ for each root`), {
-        tex: byLang((l) => solutions.map((s) => `${vk} = ${tex(s[vk], l)}:\\ ${vj} = ${tex(s[vj], l)}`).join(l === 'ru' ? ';\\quad ' : ',\\quad ')),
+    steps.push(S(msg('solve.systems.find_for_each_root', { vj }), {
+        tex: byLang((l) => solutions.map((s) => `${vk} = ${tex(s[vk], l)}:\\ ${vj} = ${tex(s[vj], l)}`).join(notation(l).listWideTex)),
     }));
     const check = [];
     const good = [];
@@ -384,7 +385,7 @@ export function solveSystem2(input, vars = null, opts = {}) {
         const ch = checkSystem(rels, s);
         check.push({ solution: s, ok: ch.ok, items: ch.items });
         if (ch.ok) good.push(s);
-        steps.push(S(byLang((l) => (l === 'ru' ? 'Проверка ' : 'Check ') + `$${tupleTex(vars.map((x) => tex(s[x], l)), l)}$`), { tex: ch.step.tex, text: ch.step.text }));
+        steps.push(S(byLang((l) => (msg('solve.systems.check_2').in(l)) + `$${tupleTex(vars.map((x) => tex(s[x], l)), l)}$`), { tex: ch.step.tex, text: ch.step.text }));
     }
     return done({ kind: good.length ? 'solutions' : 'none', solutions: good, steps, check });
 }

@@ -7,6 +7,7 @@ import { toText } from '../core/print.js';
 import { T, approxC, approxOf, approxTex, byLang, close, exactZero, simpOr, tex } from './common.js';
 import { IntervalSet, intervalTex, intervalText, parseIntervalSet } from './intervals.js';
 import { N_SYM, familiesTex } from './trig.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- roots and their TeX
 
@@ -47,9 +48,9 @@ function rootValueTex(r, lang) {
 
 /** x_1 = 2;\quad x_2 = 3 (one root: x = 2). */
 export function rootsTex(roots, v, lang, start = 1) {
-    if (!roots.length) return lang === 'ru' ? '\\text{корней нет}' : '\\text{no roots}';
+    if (!roots.length) return msg('solve.roots.no_roots').in(lang);
     const idx = roots.length > 1;
-    return roots.map((r, k) => `${idx ? `${v}_{${k + start}}` : v} ${rootValueTex(r, lang)}`).join(lang === 'ru' ? ';\\quad ' : ',\\quad ');
+    return roots.map((r, k) => `${idx ? `${v}_{${k + start}}` : v} ${rootValueTex(r, lang)}`).join(notation(lang).listWideTex);
 }
 
 
@@ -101,17 +102,17 @@ function approxText(z, lang) {
 }
 
 export function answerOf(res, v) {
-    const none = T('\\text{корней нет}', '\\text{no roots}');
+    const none = msg('solve.roots.no_roots');
     switch (res.kind) {
         case 'none':
-            return { tex: none, text: T('Корней нет.', 'No roots.') };
+            return { tex: none, text: msg('solve.roots.no_roots_2') };
         case 'all':
         case 'set': {
             const set = res.set;
             if (!set || set.isAll()) {
                 return res.kind === 'all' && res.odzPartial
-                    ? { tex: T(`${v} \\text{ — любое из ОДЗ}`, `\\text{any } ${v} \\text{ in the domain}`), text: T('Любое число из ОДЗ.', 'Any number in the domain.') }
-                    : { tex: `${v} \\in \\mathbb{R}`, text: T('Любое число.', 'Any number.') };
+                    ? { tex: msg('solve.roots.any_in_domain', { v }), text: msg('solve.roots.any_number_in_domain') }
+                    : { tex: `${v} \\in \\mathbb{R}`, text: msg('solve.roots.any_number') };
             }
             return { tex: byLang((l) => `${v} \\in ${intervalTex(set, l)}`), text: byLang((l) => intervalText(set, l)) };
         }
@@ -122,9 +123,9 @@ export function answerOf(res, v) {
                     text: byLang((l) => `${res.families.map((f) => `${v} = ${toText(simpOr(add(f.base, mul(f.period, N_SYM))), { lang: l })}`).join('; ')}, n ∈ Z`),
                 };
             }
-            return { tex: byLang((l) => rootsTex(res.roots, v, l)), text: byLang((l) => res.roots.map((r) => (r.approxOnly ? `≈ ${approxText(r.approx, l)}` : toText(r.node, { lang: l }))).join(l === 'ru' ? '; ' : ', ')) };
+            return { tex: byLang((l) => rootsTex(res.roots, v, l)), text: byLang((l) => res.roots.map((r) => (r.approxOnly ? `≈ ${approxText(r.approx, l)}` : toText(r.node, { lang: l }))).join(notation(l).listText)) };
         default:
-            return { tex: '', text: res.reason ?? T('Не удалось решить.', 'Could not solve.') };
+            return { tex: '', text: res.reason ?? msg('solve.roots.could_not_solve') };
     }
 }
 

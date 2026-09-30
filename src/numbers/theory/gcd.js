@@ -3,6 +3,7 @@
 import { Q } from '../../core/rational.js';
 import { G, L, Lc, S, T, babs, big, bmod, fail, gT, gcdCore, sn, tn, tp } from './common.js';
 import { factorMap, mapToList, ntFactorTex } from './primes.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- gcd / lcm
 
@@ -21,23 +22,20 @@ export function gcdSteps(A, B) {
     const st = [];
     let x = babs(A), y = babs(B);
     if (x === 0n && y === 0n) {
-        st.push(S(L('НОД двух нулей', 'The gcd of two zeros'), T((l) => `${G(l, 0, 0)} = 0`),
-            L('Ноль делится на любое число, так что наибольшего общего делителя у двух нулей нет. По соглашению НОД(0, 0) = 0 — так формулы остаются простыми.',
-                'Zero is divisible by every number, so two zeros have no largest common divisor. By convention gcd(0, 0) = 0, which keeps formulas simple.'),
+        st.push(S(msg('numbers.theory.gcd.gcd_of_two_zeros'), T((l) => `${G(l, 0, 0)} = 0`),
+            msg('numbers.theory.gcd.zero_is_divisible_by_every_number'),
             { rule: 'gcd-zero' }));
         return { st, rows: [], g: 0n };
     }
     if (A < 0n || B < 0n) {
-        st.push(S(L('Знак не важен', 'Signs do not matter'), T((l) => `${G(l, A, B)} = ${G(l, x, y)}`),
-            L('У числа и у противоположного ему делители одни и те же, поэтому берём модули.',
-                'A number and its negative have the same divisors, so we work with absolute values.'),
+        st.push(S(msg('numbers.theory.gcd.signs_do_not_matter'), T((l) => `${G(l, A, B)} = ${G(l, x, y)}`),
+            msg('numbers.theory.gcd.number_and_its_negative_have_same'),
             { rule: 'gcd-abs' }));
     }
     if (x === 0n || y === 0n) {
         const n = x || y;
-        st.push(S(L('Одно из чисел — ноль', 'One of the numbers is zero'), T((l) => `${G(l, x, y)} = ${tn(n)}`),
-            L(`Ноль делится на что угодно, поэтому общие делители — это просто делители числа ${sn(n)}. Наибольший из них — само ${sn(n)}.`,
-                `Zero is divisible by anything, so the common divisors are just the divisors of ${sn(n)}; the largest is ${sn(n)} itself.`),
+        st.push(S(msg('numbers.theory.gcd.one_of_numbers_is_zero'), T((l) => `${G(l, x, y)} = ${tn(n)}`),
+            msg('numbers.theory.gcd.zero_is_divisible_by_anything_so', { n: sn(n) }),
             { rule: 'gcd-zero' }));
         return { st, rows: [], g: n };
     }
@@ -45,31 +43,26 @@ export function gcdSteps(A, B) {
     if (swapped) [x, y] = [y, x];
     const rows = euclidRows(x, y);
     const g = rows[rows.length - 1].b;
-    st.push(S(L('Алгоритм Евклида', "Euclid's algorithm"),
-        T((l) => `a = q \\cdot b + r \\;\\Rightarrow\\; ${l === 'ru' ? '\\text{НОД}(a,\\,b) = \\text{НОД}(b,\\,r)' : '\\gcd(a, b) = \\gcd(b, r)'}`),
-        L(`Если a = q·b + r, то у пар (a, b) и (b, r) одни и те же общие делители: всё, что делит a и b, делит и r = a − q·b, и наоборот. Поэтому большее число можно заменить остатком от деления на меньшее — НОД не изменится. Повторяем, пока остаток не станет нулём.${swapped ? ` Начинаем с большего числа, ${sn(x)}.` : ''}`,
-            `If a = q·b + r, the pairs (a, b) and (b, r) have exactly the same common divisors: anything dividing a and b also divides r = a − q·b, and vice versa. So we may replace the larger number by the remainder of dividing it by the smaller one — the gcd stays the same. We repeat until the remainder is zero.${swapped ? ` We start with the larger number, ${sn(x)}.` : ''}`),
+    st.push(S(msg('numbers.theory.gcd.euclid_s_algorithm'),
+        T((l) => `a = q \\cdot b + r \\;\\Rightarrow\\; ${msg('numbers.theory.gcd.b_b_r').in(l)}`),
+        msg('numbers.theory.gcd.if_q_b_r_pairs_b', { p: (lng) => swapped ? msg('numbers.theory.gcd.we_start_with_larger_number', { x: sn(x) }).in(lng) : '' }),
         { rule: 'euclid' }));
     for (const { a, b, q, r } of rows) {
-        st.push(S(L(`Делим ${sn(a)} на ${sn(b)}`, `Divide ${sn(a)} by ${sn(b)}`),
+        st.push(S(msg('numbers.theory.gcd.divide_by', { a: sn(a), b: sn(b) }),
             `${tn(a)} = ${tn(q)} \\cdot ${tn(b)} + ${tn(r)}`,
             r > 0n
-                ? L(`Получаем ${sn(q)}, остаток ${sn(r)}. Значит, НОД(${sn(a)}, ${sn(b)}) = НОД(${sn(b)}, ${sn(r)}).`,
-                    `Quotient ${sn(q)}, remainder ${sn(r)}. So gcd(${sn(a)}, ${sn(b)}) = gcd(${sn(b)}, ${sn(r)}).`)
-                : L(`Делится нацело: получаем ${sn(q)}, остаток 0. Алгоритм закончен.`,
-                    `It divides exactly: quotient ${sn(q)}, remainder 0. We are done.`),
+                ? msg('numbers.theory.gcd.quotient_remainder_so_gcd_gcd', { q: sn(q), r: sn(r), a: sn(a), b: sn(b) })
+                : msg('numbers.theory.gcd.it_divides_exactly_quotient_remainder_0', { q: sn(q) }),
             { rule: 'division', row: { a, b, q, r } }));
     }
     return { st, rows, g };
 }
 
 function gcdAnswer(A, B, g) {
-    return S(L('Ответ', 'Answer'), T((l) => `${G(l, A, B)} = ${tn(g)}`),
+    return S(msg('numbers.theory.gcd.answer'), T((l) => `${G(l, A, B)} = ${tn(g)}`),
         g === 1n
-            ? L('Последний ненулевой остаток равен 1: у чисел нет общих делителей, кроме единицы, — они взаимно просты.',
-                'The last non-zero remainder is 1: the numbers have no common divisor except 1 — they are coprime.')
-            : L(`НОД — последний ненулевой остаток, то есть число, на которое разделилось нацело: ${sn(g)}.`,
-                `The gcd is the last non-zero remainder, the number that divided exactly: ${sn(g)}.`),
+            ? msg('numbers.theory.gcd.last_non_zero_remainder_is_1')
+            : msg('numbers.theory.gcd.gcd_is_last_non_zero_remainder', { g: sn(g) }),
         { rule: 'answer' });
 }
 
@@ -90,31 +83,28 @@ export function ntLcm(a, b, opts = {}) {
     if (!opts.steps) return value;
     const st = [];
     if (value === 0n) {
-        st.push(S(L('Одно из чисел — ноль', 'One of the numbers is zero'), T((l) => `${Lc(l, A, B)} = 0`),
-            L('Единственное кратное нуля — сам ноль, поэтому НОК с нулём принято считать равным 0.',
-                'The only multiple of zero is zero itself, so by convention the lcm with zero is 0.'), { rule: 'lcm-zero' }));
+        st.push(S(msg('numbers.theory.gcd.one_of_numbers_is_zero'), T((l) => `${Lc(l, A, B)} = 0`),
+            msg('numbers.theory.gcd.only_multiple_of_zero_is_zero'), { rule: 'lcm-zero' }));
         return { value, steps: st };
     }
     const x = babs(A), y = babs(B);
     const gs = gcdSteps(x, y);
-    st.push(S(L(`Сначала НОД: ${gT('ru', x, y)} = ${sn(g)}`, `First the gcd: ${gT('en', x, y)} = ${sn(g)}`),
+    st.push(S(msg('numbers.theory.gcd.first_gcd', { p: (lng) => gT(lng, x, y), g: sn(g) }),
         T((l) => `${G(l, x, y)} = ${tn(g)}`),
-        L('Находим его алгоритмом Евклида (подробности — внутри).', "We find it by Euclid's algorithm (details inside)."),
+        msg('numbers.theory.gcd.we_find_it_by_euclid_s'),
         { rule: 'gcd', sub: [...gs.st, ...(gs.rows.length ? [gcdAnswer(x, y, g)] : [])] }));
-    st.push(S(L('Делим произведение на НОД', 'Divide the product by the gcd'),
+    st.push(S(msg('numbers.theory.gcd.divide_product_by_gcd'),
         T((l) => `${Lc(l, x, y)} = \\frac{${tn(x)} \\cdot ${tn(y)}}{${tn(g)}}${g === 1n ? '' : ` = ${tn(x / g)} \\cdot ${tn(y)}`} = ${tn(value)}`),
-        L('В произведении a·b общие множители чисел встречаются дважды — деление на НОД убирает лишнюю копию. Удобнее сначала разделить одно из чисел на НОД, а потом умножить.',
-            'The product a·b contains the common factors twice; dividing by the gcd removes the extra copy. It is easier to divide one number by the gcd first and multiply afterwards.'),
+        msg('numbers.theory.gcd.product_b_contains_common_factors_twice'),
         { rule: 'lcm-formula' }));
     if (x <= 10n ** 15n && y <= 10n ** 15n && x > 1n && y > 1n) {
         const fx = factorMap(x), fy = factorMap(y);
         const all = new Map(fx);
         for (const [p, e] of fy) all.set(p, Math.max(all.get(p) ?? 0, e));
         const sorted = [...all.entries()].sort((u, v) => (u[0] < v[0] ? -1 : 1)).map(([p, e]) => ({ p, e }));
-        st.push(S(L('Проверка через разложение', 'Check by factorisation'),
+        st.push(S(msg('numbers.theory.gcd.check_by_factorisation'),
             T((l) => `${tn(x)} = ${ntFactorTex(mapToList(fx))},\\quad ${tn(y)} = ${ntFactorTex(mapToList(fy))},\\quad ${Lc(l, x, y)} = ${ntFactorTex(sorted)} = ${tn(value)}`),
-            L('Другой способ: разложить оба числа на простые множители и взять каждый простой множитель в наибольшей степени, в какой он встречается.',
-                'Another way: factor both numbers into primes and take every prime to the highest power in which it occurs.'),
+            msg('numbers.theory.gcd.another_way_factor_both_numbers_into'),
             { rule: 'lcm-factor' }));
     }
     return { value, steps: st };
@@ -128,7 +118,7 @@ function splitArgs(args) {
         args = args.slice(0, -1);
     }
     const list = args.length === 1 && Array.isArray(args[0]) ? args[0] : args;
-    if (!list.length) throw fail('Нужно хотя бы одно число.', 'At least one number is required.');
+    if (!list.length) throw fail(msg('numbers.theory.gcd.at_least_one_number_is_required'));
     return [list.map((v) => big(v)), opts];
 }
 
@@ -142,15 +132,14 @@ export function ntGcdMany(...args) {
         acc = gcdCore(acc, xs[i]);
         if (opts.steps) {
             const gs = gcdSteps(prev, xs[i]);
-            st.push(S(L(`Добавляем ${sn(xs[i])}: НОД(${sn(prev)}, ${sn(xs[i])}) = ${sn(acc)}`, `Add ${sn(xs[i])}: gcd(${sn(prev)}, ${sn(xs[i])}) = ${sn(acc)}`),
+            st.push(S(msg('numbers.theory.gcd.add_gcd', { p: sn(xs[i]), prev: sn(prev), acc: sn(acc) }),
                 T((l) => `${G(l, prev, xs[i])} = ${tn(acc)}`),
-                i === 1 ? L('НОД нескольких чисел ищем по цепочке: НОД(a, b, c) = НОД(НОД(a, b), c). Общий делитель всех чисел — это общий делитель уже найденного НОД и следующего числа.',
-                    'For several numbers we chain: gcd(a, b, c) = gcd(gcd(a, b), c). A common divisor of all the numbers is a common divisor of the gcd found so far and the next number.') : null,
+                i === 1 ? msg('numbers.theory.gcd.for_several_numbers_we_chain_gcd') : null,
                 { rule: 'gcd-chain', sub: [...gs.st, ...(gs.rows.length ? [gcdAnswer(prev, xs[i], acc)] : [])] }));
         }
     }
     if (!opts.steps) return acc;
-    if (xs.length === 1) st.push(S(L('Одно число', 'A single number'), tn(acc), L('НОД одного числа — его модуль.', 'The gcd of one number is its absolute value.')));
+    if (xs.length === 1) st.push(S(msg('numbers.theory.gcd.single_number'), tn(acc), msg('numbers.theory.gcd.gcd_of_one_number_is_its')));
     return { value: acc, steps: st };
 }
 
@@ -164,9 +153,9 @@ export function ntLcmMany(...args) {
         acc = ntLcm(acc, xs[i]);
         if (opts.steps) {
             const r = ntLcm(prev, xs[i], { steps: true });
-            st.push(S(L(`Добавляем ${sn(xs[i])}: НОК(${sn(prev)}, ${sn(xs[i])}) = ${sn(acc)}`, `Add ${sn(xs[i])}: lcm(${sn(prev)}, ${sn(xs[i])}) = ${sn(acc)}`),
+            st.push(S(msg('numbers.theory.gcd.add_lcm', { p: sn(xs[i]), prev: sn(prev), acc: sn(acc) }),
                 T((l) => `${Lc(l, prev, xs[i])} = ${tn(acc)}`),
-                i === 1 ? L('НОК нескольких чисел ищем по цепочке: НОК(a, b, c) = НОК(НОК(a, b), c).', 'For several numbers we chain: lcm(a, b, c) = lcm(lcm(a, b), c).') : null,
+                i === 1 ? msg('numbers.theory.gcd.for_several_numbers_we_chain_lcm') : null,
                 { rule: 'lcm-chain', sub: r.steps }));
         }
     }
@@ -225,53 +214,48 @@ export function ntEgcd(a, b, opts = {}) {
 
     const st = [];
     const gs = gcdSteps(A, B);
-    st.push(S(L('Сначала алгоритм Евклида', "First, Euclid's algorithm"), T((l) => `${G(l, A, B)} = ${tn(g)}`),
-        L('Записываем все деления с остатком — они понадобятся на обратном ходу.', 'We write down every division with remainder: we will need them on the way back.'),
+    st.push(S(msg('numbers.theory.gcd.first_euclid_s_algorithm'), T((l) => `${G(l, A, B)} = ${tn(g)}`),
+        msg('numbers.theory.gcd.we_write_down_every_division_with'),
         { rule: 'euclid', sub: gs.st }));
     if (X === 0n) {
-        st.push(S(L('Оба числа — нули', 'Both numbers are zero'), '0 \\cdot 0 + 0 \\cdot 0 = 0', L('Подходит любая пара; берём x = y = 0.', 'Any pair works; we take x = y = 0.')));
+        st.push(S(msg('numbers.theory.gcd.both_numbers_are_zero'), '0 \\cdot 0 + 0 \\cdot 0 = 0', msg('numbers.theory.gcd.any_pair_works_we_take_x')));
         return { ...res, rows, steps: st };
     }
     if (rows.length <= 1) {
-        st.push(S(L('Представление готово сразу', 'The representation is immediate'),
+        st.push(S(msg('numbers.theory.gcd.representation_is_immediate'),
             `${tn(g)} = ${tp(A)} \\cdot ${tp(x)} + ${tp(B)} \\cdot ${tp(y)}`,
-            L(`НОД совпадает с одним из чисел (${sn(g)}), так что это число берём с коэффициентом ±1, а другое — с коэффициентом 0.`,
-                `The gcd equals one of the numbers (${sn(g)}), so we take that number with coefficient ±1 and the other with coefficient 0.`),
+            msg('numbers.theory.gcd.gcd_equals_one_of_numbers_so', { g: sn(g) }),
             { rule: 'bezout' }));
     } else {
-        st.push(S(L('Идём назад', 'Work backwards'), null,
-            L('Выражаем НОД из предпоследнего деления, а потом по очереди подставляем выражения для остатков, поднимаясь по таблице вверх. На каждом шаге НОД записан через два соседних числа из таблицы.',
-                'We express the gcd from the second-to-last division, then substitute the remainders one by one, climbing up the table. At every step the gcd is written in terms of two neighbouring numbers of the table.'),
+        st.push(S(msg('numbers.theory.gcd.work_backwards'), null,
+            msg('numbers.theory.gcd.we_express_gcd_from_second_to'),
             { rule: 'back-substitution' }));
         for (const bk of back) {
             const row = rows[bk.j];
             if (bk.first) {
-                st.push(S(L(`Выражаем ${sn(g)} из деления ${sn(row.a)} на ${sn(row.b)}`, `Express ${sn(g)} from dividing ${sn(row.a)} by ${sn(row.b)}`),
+                st.push(S(msg('numbers.theory.gcd.express_from_dividing_by', { g: sn(g), p: sn(row.a), p2: sn(row.b) }),
                     `${tn(g)} = ${linTex(1n, row.a, -row.q, row.b)}`,
-                    L(`Из равенства ${sn(row.a)} = ${sn(row.q)}·${sn(row.b)} + ${sn(g)} переносим произведение в другую часть.`,
-                        `From ${sn(row.a)} = ${sn(row.q)}·${sn(row.b)} + ${sn(g)} we move the product to the other side.`),
+                    msg('numbers.theory.gcd.from_we_move_product_to_other', { p: sn(row.a), p2: sn(row.q), p3: sn(row.b), g: sn(g) }),
                     { rule: 'bezout' }));
             } else {
                 const nxt = rows[bk.j + 1]; // gcd = fs·nxt.a + ft·nxt.b, nxt.a = row.b, nxt.b = row.r = row.a − row.q·row.b
                 const { s: fs, t: ft } = bk.from;
                 const inner = row.q === 1n ? `${tn(row.a)} - ${tn(row.b)}` : `${tn(row.a)} - ${tn(row.q)} \\cdot ${tn(row.b)}`;
                 const mid = `${termTex(fs, row.b, true)} ${ft < 0n ? '-' : '+'} ${babs(ft) === 1n ? '' : `${tn(babs(ft))} \\cdot `}(${inner})`;
-                st.push(S(L(`Подставляем ${sn(row.r)}`, `Substitute ${sn(row.r)}`),
+                st.push(S(msg('numbers.theory.gcd.substitute', { p: sn(row.r) }),
                     `${tn(g)} = ${linTex(fs, nxt.a, ft, nxt.b)} = ${mid} = ${linTex(bk.s, row.a, bk.t, row.b)}`,
-                    L(`Из деления ${sn(row.a)} на ${sn(row.b)}: ${sn(row.r)} = ${sn(row.a)} − ${sn(row.q)}·${sn(row.b)}. Подставляем и собираем подобные.`,
-                        `From dividing ${sn(row.a)} by ${sn(row.b)}: ${sn(row.r)} = ${sn(row.a)} − ${sn(row.q)}·${sn(row.b)}. Substitute and collect like terms.`),
+                    msg('numbers.theory.gcd.from_dividing_by_substitute_and_collect', { p: sn(row.a), p2: sn(row.b), p3: sn(row.r), p4: sn(row.q) }),
                     { rule: 'bezout' }));
             }
         }
     }
     if (A < 0n || B < 0n) {
-        st.push(S(L('Возвращаем знаки', 'Put the signs back'), null,
-            L('Мы работали с модулями; у отрицательного числа меняем знак коэффициента.', 'We worked with absolute values; for a negative number we flip the sign of its coefficient.')));
+        st.push(S(msg('numbers.theory.gcd.put_signs_back'), null,
+            msg('numbers.theory.gcd.we_worked_with_absolute_values_for')));
     }
-    st.push(S(L('Ответ и проверка', 'Answer and check'),
+    st.push(S(msg('numbers.theory.gcd.answer_and_check'),
         `${tp(A)} \\cdot ${tp(x)} + ${tp(B)} \\cdot ${tp(y)} = ${tn(A * x)} ${B * y < 0n ? '-' : '+'} ${tn(babs(B * y))} = ${tn(g)}`,
-        L(`Нашли x = ${sn(x)}, y = ${sn(y)}. Такие числа есть всегда (соотношение Безу), но пара не единственная: подойдут и x + k·${sn(B / g)}, y − k·${sn(A / g)} при любом целом k.`,
-            `We found x = ${sn(x)}, y = ${sn(y)}. Such numbers always exist (Bézout's identity), but the pair is not unique: x + k·${sn(B / g)}, y − k·${sn(A / g)} works for every integer k.`),
+        msg('numbers.theory.gcd.we_found_x_y_such_numbers', { x: sn(x), y: sn(y), p: sn(B / g), p2: sn(A / g) }),
         { rule: 'answer' }));
     return { ...res, rows, steps: st };
 }
@@ -286,8 +270,8 @@ export function ntDiophantine(a, b, c, opts = {}) {
     if (A === 0n && B === 0n) {
         const res = { solvable: C === 0n, any: C === 0n, g: 0n, x0: 0n, y0: 0n, dx: 0n, dy: 0n };
         if (opts.steps) {
-            st.push(S(L('Оба коэффициента — нули', 'Both coefficients are zero'), `0 \\cdot x + 0 \\cdot y = ${tn(C)}`,
-                C === 0n ? L('Подходит любая пара (x, y).', 'Every pair (x, y) works.') : L('Слева всегда 0, справа — нет: решений нет.', 'The left side is always 0 and the right side is not: no solutions.')));
+            st.push(S(msg('numbers.theory.gcd.both_coefficients_are_zero'), `0 \\cdot x + 0 \\cdot y = ${tn(C)}`,
+                C === 0n ? msg('numbers.theory.gcd.every_pair_x_y_works') : msg('numbers.theory.gcd.left_side_is_always_0_and')));
             res.steps = st;
         }
         return res;
@@ -297,10 +281,9 @@ export function ntDiophantine(a, b, c, opts = {}) {
     if (C % g !== 0n) {
         const res = { solvable: false, g };
         if (opts.steps) {
-            st.push(S(L(`НОД(${sn(A)}, ${sn(B)}) = ${sn(g)}`, `gcd(${sn(A)}, ${sn(B)}) = ${sn(g)}`), T((l) => `${G(l, A, B)} = ${tn(g)}`), null, { rule: 'gcd', sub: e.steps[0].sub }));
-            st.push(S(L('Решений нет', 'No solutions'), `${tn(g)} \\nmid ${tn(C)}`,
-                L(`При любых целых x и y левая часть делится на ${sn(g)}, а ${sn(C)} на ${sn(g)} не делится.`,
-                    `For all integers x and y the left side is divisible by ${sn(g)}, but ${sn(C)} is not.`), { rule: 'answer' }));
+            st.push(S(msg('numbers.theory.gcd.gcd', { A: sn(A), B: sn(B), g: sn(g) }), T((l) => `${G(l, A, B)} = ${tn(g)}`), null, { rule: 'gcd', sub: e.steps[0].sub }));
+            st.push(S(msg('numbers.theory.gcd.no_solutions'), `${tn(g)} \\nmid ${tn(C)}`,
+                msg('numbers.theory.gcd.for_all_integers_x_and_y', { g: sn(g), C: sn(C) }), { rule: 'answer' }));
             res.steps = st;
         }
         return res;
@@ -316,20 +299,17 @@ export function ntDiophantine(a, b, c, opts = {}) {
     }
     const res = { solvable: true, g, x0, y0, dx, dy };
     if (!opts.steps) return res;
-    st.push(S(L('НОД и коэффициенты Безу', 'The gcd and the Bézout coefficients'),
+    st.push(S(msg('numbers.theory.gcd.gcd_and_b_zout_coefficients'),
         `${tp(A)} \\cdot ${tp(e.x)} + ${tp(B)} \\cdot ${tp(e.y)} = ${tn(g)}`,
-        L('Расширенный алгоритм Евклида (подробности внутри).', 'The extended Euclidean algorithm (details inside).'), { rule: 'egcd', sub: e.steps }));
-    st.push(S(L(`Умножаем на ${sn(k)}`, `Multiply by ${sn(k)}`),
+        msg('numbers.theory.gcd.extended_euclidean_algorithm_details_inside'), { rule: 'egcd', sub: e.steps }));
+    st.push(S(msg('numbers.theory.gcd.multiply_by', { k: sn(k) }),
         `${tp(A)} \\cdot ${tp(e.x * k)} + ${tp(B)} \\cdot ${tp(e.y * k)} = ${tn(C)}`,
-        g === 1n ? L(`НОД равен 1, поэтому решение есть при любой правой части: умножаем равенство на ${sn(C)}.`,
-            `The gcd is 1, so there are solutions for any right-hand side: multiply the identity by ${sn(C)}.`)
-            : L(`${sn(C)} делится на НОД = ${sn(g)}, поэтому решение есть: умножаем равенство на ${sn(C)} : ${sn(g)} = ${sn(k)}.`,
-                `${sn(C)} is divisible by the gcd ${sn(g)}, so solutions exist: multiply the identity by ${sn(C)} / ${sn(g)} = ${sn(k)}.`), { rule: 'scale' }));
+        g === 1n ? msg('numbers.theory.gcd.gcd_is_1_so_there_are', { C: sn(C) })
+            : msg('numbers.theory.gcd.is_divisible_by_gcd_so_solutions', { C: sn(C), g: sn(g), k: sn(k) }), { rule: 'scale' }));
     const part = (v0, dv) => `${tn(v0)} ${dv < 0n ? '-' : '+'} ${babs(dv) === 1n ? '' : tn(babs(dv))}k`;
-    st.push(S(L('Все решения', 'All solutions'),
+    st.push(S(msg('numbers.theory.gcd.all_solutions'),
         `x = ${part(x0, dx)},\\quad y = ${part(y0, dy)},\\quad k \\in \\mathbb Z`,
-        L(`Если к x ${dx < 0n ? `прибавить ${sn(dx)}` : `прибавить ${sn(dx)}`}, а ${dy < 0n ? `из y вычесть ${sn(-dy)}` : `к y прибавить ${sn(dy)}`}, левая часть не изменится: ${sn(A)}·${sn(dx)} + ${sn(B)}·(${sn(dy)}) = 0. Других решений нет. Здесь ${sn(x0)} — наименьшее неотрицательное x.`,
-            `Adding ${sn(dx)} to x and ${dy < 0n ? `subtracting ${sn(-dy)} from` : `adding ${sn(dy)} to`} y does not change the left side: ${sn(A)}·${sn(dx)} + ${sn(B)}·(${sn(dy)}) = 0. There are no other solutions. Here ${sn(x0)} is the smallest non-negative x.`),
+        msg('numbers.theory.gcd.adding_to_x_and_y_does', { p: dx < 0n ? `прибавить ${sn(dx)}` : `прибавить ${sn(dx)}`, p2: (lng) => dy < 0n ? msg('numbers.theory.gcd.subtracting_from_2', { p: sn(-dy) }).in(lng) : msg('numbers.theory.gcd.adding_to_2', { dy: sn(dy) }).in(lng), A: sn(A), dx: sn(dx), B: sn(B), dy: sn(dy), x0: sn(x0) }),
         { rule: 'answer' }));
     res.steps = st;
     return res;

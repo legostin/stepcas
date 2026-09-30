@@ -9,6 +9,7 @@ import { step } from '../../core/steps.js';
 import { N0, N1, T_, asNode, bt, evalAt, isNum, isZeroN, simp, tx } from './common.js';
 import { limit } from './limit.js';
 import { fmtNum } from './table.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- Taylor polynomials
 
@@ -25,7 +26,7 @@ function factorialQ(k) {
  */
 export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
     node = asNode(node);
-    if (!Number.isInteger(n) || n < 0 || n > 20) throw new MathError({ ru: 'Степень многочлена Тейлора — от 0 до 20', en: 'The degree must be from 0 to 20' }, null, null, 'range');
+    if (!Number.isInteger(n) || n < 0 || n > 20) throw new MathError(msg('calculus.limit.taylor.degree_must_be_from_0_to'), null, null, 'range');
     const A = simp(asNode(a));
     const X = sym(v);
     let d = simp(node);
@@ -43,7 +44,7 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         }
         if (!val) {
             const L = limit(d, v, A);
-            if (!L.value || typeof L.value !== 'object') throw new MathError({ ru: `Производная порядка ${k} не определена в точке — многочлена Тейлора нет`, en: `The derivative of order ${k} is undefined at the point: no Taylor polynomial` }, null, null, 'undefined');
+            if (!L.value || typeof L.value !== 'object') throw new MathError(msg('calculus.limit.taylor.derivative_of_order_is_undefined_at', { k }), null, null, 'undefined');
             val = L.value;
         }
         coeffs.push(simp(div(val, num(factorialQ(k)))));
@@ -69,19 +70,19 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
     const steps = [];
     if (opts.steps) {
         steps.push(step({
-            title: T_('Формула Тейлора', "Taylor's formula"),
+            title: msg('calculus.limit.taylor.taylor_s_formula'),
             tex: `T_{n}(${v}) = \\sum_{k=0}^{n} \\frac{f^{(k)}(a)}{k!}(${v} - a)^{k}`,
-            text: T_('Коэффициенты — производные в точке, делённые на факториалы: многочлен совпадает с функцией в точке вместе с n первыми производными.', 'The coefficients are the derivatives at the point divided by factorials: the polynomial matches the function and its first n derivatives there.'),
+            text: msg('calculus.limit.taylor.coefficients_are_derivatives_at_point_divided'),
             rule: 'taylor',
         }));
         for (let k = 0; k <= n; k++) {
             steps.push(step({
-                title: T_(`Коэффициент при степени ${k}`, `Coefficient of degree ${k}`),
+                title: msg('calculus.limit.taylor.coefficient_of_degree', { k }),
                 tex: bt((L) => `\\frac{f^{(${k})}(${tx(A, L)})}{${k}!} = ${tx(coeffs[k], L)}`),
                 rule: 'coefficient',
             }));
         }
-        const s = step({ title: T_('Многочлен Тейлора', 'Taylor polynomial'), tex, rule: 'answer' });
+        const s = step({ title: msg('calculus.limit.taylor.taylor_polynomial'), tex, rule: 'answer' });
         s.final = true;
         steps.push(s);
     }

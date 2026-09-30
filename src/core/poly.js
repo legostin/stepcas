@@ -5,9 +5,10 @@ import { num, sym, add, mul, pow, isConst, numValue } from './ast.js';
 import { expand } from './expand.js';
 import { toTex } from './print.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
+import { msg } from '../i18n/index.js';
 
 const MAX_DEG = 10000;
-const DIV0 = { ru: 'Деление на нулевой многочлен', en: 'Division by the zero polynomial' };
+const DIV0 = msg('core.poly.division_by_zero_polynomial');
 
 // ---------------------------------------------------------------- divisors of big integers
 
@@ -388,7 +389,7 @@ export class Poly {
 
     pow(n) {
         if (!Number.isInteger(n) || n < 0) throw new TypeError('Poly.pow needs a non-negative integer');
-        if (Math.max(this.degree, 0) * n > MAX_DEG) throw new MathError({ ru: 'Слишком большая степень', en: 'The degree is too large' }, null, null, 'too-big');
+        if (Math.max(this.degree, 0) * n > MAX_DEG) throw new MathError(msg('core.poly.degree_is_too_large'), null, null, 'too-big');
         let r = new Poly([Q.ONE]);
         let b = this;
         while (n > 0) {

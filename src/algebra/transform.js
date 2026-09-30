@@ -16,6 +16,7 @@ import { expand, numDen } from '../core/expand.js';
 import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { trySimplify } from '../core/safe.js';
+import { msg } from '../i18n/index.js';
 
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const bt = (f) => L(f('ru'), f('en'));
@@ -51,7 +52,7 @@ function factorPoly(P, v) {
         if (m > 0) out.push({ poly: new Poly([Q.ZERO, Q.ONE]), mult: m });
         if (R.degree >= 1) {
             steps.push(step({
-                title: L('Выносим общий множитель за скобки', 'Take the common factor out'),
+                title: msg('algebra.transform.take_common_factor_out'),
                 tex: bt((l) => `${polyTex(P, v, l)} = ${tex(common, l)}\\left(${polyTex(R, v, l)}\\right)`),
             }));
         }
@@ -79,7 +80,7 @@ function factorPoly(P, v) {
             const f1 = u.sub(new Poly([q]));
             const f2 = u.add(new Poly([q]));
             steps.push(step({
-                title: L('Разность квадратов', 'The difference of squares'),
+                title: msg('algebra.transform.difference_of_squares'),
                 tex: bt((l) => {
                     const pb = trySimplify(mul(num(p), base));
                     const pT = pb.type === 'sym' ? tex(pb, l) : `\\left(${tex(pb, l)}\\right)`;
@@ -98,7 +99,7 @@ function factorPoly(P, v) {
             const quad = new Poly([q.mul(q), p.mul(q).neg(), p.mul(p)]);
             const plus = q.isPos();
             steps.push(step({
-                title: plus ? L('Сумма кубов', 'The sum of cubes') : L('Разность кубов', 'The difference of cubes'),
+                title: plus ? msg('algebra.transform.sum_of_cubes') : msg('algebra.transform.difference_of_cubes'),
                 tex: bt((l) => `${polyTex(F, v, l)} = \\left(${polyTex(lin, v, l)}\\right)\\left(${polyTex(quad, v, l)}\\right)`),
                 text: plus ? L('$a^3 + b^3 = (a + b)(a^2 - ab + b^2)$.') : L('$a^3 - b^3 = (a - b)(a^2 + ab + b^2)$.'),
             }));
@@ -110,14 +111,14 @@ function factorPoly(P, v) {
             if (D.isNeg()) {
                 constant = constant.mul(F.content());
                 out.push({ poly: F.primitive(), mult: 1 });
-                steps.push(step({ title: L('Трёхчлен не раскладывается', 'The quadratic does not factor'), tex: bt((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)} < 0`), text: L('Действительных корней нет.', 'It has no real roots.') }));
+                steps.push(step({ title: msg('algebra.transform.quadratic_does_not_factor'), tex: bt((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)} < 0`), text: msg('algebra.transform.it_has_no_real_roots') }));
                 continue;
             }
             const sd = D.exactRoot(2);
             if (!sd) {
                 constant = constant.mul(F.content());
                 out.push({ poly: F.primitive(), mult: 1 });
-                steps.push(step({ title: L('Корни иррациональные', 'The roots are irrational'), tex: bt((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)}`), text: L('Над рациональными числами трёхчлен не раскладывается.', 'The quadratic does not factor over the rationals.') }));
+                steps.push(step({ title: msg('algebra.transform.roots_are_irrational'), tex: bt((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)}`), text: msg('algebra.transform.quadratic_does_not_factor_over_rationals') }));
                 continue;
             }
             const x1 = b.neg().sub(sd).div(a.mul(new Q(2n)));
@@ -128,9 +129,9 @@ function factorPoly(P, v) {
                 constant = constant.mul(k);
                 out.push({ poly: f, mult: 2 });
                 steps.push(step({
-                    title: L('Полный квадрат', 'A perfect square'),
+                    title: msg('algebra.transform.perfect_square'),
                     tex: bt((l) => `${polyTex(F, v, l)} = ${k.isOne() ? '' : k.toTex(l)}\\left(${polyTex(f, v, l)}\\right)^2`),
-                    text: L('$a^2 \\pm 2ab + b^2 = (a \\pm b)^2$ (дискриминант равен нулю).', '$a^2 \\pm 2ab + b^2 = (a \\pm b)^2$ (the discriminant is zero).'),
+                    text: msg('algebra.transform.discriminant_is_zero'),
                 }));
                 continue;
             }
@@ -140,11 +141,11 @@ function factorPoly(P, v) {
             constant = constant.mul(k);
             out.push({ poly: f1, mult: 1 }, { poly: f2, mult: 1 });
             steps.push(step({
-                title: L('Раскладываем квадратный трёхчлен по корням', 'Factor the quadratic through its roots'),
+                title: msg('algebra.transform.factor_quadratic_through_its_roots'),
                 tex: bt((l) => `D = ${D.toTex(l)},\\ ${v}_1 = ${x1.toTex(l)},\\ ${v}_2 = ${x2.toTex(l)} \\;\\Rightarrow\\; ${polyTex(F, v, l)} = ${k.isOne() ? '' : k.eq(-1) ? '-' : k.toTex(l)}\\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`),
                 text: x1.isInt() && x2.isInt()
                     ? L(`$a${v}^2 + b${v} + c = a(${v} - ${v}_1)(${v} - ${v}_2)$.`)
-                    : L(`$a${v}^2 + b${v} + c = a(${v} - ${v}_1)(${v} - ${v}_2)$; дробный корень записываем без дроби, внося знаменатель в скобку: ${[x1, x2].filter((z) => !z.isInt()).map((z) => `$${v} - ${z.toTex('ru')} \\to ${polyTex(linFromRoot(z), v, 'ru')}$`).join(', ')}.`, `$a${v}^2 + b${v} + c = a(${v} - ${v}_1)(${v} - ${v}_2)$; a fractional root goes into its bracket without the fraction: ${[x1, x2].filter((z) => !z.isInt()).map((z) => `$${v} - ${z.toTex('en')} \\to ${polyTex(linFromRoot(z), v, 'en')}$`).join(', ')}.`),
+                    : msg('algebra.transform.fractional_root_goes_into_its_bracket', { v, p: (lng) => [x1, x2].filter((z) => !z.isInt()).map((z) => `$${v} - ${z.toTex(lng)} \\to ${polyTex(linFromRoot(z), v, lng)}$`).join(', ') }),
             }));
             continue;
         }
@@ -156,9 +157,9 @@ function factorPoly(P, v) {
             const { q: G, r: rem } = F.divmod(f);
             if (!rem.isZero()) break;
             steps.push(step({
-                title: L('Подбираем корень и делим', 'Find a root and divide'),
+                title: msg('algebra.transform.find_root_and_divide'),
                 tex: bt((l) => `${polyTex(F, v, l)} = \\left(${polyTex(f, v, l)}\\right)\\left(${polyTex(G, v, l)}\\right)`),
-                text: L(`Корень ищем среди делителей свободного члена (делённых на делители старшего коэффициента): $${v} = ${r.toTex('ru')}$ обращает многочлен в ноль. Делим на $${polyTex(f, v, 'ru')}$ уголком или по схеме Горнера.`, `A root is sought among the divisors of the free term (over the divisors of the leading coefficient): $${v} = ${r.toTex('en')}$ makes it zero. Divide by $${polyTex(f, v, 'en')}$ (long division or Horner).`),
+                text: msg('algebra.transform.root_is_sought_among_divisors_of', { v, p: (lng) => r.toTex(lng), f: (lng) => polyTex(f, v, lng) }),
             }));
             queue.push(f, G);
             continue;
@@ -187,7 +188,7 @@ function productNode(constant, factors, v) {
 
 function onlyVar(node) {
     const vs = freeVars(node);
-    if (vs.length !== 1) throw new MathError(L('Нужно выражение с одной переменной.', 'An expression in one variable is needed.'));
+    if (vs.length !== 1) throw new MathError(msg('algebra.transform.expression_in_one_variable_is_needed'));
     return vs[0];
 }
 
@@ -203,9 +204,9 @@ export function factorSteps(input, opts = {}) {
     let back = new Poly([r.constant]);
     for (const { poly, mult } of r.factors) back = back.mul(poly.pow(mult));
     if (!back.equals(P)) return null;
-    const steps = [step({ title: L('Выражение', 'The expression'), tex: bt((l) => tex(node, l)) }), ...r.steps];
-    if (!r.steps.length) steps.push(step({ title: L('Разложить нельзя', 'It does not factor'), text: L('Многочлен неприводим над рациональными числами.', 'The polynomial is irreducible over the rationals.') }));
-    steps.push(step({ title: L('Ответ', 'Answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
+    const steps = [step({ title: msg('algebra.transform.expression'), tex: bt((l) => tex(node, l)) }), ...r.steps];
+    if (!r.steps.length) steps.push(step({ title: msg('algebra.transform.it_does_not_factor'), text: msg('algebra.transform.polynomial_is_irreducible_over_rationals') }));
+    steps.push(step({ title: msg('algebra.transform.answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
     steps[steps.length - 1].final = true;
     return { result, steps, factors: r.factors, constant: r.constant };
 }
@@ -220,7 +221,7 @@ function expandOne(t) {
         const minus = b0.type === 'neg';
         const b = minus ? b0.arg : b0;
         const mid = S(mul(num(2), a, b));
-        return { node: add(S(pow(a, num(2))), minus ? neg(mid) : mid, S(pow(b, num(2)))), rule: minus ? L('квадрат разности $(a - b)^2 = a^2 - 2ab + b^2$', 'the square of a difference $(a - b)^2 = a^2 - 2ab + b^2$') : L('квадрат суммы $(a + b)^2 = a^2 + 2ab + b^2$', 'the square of a sum $(a + b)^2 = a^2 + 2ab + b^2$') };
+        return { node: add(S(pow(a, num(2))), minus ? neg(mid) : mid, S(pow(b, num(2)))), rule: minus ? msg('algebra.transform.square_of_difference') : msg('algebra.transform.square_of_sum') };
     }
     if (t.type === 'pow' && numValue(t.exp)?.eq(3) && t.base.type === 'add' && t.base.args.length === 2) {
         const [a, b0] = t.base.args;
@@ -228,13 +229,13 @@ function expandOne(t) {
         const b = minus ? b0.arg : b0;
         const t2 = S(mul(num(3), pow(a, num(2)), b));
         const t4 = S(pow(b, num(3)));
-        return { node: add(S(pow(a, num(3))), minus ? neg(t2) : t2, S(mul(num(3), a, pow(b, num(2)))), minus ? neg(t4) : t4), rule: minus ? L('куб разности', 'the cube of a difference') : L('куб суммы', 'the cube of a sum') };
+        return { node: add(S(pow(a, num(3))), minus ? neg(t2) : t2, S(mul(num(3), a, pow(b, num(2)))), minus ? neg(t4) : t4), rule: minus ? msg('algebra.transform.cube_of_difference') : msg('algebra.transform.cube_of_sum') };
     }
     if (t.type === 'mul' && t.args.length === 2 && t.args.every((f) => f.type === 'add' && f.args.length === 2)) {
         const [[a1, b1], [a2, b2]] = t.args.map((f) => f.args);
         if (nodeKey(S(a1)) === nodeKey(S(a2)) && nodeKey(S(b1)) === nodeKey(S(neg(b2)))) {
             const b = b1.type === 'neg' ? b1.arg : b1;
-            return { node: add(S(pow(a1, num(2))), neg(S(pow(b, num(2))))), rule: L('разность квадратов $(a - b)(a + b) = a^2 - b^2$', 'the difference of squares $(a - b)(a + b) = a^2 - b^2$') };
+            return { node: add(S(pow(a1, num(2))), neg(S(pow(b, num(2))))), rule: msg('algebra.transform.difference_of_squares_2') };
         }
     }
     if (t.type === 'mul' && t.args.some((f) => f.type === 'add')) {
@@ -244,7 +245,7 @@ function expandOne(t) {
         } catch {
             return null;
         }
-        return { node: e, rule: L('раскрываем скобки: каждый член умножаем на каждый', 'open the brackets: every term times every term') };
+        return { node: e, rule: msg('algebra.transform.open_brackets_every_term_times_every') };
     }
     return null;
 }
@@ -270,17 +271,17 @@ export function expandSteps(input) {
     } catch {
         return null;
     }
-    const steps = [step({ title: L('Выражение', 'The expression'), tex: bt((l) => tex(node, l)) })];
+    const steps = [step({ title: msg('algebra.transform.expression'), tex: bt((l) => tex(node, l)) })];
     const mid = opened.length === 1 ? opened[0] : add(opened);
     if (changed) {
         steps.push(step({
-            title: L('Раскрываем скобки', 'Open the brackets'),
+            title: msg('algebra.transform.open_brackets'),
             tex: bt((l) => `${tex(node, l)} = ${tex(mid, l)}`),
-            text: L(`По формулам: ${rules.map((r) => r.ru).join('; ')}.`, `By the formulas: ${rules.map((r) => r.en).join('; ')}.`),
+            text: msg('algebra.transform.by_formulas', { p: (lng) => rules.map((r) => r[lng]).join('; ') }),
         }));
     }
-    if (tex(mid) !== tex(result)) steps.push(step({ title: L('Приводим подобные', 'Collect like terms'), tex: bt((l) => `${tex(mid, l)} = ${tex(result, l)}`) }));
-    steps.push(step({ title: L('Ответ', 'Answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
+    if (tex(mid) !== tex(result)) steps.push(step({ title: msg('algebra.transform.collect_like_terms'), tex: bt((l) => `${tex(mid, l)} = ${tex(result, l)}`) }));
+    steps.push(step({ title: msg('algebra.transform.answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
     steps[steps.length - 1].final = true;
     return { result, steps };
 }
@@ -304,14 +305,14 @@ export function simplifySteps(input) {
     if (!N || !D) return null;
     const fN = factorPoly(N, v);
     const fD = factorPoly(D, v);
-    const steps = [step({ title: L('Выражение', 'The expression'), tex: bt((l) => tex(node, l)) })];
+    const steps = [step({ title: msg('algebra.transform.expression'), tex: bt((l) => tex(node, l)) })];
     // the excluded values: zeros of the denominator
     const zeros = D.rationalRoots().map((r) => r.root ?? r);
     const G = N.gcd(D);
     const numF = productNode(fN.constant, fN.factors, v);
     const denF = productNode(fD.constant, fD.factors, v);
     if (fN.steps.length || fD.steps.length) {
-        steps.push(step({ title: L('Раскладываем числитель и знаменатель на множители', 'Factor the numerator and the denominator'), tex: bt((l) => `${tex(node, l)} = \\frac{${tex(numF, l)}}{${tex(denF, l)}}`), sub: [...fN.steps, ...fD.steps] }));
+        steps.push(step({ title: msg('algebra.transform.factor_numerator_and_denominator'), tex: bt((l) => `${tex(node, l)} = \\frac{${tex(numF, l)}}{${tex(denF, l)}}`), sub: [...fN.steps, ...fD.steps] }));
     }
     const Nr = N.divmod(G).q;
     const Dr = D.divmod(G).q;
@@ -327,12 +328,12 @@ export function simplifySteps(input) {
     const restr = zeros.length ? bt((l) => zeros.map((z) => `${v} \\ne ${z.toTex(l)}`).join(',\\ ')) : null;
     if (G.degree >= 1) {
         steps.push(step({
-            title: L('Сокращаем дробь', 'Reduce the fraction'),
+            title: msg('algebra.transform.reduce_fraction'),
             tex: bt((l) => `\\frac{${tex(numF, l)}}{${tex(denF, l)}} = ${tex(result, l)}`),
-            text: L(`Сокращаем на $${polyTex(G.primitive(), v, 'ru')}$. Это можно, пока знаменатель не равен нулю: ${zeros.map((z) => `$${v} \\ne ${z.toTex('ru')}$`).join(', ')}.`, `Cancel $${polyTex(G.primitive(), v, 'en')}$. This is allowed while the denominator is not zero: ${zeros.map((z) => `$${v} \\ne ${z.toTex('en')}$`).join(', ')}.`),
+            text: msg('algebra.transform.cancel_this_is_allowed_while_denominator', { p: (lng) => polyTex(G.primitive(), v, lng), p2: (lng) => zeros.map((z) => `$${v} \\ne ${z.toTex(lng)}$`).join(', ') }),
         }));
     }
-    steps.push(step({ title: L('Ответ', 'Answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}${restr ? `,\\quad ${restr[l] ?? restr}` : ''}`) }));
+    steps.push(step({ title: msg('algebra.transform.answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}${restr ? `,\\quad ${restr[l] ?? restr}` : ''}`) }));
     steps[steps.length - 1].final = true;
     return { result, steps, restrictions: zeros };
 }

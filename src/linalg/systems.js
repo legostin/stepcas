@@ -5,13 +5,14 @@ import { E_, L, S, T, fail, qs, qt, qtp, sub } from './common.js';
 import { M, Matrix, needSquare, toQ, vecTex } from './core.js';
 import { matDet } from './det.js';
 import { STRATEGY, nullspaceFrom, reduce } from './reduce.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- inverse and linear systems
 
 /** Inverse by Gauss–Jordan on [A | E]; null for a singular matrix. {steps: true} → {value, steps}. */
 export function matInverse(A, opts = {}) {
     A = M(A);
-    needSquare(A, L('Обратная матрица', 'The inverse'));
+    needSquare(A, msg('linalg.systems.inverse'));
     const n = A.rows;
     const W = A.augment(Matrix.identity(n)).a;
     const res = reduce(W, { augmented: n, steps: !!opts.steps, stopOnSingular: true });
@@ -19,33 +20,29 @@ export function matInverse(A, opts = {}) {
     const value = singular ? null : new Matrix(res.W.map((r) => r.slice(n)));
     if (!opts.steps) return value;
     const st = [];
-    st.push(S(T((l) => (l === 'ru' ? 'Приписываем справа единичную матрицу' : 'Append the identity matrix')),
+    st.push(S(T((l) => (msg('linalg.systems.append_identity_matrix').in(l))),
         T((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
-        T((l) => (l === 'ru'
-            ? `Элементарными преобразованиями строк превращаем левую половину в единичную матрицу E. Те же действия превращают правую половину в A⁻¹: они равносильны умножению слева на A⁻¹. ${STRATEGY.ru}`
-            : `Using row operations we turn the left half into the identity matrix I. The same operations turn the right half into A⁻¹, because together they amount to multiplying by A⁻¹ on the left. ${STRATEGY.en}`)),
+        T((l) => (msg('linalg.systems.using_row_operations_we_turn_left', { p: (lng) => STRATEGY[lng] }).in(l))),
         { rule: 'inverse-plan' }));
     if (n === 2 && !singular) {
         const [[a, b], [c, d]] = A.a;
         const det = a.mul(d).sub(b.mul(c));
-        st.push(S(L('Для 2×2 есть готовая формула', 'For 2×2 there is a ready formula'),
+        st.push(S(msg('linalg.systems.for_2_2_there_is_ready'),
             `A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} = \\frac{1}{${qt(det)}}${new Matrix([[d, b.neg()], [c.neg(), a]]).toTex()}`,
-            L('Меняем местами элементы главной диагонали, у побочной меняем знаки и делим на определитель. Ниже — тот же ответ методом Гаусса.',
-                'Swap the entries on the main diagonal, negate the other two and divide by the determinant. Below is the same answer by Gauss–Jordan.'),
+            msg('linalg.systems.swap_entries_on_main_diagonal_negate'),
             { rule: 'inverse-2x2' }));
     }
     st.push(...res.steps);
     if (singular) {
-        st.push(S(L('Обратной матрицы нет', 'There is no inverse'), '\\det A = 0',
-            L(`В столбце ${res.singularAt + 1} на месте ведущего и ниже — одни нули: левую половину нельзя превратить в единичную матрицу. Ранг A меньше ${n}, определитель равен 0 — матрица вырожденная, обратной у неё нет.`,
-                `Column ${res.singularAt + 1} has only zeros at and below the pivot position, so the left half cannot become the identity. The rank of A is less than ${n} and det A = 0: the matrix is singular and has no inverse.`),
+        st.push(S(msg('linalg.systems.there_is_no_inverse'), '\\det A = 0',
+            msg('linalg.systems.column_has_only_zeros_at_and', { p: res.singularAt + 1, n }),
             { rule: 'answer' }));
         return { value: null, steps: st };
     }
-    st.push(S(L('Ответ', 'Answer'), `A^{-1} = ${value.toTex()}`,
-        T((l) => (l === 'ru' ? 'Слева получилась единичная матрица — значит, справа стоит A⁻¹.' : 'The left half is now the identity, so the right half is A⁻¹.')),
+    st.push(S(msg('linalg.systems.answer'), `A^{-1} = ${value.toTex()}`,
+        T((l) => (msg('linalg.systems.left_half_is_now_identity_so').in(l))),
         { rule: 'answer' }));
-    st.push(S(L('Проверка', 'Check'), T((l) => `A \\cdot A^{-1} = ${A.mul(value).toTex()} = ${E_(l)}`), null, { rule: 'check' }));
+    st.push(S(msg('linalg.systems.check'), T((l) => `A \\cdot A^{-1} = ${A.mul(value).toTex()} = ${E_(l)}`), null, { rule: 'check' }));
     return { value, steps: st };
 }
 
@@ -77,7 +74,7 @@ function linComb(c, terms) {
 export function matSolve(A, b, opts = {}) {
     A = M(A);
     const bv = b instanceof Matrix ? b.col(0) : Array.isArray(b) ? b.map((v) => (Array.isArray(v) ? toQ(v[0]) : toQ(v))) : null;
-    if (!bv || bv.length !== A.rows) throw fail('Столбец правых частей должен иметь столько же чисел, сколько строк в матрице.', 'The right-hand side must have as many numbers as the matrix has rows.', 'shape');
+    if (!bv || bv.length !== A.rows) throw fail(msg('linalg.systems.right_hand_side_must_have_as'), 'shape');
     const n = A.cols;
     const names = opts.vars ?? null;
     const Aug = A.augment(bv.map((v) => [v]));
@@ -114,36 +111,31 @@ export function matSolve(A, b, opts = {}) {
 
     const st = [];
     const sysTex = `\\begin{cases} ${A.a.map((r, i) => `${linComb(Q.ZERO, r.map((k, j) => [k, varTex(names, j)]))} = ${qt(bv[i])}`).join(' \\\\ ')} \\end{cases}`;
-    st.push(S(L('Расширенная матрица', 'The augmented matrix'), `${sysTex} \\quad\\Longrightarrow\\quad ${Aug.toTex({ augmented: 1 })}`,
-        L(`Записываем коэффициенты при неизвестных и, за чертой, правые части. Преобразования строк матрицы — это те же действия с уравнениями (переставить, умножить на число, прибавить одно к другому), поэтому решения не меняются. ${STRATEGY.ru}`,
-            `Write the coefficients and, after the bar, the right-hand sides. Row operations are exactly the operations on the equations (swap, multiply by a number, add one to another), so the solutions do not change. ${STRATEGY.en}`),
+    st.push(S(msg('linalg.systems.augmented_matrix'), `${sysTex} \\quad\\Longrightarrow\\quad ${Aug.toTex({ augmented: 1 })}`,
+        msg('linalg.systems.write_coefficients_and_after_bar_right', { p: (lng) => STRATEGY[lng] }),
         { rule: 'augmented' }));
     st.push(...res.steps);
     if (out.kind === 'none') {
-        st.push(S(L('Противоречие', 'A contradiction'), `0 = ${qt(W[badRow][n])}`,
-            L(`В строке ${badRow + 1} слева одни нули, а справа ${qs(W[badRow][n])}: получилось уравнение 0 = ${qs(W[badRow][n])}. Система несовместна — решений нет. (Ранг матрицы коэффициентов ${rank}, а расширенной — ${rank + 1}: по теореме Кронекера — Капелли решений нет.)`,
-                `Row ${badRow + 1} has zeros on the left and ${qs(W[badRow][n])} on the right: the equation 0 = ${qs(W[badRow][n])}. The system is inconsistent — no solutions. (The coefficient matrix has rank ${rank}, the augmented one ${rank + 1}; by the Rouché–Capelli theorem there are no solutions.)`),
+        st.push(S(msg('linalg.systems.contradiction'), `0 = ${qt(W[badRow][n])}`,
+            msg('linalg.systems.row_has_zeros_on_left_and', { p: badRow + 1, p2: qs(W[badRow][n]), rank, p3: rank + 1 }),
             { rule: 'answer' }));
     } else if (out.kind === 'unique') {
-        st.push(S(L('Читаем ответ', 'Read off the answer'), out.tex,
-            L(`Слева получилась единичная матрица: каждая строка — это уже готовое уравнение вида x = число. Ранг равен числу неизвестных (${n}), поэтому решение единственное.`,
-                `The left part is the identity: each row is now an equation "x = number". The rank equals the number of unknowns (${n}), so the solution is unique.`),
+        st.push(S(msg('linalg.systems.read_off_answer'), out.tex,
+            msg('linalg.systems.left_part_is_identity_each_row', { n }),
             { rule: 'answer' }));
         const checks = A.a.map((r, i) => `${r.map((k, j) => `${qtp(k)} \\cdot ${qtp(out.x[j])}`).join(' + ')} = ${qt(bv[i])}`);
-        st.push(S(L('Проверка', 'Check'), checks.length <= 4 ? `\\begin{aligned} ${checks.map((c) => `& ${c}`).join(' \\\\ ')} \\end{aligned}` : null,
-            L('Подставляем найденные значения в каждое уравнение — все равенства верны.', 'Substitute the values into every equation: all of them hold.'), { rule: 'check' }));
+        st.push(S(msg('linalg.systems.check'), checks.length <= 4 ? `\\begin{aligned} ${checks.map((c) => `& ${c}`).join(' \\\\ ')} \\end{aligned}` : null,
+            msg('linalg.systems.substitute_values_into_every_equation_all'), { rule: 'check' }));
     } else {
         const freeNames = out.params.map((p) => varTex(names, p.index));
         const fn = out.params.map((p) => varText(names, p.index)).join(', ');
         const pn = out.params.map((p) => p.name).join(', ');
         const one = out.params.length === 1;
-        st.push(S(L('Свободные неизвестные', 'Free unknowns'), out.params.map((p, k) => `${freeNames[k]} = ${p.name}`).join(',\\quad '),
-            L(`Ведущих единиц ${rank}, а неизвестных ${n}. ${one ? `Неизвестной ${fn} ведущий элемент не достался: она свободная, её можно взять любой. Обозначим её параметром ${pn}` : `Неизвестным ${fn} ведущие элементы не достались: они свободные, их можно взять любыми. Обозначим их параметрами ${pn}`}, а остальные неизвестные выразим через ${one ? 'него' : 'них'}.`,
-                `There are ${rank} leading ones but ${n} unknowns. ${one ? `The unknown ${fn} got no pivot: it is free and can take any value. Call it ${pn}` : `The unknowns ${fn} got no pivots: they are free and can take any values. Call them ${pn}`} and express the other unknowns through ${one ? 'it' : 'them'}.`),
+        st.push(S(msg('linalg.systems.free_unknowns'), out.params.map((p, k) => `${freeNames[k]} = ${p.name}`).join(',\\quad '),
+            msg('linalg.systems.there_are_leading_ones_but_unknowns', { rank, n, p: (lng) => one ? msg('linalg.systems.unknown_got_no_pivot_it_is', { fn, pn }).in(lng) : msg('linalg.systems.unknowns_got_no_pivots_they_are', { fn, pn }).in(lng), p2: (lng) => one ? msg('linalg.systems.it').in(lng) : msg('linalg.systems.them').in(lng) }),
             { rule: 'free-vars' }));
-        st.push(S(L('Общее решение', 'The general solution'), out.tex,
-            L(`Бесконечно много решений: при любых значениях ${out.params.map((p) => p.name).join(', ')}. В векторной записи — частное решение плюс линейная комбинация решений однородной системы.`,
-                `Infinitely many solutions, one for every choice of ${out.params.map((p) => p.name).join(', ')}. In vector form: a particular solution plus a combination of solutions of the homogeneous system.`),
+        st.push(S(msg('linalg.systems.general_solution'), out.tex,
+            msg('linalg.systems.infinitely_many_solutions_one_for_every', { p: out.params.map((p) => p.name).join(', ') }),
             { rule: 'answer', vectorTex: out.vectorTex }));
     }
     out.steps = st;
@@ -153,9 +145,9 @@ export function matSolve(A, b, opts = {}) {
 /** Cramer's rule for n ≤ 3 (n ≤ 6 without steps): {kind: 'unique', x, dets} or {kind: 'singular'} when det A = 0. */
 export function matSolveCramer(A, b, opts = {}) {
     A = M(A);
-    needSquare(A, L('Правило Крамера', "Cramer's rule"));
+    needSquare(A, msg('linalg.systems.cramer_s_rule'));
     const n = A.rows;
-    if (n > 6 || (opts.steps && n > 3)) throw fail('Правило Крамера показываем для систем до 3×3.', "Cramer's rule is shown for systems up to 3×3.", 'too-big');
+    if (n > 6 || (opts.steps && n > 3)) throw fail(msg('linalg.systems.cramer_s_rule_is_shown_for'), 'too-big');
     const bv = (Array.isArray(b) ? b : b.col(0)).map((v) => toQ(Array.isArray(v) ? v[0] : v));
     const Ai = (i) => new Matrix(A.a.map((r, k) => r.map((v, j) => (j === i ? bv[k] : v))));
     const d = matDet(A, { steps: !!opts.steps });
@@ -163,15 +155,14 @@ export function matSolveCramer(A, b, opts = {}) {
     const st = [];
     const names = opts.vars ?? null;
     if (opts.steps) {
-        st.push(S(L('Главный определитель', 'The main determinant'), `\\Delta = \\det A = ${qt(D)}`,
-            L('Правило Крамера работает, когда главный определитель не равен нулю.', "Cramer's rule works when the main determinant is not zero."), { rule: 'cramer-main', sub: d.steps }));
+        st.push(S(msg('linalg.systems.main_determinant'), `\\Delta = \\det A = ${qt(D)}`,
+            msg('linalg.systems.cramer_s_rule_works_when_main'), { rule: 'cramer-main', sub: d.steps }));
     }
     if (D.isZero()) {
         const res = { kind: 'singular', x: null, dets: { main: D } };
         if (opts.steps) {
-            st.push(S(L('Правило Крамера не применимо', "Cramer's rule does not apply"), '\\Delta = 0',
-                L('Главный определитель равен нулю: система либо несовместна, либо имеет бесконечно много решений. Разобраться поможет метод Гаусса.',
-                    'The main determinant is zero: the system has either no solutions or infinitely many. Gaussian elimination will tell which.'), { rule: 'answer' }));
+            st.push(S(msg('linalg.systems.cramer_s_rule_does_not_apply'), '\\Delta = 0',
+                msg('linalg.systems.main_determinant_is_zero_system_has'), { rule: 'answer' }));
             res.steps = st;
         }
         return res;
@@ -182,8 +173,8 @@ export function matSolveCramer(A, b, opts = {}) {
         const v = opts.steps ? di.value : di;
         dets.push(v);
         if (opts.steps) {
-            st.push(S(L(`Определитель Δ${sub(i + 1)}`, `Determinant Δ${sub(i + 1)}`), `\\Delta_{${i + 1}} = ${Ai(i).toTex({ env: 'vmatrix' })} = ${qt(v)}`,
-                i === 0 ? L('Заменяем столбец коэффициентов при этой неизвестной столбцом правых частей.', 'Replace the column of this unknown by the right-hand sides.') : null,
+            st.push(S(msg('linalg.systems.determinant', { p: sub(i + 1) }), `\\Delta_{${i + 1}} = ${Ai(i).toTex({ env: 'vmatrix' })} = ${qt(v)}`,
+                i === 0 ? msg('linalg.systems.replace_column_of_this_unknown_by') : null,
                 { rule: 'cramer-minor', sub: di.steps }));
         }
     }
@@ -191,8 +182,8 @@ export function matSolveCramer(A, b, opts = {}) {
     const res = { kind: 'unique', x, dets: { main: D, parts: dets } };
     if (opts.steps) {
         const fr = (i) => { const f = `\\frac{${qt(dets[i])}}{${qt(D)}}`; return f === qt(x[i]) ? f : `${f} = ${qt(x[i])}`; };
-        st.push(S(L('Ответ', 'Answer'), x.map((v, i) => `${varTex(names, i)} = \\frac{\\Delta_{${i + 1}}}{\\Delta} = ${fr(i)}`).join(',\\quad '),
-            L('Каждая неизвестная равна своему определителю, делённому на главный.', 'Each unknown is its determinant divided by the main one.'), { rule: 'answer' }));
+        st.push(S(msg('linalg.systems.answer'), x.map((v, i) => `${varTex(names, i)} = \\frac{\\Delta_{${i + 1}}}{\\Delta} = ${fr(i)}`).join(',\\quad '),
+            msg('linalg.systems.each_unknown_is_its_determinant_divided'), { rule: 'answer' }));
         res.steps = st;
     }
     return res;

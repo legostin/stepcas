@@ -9,6 +9,7 @@ import { E_SYM, baseInfo, baseNode, isE, logNode, sameBase } from './exponential
 import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
 import { termsOfSum } from './rational.js';
 import { mergeRoots } from './roots.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- logarithmic equations
 
@@ -63,11 +64,9 @@ export function solveCommonExp(lhs, rhs, E, ctx) {
     for (const F of first.filter(varExp)) {
         const rest = expd(mul(E, pow(F, num(-1))));
         if (!rest || !containsVar(rest, v) || nodeSome(rest, (n) => n.type === 'pow' && containsVar(n.exp, v))) continue;
-        const steps = [S(byLang((l) => (l === 'ru' ? `Выносим $${tex(F, l)}$ за скобки` : `Take $${tex(F, l)}$ out of the brackets`)), {
+        const steps = [S(byLang((l) => (msg('solve.logarithmic.take_out_of_brackets', { F: tex(F, l) }).in(l))), {
             tex: byLang((l) => `${tex(F, l)}\\left(${tex(rest, l)}\\right) = 0`),
-            text: byLang((l) => (l === 'ru'
-                ? `Показательная функция всегда положительна: $${tex(F, l)} > 0$, поэтому этот множитель нулю не равен и на него можно разделить: $${tex(rest, l)} = 0$.`
-                : `An exponential is always positive: $${tex(F, l)} > 0$, so this factor is never zero and we may divide by it: $${tex(rest, l)} = 0$.`)),
+            text: byLang((l) => (msg('solve.logarithmic.exponential_is_always_positive_so_this', { F: tex(F, l), rest: tex(rest, l) }).in(l))),
         })];
         const sub = subSolve(rest, N0, ctx);
         if (sub.kind === 'unsupported' || sub.numeric) return null;
@@ -119,11 +118,10 @@ export function solveTakeLog(lhs, rhs, E, ctx) {
     if (!LA || !LB) return null;
     const L1 = simpOr(expd(LA) ?? LA);
     const L2 = simpOr(expd(LB) ?? LB);
-    const lt = (l) => (lname === 'ln' ? '\\ln' : lname === 'lg' ? (l === 'ru' ? '\\lg' : '\\log_{10}') : `\\log_{${tex(base, l)}}`);
-    const steps = [S(T('Логарифмируем обе части', 'Take the logarithm of both sides'), {
+    const lt = (l) => (lname === 'ln' ? '\\ln' : lname === 'lg' ? (notation(l).log10Tex) : `\\log_{${tex(base, l)}}`);
+    const steps = [S(msg('solve.logarithmic.take_logarithm_of_both_sides'), {
         tex: byLang((l) => `${tex(L1, l)} = ${tex(L2, l)}`),
-        text: T(`Основание степени с переменным показателем положительно (ОДЗ), значит, обе части положительны и от них можно взять $${lt('ru')}$. Логарифм степени — произведение: $${lt('ru')} a^{b} = b\\,${lt('ru')} a$, логарифм произведения — сумма.`,
-            `The base of a power with a variable exponent is positive (the domain), so both sides are positive and we may take $${lt('en')}$ of them. The logarithm of a power is a product, $${lt('en')} a^{b} = b\\,${lt('en')} a$, and of a product a sum.`),
+        text: msg('solve.logarithmic.base_of_power_with_variable_exponent', { p: (lng) => lt(lng) }),
     })];
     const sub = subSolve(L1, L2, ctx);
     if (sub.kind === 'unsupported' || sub.numeric) return null;
@@ -138,16 +136,16 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
     const { vt, constant } = an;
     const C = simpOr(sumNode(constant));
     const steps = [];
-    const defText = T('По определению логарифма: $\\log_a b = c \\Leftrightarrow b = a^{c}$.', 'By the definition of the logarithm: $\\log_a b = c \\Leftrightarrow b = a^{c}$.');
+    const defText = msg('solve.logarithmic.by_definition_of_logarithm');
     // a variable base: log_f(g) = R
     if (vt.some((x) => x.info.varBase)) {
         if (vt.length !== 1 || vt[0].p !== 1) return null;
         const { coef, info, F } = vt[0];
         const R = simpOr(div(neg(C), coef));
         if (!isConstNode(R)) return null;
-        if (!isolated(lhs, rhs, F, R)) steps.push(S(T('Уединяем логарифм', 'Isolate the logarithm'), { tex: byLang((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
+        if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: byLang((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
         const l2 = expd(pow(info.base, R)) ?? pow(info.base, R);
-        steps.push(S(T('Переходим к степени', 'Rewrite as a power'), { tex: byLang((l) => `${tex(l2, l)} = ${tex(info.arg, l)}`), text: defText }));
+        steps.push(S(msg('solve.logarithmic.rewrite_as_power'), { tex: byLang((l) => `${tex(l2, l)} = ${tex(info.arg, l)}`), text: defText }));
         const sub = subSolve(l2, info.arg, ctx);
         if (sub.kind === 'unsupported') return null;
         pushPart(steps, l2, info.arg, sub, v);
@@ -165,9 +163,9 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
             const { coef, info, F } = vt[0];
             const R = simpOr(div(neg(C), coef));
             if (!isConstNode(R)) return null;
-            if (!isolated(lhs, rhs, F, R)) steps.push(S(T('Уединяем логарифм', 'Isolate the logarithm'), { tex: byLang((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
+            if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: byLang((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
             const val = simpOr(pow(info.base, R));
-            steps.push(S(T('Переходим от логарифма к степени', 'Go from the logarithm to a power'), {
+            steps.push(S(msg('solve.logarithmic.go_from_logarithm_to_power'), {
                 tex: byLang((l) => `${tex(u, l)} = ${tex(pow(info.base, R), l)}${nodeKey(val) !== nodeKey(pow(info.base, R)) ? ` = ${tex(val, l)}` : ''}`),
                 text: defText,
             }));
@@ -192,9 +190,9 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
         const Pt = new Poly(arr);
         if (Pt.degree < 1) return null;
         const tN = logNode(c, u);
-        steps.push(S(T(`Замена $t = ${tex(tN)}$`, `Substitute $t = ${tex(tN, 'en')}$`), {
+        steps.push(S(msg('solve.logarithmic.substitute', { tN: (lng) => tex(tN, lng) }), {
             tex: byLang((l) => `${polyTex(Pt, 't', l)} = 0`),
-            text: normalize ? T(`Логарифмы по разным основаниям переводим к основанию $${tex(cN)}$: $\\log_{a^k} u = \\frac{1}{k}\\log_a u$.`, `Logarithms to different bases are converted to base $${tex(cN, 'en')}$: $\\log_{a^k} u = \\frac{1}{k}\\log_a u$.`) : undefined,
+            text: normalize ? msg('solve.logarithmic.logarithms_to_different_bases_are_converted', { cN: (lng) => tex(cN, lng) }) : undefined,
         }));
         const tr = solveAnyPoly(Pt, { v: 't', domain: 'real' });
         steps.push(partStep(byLang((l) => `${polyTex(Pt, 't', l)} = 0`), tr, 't'));
@@ -250,21 +248,20 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
     const rightT = (l) => (hasG ? (isZeroNode(R) ? tex(logNode(c, Gs), l) : `${tex(logNode(c, Gs), l)} ${approxOf(R) < 0 ? '' : '+'} ${tex(R, l)}`) : tex(R, l));
     const simpleEq = vt.length === 2 && !hasG && isZeroNode(R) && ups.length === 1 && downs.length === 1 && vt.every((x) => numValue(x.coef)?.abs().isOne() && x.info.k.isOne());
     if (simpleEq) {
-        steps.push(S(T('Логарифмы с равными основаниями равны — равны и их аргументы', 'Equal logarithms to the same base: the arguments are equal'), {
+        steps.push(S(msg('solve.logarithmic.equal_logarithms_to_same_base_arguments'), {
             tex: byLang((l) => `${tex(ups[0], l)} = ${tex(downs[0], l)}`),
-            text: T('Логарифмическая функция монотонна. Переход не учитывает ОДЗ — корни проверим по ней.', 'The logarithm is monotonic. This step ignores the domain, so we check the roots against it.'),
+            text: msg('solve.logarithmic.logarithm_is_monotonic_this_step_ignores'),
         }));
         const sub = subSolve(ups[0], downs[0], ctx);
         if (sub.kind === 'unsupported') return null;
         pushPart(steps, ups[0], downs[0], sub, v);
         return { ...sub, steps, type: 'logarithmic' };
     }
-    steps.push(S(T('Собираем логарифмы в один', 'Combine the logarithms into one'), {
+    steps.push(S(msg('solve.logarithmic.combine_logarithms_into_one'), {
         tex: byLang((l) => `${tex(logF, l)} = ${rightT(l)}`),
-        text: T(`Свойства: $\\log_a m + \\log_a n = \\log_a(mn)$, $\\log_a m - \\log_a n = \\log_a\\frac{m}{n}$, $k\\log_a m = \\log_a m^{k}$. Они верны при $m, n > 0$, поэтому корни потом сверим с ОДЗ.${normalize ? ` Логарифмы переведены к основанию $${tex(cN)}$.` : ''}`,
-            `The rules $\\log_a m + \\log_a n = \\log_a(mn)$, $\\log_a m - \\log_a n = \\log_a\\frac{m}{n}$, $k\\log_a m = \\log_a m^{k}$ hold for $m, n > 0$, so we check the roots against the domain later.${normalize ? ` All logarithms are converted to base $${tex(cN, 'en')}$.` : ''}`),
+        text: msg('solve.logarithmic.rules_hold_for_so_we_check', { p: (lng) => normalize ? msg('solve.logarithmic.all_logarithms_are_converted_to_base', { cN: (lng) => tex(cN, lng) }).in(lng) : '' }),
     }));
-    steps.push(S(T('Переходим от логарифма к аргументам', 'Pass from the logarithms to their arguments'), {
+    steps.push(S(msg('solve.logarithmic.pass_from_logarithms_to_their_arguments'), {
         tex: byLang((l) => `${tex(F, l)} = ${tex(K, l)}`),
         text: defText,
     }));

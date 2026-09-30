@@ -1,6 +1,7 @@
 // numeric/ode — Euler, Runge–Kutta, adaptive steps and ready-made systems (SIR, Lotka–Volterra, pendulum, Lorenz).
 
 import { fail, fin, needFn, numLinspace } from './common.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- ODEs
 
@@ -12,7 +13,7 @@ function vcomb(y, h, ks, cs) {
 const vcopy = (y) => (typeof y === 'number' ? y : y.slice());
 function checkY(y0) {
     if (typeof y0 === 'number') return;
-    if (!Array.isArray(y0) || !y0.every((v) => typeof v === 'number')) throw fail('Начальное условие — число или массив чисел.', 'The initial value must be a number or an array of numbers.', 'type');
+    if (!Array.isArray(y0) || !y0.every((v) => typeof v === 'number')) throw fail(msg('numbers.numeric.ode.initial_value_must_be_number_or'), 'type');
 }
 
 /** Euler's method: n steps of size h from (t0, y0); y is a number or an array. → {t: [], y: []}. */

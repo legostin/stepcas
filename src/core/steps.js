@@ -3,6 +3,7 @@
 // Step = { title: {ru, en}, tex?: string | {ru, en}, text?: {ru, en}, rule?: string, sub?: Step[] }
 
 import { toTex } from './print.js';
+import { msg } from '../i18n/index.js';
 
 /** Bilingual string; en defaults to ru (for formulas and names that do not change). */
 export function L(ru, en = ru) {
@@ -30,7 +31,7 @@ export function texBoth(node, opts = {}) {
  * `title`/`text` may be strings or {ru, en}; `sub` holds nested steps (plain objects are normalised too).
  */
 export function step({ title, tex, text, rule, sub } = {}) {
-    const s = { title: bi(title) ?? { ru: '', en: '' } };
+    const s = { title: bi(title) ?? '' };
     if (tex !== undefined && tex !== null) {
         if (typeof tex === 'string') s.tex = tex;
         else if (isNode(tex)) s.tex = texBoth(tex);

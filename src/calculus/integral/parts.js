@@ -10,6 +10,7 @@ import { plainish } from './basic.js';
 import { N0, T_, bt, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx } from './common.js';
 import { I, sub } from './engine.js';
 import { cleanAnti } from './integrate.js';
+import { msg } from '../../i18n/index.js';
 
 // ---- integration by parts
 
@@ -33,9 +34,9 @@ function trigPowerPartner(x, v) {
 }
 
 const LIATE_WHY = {
-    L: T_('логарифм при дифференцировании превращается в дробь', 'a logarithm turns into a fraction when differentiated'),
-    I: T_('обратная тригонометрическая функция при дифференцировании становится алгебраической', 'an inverse trigonometric function becomes algebraic when differentiated'),
-    A: T_('многочлен при дифференцировании понижает степень', 'a polynomial loses a degree when differentiated'),
+    L: msg('calculus.integral.parts.logarithm_turns_into_fraction_when_differentiated'),
+    I: msg('calculus.integral.parts.inverse_trigonometric_function_becomes_algebraic_when'),
+    A: msg('calculus.integral.parts.polynomial_loses_degree_when_differentiated'),
 };
 
 export function mParts(f, ctx) {
@@ -95,10 +96,9 @@ export function mParts(f, ctx) {
         F,
         method: 'parts',
         step: step({
-            title: T_('Интегрирование по частям', 'Integration by parts'),
+            title: msg('calculus.integral.parts.integration_by_parts'),
             tex: bt((L) => `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
-            text: T_(`Формула ∫u dv = uv − ∫v du. За u берём ${plainish(u, 'ru')}: ${why ? why.ru : 'так интеграл упрощается'}. Остальное — dv, его первообразная v = ${plainish(Vs, 'ru')}.`,
-                `The formula ∫u dv = uv − ∫v du. Take u = ${plainish(u, 'en')}: ${why ? why.en : 'this makes the integral simpler'}. The rest is dv, with antiderivative v = ${plainish(Vs, 'en')}.`),
+            text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', { u: (lng) => plainish(u, lng), p: (lng) => why ? why[lng] : msg('calculus.integral.parts.this_makes_integral_simpler').in(lng), Vs: (lng) => plainish(Vs, lng) }),
             rule: 'parts',
             sub: [rv.step, rj.step].filter(Boolean),
         }),
@@ -149,10 +149,9 @@ export function mPolyTimes(f, ctx) {
         F,
         method: 'parts',
         step: step({
-            title: T_(`По частям ${P.degree} раз`, `By parts ${P.degree} times`),
+            title: msg('calculus.integral.parts.by_parts_times', { degree: P.degree }),
             tex: bt((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
-            text: T_(`Интегрируем по частям ${P.degree} раз подряд, каждый раз беря за u многочлен: его степень падает на единицу, пока не останется число. Удобно вести таблицу: производные многочлена со знаками +, −, +, … умножаются на последовательные первообразные второго множителя.`,
-                `Integrate by parts ${P.degree} times, each time with the polynomial as u: its degree drops by one until a number is left. It is convenient to keep a table: the derivatives of the polynomial with signs +, −, +, … times the successive antiderivatives of the other factor.`),
+            text: msg('calculus.integral.parts.integrate_by_parts_times_each_time', { degree: P.degree }),
             rule: 'parts-tabular',
         }),
     };

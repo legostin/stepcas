@@ -7,6 +7,7 @@ import { step } from '../../core/steps.js';
 import { niceForm } from './clean.js';
 import { E_, N0, N1, N2, NM1, T_, bt, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from './display.js';
 import { FACT_ERR } from './quick.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- tidy assembly (unsimplified answers and step lines)
 
@@ -277,19 +278,18 @@ export function dS(n, ctx) {
     if (!containsVar(n, v)) {
         const others = freeVars(n).filter((w) => w !== v);
         const st = step({
-            title: T_('Производная постоянной', 'Derivative of a constant'),
+            title: msg('calculus.derivative.steps.derivative_of_constant'),
             tex: bt((L) => `${paren(calcTex(n, L))}' = 0`),
             text: others.length
-                ? T_(`От ${v} не зависит: ${others.join(', ')} при дифференцировании по ${v} считаем постоянными. Производная постоянной равна нулю.`,
-                    `It does not depend on ${v}: when differentiating with respect to ${v} we treat ${others.join(', ')} as constants. The derivative of a constant is zero.`)
-                : T_('Производная числа равна нулю: постоянная не меняется.', 'The derivative of a number is zero: a constant does not change.'),
+                ? msg('calculus.derivative.steps.it_does_not_depend_on_when', { v, p: others.join(', ') })
+                : msg('calculus.derivative.steps.derivative_of_number_is_zero_constant'),
             rule: 'const',
         });
         return { raw: N0, res: N0, step: st, trivial: true };
     }
     switch (n.type) {
         case 'sym':
-            return { raw: N1, res: N1, trivial: true, step: step({ title: T_('Производная переменной', 'Derivative of the variable'), tex: `(${calcTex(n)})' = 1`, rule: 'var' }) };
+            return { raw: N1, res: N1, trivial: true, step: step({ title: msg('calculus.derivative.steps.derivative_of_variable'), tex: `(${calcTex(n)})' = 1`, rule: 'var' }) };
         case 'add':
             return dSum(n, ctx);
         case 'neg':
@@ -303,7 +303,7 @@ export function dS(n, ctx) {
         case 'fn':
             return dFn(n, ctx);
         default:
-            throw new MathError({ ru: 'Не умею дифференцировать это выражение', en: 'Cannot differentiate this expression' }, null, null, 'unsupported');
+            throw new MathError(msg('calculus.derivative.steps.cannot_differentiate_this_expression'), null, null, 'unsupported');
     }
 }
 
@@ -320,8 +320,8 @@ function dSum(n, ctx) {
     const terms = n.args.map(splitSignTerm);
     const kids = terms.map((t) => dS(t.abs, ctx));
     return finish(n, ctx, {
-        title: T_('Производная суммы', 'Derivative of a sum'),
-        text: T_('Производная суммы равна сумме производных: дифференцируем каждое слагаемое отдельно.', 'The derivative of a sum is the sum of the derivatives: differentiate term by term.'),
+        title: msg('calculus.derivative.steps.derivative_of_sum'),
+        text: msg('calculus.derivative.steps.derivative_of_sum_is_sum_of'),
         rule: 'sum',
         ruleLine: pSum(terms.map((t) => ({ p: pPrime(t.abs), minus: t.minus }))),
         assembled: pSum(terms.map((t, i) => ({ p: pNode(kids[i].res), minus: t.minus })), { dropZeros: true }),
@@ -334,8 +334,8 @@ function dSum(n, ctx) {
 function dNeg(n, ctx) {
     const k = dS(n.arg, ctx);
     return finish(n, ctx, {
-        title: T_('Минус выносим', 'Take the minus out'),
-        text: T_('Знак минус — это множитель −1, его выносим за знак производной.', 'The minus sign is a factor −1; it comes out of the derivative.'),
+        title: msg('calculus.derivative.steps.take_minus_out'),
+        text: msg('calculus.derivative.steps.minus_sign_is_factor_1_it'),
         rule: 'neg',
         ruleLine: pNeg(pPrime(n.arg)),
         assembled: pNeg(pNode(k.res)),
@@ -354,8 +354,8 @@ function dMul(n, ctx) {
         const u = vars.length === 1 ? vars[0] : mul(vars);
         const k = dS(u, ctx);
         return finish(n, ctx, {
-            title: T_('Постоянный множитель', 'Constant factor'),
-            text: T_('Постоянный множитель выносим за знак производной: (c·u)′ = c·u′.', 'A constant factor comes out of the derivative: (c·u)′ = c·u′.'),
+            title: msg('calculus.derivative.steps.constant_factor'),
+            text: msg('calculus.derivative.steps.constant_factor_comes_out_of_derivative'),
             rule: 'const-factor',
             ruleLine: pProd([pNode(c), pPrime(u)]),
             assembled: pProd([pNode(c), pNode(k.res)], { dropOnes: true }),
@@ -368,12 +368,10 @@ function dMul(n, ctx) {
     const termOf = (i, d) => tMul(vars.map((g, j) => (i === j ? d : g)));
     const two = vars.length === 2;
     return finish(n, ctx, {
-        title: T_('Правило произведения', 'Product rule'),
+        title: msg('calculus.derivative.steps.product_rule'),
         text: two
-            ? T_('По правилу произведения: производная первого множителя на второй плюс первый на производную второго, (uv)′ = u′v + uv′.',
-                'By the product rule: the derivative of the first factor times the second plus the first times the derivative of the second, (uv)′ = u′v + uv′.')
-            : T_('Правило произведения для нескольких множителей: по очереди дифференцируем один множитель, остальные оставляем как есть, и всё складываем.',
-                'The product rule for several factors: differentiate one factor at a time, keep the others as they are, and add everything up.'),
+            ? msg('calculus.derivative.steps.by_product_rule_derivative_of_first')
+            : msg('calculus.derivative.steps.product_rule_for_several_factors_differentiate'),
         rule: 'product',
         ruleLine: pSum(vars.map((_, i) => ({ p: pProd(vars.map((g, j) => (i === j ? pPrime(g) : pNode(g)))) }))),
         assembled: pSum(vars.map((_, i) => ({ p: pProd(vars.map((g, j) => pNode(i === j ? kids[i].res : g)), { dropOnes: true }) })), { dropZeros: true }),
@@ -405,8 +403,8 @@ function dDiv(n, ctx) {
     if (!wv) {
         const k = dS(u, ctx);
         return finish(n, ctx, {
-            title: T_('Деление на постоянную', 'Division by a constant'),
-            text: T_('Знаменатель от переменной не зависит — это постоянный множитель 1/c, его выносим за знак производной.', 'The denominator does not depend on the variable: it is a constant factor 1/c that comes out of the derivative.'),
+            title: msg('calculus.derivative.steps.division_by_constant'),
+            text: msg('calculus.derivative.steps.denominator_does_not_depend_on_variable'),
             rule: 'const-factor',
             ruleLine: pFrac(pPrime(u), pNode(w)),
             assembled: pFrac(pNode(k.res), pNode(w)),
@@ -425,10 +423,9 @@ function dDiv(n, ctx) {
             const inner = dS(rewritten, ctx);
             const coefT = (L) => (isOne(u) ? '' : u.type === 'add' ? paren(calcTex(u, L)) : calcTex(u, L));
             const st = step({
-                title: T_('Записываем как степень', 'Write it as a power'),
+                title: msg('calculus.derivative.steps.write_it_as_power'),
                 tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, (L) => `${paren(coefT(L) + texPowRaw(X, k, L))}'`, pNode(inner.res)]),
-                text: T_(`Переменная стоит только в знаменателе, поэтому удобно записать дробь как степень с отрицательным показателем: 1/${v}ᵏ = ${v}⁻ᵏ, и взять производную степени.`,
-                    `The variable is only in the denominator, so write the fraction as a power with a negative exponent, 1/${v}ᵏ = ${v}⁻ᵏ, and use the power rule.`),
+                text: msg('calculus.derivative.steps.variable_is_only_in_denominator_so', { v }),
                 rule: 'rewrite-power',
                 sub: inner.step && !inner.trivial ? [inner.step] : [],
             });
@@ -437,8 +434,8 @@ function dDiv(n, ctx) {
         const k = dS(w, ctx);
         const w2 = pow(w, N2);
         return finish(n, ctx, {
-            title: T_('Постоянная, делённая на функцию', 'A constant over a function'),
-            text: T_('Числитель постоянный, поэтому от правила частного остаётся одно слагаемое: (c/v)′ = −c·v′/v².', 'The numerator is constant, so only one term of the quotient rule is left: (c/v)′ = −c·v′/v².'),
+            title: msg('calculus.derivative.steps.constant_over_function'),
+            text: msg('calculus.derivative.steps.numerator_is_constant_so_only_one'),
             rule: 'quotient',
             ruleLine: pNeg(pFrac(pProd([pNode(u), pPrime(w)], { dropOnes: true }), pNode(w2))),
             assembled: pNeg(pFrac(pProd([pNode(u), pNode(k.res)], { dropOnes: true }), pNode(w2))),
@@ -451,9 +448,8 @@ function dDiv(n, ctx) {
     const kw = dS(w, ctx);
     const w2 = pow(w, N2);
     return finish(n, ctx, {
-        title: T_('Правило частного', 'Quotient rule'),
-        text: T_('Производная дроби: производная числителя на знаменатель минус числитель на производную знаменателя, и всё делим на квадрат знаменателя: (u/v)′ = (u′v − uv′)/v².',
-            'The derivative of a fraction: the derivative of the numerator times the denominator minus the numerator times the derivative of the denominator, all over the denominator squared: (u/v)′ = (u′v − uv′)/v².'),
+        title: msg('calculus.derivative.steps.quotient_rule'),
+        text: msg('calculus.derivative.steps.derivative_of_fraction_derivative_of_numerator'),
         rule: 'quotient',
         ruleLine: pFrac(pSum([{ p: pProd([pPrime(u), pNode(w)]) }, { p: pProd([pNode(u), pPrime(w)]), minus: true }]), pNode(w2)),
         assembled: pFrac(
@@ -505,18 +501,17 @@ function dPow(n, ctx, shown = n) {
                 raw: outer,
                 res,
                 step: step({
-                    title: T_('Производная степени', 'Power rule'),
+                    title: msg('calculus.derivative.steps.power_rule'),
                     tex: chainTex([(L) => `${paren(calcTex(shown, L))}'`, piece, pNode(res)]),
-                    text: T_(`(${v}ⁿ)′ = n·${v}ⁿ⁻¹: показатель становится множителем, а степень уменьшается на единицу.`, `(${v}ⁿ)′ = n·${v}ⁿ⁻¹: the exponent becomes a factor and the power drops by one.`),
+                    text: msg('calculus.derivative.steps.n_exponent_becomes_factor_and_power', { v }),
                     rule: 'power',
                 }),
             };
         }
         const k = dS(b, ctx);
         return finish(shown, ctx, {
-            title: T_('Степень сложной функции', 'Power of a function (chain rule)'),
-            text: T_(`Сложная функция: внешняя — степень uⁿ, внутренняя — u = ${plain(b, 'ru')}. По цепному правилу (uⁿ)′ = n·uⁿ⁻¹·u′.`,
-                `A composite function: the outer one is the power uⁿ, the inner one is u = ${plain(b, 'en')}. By the chain rule (uⁿ)′ = n·uⁿ⁻¹·u′.`),
+            title: msg('calculus.derivative.steps.power_of_function_chain_rule'),
+            text: msg('calculus.derivative.steps.composite_function_outer_one_is_power', { b: (lng) => plain(b, lng) }),
             rule: 'chain',
             ruleLine: pProd([piece, pPrime(b)]),
             assembled: pProd([piece, pNode(k.res)], { dropOnes: true }),
@@ -535,11 +530,11 @@ function dPow(n, ctx, shown = n) {
                 raw: outer,
                 res,
                 step: step({
-                    title: isE ? T_('Производная экспоненты', 'Derivative of the exponential') : T_('Показательная функция', 'Exponential function'),
+                    title: isE ? msg('calculus.derivative.steps.derivative_of_exponential') : msg('calculus.derivative.steps.exponential_function'),
                     tex: chainTex([(L) => `${paren(calcTex(shown, L))}'`, pNode(outer), pNode(res)]),
                     text: isE
-                        ? T_(`(e^${v})′ = e^${v}: экспонента при дифференцировании не меняется.`, `(e^${v})′ = e^${v}: the exponential is its own derivative.`)
-                        : T_(`Табличная производная: (a^${v})′ = a^${v}·ln a.`, `A table derivative: (a^${v})′ = a^${v}·ln a.`),
+                        ? msg('calculus.derivative.steps.e_e_exponential_is_its_own', { v })
+                        : msg('calculus.derivative.steps.table_derivative_ln', { v }),
                     rule: isE ? 'exp' : 'exp-base',
                 }),
             };
@@ -547,10 +542,10 @@ function dPow(n, ctx, shown = n) {
         const k = dS(e, ctx);
         const outerPieces = isE ? [pNode(n)] : [pNode(n), pNode(lnB)];
         return finish(shown, ctx, {
-            title: isE ? T_('Экспонента от функции', 'Exponential of a function') : T_('Показательная функция от функции', 'Exponential function of a function'),
+            title: isE ? msg('calculus.derivative.steps.exponential_of_function') : msg('calculus.derivative.steps.exponential_function_of_function'),
             text: isE
-                ? T_(`Сложная функция: внешняя — экспонента, внутренняя — u = ${plain(e, 'ru')}. (eᵘ)′ = eᵘ·u′.`, `A composite function: the outer one is the exponential, the inner one is u = ${plain(e, 'en')}. (eᵘ)′ = eᵘ·u′.`)
-                : T_(`Сложная функция: внешняя — показательная aᵘ, внутренняя — u = ${plain(e, 'ru')}. (aᵘ)′ = aᵘ·ln a·u′.`, `A composite function: the outer one is aᵘ, the inner one is u = ${plain(e, 'en')}. (aᵘ)′ = aᵘ·ln a·u′.`),
+                ? msg('calculus.derivative.steps.composite_function_outer_one_is_exponential', { e: (lng) => plain(e, lng) })
+                : msg('calculus.derivative.steps.composite_function_outer_one_is_inner', { e: (lng) => plain(e, lng) }),
             rule: 'chain',
             ruleLine: pProd([...outerPieces, pPrime(e)]),
             assembled: pProd([...outerPieces, pNode(k.res)], { dropOnes: true }),
@@ -563,9 +558,8 @@ function dPow(n, ctx, shown = n) {
     const prod = mul(e, fn('ln', b));
     const k = dS(prod, ctx);
     return finish(shown, ctx, {
-        title: T_('Логарифмическое дифференцирование', 'Logarithmic differentiation'),
-        text: T_('Переменная есть и в основании, и в показателе, поэтому не подходит ни правило степени, ни правило показательной функции. Запишем uᵛ = e^(v·ln u): тогда (uᵛ)′ = uᵛ·(v·ln u)′. То же получится, если прологарифмировать: ln y = v·ln u.',
-            'The variable is both in the base and in the exponent, so neither the power rule nor the exponential rule applies. Write uᵛ = e^(v·ln u); then (uᵛ)′ = uᵛ·(v·ln u)′. Taking logarithms, ln y = v·ln u, gives the same.'),
+        title: msg('calculus.derivative.steps.logarithmic_differentiation'),
+        text: msg('calculus.derivative.steps.variable_is_both_in_base_and'),
         rule: 'log-diff',
         ruleLine: pProd([pNode(n), pPrime(prod)]),
         assembled: pProd([pNode(n), pNode(k.res)], { dropOnes: true }),
@@ -586,9 +580,9 @@ function dFn(n, ctx) {
         if (!kq || kq.isZero()) return dS(pow(x, div(N1, k)), ctx);
         const inner = dPow(pow(x, num(kq.inv())), ctx);
         const st = step({
-            title: T_('Корень как степень', 'A root as a power'),
+            title: msg('calculus.derivative.steps.root_as_power'),
             tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, (L) => `${paren(texPowRaw(x, kq.inv(), L))}'`, pNode(inner.res)]),
-            text: T_('Корень n-й степени — это степень с показателем 1/n: ⁿ√u = u^(1/n). Дальше — правило степени.', 'An n-th root is a power with exponent 1/n: ⁿ√u = u^(1/n). Then the power rule.'),
+            text: msg('calculus.derivative.steps.n_th_root_is_power_with'),
             rule: 'rewrite-power',
             sub: inner.step ? [inner.step] : [],
         });
@@ -598,9 +592,9 @@ function dFn(n, ctx) {
         const q = div(fn('ln', n.args[1]), fn('ln', n.args[0]));
         const inner = dS(q, ctx);
         const st = step({
-            title: T_('Переход к натуральному логарифму', 'Change to the natural logarithm'),
+            title: msg('calculus.derivative.steps.change_to_natural_logarithm'),
             tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, (L) => `${paren(calcTex(q, L))}'`, pNode(inner.res)]),
-            text: T_('Основание логарифма зависит от переменной, поэтому переходим к натуральным логарифмам: logₐb = ln b / ln a.', 'The base depends on the variable, so switch to natural logarithms: logₐb = ln b / ln a.'),
+            text: msg('calculus.derivative.steps.base_depends_on_variable_so_switch'),
             rule: 'log-base',
             sub: inner.step ? [inner.step] : [],
         });
@@ -608,29 +602,27 @@ function dFn(n, ctx) {
     }
     if (name === 'sign' || name === 'floor' || name === 'ceil') {
         const text = name === 'sign'
-            ? T_('Функция sgn постоянна и слева, и справа от нуля, поэтому её производная равна 0 везде, где аргумент не равен нулю (в самом нуле скачок, и производной нет).',
-                'sgn is constant on each side of zero, so its derivative is 0 wherever the argument is not zero (at zero there is a jump and no derivative).')
-            : T_('Функция постоянна между соседними целыми значениями аргумента, поэтому производная равна 0 везде, кроме точек, где аргумент целый (там скачок, и производной нет).',
-                'The function is constant between consecutive whole values of the argument, so the derivative is 0 except where the argument is a whole number (there it jumps and has no derivative).');
-        return { raw: N0, res: N0, step: step({ title: T_('Ступенчатая функция', 'A step function'), tex: bt((L) => `${paren(calcTex(n, L))}' = 0`), text, rule: 'step-fn' }) };
+            ? msg('calculus.derivative.steps.sgn_is_constant_on_each_side')
+            : msg('calculus.derivative.steps.function_is_constant_between_consecutive_whole');
+        return { raw: N0, res: N0, step: step({ title: msg('calculus.derivative.steps.step_function'), tex: bt((L) => `${paren(calcTex(n, L))}' = 0`), text, rule: 'step-fn' }) };
     }
     const u = name === 'log' ? n.args[1] : n.args[0];
     const outer = outerReadable(name, u, n.args);
-    if (!outer) throw new MathError({ ru: `Не умею дифференцировать функцию ${name}`, en: `Cannot differentiate ${name}` }, null, null, 'unsupported');
+    if (!outer) throw new MathError(msg('calculus.derivative.steps.cannot_differentiate', { name }), null, null, 'unsupported');
     const absNote = name === 'abs'
-        ? T_(' Это верно при u ≠ 0: в нуле у модуля излом, и производной там нет.', ' This holds for u ≠ 0: the absolute value has a corner at zero, with no derivative there.')
+        ? msg('calculus.derivative.steps.this_holds_for_u_0_absolute')
         : T_('', '');
     if (u.type === 'sym' && u.name === v && !isConst(u)) {
         const res = niceForm(outer, v);
         const f = formula(name, v);
         let text;
-        if (name === 'abs') text = T_(`(|${v}|)′ = ${v}/|${v}|: это +1 при ${v} > 0 и −1 при ${v} < 0. В нуле у модуля излом, и производной там нет.`, `(|${v}|)′ = ${v}/|${v}|: it is +1 for ${v} > 0 and −1 for ${v} < 0. At zero there is a corner, with no derivative.`);
-        else if (name === 'log') text = T_(`Табличная производная: (logₐ ${v})′ = 1/(${v}·ln a).`, `A table derivative: (logₐ ${v})′ = 1/(${v}·ln a).`);
-        else if (f) text = T_(`Табличная производная: ${f.ru}.`, `A table derivative: ${f.en}.`);
+        if (name === 'abs') text = msg('calculus.derivative.steps.it_is_1_for_0_and', { v });
+        else if (name === 'log') text = msg('calculus.derivative.steps.table_derivative_log_1_ln', { v });
+        else if (f) text = msg('calculus.derivative.steps.table_derivative', { p: (lng) => f[lng] });
         return {
             raw: outer,
             res,
-            step: step({ title: T_('Табличная производная', 'Table derivative'), tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, pNode(outer), pNode(res)]), text, rule: 'table' }),
+            step: step({ title: msg('calculus.derivative.steps.table_derivative_2'), tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, pNode(outer), pNode(res)]), text, rule: 'table' }),
         };
     }
     const k = dS(u, ctx);
@@ -641,9 +633,8 @@ function dFn(n, ctx) {
     else if (name === 'abs') law = T_('(|u|)′ = u/|u|·u′', '(|u|)′ = u/|u|·u′');
     else law = T_(`${f.ru}·u′`, `${f.en}·u′`);
     return finish(n, ctx, {
-        title: T_(`Сложная функция: ${nm[0]}`, `Chain rule: ${nm[1]}`),
-        text: T_(`Внешняя функция — ${nm[0]}, внутренняя — u = ${plain(u, 'ru')}. Берём производную внешней функции по u и умножаем на производную внутренней: ${law.ru}.${absNote.ru}`,
-            `The outer function is the ${nm[1]}, the inner one is u = ${plain(u, 'en')}. Differentiate the outer function with respect to u and multiply by the derivative of the inner one: ${law.en}.${absNote.en}`),
+        title: msg('calculus.derivative.steps.chain_rule', { p: nm[0], p2: nm[1] }),
+        text: msg('calculus.derivative.steps.outer_function_is_inner_one_is', { p: nm[0], u: (lng) => plain(u, lng), p2: (lng) => law[lng], p3: (lng) => absNote[lng], p4: nm[1] }),
         rule: 'chain',
         ruleLine: pProd([pNode(outer), pPrime(u)]),
         assembled: pProd([pNode(outer), pNode(k.res)], { dropOnes: true }),

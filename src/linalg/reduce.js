@@ -3,6 +3,7 @@
 import { Q, bigGcd } from '../core/rational.js';
 import { L, R, S, qs, qt, rowAcc, rowAccShort, rowDat, rowGen, rowLoc } from './common.js';
 import { M, Matrix } from './core.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- row reduction
 
@@ -42,17 +43,17 @@ export function opText(op, phase, why) {
     }
     if (op.op === 'scale') {
         const p = op.pivot;
-        if (p.eq(Q.MINUS_ONE)) return L(`Умножаем ${rowAcc(op.i)} на −1, чтобы ведущий элемент стал равен 1.`, `Multiply row ${op.i + 1} by −1 so that the pivot becomes 1.`);
-        if (p.isInt()) return L(`Делим ${rowAcc(op.i)} на ${qs(p)}, чтобы ведущий элемент стал равен 1.`, `Divide row ${op.i + 1} by ${qs(p)} so that the pivot becomes 1.`);
-        return L(`Умножаем ${rowAcc(op.i)} на ${qs(op.k)}, чтобы ведущий элемент ${qs(p)} стал равен 1.`, `Multiply row ${op.i + 1} by ${qs(op.k)} so that the pivot ${qs(p)} becomes 1.`);
+        if (p.eq(Q.MINUS_ONE)) return msg('linalg.reduce.multiply_row_by_1_so_that', { p: rowAcc(op.i), p2: op.i + 1 });
+        if (p.isInt()) return msg('linalg.reduce.divide_row_by_so_that_pivot', { p: rowAcc(op.i), p2: qs(p), p3: op.i + 1 });
+        return msg('linalg.reduce.multiply_row_by_so_that_pivot', { p: rowAcc(op.i), p2: qs(op.k), p3: qs(p), p4: op.i + 1 });
     }
     const a = op.k.abs();
     const times = L(a.isOne() ? '' : `, умноженную на ${qs(a)}`, a.isOne() ? '' : `${qs(a)} times `);
-    const where = phase === 'backward' ? L('над', 'above') : L('под', 'below');
+    const where = phase === 'backward' ? msg('linalg.reduce.above') : msg('linalg.reduce.below');
     const act = op.k.isNeg()
-        ? L(`из ${rowGen(op.i)} вычитаем ${rowAccShort(op.j)}${times.ru}`, `subtract ${times.en}row ${op.j + 1} from row ${op.i + 1}`)
-        : L(`${rowDat(op.i)} прибавляем ${rowAccShort(op.j)}${times.ru}`, `add ${times.en}row ${op.j + 1} to row ${op.i + 1}`);
-    return L(`Обнуляем элемент ${where.ru} ведущим: ${act.ru}.`, `Clear the entry ${where.en} the pivot: ${act.en}.`);
+        ? msg('linalg.reduce.subtract_row_from_row', { p: rowGen(op.i), p2: rowAccShort(op.j), p3: (lng) => times[lng], p4: op.j + 1, p5: op.i + 1 })
+        : msg('linalg.reduce.add_row_to_row', { p: rowDat(op.i), p2: rowAccShort(op.j), p3: (lng) => times[lng], p4: op.j + 1, p5: op.i + 1 });
+    return msg('linalg.reduce.clear_entry_pivot', { p: (lng) => where[lng], p2: (lng) => act[lng] });
 }
 
 function applyOp(W, op) {
@@ -87,8 +88,8 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
         if (p < 0) {
             if (stopOnSingular) { singularAt = c; break; }
             if (steps && W.some((row, i) => i >= r && !row[c].isZero()) === false && r > 0) {
-                st.push(S(L(`Столбец ${c + 1}: ведущего нет`, `Column ${c + 1}: no pivot`), null,
-                    L(`Ниже уже найденных ведущих в столбце ${c + 1} одни нули — переходим к следующему столбцу.`, `Below the pivots found so far column ${c + 1} has only zeros, so we move on to the next column.`),
+                st.push(S(msg('linalg.reduce.column_no_pivot', { p: c + 1 }), null,
+                    msg('linalg.reduce.below_pivots_found_so_far_column', { p: c + 1 }),
                     { rule: 'no-pivot', col: c }));
             }
             continue;
@@ -96,19 +97,16 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
         if (p !== r) {
             const v = W[p][c], cur = W[r][c];
             const why = cur.isZero()
-                ? L(`На месте ведущего элемента в столбце ${c + 1} стоит 0, а ${rowLoc(p)} — ${qs(v)}. Меняем местами ${rowAccShort(r)} и ${rowAccShort(p)} строки.`,
-                    `The pivot position in column ${c + 1} holds 0, while row ${p + 1} has ${qs(v)}. Swap rows ${r + 1} and ${p + 1}.`)
+                ? msg('linalg.reduce.pivot_position_in_column_holds_0', { p: c + 1, p2: rowLoc(p), v: qs(v), r: rowAccShort(r), p3: rowAccShort(p), p4: p + 1, p5: r + 1 })
                 : v.isOne() || v.eq(Q.MINUS_ONE)
-                    ? L(`Удобнее, чтобы ведущим элементом была ${v.isOne() ? 'единица' : 'минус единица'}: она стоит ${rowLoc(p)}. Меняем местами ${rowAccShort(r)} и ${rowAccShort(p)} строки — так не появятся дроби.`,
-                        `A pivot of ${qs(v)} is handier: it sits in row ${p + 1}. Swap rows ${r + 1} and ${p + 1} — this way no fractions appear.`)
-                    : L(`Берём ведущим элемент ${qs(v)} ${rowLoc(p)}: с ним получается меньше дробей. Меняем местами ${rowAccShort(r)} и ${rowAccShort(p)} строки.`,
-                        `We take ${qs(v)} in row ${p + 1} as the pivot: it gives fewer fractions. Swap rows ${r + 1} and ${p + 1}.`);
-            record({ op: 'swap', i: r, j: p }, 'forward', L('Меняем строки местами', 'Swap rows'), why);
+                    ? msg('linalg.reduce.pivot_of_is_handier_it_sits', { p: v.isOne() ? 'единица' : 'минус единица', p2: rowLoc(p), r: rowAccShort(r), p3: rowAccShort(p), v: qs(v), p4: p + 1, p5: r + 1 })
+                    : msg('linalg.reduce.we_take_in_row_as_pivot', { v: qs(v), p: rowLoc(p), r: rowAccShort(r), p2: rowAccShort(p), p3: p + 1, p4: r + 1 });
+            record({ op: 'swap', i: r, j: p }, 'forward', msg('linalg.reduce.swap_rows'), why);
         }
         const piv = W[r][c];
-        if (!piv.isOne()) record({ op: 'scale', i: r, k: piv.inv(), pivot: piv }, 'forward', L('Делаем ведущий элемент единицей', 'Make the pivot 1'));
+        if (!piv.isOne()) record({ op: 'scale', i: r, k: piv.inv(), pivot: piv }, 'forward', msg('linalg.reduce.make_pivot_1'));
         for (let i = r + 1; i < m; i++) {
-            if (!W[i][c].isZero()) record({ op: 'add', i, j: r, k: W[i][c].neg() }, 'forward', L('Обнуляем под ведущим', 'Clear below the pivot'));
+            if (!W[i][c].isZero()) record({ op: 'add', i, j: r, k: W[i][c].neg() }, 'forward', msg('linalg.reduce.clear_below_pivot'));
         }
         pivots.push(c);
         r++;
@@ -117,15 +115,14 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
         for (let t = pivots.length - 1; t >= 0; t--) {
             const c = pivots[t];
             for (let i = 0; i < t; i++) {
-                if (!W[i][c].isZero()) record({ op: 'add', i, j: t, k: W[i][c].neg() }, 'backward', L('Обнуляем над ведущим', 'Clear above the pivot'));
+                if (!W[i][c].isZero()) record({ op: 'add', i, j: t, k: W[i][c].neg() }, 'backward', msg('linalg.reduce.clear_above_pivot'));
             }
         }
     }
     return { W, pivots, ops, steps: st, singularAt };
 }
 
-export const STRATEGY = L('Ведущий элемент выбираем так, чтобы не плодить дроби: сначала ищем в столбце 1 или −1, потом число, на которое делится вся его строка, иначе берём наименьшее по модулю.',
-    'We pick pivots so as to avoid fractions: first a 1 or −1 in the column, then a number that divides its whole row, otherwise the entry of smallest absolute value.');
+export const STRATEGY = msg('linalg.reduce.we_pick_pivots_so_as_to');
 
 /**
  * Reduced row echelon form by Gauss–Jordan elimination. {steps, augmented: k} (pivots only in the
@@ -138,15 +135,13 @@ export function matRref(A, opts = {}) {
     const res = reduce(A.a, { augmented, steps: !!opts.steps });
     const out = { matrix: new Matrix(res.W), pivots: res.pivots, rank: res.pivots.length, ops: res.ops };
     if (opts.steps) {
-        const st = [S(L('Приводим к ступенчатому виду', 'Row reduce'), A.toTex({ augmented }),
-            L(`Прямой ход: идём по столбцам слева направо, в каждом выбираем ведущий элемент, делаем его единицей и обнуляем всё под ним. Обратный ход: обнуляем элементы над ведущими. ${STRATEGY.ru}`,
-                `Forward pass: go through the columns left to right; in each, choose a pivot, make it 1 and clear everything below it. Backward pass: clear the entries above the pivots. ${STRATEGY.en}`),
+        const st = [S(msg('linalg.reduce.row_reduce'), A.toTex({ augmented }),
+            msg('linalg.reduce.forward_pass_go_through_columns_left', { p: (lng) => STRATEGY[lng] }),
             { rule: 'rref-plan' }), ...res.steps];
-        st.push(S(L('Приведённый ступенчатый вид', 'Reduced row echelon form'), out.matrix.toTex({ augmented }),
+        st.push(S(msg('linalg.reduce.reduced_row_echelon_form'), out.matrix.toTex({ augmented }),
             res.pivots.length
-                ? L(`Ведущие единицы стоят в ${res.pivots.length === 1 ? 'столбце' : 'столбцах'} ${res.pivots.map((c) => c + 1).join(', ')}. Их число — ранг матрицы: ${res.pivots.length}.`,
-                    `The leading ones sit in column${res.pivots.length === 1 ? '' : 's'} ${res.pivots.map((c) => c + 1).join(', ')}. Their number is the rank: ${res.pivots.length}.`)
-                : L('Матрица нулевая, её ранг равен 0.', 'The matrix is zero; its rank is 0.'),
+                ? msg('linalg.reduce.leading_ones_sit_in_column_their', { p: (lng) => res.pivots.length === 1 ? msg('linalg.reduce.formula').in(lng) : msg('linalg.reduce.s').in(lng), p2: res.pivots.map((c) => c + 1).join(', '), length: res.pivots.length })
+                : msg('linalg.reduce.matrix_is_zero_its_rank_is'),
             { rule: 'answer' }));
         out.steps = st;
     }

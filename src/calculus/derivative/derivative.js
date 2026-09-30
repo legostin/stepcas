@@ -12,6 +12,7 @@ import { niceForm, penalty, score } from './clean.js';
 import { N0, NM1, T_, agree, asNode, bt, calcTex, checkExpr, isZero, negLeading, randomEnv } from './display.js';
 import { quickDerivative } from './quick.js';
 import { dS } from './steps.js';
+import { msg, notation } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric check against central differences
 
@@ -99,11 +100,11 @@ export function derivative(node, v = 'x', opts = {}) {
         if (wantSteps) {
             const others = freeVars(node).filter((w) => w !== v);
             steps.push(step({
-                title: T_('Что дифференцируем', 'What we differentiate'),
+                title: msg('calculus.derivative.derivative.what_we_differentiate'),
                 tex: bt((L) => `f(${v}) = ${calcTex(node, L)}`),
                 text: others.length
-                    ? T_(`Ищем производную по ${v}. Остальные буквы (${others.join(', ')}) считаем постоянными — это частная производная.`, `We differentiate with respect to ${v}. The other letters (${others.join(', ')}) are treated as constants: this is a partial derivative.`)
-                    : T_(`Ищем производную по ${v}: разбираем выражение от внешней операции к внутренним.`, `We differentiate with respect to ${v}, going from the outermost operation inwards.`),
+                    ? msg('calculus.derivative.derivative.we_differentiate_with_respect_to_other', { v, p: others.join(', ') })
+                    : msg('calculus.derivative.derivative.we_differentiate_with_respect_to_going', { v }),
                 rule: 'start',
             }));
             if (r.step) steps.push(r.step);
@@ -115,9 +116,9 @@ export function derivative(node, v = 'x', opts = {}) {
                 if (wantSteps) {
                     const from = result;
                     steps.push(step({
-                        title: T_('Упрощаем', 'Simplify'),
+                        title: msg('calculus.derivative.derivative.simplify'),
                         tex: bt((L) => `${calcTex(from, L)} = ${calcTex(alt, L)}`),
-                        text: T_('Раскрываем скобки, приводим к общему знаменателю и собираем подобные.', 'Expand, bring to a common denominator and collect like terms.'),
+                        text: msg('calculus.derivative.derivative.expand_bring_to_common_denominator_and'),
                         rule: 'simplify',
                     }));
                 }
@@ -135,7 +136,7 @@ export function derivative(node, v = 'x', opts = {}) {
     }
     if (numericCheck(node, result, v) === false) verified = false;
     const tex = bt((L) => `${primeTex(v, 1, partial)} = ${calcTex(result, L)}`);
-    if (wantSteps) steps.push(answerStep(T_('Ответ', 'Answer'), tex));
+    if (wantSteps) steps.push(answerStep(msg('calculus.derivative.derivative.answer'), tex));
     return { result, steps, verified, tex };
 }
 
@@ -151,7 +152,7 @@ export function partialDerivative(node, v = 'x', opts = {}) {
 export function derivativeN(node, v = 'x', n = 2, opts = {}) {
     node = asNode(node);
     checkExpr(node);
-    if (!Number.isInteger(n) || n < 1 || n > 30) throw new MathError({ ru: 'Порядок производной — целое число от 1 до 30', en: 'The order must be a whole number from 1 to 30' }, null, null, 'range');
+    if (!Number.isInteger(n) || n < 1 || n > 30) throw new MathError(msg('calculus.derivative.derivative.order_must_be_whole_number_from'), null, null, 'range');
     let cur = node;
     const list = [];
     const steps = [];
@@ -164,9 +165,9 @@ export function derivativeN(node, v = 'x', n = 2, opts = {}) {
             const prevTex = k === 1 ? null : primeTex(v, k - 1);
             const src = cur;
             steps.push(step({
-                title: T_(`Производная ${k}-го порядка`, `Derivative of order ${k}`),
+                title: msg('calculus.derivative.derivative.derivative_of_order', { k }),
                 tex: bt((L) => `${primeTex(v, k)} = \\left(${prevTex ?? calcTex(src, L)}\\right)' = ${calcTex(r.result, L)}`),
-                text: k === 1 ? undefined : T_('Дифференцируем предыдущую производную.', 'Differentiate the previous derivative.'),
+                text: k === 1 ? undefined : msg('calculus.derivative.derivative.differentiate_previous_derivative'),
                 rule: 'order',
                 sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
             }));
@@ -179,7 +180,7 @@ export function derivativeN(node, v = 'x', n = 2, opts = {}) {
     }
     const result = list[n - 1];
     const tex = bt((L) => `${primeTex(v, n)} = ${calcTex(result, L)}`);
-    if (opts.steps) steps.push(answerStep(T_('Ответ', 'Answer'), tex));
+    if (opts.steps) steps.push(answerStep(msg('calculus.derivative.derivative.answer'), tex));
     return { result, list, steps, verified, tex };
 }
 
@@ -188,7 +189,7 @@ export function gradientOf(node, vars = null, opts = {}) {
     node = asNode(node);
     checkExpr(node);
     const vs = vars ?? freeVars(node);
-    if (!vs.length) throw new MathError({ ru: 'В выражении нет переменных', en: 'The expression has no variables' }, null, null, 'no-var');
+    if (!vs.length) throw new MathError(msg('calculus.derivative.derivative.expression_has_no_variables'), null, null, 'no-var');
     const components = {};
     const steps = [];
     for (const w of vs) {
@@ -196,9 +197,9 @@ export function gradientOf(node, vars = null, opts = {}) {
         components[w] = r.result;
         if (opts.steps) {
             steps.push(step({
-                title: T_(`Частная производная по ${w}`, `Partial derivative with respect to ${w}`),
+                title: msg('calculus.derivative.derivative.partial_derivative_with_respect_to', { w }),
                 tex: r.tex,
-                text: T_(`Дифференцируем по ${w}, остальные переменные считаем постоянными.`, `Differentiate with respect to ${w}, keeping the other variables constant.`),
+                text: msg('calculus.derivative.derivative.differentiate_with_respect_to_keeping_other', { w }),
                 rule: 'partial',
                 sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
             }));
@@ -206,10 +207,10 @@ export function gradientOf(node, vars = null, opts = {}) {
     }
     const result = Object.freeze({ type: 'list', items: Object.freeze(vs.map((w) => components[w])) });
     const tex = bt((L) => {
-        const sep = L === 'ru' ? ';\\ ' : ',\\ ';
+        const sep = notation(L).listTex;
         return `\\nabla f = \\left(${vs.map((w) => primeTex(w, 1, true)).join(sep)}\\right) = \\left(${vs.map((w) => calcTex(components[w], L)).join(sep)}\\right)`;
     });
-    if (opts.steps) steps.push(answerStep(T_('Градиент', 'Gradient'), tex));
+    if (opts.steps) steps.push(answerStep(msg('calculus.derivative.derivative.gradient'), tex));
     return { result, components, vars: vs, steps, tex };
 }
 
@@ -221,7 +222,7 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
     node = asNode(node);
     checkExpr(node);
     const A = typeof a === 'string' ? parse(a) : toNode(a);
-    const noF = () => new MathError({ ru: 'Функция не определена в этой точке', en: 'The function is not defined at this point' }, null, null, 'undefined');
+    const noF = () => new MathError(msg('calculus.derivative.derivative.function_is_not_defined_at_this'), null, null, 'undefined');
     let fa;
     try {
         fa = simplify(substitute(node, { [v]: A }));
@@ -239,7 +240,7 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
         k = null;
     }
     if (!k || !Number.isFinite(evaluate(k, env))) {
-        throw new MathError({ ru: 'В этой точке у функции нет конечной производной: касательная вертикальна или её нет', en: 'The function has no finite derivative here: the tangent is vertical or does not exist' }, null, null, 'no-derivative');
+        throw new MathError(msg('calculus.derivative.derivative.function_has_no_finite_derivative_here'), null, null, 'no-derivative');
     }
     const C = canonContext();
     const X = sym(v);
@@ -250,20 +251,20 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
     if (opts.steps) {
         const at = (L) => calcTex(A, L);
         steps.push(step({
-            title: T_('Уравнение касательной', 'Equation of the tangent'),
+            title: msg('calculus.derivative.derivative.equation_of_tangent'),
             tex: bt((L) => `y = f(${at(L)}) + f'(${at(L)})\\,${isZero(A) ? v : `(${v} ${negLeading(A) ? '+ ' + calcTex(simplify(neg(A)), L) : '- ' + at(L)})`}`),
-            text: T_('Касательная проходит через точку графика, а её наклон равен производной в этой точке.', 'The tangent passes through the point of the graph, and its slope equals the derivative at that point.'),
+            text: msg('calculus.derivative.derivative.tangent_passes_through_point_of_graph'),
             rule: 'tangent-formula',
         }));
-        steps.push(step({ title: T_('Значение функции', 'Value of the function'), tex: bt((L) => `f(${at(L)}) = ${calcTex(fa, L)}`), rule: 'value' }));
-        steps.push(step({ title: T_('Производная', 'Derivative'), tex: d.tex, rule: 'derivative', sub: d.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer') }));
+        steps.push(step({ title: msg('calculus.derivative.derivative.value_of_function'), tex: bt((L) => `f(${at(L)}) = ${calcTex(fa, L)}`), rule: 'value' }));
+        steps.push(step({ title: msg('calculus.derivative.derivative.derivative'), tex: d.tex, rule: 'derivative', sub: d.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer') }));
         steps.push(step({
-            title: T_('Угловой коэффициент', 'Slope'),
+            title: msg('calculus.derivative.derivative.slope'),
             tex: bt((L) => `k = f'(${at(L)}) = ${calcTex(k, L)}`),
-            text: T_('Подставляем точку в производную: это тангенс угла наклона касательной.', 'Substitute the point into the derivative: this is the slope of the tangent.'),
+            text: msg('calculus.derivative.derivative.substitute_point_into_derivative_this_is'),
             rule: 'slope',
         }));
-        steps.push(answerStep(T_('Касательная', 'Tangent line'), tex));
+        steps.push(answerStep(msg('calculus.derivative.derivative.tangent_line'), tex));
     }
     return { k, b, point: { x: A, y: fa }, line, tex, steps };
 }

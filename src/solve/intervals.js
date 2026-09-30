@@ -5,6 +5,7 @@ import { num, numValue, add, neg, nodeSome } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toText } from '../core/print.js';
 import { approxNode, approxOf, exactZero, isConstNode, simp, tex } from './common.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- IntervalSet
 
@@ -242,17 +243,17 @@ function setPieces(set, endTex, inf, sep, empty, cup, braces) {
 
 /** TeX of a set: (-\infty;\,2] \cup (3;\,+\infty) in RU, (-\infty, 2] \cup (3, +\infty) in EN; \varnothing. */
 export function intervalTex(set, lang = 'ru') {
-    return setPieces(set, (e) => tex(e.node, lang, e.approx ? { decimals: true } : {}), INF_TEX, lang === 'ru' ? ';\\,' : ',\\ ', '\\varnothing', ' \\cup ', (s) => `\\{${s}\\}`);
+    return setPieces(set, (e) => tex(e.node, lang, e.approx ? { decimals: true } : {}), INF_TEX, notation(lang).intervalTex, '\\varnothing', ' \\cup ', (s) => `\\{${s}\\}`);
 }
 
 /** Plain text of a set: (-∞; 2] ∪ (3; +∞) in RU, (-∞, 2] ∪ (3, +∞) in EN; ∅. */
 export function intervalText(set, lang = 'ru') {
-    return setPieces(set, (e) => (e.approx ? String(Number(e.x.toFixed(5))).replace('.', lang === 'ru' ? ',' : '.') : toText(e.node, { lang })), { lo: '-∞', hi: '+∞' }, lang === 'ru' ? '; ' : ', ', '∅', ' ∪ ', (s) => `{${s}}`);
+    return setPieces(set, (e) => (e.approx ? String(Number(e.x.toFixed(5))).replace('.', notation(lang).decimalText) : toText(e.node, { lang })), { lo: '-∞', hi: '+∞' }, notation(lang).listText, '∅', ' ∪ ', (s) => `{${s}}`);
 }
 
 // ---------------------------------------------------------------- reading sets typed by people
 
-const SET_ERR = (text) => new MathError({ ru: `Не удалось прочитать множество «${text}»`, en: `Could not read the set "${text}"` }, 0, String(text).length, 'interval');
+const SET_ERR = (text) => new MathError(msg('solve.intervals.could_not_read_set', { text }), 0, String(text).length, 'interval');
 const INF_RE = /^([+-]?)\s*(?:∞|inf|infty|infinity|oo|бесконечность)$/i;
 
 function readEnd(s, v) {

@@ -11,6 +11,7 @@ import { Q } from '../../core/rational.js';
 import { N1, N2, NM1, PI, T_, bt, coefTex, dTex, freshVar, iTex, isNum, isVar, isZero, linearParts, lnAbs, negLeading, q, simp, trySimp, tx } from './common.js';
 import { I, sub } from './engine.js';
 import { qn } from './rational.js';
+import { msg } from '../../i18n/index.js';
 
 // ---- constant and table
 
@@ -22,9 +23,9 @@ export function mConst(f, ctx) {
         F,
         method: 'constant',
         step: step({
-            title: T_('Интеграл от постоянной', 'Integral of a constant'),
+            title: msg('calculus.integral.basic.integral_of_constant'),
             tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
-            text: T_(`Подынтегральная функция не зависит от ${v}: ∫c d${v} = c·${v} + C.`, `The integrand does not depend on ${v}: ∫c d${v} = c·${v} + C.`),
+            text: msg('calculus.integral.basic.integrand_does_not_depend_on_c', { v }),
             rule: 'const',
         }),
     };
@@ -98,11 +99,11 @@ export function mTable(f, ctx) {
         F,
         method: 'table',
         step: step({
-            title: T_('Табличный интеграл', 'Table integral'),
+            title: msg('calculus.integral.basic.table_integral'),
             tex: bt((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text: t.note
-                ? T_(`Из таблицы: ${t.law.ru} (при показателе, не равном −1).`, `From the table: ${t.law.en} (for an exponent other than −1).`)
-                : T_(`Из таблицы интегралов: ${t.law.ru}.`, `From the table of integrals: ${t.law.en}.`),
+                ? msg('calculus.integral.basic.from_table_for_exponent_other_than', { p: (lng) => t.law[lng] })
+                : msg('calculus.integral.basic.from_table_of_integrals', { p: (lng) => t.law[lng] }),
             rule: 'table',
         }),
     };
@@ -125,9 +126,9 @@ export function mLinearity(f, ctx) {
             F,
             method: r.method,
             step: step({
-                title: T_('Постоянный множитель', 'Constant factor'),
+                title: msg('calculus.integral.basic.constant_factor'),
                 tex: bt((L) => `${iTex(f, v, L)} = ${coefTex(c, L)}${iTex(g, v, L)} = ${tx(simp(F), L)}`),
-                text: T_('Постоянный множитель выносим за знак интеграла: ∫c·f dx = c·∫f dx.', 'A constant factor comes out of the integral: ∫c·f dx = c·∫f dx.'),
+                text: msg('calculus.integral.basic.constant_factor_comes_out_of_integral'),
                 rule: 'const-factor',
                 sub: [r.step],
             }),
@@ -146,13 +147,13 @@ export function mLinearity(f, ctx) {
             F,
             method: methods.length === 1 ? methods[0] : 'linearity',
             step: step({
-                title: T_('Интеграл суммы', 'Integral of a sum'),
+                title: msg('calculus.integral.basic.integral_of_sum'),
                 tex: bt((L) => `${iTex(f, v, L)} = ${parts.map((p, i) => {
                     if (negLeading(p.t)) return (i === 0 ? '-' : ' - ') + iTex(simp(neg(p.t)), v, L);
                     const s = iTex(p.t, v, L);
                     return i === 0 ? s : ' + ' + s;
                 }).join('')} = ${tx(simp(F), L)}`),
-                text: T_('Интеграл суммы равен сумме интегралов: берём каждое слагаемое отдельно, постоянные выносим.', 'The integral of a sum is the sum of the integrals: take each term separately, constants come out.'),
+                text: msg('calculus.integral.basic.integral_of_sum_is_sum_of'),
                 rule: 'sum',
                 sub: parts.map((p) => p.r.step),
             }),
@@ -225,10 +226,9 @@ export function mLinearSub(f, ctx) {
             F,
             method: r.method === 'table' ? 'linear-substitution' : r.method,
             step: step({
-                title: T_('Линейная замена', 'Linear substitution'),
+                title: msg('calculus.integral.basic.linear_substitution'),
                 tex: bt((L) => `${iTex(f, v, L)} = \\left[${t} = ${tx(Lx, L)},\\ d${t} = ${dTex(k, v, L)}\\right] = ${coefTex(simp(div(N1, k)), L)}${iTex(g, t, L)} = ${tx(simp(F), L)}`),
-                text: T_(`Под функцией стоит линейное выражение ${plainish(Lx, 'ru')}. Если ∫f(t)dt = F(t) + C, то ∫f(kx + b)dx = F(kx + b)/k + C: это замена t = kx + b, при которой dt = k·dx.`,
-                    `The function is applied to a linear expression ${plainish(Lx, 'en')}. If ∫f(t)dt = F(t) + C, then ∫f(kx + b)dx = F(kx + b)/k + C: the substitution t = kx + b, dt = k·dx.`),
+                text: msg('calculus.integral.basic.function_is_applied_to_linear_expression', { Lx: (lng) => plainish(Lx, lng) }),
                 rule: 'linear-substitution',
                 sub: [r.step],
             }),
@@ -279,9 +279,9 @@ export function mExpand(f, ctx) {
         F: r.F,
         method: r.method,
         step: step({
-            title: T_('Раскрываем скобки', 'Expand'),
+            title: msg('calculus.integral.basic.expand'),
             tex: bt((L) => `${iTex(f, v, L)} = ${iTex(X, v, L)}`),
-            text: T_('После раскрытия скобок получается сумма простых слагаемых, каждое из которых интегрируется по таблице.', 'Multiplying out gives a sum of simple terms, each of which is a table integral.'),
+            text: msg('calculus.integral.basic.multiplying_out_gives_sum_of_simple'),
             rule: 'expand',
             sub: [r.step],
         }),
@@ -310,13 +310,13 @@ export function mDerivPattern(f, ctx) {
         if (!c || containsVar(c, v)) continue;
         const F = k.eq(-1) ? mul(c, lnAbs(h, v)) : mul(c, div(pow(h, num(k.add(Q.ONE))), qn(k.add(Q.ONE))));
         const law = k.eq(-1)
-            ? T_(`В числителе стоит (с точностью до множителя) производная знаменателя: ∫h′/h dx = ln|h| + C, где h = ${plainish(h, 'ru')}.`, `The numerator is (up to a factor) the derivative of the denominator: ∫h′/h dx = ln|h| + C with h = ${plainish(h, 'en')}.`)
-            : T_(`Множителем стоит (с точностью до постоянной) производная выражения h = ${plainish(h, 'ru')}: ∫hᵏ·h′ dx = hᵏ⁺¹/(k + 1) + C — это замена t = h.`, `The derivative of h = ${plainish(h, 'en')} is (up to a constant) a factor: ∫hᵏ·h′ dx = hᵏ⁺¹/(k + 1) + C, i.e. the substitution t = h.`);
+            ? msg('calculus.integral.basic.numerator_is_up_to_factor_derivative', { h: (lng) => plainish(h, lng) })
+            : msg('calculus.integral.basic.derivative_of_h_is_up_to', { h: (lng) => plainish(h, lng) });
         return {
             F,
             method: 'substitution',
             step: step({
-                title: k.eq(-1) ? T_('Производная знаменателя в числителе', 'The derivative of the denominator on top') : T_('Производная внутренней функции — множитель', 'The inner derivative is a factor'),
+                title: k.eq(-1) ? msg('calculus.integral.basic.derivative_of_denominator_on_top') : msg('calculus.integral.basic.inner_derivative_is_factor'),
                 tex: bt((L) => `${iTex(f, v, L)} = \\left[t = ${tx(h, L)},\\ dt = ${dTex(dh, v, L)}\\right] = ${tx(trySimp(F) ?? F, L)}`),
                 text: law,
                 rule: 'substitution',

@@ -16,6 +16,7 @@ import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
 import { numDen } from '../core/expand.js';
 import { trySimplify, approx } from '../core/safe.js';
+import { msg } from '../i18n/index.js';
 
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const bt = (f) => L(f('ru'), f('en'));
@@ -44,18 +45,18 @@ function splitTop(s) {
 function readInput(input) {
     const s = String(input).trim();
     const m = s.match(/^(?:sum|Σ|сумма)\s*\(([\s\S]*)\)$/i);
-    if (!m) throw new MathError(L('Запись: sum(член, k, начало, конец), конец может быть inf.', 'Write it as sum(term, k, start, end); the end may be inf.'));
+    if (!m) throw new MathError(msg('calculus.series.write_it_as_sum_term_k'));
     const parts = splitTop(m[1]);
-    if (parts.length !== 4) throw new MathError(L('Нужно четыре части: sum(член, k, начало, конец).', 'Four parts are needed: sum(term, k, start, end).'));
+    if (parts.length !== 4) throw new MathError(msg('calculus.series.four_parts_are_needed_sum_term'));
     const k = parts[1];
-    if (!/^[a-zA-Z]$/.test(k)) throw new MathError(L('Индекс суммирования — одна буква.', 'The index is a single letter.'));
+    if (!/^[a-zA-Z]$/.test(k)) throw new MathError(msg('calculus.series.index_is_single_letter'));
     const term = parse(parts[0], { vars: [k] });
     const lo = trySimplify(parse(parts[2]));
     const hiText = parts[3].replace(/∞|infinity/i, 'inf');
     const hi = /^\+?inf$/.test(hiText) ? INF : trySimplify(parse(hiText));
     const others = freeVars(term).filter((x) => x !== k);
-    if (others.length) throw new MathError(L(`Кроме ${k} в члене есть другие буквы (${others.join(', ')}).`, `Besides ${k} the term has other letters (${others.join(', ')}).`));
-    if (!numValue(lo)?.isInt() || (!isInf(hi) && !numValue(hi)?.isInt())) throw new MathError(L('Границы суммирования — целые числа (конец может быть inf).', 'The bounds are integers (the end may be inf).'));
+    if (others.length) throw new MathError(msg('calculus.series.besides_term_has_other_letters', { k, p: others.join(', ') }));
+    if (!numValue(lo)?.isInt() || (!isInf(hi) && !numValue(hi)?.isInt())) throw new MathError(msg('calculus.series.bounds_are_integers_end_may_be'));
     return { term, k, lo: numValue(lo), hi: isInf(hi) ? null : numValue(hi) };
 }
 
@@ -96,17 +97,17 @@ function finiteSum(term, k, lo, hi) {
             const last = P.evalAt(hi);
             const n = hi.sub(lo).add(Q.ONE);
             steps.push(step({
-                title: L('Сумма арифметической прогрессии', 'The sum of an arithmetic progression'),
+                title: msg('calculus.series.sum_of_arithmetic_progression'),
                 tex: bt((l) => `S = \\frac{a_1 + a_n}{2}\\cdot n = \\frac{${first.toTex(l)} + ${last.toTex(l)}}{2}\\cdot ${n.toTex(l)} = ${total.toTex(l)}`),
-                text: L(`Члены растут на одно и то же число, первый $${first.toTex('ru')}$, последний $${last.toTex('ru')}$, всего $${n.toTex('ru')}$.`, `The terms grow by the same step: the first is $${first.toTex('en')}$, the last $${last.toTex('en')}$, $${n.toTex('en')}$ in all.`),
+                text: msg('calculus.series.terms_grow_by_same_step_first', { p: (lng) => first.toTex(lng), p2: (lng) => last.toTex(lng), p3: (lng) => n.toTex(lng) }),
             }));
         } else {
             steps.push(step({
-                title: L('Формулы сумм степеней', 'The power-sum formulas'),
+                title: msg('calculus.series.power_sum_formulas'),
                 tex: used.map((m) => FAUL_TEX[m]).join(',\\qquad '),
-                text: L('Раскладываем член по степеням $k$ и суммируем каждую степень по формуле.', 'Split the term by powers of $k$ and sum each power by its formula.'),
+                text: msg('calculus.series.split_term_by_powers_of_and'),
             }));
-            steps.push(step({ title: L('Подставляем границы', 'Substitute the bounds'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${total.toTex(l)}`) }));
+            steps.push(step({ title: msg('calculus.series.substitute_bounds'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${total.toTex(l)}`) }));
         }
         return { value: num(total), steps, type: P.degree === 1 ? 'arithmetic' : 'power-sums' };
     }
@@ -116,9 +117,9 @@ function finiteSum(term, k, lo, hi) {
         const n = hi.sub(lo).add(Q.ONE);
         const value = trySimplify(div(mul(first, add(pow(geo.q, num(n)), num(-1))), add(geo.q, num(-1))));
         steps.push(step({
-            title: L('Сумма геометрической прогрессии', 'The sum of a geometric progression'),
+            title: msg('calculus.series.sum_of_geometric_progression'),
             tex: bt((l) => `S_n = b_1\\frac{q^n - 1}{q - 1} = ${tex(first, l)}\\cdot\\frac{${tex(geo.q, l)}^{${n.toTex(l)}} - 1}{${tex(geo.q, l)} - 1} = ${tex(value, l)}`),
-            text: L(`Отношение соседних членов постоянно: $q = ${tex(geo.q)}$.`, `The ratio of neighbouring terms is constant: $q = ${tex(geo.q, 'en')}$.`),
+            text: msg('calculus.series.ratio_of_neighbouring_terms_is_constant', { p: (lng) => tex(geo.q, lng) }),
         }));
         return { value, steps, type: 'geometric' };
     }
@@ -126,7 +127,7 @@ function finiteSum(term, k, lo, hi) {
     if (count.gt(new Q(2000n))) return null;
     let acc = N0;
     for (let i = lo; i.le(hi); i = i.add(Q.ONE)) acc = trySimplify(add(acc, at(term, k, i)));
-    steps.push(step({ title: L('Складываем члены', 'Add the terms'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(acc, l)}`) }));
+    steps.push(step({ title: msg('calculus.series.add_terms'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(acc, l)}`) }));
     return { value: acc, steps, type: 'direct' };
 }
 
@@ -177,16 +178,16 @@ function geometricInfinite(term, k, lo) {
     const first = at(term, k, lo);
     const steps = [];
     if (Math.abs(g.qv) >= 1) {
-        steps.push(step({ title: L('Геометрический ряд расходится', 'The geometric series diverges'), tex: bt((l) => `q = ${tex(g.q, l)},\\quad |q| \\ge 1`), text: L('Члены не стремятся к нулю.', 'The terms do not tend to zero.') }));
+        steps.push(step({ title: msg('calculus.series.geometric_series_diverges'), tex: bt((l) => `q = ${tex(g.q, l)},\\quad |q| \\ge 1`), text: msg('calculus.series.terms_do_not_tend_to_zero') }));
         return { diverges: true, steps, type: 'geometric' };
     }
     const value = trySimplify(div(first, add(N1, neg(g.q))));
     steps.push(step({
-        title: L('Геометрический ряд', 'A geometric series'),
+        title: msg('calculus.series.geometric_series'),
         tex: bt((l) => `q = \\frac{a_{${k}+1}}{a_{${k}}} = ${tex(g.q, l)},\\quad |q| < 1`),
-        text: L('Отношение соседних членов постоянно и по модулю меньше единицы — ряд сходится.', 'The ratio of neighbouring terms is constant and less than one in absolute value, so the series converges.'),
+        text: msg('calculus.series.ratio_of_neighbouring_terms_is_constant_2'),
     }));
-    steps.push(step({ title: L('Сумма бесконечно убывающей прогрессии', 'The sum of an infinite geometric progression'), tex: bt((l) => `S = \\frac{b_1}{1 - q} = \\frac{${tex(first, l)}}{1 - ${tex(g.q, l)}} = ${tex(value, l)}`) }));
+    steps.push(step({ title: msg('calculus.series.sum_of_infinite_geometric_progression'), tex: bt((l) => `S = \\frac{b_1}{1 - q} = \\frac{${tex(first, l)}}{1 - ${tex(g.q, l)}} = ${tex(value, l)}`) }));
     return { value, steps, type: 'geometric' };
 }
 
@@ -210,11 +211,11 @@ function arithGeoInfinite(term, k, lo) {
     const value = trySimplify(add(total, neg(head)));
     const steps = [
         step({
-            title: L('Арифметико-геометрический ряд', 'An arithmetico-geometric series'),
+            title: msg('calculus.series.arithmetico_geometric_series'),
             tex: L(`\\sum_{k=0}^{\\infty} q^k = \\frac{1}{1-q},\\quad \\sum_{k=0}^{\\infty} k q^k = \\frac{q}{(1-q)^2},\\quad \\sum_{k=0}^{\\infty} k^2 q^k = \\frac{q(1+q)}{(1-q)^3}`),
-            text: L(`Член — многочлен от $k$, умноженный на $q^k$ с $q = ${tex(q)}$, $|q| < 1$. Формулы получаются дифференцированием суммы геометрической прогрессии по $q$.`, `The term is a polynomial in $k$ times $q^k$ with $q = ${tex(q, 'en')}$, $|q| < 1$. The formulas come from differentiating the geometric sum in $q$.`),
+            text: msg('calculus.series.term_is_polynomial_in_times_with', { q: (lng) => tex(q, lng) }),
         }),
-        step({ title: L('Подставляем', 'Substitute'), tex: bt((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) }),
+        step({ title: msg('calculus.series.substitute'), tex: bt((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) }),
     ];
     return { value, steps, type: 'arithmetico-geometric' };
 }
@@ -257,13 +258,13 @@ function telescoping(term, k, lo) {
     const tail = add(A.flatMap((a, i) => Array.from({ length: Number(ms[i].n) }, (_, j) => mul(num(a), div(N1, add(n, num(Q.ONE.add(c).add(new Q(BigInt(j))))))))));
     const Sn = trySimplify(add(num(S), tail));
     const steps = [
-        step({ title: L('Раскладываем член на простейшие дроби', 'Split the term into partial fractions'), tex: bt((l) => `${tex(term, l)} = ${tex(decomposed, l)}`) }),
+        step({ title: msg('calculus.series.split_term_into_partial_fractions'), tex: bt((l) => `${tex(term, l)} = ${tex(decomposed, l)}`) }),
         step({
-            title: L('Ряд телескопический', 'The series telescopes'),
+            title: msg('calculus.series.series_telescopes'),
             tex: bt((l) => `S_n = ${tex(Sn, l)}`),
-            text: L('Слагаемые соседних членов взаимно уничтожаются; в частичной сумме остаются только первые и последние.', 'Pieces of neighbouring terms cancel; only the first and the last survive in a partial sum.'),
+            text: msg('calculus.series.pieces_of_neighbouring_terms_cancel_only'),
         }),
-        step({ title: L('Переходим к пределу', 'Take the limit'), tex: bt((l) => `S = \\lim_{n\\to\\infty} S_n = ${S.toTex(l)}`) }),
+        step({ title: msg('calculus.series.take_limit'), tex: bt((l) => `S = \\lim_{n\\to\\infty} S_n = ${S.toTex(l)}`) }),
     ];
     void constant;
     return { value: num(S), steps, type: 'telescoping' };
@@ -272,14 +273,14 @@ function telescoping(term, k, lo) {
 /* ------------------------------------------------------------------ a table of classic sums */
 
 const TABLE = [
-    { f: '1/k^2', s: 1, v: 'pi^2/6', name: L('Базельская задача (Эйлер)', 'The Basel problem (Euler)') },
-    { f: '1/k^4', s: 1, v: 'pi^4/90', name: L('Сумма Эйлера', "Euler's sum") },
-    { f: '(-1)^(k+1)/k', s: 1, v: 'ln(2)', name: L('Знакочередующийся гармонический ряд', 'The alternating harmonic series') },
-    { f: '(-1)^k/(2k+1)', s: 0, v: 'pi/4', name: L('Ряд Лейбница', 'The Leibniz series') },
-    { f: '1/k!', s: 0, v: 'e', name: L('Ряд для числа e', 'The series for e') },
-    { f: '(-1)^k/k!', s: 0, v: '1/e', name: L('Ряд для 1/e', 'The series for 1/e') },
-    { f: '(-1)^(k+1)/k^2', s: 1, v: 'pi^2/12', name: L('Знакочередующийся ряд обратных квадратов', 'The alternating series of inverse squares') },
-    { f: '1/(2k-1)^2', s: 1, v: 'pi^2/8', name: L('Сумма обратных квадратов нечётных', 'Inverse squares of odd numbers') },
+    { f: '1/k^2', s: 1, v: 'pi^2/6', name: msg('calculus.series.basel_problem_euler') },
+    { f: '1/k^4', s: 1, v: 'pi^4/90', name: msg('calculus.series.euler_s_sum') },
+    { f: '(-1)^(k+1)/k', s: 1, v: 'ln(2)', name: msg('calculus.series.alternating_harmonic_series') },
+    { f: '(-1)^k/(2k+1)', s: 0, v: 'pi/4', name: msg('calculus.series.leibniz_series') },
+    { f: '1/k!', s: 0, v: 'e', name: msg('calculus.series.series_for_e') },
+    { f: '(-1)^k/k!', s: 0, v: '1/e', name: msg('calculus.series.series_for_1_e') },
+    { f: '(-1)^(k+1)/k^2', s: 1, v: 'pi^2/12', name: msg('calculus.series.alternating_series_of_inverse_squares') },
+    { f: '1/(2k-1)^2', s: 1, v: 'pi^2/8', name: msg('calculus.series.inverse_squares_of_odd_numbers') },
 ];
 
 function tableSum(term, k, lo) {
@@ -306,8 +307,8 @@ function tableSum(term, k, lo) {
             steps: [step({
                 title: row.name,
                 tex: bt((l) => `\\sum_{${k}=${row.s}}^{\\infty} ${tex(f, l)} = ${tex(V, l)}`),
-                text: L('Классическая сумма; член отличается от табличного постоянным множителем или началом суммирования.', 'A classic sum; the term differs from the table one by a constant factor or the starting index.'),
-            }), step({ title: L('Подставляем', 'Substitute'), tex: bt((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) })],
+                text: msg('calculus.series.classic_sum_term_differs_from_table'),
+            }), step({ title: msg('calculus.series.substitute'), tex: bt((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) })],
             type: 'table',
         };
     }
@@ -325,7 +326,7 @@ function divergence(term, k) {
     }
     const lv = lim && lim.value !== null && typeof lim.value === 'object' ? approx(lim.value) : lim?.value === 'inf' || lim?.value === '-inf' ? Infinity : NaN;
     if (lim && (lim.value === 'dne' || (Number.isFinite(lv) && Math.abs(lv) > 1e-12) || lv === Infinity)) {
-        return { diverges: true, type: 'necessary', steps: [step({ title: L('Необходимый признак не выполнен', 'The necessary condition fails'), tex: bt((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? '\\text{ — не существует}' : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: L('Если ряд сходится, его члены стремятся к нулю. Здесь это не так — ряд расходится.', 'If a series converges, its terms tend to zero. They do not here, so the series diverges.') })] };
+        return { diverges: true, type: 'necessary', steps: [step({ title: msg('calculus.series.necessary_condition_fails'), tex: bt((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? '\\text{ — не существует}' : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: msg('calculus.series.if_series_converges_its_terms_tend') })] };
     }
     // rational term of degree −1 or more: comparison with the harmonic series
     try {
@@ -333,7 +334,7 @@ function divergence(term, k) {
         const Np = nd0 && Poly.fromNode(nd0.num, k);
         const Dp = nd0 && Poly.fromNode(nd0.den, k);
         if (Np && Dp && Dp.degree - Np.degree === 1) {
-            return { diverges: true, type: 'harmonic', steps: [step({ title: L('Сравнение с гармоническим рядом', 'Comparison with the harmonic series'), tex: bt((l) => `${tex(term, l)} \\sim \\frac{${Np.lead.div(Dp.lead).toTex(l)}}{${k}}`), text: L('Члены ведут себя как $c/k$, а гармонический ряд $\\sum 1/k$ расходится — значит, расходится и этот.', 'The terms behave like $c/k$, and the harmonic series $\\sum 1/k$ diverges, so this one diverges too.') })] };
+            return { diverges: true, type: 'harmonic', steps: [step({ title: msg('calculus.series.comparison_with_harmonic_series'), tex: bt((l) => `${tex(term, l)} \\sim \\frac{${Np.lead.div(Dp.lead).toTex(l)}}{${k}}`), text: msg('calculus.series.terms_behave_like_and_harmonic_series') })] };
         }
     } catch {
         /* not rational */
@@ -366,9 +367,9 @@ function pSeries(term, k) {
         diverges: true,
         type: 'p-series',
         steps: [step({
-            title: L('Сравнение с рядом $\\sum 1/k^p$', 'Comparison with $\\sum 1/k^p$'),
+            title: msg('calculus.series.comparison_with'),
             tex: bt((l) => `${tex(term, l)} \\sim \\frac{c}{${k}^{${r.p.toTex(l)}}},\\quad p = ${r.p.toTex(l)} \\le 1`),
-            text: L(`Члены одного знака и убывают как $1/k^{${pT}}$; ряд $\\sum 1/k^p$ сходится только при $p > 1$, поэтому этот ряд расходится.`, `The terms keep one sign and decay like $1/k^{${r.p.toTex('en')}}$; $\\sum 1/k^p$ converges only for $p > 1$, so this series diverges.`),
+            text: msg('calculus.series.terms_keep_one_sign_and_decay', { pT, p: r.p.toTex('en') }),
         })],
     };
 }
@@ -385,23 +386,23 @@ export function sumSeries(input, opts = {}) {
         return { kind: 'unsupported', reason: e.msg, steps: [] };
     }
     const { term, k, lo, hi } = inp;
-    const head = step({ title: L('Сумма', 'The sum'), tex: bt((l) => sumTex(term, k, lo, hi, l)) });
+    const head = step({ title: msg('calculus.series.sum'), tex: bt((l) => sumTex(term, k, lo, hi, l)) });
     let r;
     try {
-        if (hi) r = hi.lt(lo) ? { value: N0, steps: [step({ title: L('Пустая сумма', 'An empty sum'), text: L('Конец меньше начала — слагаемых нет.', 'The end is below the start: no terms.') })], type: 'empty' } : finiteSum(term, k, lo, hi);
+        if (hi) r = hi.lt(lo) ? { value: N0, steps: [step({ title: msg('calculus.series.empty_sum'), text: msg('calculus.series.end_is_below_start_no_terms') })], type: 'empty' } : finiteSum(term, k, lo, hi);
         else r = geometricInfinite(term, k, lo) ?? arithGeoInfinite(term, k, lo) ?? telescoping(term, k, lo) ?? tableSum(term, k, lo) ?? divergence(term, k) ?? pSeries(term, k);
     } catch (e) {
         if (!(e instanceof MathError)) throw e;
         r = null;
     }
     if (r?.diverges) {
-        const steps = [head, ...r.steps, step({ title: L('Ответ', 'Answer'), tex: L('\\text{ряд расходится}', '\\text{the series diverges}') })];
+        const steps = [head, ...r.steps, step({ title: msg('calculus.series.answer'), tex: msg('calculus.series.series_diverges') })];
         steps[steps.length - 1].final = true;
         return { kind: 'diverges', value: null, type: r.type, steps, text: 'diverges' };
     }
     if (!r) {
         // a numeric estimate: partial sums with the average of two neighbours (alternating tails)
-        if (hi) return { kind: 'unsupported', reason: L('Не удалось сложить.', 'Could not add it up.'), steps: [] };
+        if (hi) return { kind: 'unsupported', reason: msg('calculus.series.could_not_add_it_up'), steps: [] };
         const T = (x) => approx(term, { [k]: x });
         // strictly alternating signs over runs of neighbours, absolute values falling to zero: the Leibniz test
         const run = (K) => Array.from({ length: 12 }, (_, j) => T(K + j));
@@ -414,7 +415,7 @@ export function sumSeries(input, opts = {}) {
         const rate = powerRate(term, k);
         const absolute = rate ? rate.p.gt(new Q(11n, 10n)) : Number.isFinite(pEnv) && pEnv > 1.1 && Math.abs(pEnv - pEnv2) < 0.15;
         if (!leibniz && !absolute) {
-            return { kind: 'unsupported', reason: L('Не удалось ни найти сумму, ни доказать сходимость.', 'Could neither find the sum nor prove convergence.'), steps: [] };
+            return { kind: 'unsupported', reason: msg('calculus.series.could_neither_find_sum_nor_prove'), steps: [] };
         }
         let s = 0;
         let prev = 0;
@@ -427,18 +428,18 @@ export function sumSeries(input, opts = {}) {
         // alternating: the mean of two neighbouring partial sums; one sign: the tail ∫ c/x^p ≈ t(N)(N + ½)/(p − 1)
         const est = leibniz ? (s + prev) / 2 : s + (rate ? (approx(term, { [k]: last }) * (last + 0.5)) / (rate.p.toNumber() - 1) : 0);
         const digits = leibniz || rate ? 8 : 6;
-        if (!Number.isFinite(est)) return { kind: 'unsupported', reason: L('Не удалось оценить сумму.', 'Could not estimate the sum.'), steps: [] };
+        if (!Number.isFinite(est)) return { kind: 'unsupported', reason: msg('calculus.series.could_not_estimate_sum'), steps: [] };
         const why = leibniz
-            ? L('Ряд знакочередующийся, модули членов убывают к нулю — по признаку Лейбница он сходится.', 'The series alternates and the absolute values of its terms decrease to zero, so it converges by the Leibniz test.')
+            ? msg('calculus.series.series_alternates_and_absolute_values_of')
             : rate
-                ? L(`Члены одного знака и убывают как $1/k^{${rate.p.toTex('ru')}}$ с показателем больше 1 — ряд сходится (сравнение с $\\sum 1/k^p$).`, `The terms keep one sign and decay like $1/k^{${rate.p.toTex('en')}}$ with the power above 1, so the series converges (comparison with $\\sum 1/k^p$).`)
-                : L('Модули членов не больше $c/k^p$ с $p > 1$ — ряд сходится абсолютно (сравнение с $\\sum 1/k^p$).', 'The absolute values of the terms are at most $c/k^p$ with $p > 1$, so the series converges absolutely (comparison with $\\sum 1/k^p$).');
-        const steps = [head, step({ title: L('Сходимость', 'Convergence'), text: why }), step({ title: L('Численная оценка', 'A numeric estimate'), tex: `S \\approx ${est.toPrecision(digits)}`, text: L('Точную сумму в элементарных функциях найти не удалось; оценка по частичной сумме из 200 000 членов с поправкой на хвост.', 'No exact sum in elementary terms was found; the estimate is a partial sum of 200,000 terms with a tail correction.') })];
+                ? msg('calculus.series.terms_keep_one_sign_and_decay_2', { p: (lng) => rate.p.toTex(lng) })
+                : msg('calculus.series.absolute_values_of_terms_are_at');
+        const steps = [head, step({ title: msg('calculus.series.convergence'), text: why }), step({ title: msg('calculus.series.numeric_estimate'), tex: `S \\approx ${est.toPrecision(digits)}`, text: msg('calculus.series.no_exact_sum_in_elementary_terms') })];
         steps[steps.length - 1].final = true;
         return { kind: 'approx', value: null, approx: est, steps, type: 'numeric', text: `≈ ${est.toPrecision(digits)}` };
     }
     const value = trySimplify(r.value);
-    const steps = [head, ...r.steps, step({ title: L('Ответ', 'Answer'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(value, l)}`) })];
+    const steps = [head, ...r.steps, step({ title: msg('calculus.series.answer'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(value, l)}`) })];
     steps[steps.length - 1].final = true;
     return { kind: 'value', value, approx: approx(value), type: r.type, steps, text: toText(value, { lang: 'en' }) };
 }

@@ -3,6 +3,7 @@
 import { Q } from '../core/rational.js';
 import { fail, qt } from './common.js';
 import { matPower } from './eigen.js';
+import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- the Matrix class
 
@@ -11,7 +12,7 @@ export function toQ(v) {
 }
 function sameShape(A, B) {
     if (B.rows !== A.rows || B.cols !== A.cols) {
-        throw fail(`Размеры не совпадают: ${A.rows}×${A.cols} и ${B.rows}×${B.cols}.`, `Sizes differ: ${A.rows}×${A.cols} and ${B.rows}×${B.cols}.`, 'shape');
+        throw fail(msg('linalg.core.sizes_differ_and', { rows: A.rows, cols: A.cols, rows2: B.rows, cols2: B.cols }), 'shape');
     }
 }
 
@@ -26,10 +27,10 @@ export class Matrix {
     /** From [[1, 2], ['1/2', 3]] (numbers, strings, BigInt, Q) or another Matrix. A flat array is a column. */
     static from(x) {
         if (x instanceof Matrix) return x;
-        if (!Array.isArray(x) || !x.length) throw fail('Матрица задаётся непустым массивом строк.', 'A matrix is a non-empty array of rows.', 'shape');
+        if (!Array.isArray(x) || !x.length) throw fail(msg('linalg.core.matrix_is_non_empty_array_of'), 'shape');
         const rows = x.map((r) => (Array.isArray(r) ? r.map(toQ) : [toQ(r)]));
         const c = rows[0].length;
-        if (!c || rows.some((r) => r.length !== c)) throw fail('Во всех строках матрицы должно быть одинаковое число элементов.', 'All rows of a matrix must have the same length.', 'shape');
+        if (!c || rows.some((r) => r.length !== c)) throw fail(msg('linalg.core.all_rows_of_matrix_must_have'), 'shape');
         return new Matrix(rows);
     }
 
@@ -108,13 +109,12 @@ export class Matrix {
         if (!(B instanceof Matrix) && !Array.isArray(B)) return this.scale(B);
         if (Array.isArray(B) && !Array.isArray(B[0])) {
             const v = B.map(toQ);
-            if (v.length !== this.cols) throw fail('Длина вектора не равна числу столбцов матрицы.', 'The vector length differs from the number of columns.', 'shape');
+            if (v.length !== this.cols) throw fail(msg('linalg.core.vector_length_differs_from_number_of'), 'shape');
             return this.a.map((r) => r.reduce((s, x, j) => s.add(x.mul(v[j])), Q.ZERO));
         }
         B = Matrix.from(B);
         if (this.cols !== B.rows) {
-            throw fail(`Нельзя умножить матрицу ${this.rows}×${this.cols} на ${B.rows}×${B.cols}: число столбцов первой должно равняться числу строк второй.`,
-                `Cannot multiply a ${this.rows}×${this.cols} matrix by a ${B.rows}×${B.cols} one: the columns of the first must match the rows of the second.`, 'shape');
+            throw fail(msg('linalg.core.cannot_multiply_matrix_by_one_columns', { rows: this.rows, cols: this.cols, rows2: B.rows, cols2: B.cols }), 'shape');
         }
         const out = [];
         for (let i = 0; i < this.rows; i++) {
@@ -139,7 +139,7 @@ export class Matrix {
     }
 
     trace() {
-        if (!this.isSquare()) throw fail('След определён только для квадратной матрицы.', 'The trace is defined for square matrices only.', 'shape');
+        if (!this.isSquare()) throw fail(msg('linalg.core.trace_is_defined_for_square_matrices'), 'shape');
         return this.a.reduce((s, r, i) => s.add(r[i]), Q.ZERO);
     }
 
@@ -150,7 +150,7 @@ export class Matrix {
     /** [A | B] */
     augment(B) {
         B = Matrix.from(B);
-        if (B.rows !== this.rows) throw fail('У матриц разное число строк.', 'The matrices have different numbers of rows.', 'shape');
+        if (B.rows !== this.rows) throw fail(msg('linalg.core.matrices_have_different_numbers_of_rows'), 'shape');
         return new Matrix(this.a.map((r, i) => [...r, ...B.a[i]]));
     }
 
@@ -197,6 +197,6 @@ export function M(x) {
     return Matrix.from(x);
 }
 export function needSquare(A, what) {
-    if (!A.isSquare()) throw fail(`${what.ru} определён только для квадратной матрицы.`, `${what.en} is defined for square matrices only.`, 'shape');
+    if (!A.isSquare()) throw fail(msg('linalg.core.is_defined_for_square_matrices_only', { p: (lng) => what[lng] }), 'shape');
 }
 export const vecTex = (v) => `\\begin{pmatrix} ${v.map(qt).join(' \\\\ ')} \\end{pmatrix}`;

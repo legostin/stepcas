@@ -1,12 +1,13 @@
 // theory/common — tiny helpers: reading integers and fractions, bilingual steps.
 
 import { MathError, Q } from '../../core/rational.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- tiny internal helpers
 
 export const L = (ru, en) => ({ ru, en });
 export const T = (f) => ({ ru: f('ru'), en: f('en') });
-export const fail = (ru, en, code = null) => new MathError({ ru, en }, null, null, code);
+export const fail = (msg, code = null) => new MathError(msg, null, null, code);
 
 export function S(title, tex, text, extra) {
     const s = { title };
@@ -59,32 +60,31 @@ export const coefX = (a, v = 'x') => (a === 1n ? v : a === -1n ? `-${v}` : `${tn
 export function listText(items, lang) {
     const a = items.map(sn);
     if (a.length === 1) return a[0];
-    if (a.length <= 4) return a.slice(0, -1).join(', ') + (lang === 'ru' ? ' и ' : ' and ') + a[a.length - 1];
+    if (a.length <= 4) return a.slice(0, -1).join(', ') + (msg('numbers.theory.common.and').in(lang)) + a[a.length - 1];
     return `${a[0]}, ${a[1]}, ${a[2]}, …, ${a[a.length - 1]}`;
 }
 
-export const G = (l, a, b) => (l === 'ru' ? `\\text{НОД}(${tn(a)},\\,${tn(b)})` : `\\gcd(${tn(a)}, ${tn(b)})`);
-export const Lc = (l, a, b) => (l === 'ru' ? `\\text{НОК}(${tn(a)},\\,${tn(b)})` : `\\operatorname{lcm}(${tn(a)}, ${tn(b)})`);
-export const gT = (l, a, b) => (l === 'ru' ? `НОД(${sn(a)}, ${sn(b)})` : `gcd(${sn(a)}, ${sn(b)})`);
+export const G = (l, a, b) => (msg('numbers.theory.common.formula', { a: tn(a), b: tn(b) }).in(l));
+export const Lc = (l, a, b) => (msg('numbers.theory.common.lcm', { a: tn(a), b: tn(b) }).in(l));
+export const gT = (l, a, b) => (msg('numbers.theory.common.gcd', { a: sn(a), b: sn(b) }).in(l));
 
 /** Anything integer-like → BigInt. */
 export function big(x, what) {
     if (typeof x === 'bigint') return x;
     if (typeof x === 'number') {
         if (Number.isInteger(x)) return BigInt(x);
-        throw fail(`Нужно целое число${what ? ` (${what})` : ''}, а получено ${String(x).replace('.', ',')}.`,
-            `An integer is required${what ? ` (${what})` : ''}, got ${x}.`, 'not-int');
+        throw fail(msg('numbers.theory.common.integer_is_required_got', { p: what ? ` (${what})` : '', p2: String(x).replace('.', ','), x }), 'not-int');
     }
     if (typeof x === 'string') {
         const s = x.replace(/[\s_\u00a0\u202f\u2009']/g, '').replace(/^[−–]/, '-');
         if (/^[+-]?\d+$/.test(s)) return BigInt(s);
-        throw fail(`«${x}» — не целое число.`, `"${x}" is not an integer.`, 'not-int');
+        throw fail(msg('numbers.theory.common.is_not_integer', { x }), 'not-int');
     }
     if (x instanceof Q) {
         if (x.isInt()) return x.n;
-        throw fail('Нужно целое число, а получена дробь.', 'An integer is required, not a fraction.', 'not-int');
+        throw fail(msg('numbers.theory.common.integer_is_required_not_fraction'), 'not-int');
     }
-    throw fail('Нужно целое число.', 'An integer is required.', 'not-int');
+    throw fail(msg('numbers.theory.common.integer_is_required'), 'not-int');
 }
 
 /** Exact value of a double as {num, den}. */
@@ -116,7 +116,7 @@ export function ratOf(x) {
         const q = new Q(x.num, x.den);
         return { num: q.n, den: q.d };
     }
-    throw fail('Нужно число.', 'A number is required.', 'nan');
+    throw fail(msg('numbers.theory.common.number_is_required'), 'nan');
 }
 
 export function gcdCore(a, b) {

@@ -17,6 +17,7 @@
 
 import { Q } from './rational.js';
 import { mul, num, pow, isConst, freeVars, nodeSome } from './ast.js';
+import { msg, notation } from '../i18n/index.js';
 
 const FN_TEX = {
     sin: ['\\sin', '\\sin'],
@@ -628,7 +629,7 @@ function groupDigits(int) {
  */
 export function texNumber(value, lang = 'ru', opts = {}) {
     const digits = opts.digits ?? 6;
-    const comma = lang === 'ru' ? '{,}' : '.';
+    const comma = notation(lang).decimalTex;
     const fix = (s) => {
         const parts = s.split('.');
     let i = parts[0];

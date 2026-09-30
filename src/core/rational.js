@@ -1,3 +1,4 @@
+import { msg, notation } from '../i18n/index.js';
 // rational — exact rational numbers on BigInt, BigInt helpers, and MathError (used by the whole engine).
 //
 //   new Q(3n, 4n)            normalised: reduced, denominator > 0
@@ -14,7 +15,8 @@ export class MathError extends Error {
      * @param {string} [code]  short machine-readable id ('div0', 'syntax', 'too-big', …)
      */
     constructor(msg, pos = null, len = null, code = null) {
-        const m = typeof msg === 'string' ? { ru: msg, en: msg } : { ru: msg?.ru ?? msg?.en ?? '', en: msg?.en ?? msg?.ru ?? '' };
+        // a message (from i18n) stays language-neutral; strings and {ru, en} objects are taken as they are
+        const m = typeof msg === 'string' ? { ru: msg, en: msg } : typeof msg?.in === 'function' ? msg : { ru: msg?.ru ?? msg?.en ?? '', en: msg?.en ?? msg?.ru ?? '' };
         super(m.en);
         if (pos !== null && typeof pos === 'object') ({ pos = null, len = null, code = null } = pos);
         this.name = 'MathError';
@@ -30,8 +32,8 @@ export class MathError extends Error {
     }
 }
 
-const DIV0 = { ru: 'Деление на ноль', en: 'Division by zero' };
-const TOO_BIG = { ru: 'Число получается слишком большим', en: 'The number gets too large' };
+const DIV0 = msg('core.rational.division_by_zero');
+const TOO_BIG = msg('core.rational.number_gets_too_large');
 
 // ---------------------------------------------------------------- BigInt helpers
 
@@ -72,7 +74,7 @@ export function bigBitLength(n) {
 /** floor(sqrt(n)) for n ≥ 0. */
 export function bigIsqrt(n) {
     n = toBig(n);
-    if (n < 0n) throw new MathError({ ru: 'Корень из отрицательного числа', en: 'Square root of a negative number' });
+    if (n < 0n) throw new MathError(msg('core.rational.square_root_of_negative_number'));
     if (n < 2n) return n;
     if (n < 2n ** 52n) {
         let r = BigInt(Math.floor(Math.sqrt(Number(n))));
@@ -98,7 +100,7 @@ export function bigIroot(n, k) {
     if (!Number.isInteger(k) || k < 1) throw new TypeError('root index must be a positive integer');
     if (k === 1) return n;
     if (n < 0n) {
-        if (k % 2 === 0) throw new MathError({ ru: 'Корень чётной степени из отрицательного числа', en: 'Even root of a negative number' });
+        if (k % 2 === 0) throw new MathError(msg('core.rational.even_root_of_negative_number'));
         return -bigIroot(-n, k);
     }
     if (k === 2) return bigIsqrt(n);
@@ -223,14 +225,14 @@ export class Q {
         if (x instanceof Q) return x;
         if (typeof x === 'bigint') return new Q(x);
         if (typeof x === 'number') {
-            if (!Number.isFinite(x)) throw new MathError({ ru: 'Число должно быть конечным', en: 'The number must be finite' }, null, null, 'nan');
+            if (!Number.isFinite(x)) throw new MathError(msg('core.rational.number_must_be_finite'), null, null, 'nan');
             if (Number.isSafeInteger(x)) return new Q(BigInt(x));
             return parseDecimal(String(x));
         }
         if (typeof x === 'string') {
             const s = x.trim().replace(/[\s\u00a0\u202f]/g, '').replace(/[−–]/g, '-');
             const slash = s.indexOf('/');
-            const bad = () => new MathError({ ru: `Не число: «${x}»`, en: `Not a number: "${x}"` }, null, null, 'nan');
+            const bad = () => new MathError(msg('core.rational.not_number', { x }), null, null, 'nan');
             if (slash >= 0) {
                 const a = parseDecimal(s.slice(0, slash));
                 const b = parseDecimal(s.slice(slash + 1));
@@ -241,7 +243,7 @@ export class Q {
             if (!q) throw bad();
             return q;
         }
-        throw new MathError({ ru: 'Не число', en: 'Not a number' }, null, null, 'nan');
+        throw new MathError(msg('core.rational.not_number_2'), null, null, 'nan');
     }
 
     static max(a, b) {
@@ -447,7 +449,7 @@ export class Q {
             s = s.padStart(digits + 1, '0');
             const int = s.slice(0, s.length - digits);
             const frac = s.slice(s.length - digits).replace(/0+$/, '');
-            s = frac ? `${int}${lang === 'ru' ? ',' : '.'}${frac}` : int;
+            s = frac ? `${int}${notation(lang).decimalText}${frac}` : int;
         }
         return (neg ? '-' : '') + s;
     }
@@ -478,7 +480,7 @@ export class Q {
     toPeriodicString(lang = 'en', maxDigits = 200) {
         const p = this.toPeriodic(maxDigits);
         if (!p) return null;
-        const sep = lang === 'ru' ? ',' : '.';
+        const sep = notation(lang).decimalText;
         const frac = p.pre + (p.period ? `(${p.period})` : '');
         return (p.sign < 0 ? '-' : '') + p.int.toString() + (frac ? sep + frac : '');
     }

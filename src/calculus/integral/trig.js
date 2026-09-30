@@ -10,6 +10,7 @@ import { plainish } from './basic.js';
 import { HALF, N1, N2, NM1, T_, bt, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx } from './common.js';
 import { I, sub } from './engine.js';
 import { qn } from './rational.js';
+import { msg } from '../../i18n/index.js';
 
 // ---- trigonometric forms
 
@@ -107,20 +108,18 @@ export function mTrig(f, ctx) {
             const gt = mul(neg(c), kInv, pow(oneMinus, num((m - 1) / 2)), pow(T, num(n)));
             return substResult(f, ctx, {
                 t, uNode: fn('cos', L), g: expandSafe(gt), rule: 'trig-substitution',
-                title: T_(`Замена ${t} = ${plainish(fn('cos', L), 'ru')}`, `Substitution ${t} = ${plainish(fn('cos', L), 'en')}`),
-                dtTex: (Lg) => `d${t} = -${coefTex(k, Lg)}\\sin ${Lg === 'ru' ? '' : ''}${paren(tx(L, Lg)).replace(/^\((.*)\)$/, L.type === 'sym' ? '$1' : '($1)')}\\,d${v}`,
-                text: T_('Синус стоит в нечётной степени: один синус отделяем к dx, остальные чётные степени выражаем через косинус (sin² = 1 − cos²) и заменяем t = cos, dt = −sin·dx.',
-                    'The sine has an odd power: keep one sine with dx, write the remaining even powers through the cosine (sin² = 1 − cos²) and substitute t = cos, dt = −sin·dx.'),
+                title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('cos', L), lng) }),
+                dtTex: (Lg) => `d${t} = -${coefTex(k, Lg)}\\sin ${''}${paren(tx(L, Lg)).replace(/^\((.*)\)$/, L.type === 'sym' ? '$1' : '($1)')}\\,d${v}`,
+                text: msg('calculus.integral.trig.sine_has_odd_power_keep_one'),
             });
         }
         if (useSin) {
             const gt = mul(c, kInv, pow(T, num(m)), pow(oneMinus, num((n - 1) / 2)));
             return substResult(f, ctx, {
                 t, uNode: fn('sin', L), g: expandSafe(gt), rule: 'trig-substitution',
-                title: T_(`Замена ${t} = ${plainish(fn('sin', L), 'ru')}`, `Substitution ${t} = ${plainish(fn('sin', L), 'en')}`),
+                title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('sin', L), lng) }),
                 dtTex: (Lg) => `d${t} = ${coefTex(k, Lg)}\\cos${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}\\,d${v}`,
-                text: T_('Косинус стоит в нечётной степени: один косинус отделяем к dx, остальные чётные степени выражаем через синус (cos² = 1 − sin²) и заменяем t = sin, dt = cos·dx.',
-                    'The cosine has an odd power: keep one cosine with dx, write the remaining even powers through the sine (cos² = 1 − sin²) and substitute t = sin, dt = cos·dx.'),
+                text: msg('calculus.integral.trig.cosine_has_odd_power_keep_one'),
             });
         }
         if (m + n <= 0) {
@@ -128,10 +127,9 @@ export function mTrig(f, ctx) {
             const gt = mul(c, kInv, pow(T, num(m)), pow(add(N1, pow(T, N2)), num(-(m + n) / 2 - 1)));
             return substResult(f, ctx, {
                 t, uNode: fn('tan', L), g: gt, rule: 'trig-substitution',
-                title: T_(`Замена ${t} = ${plainish(fn('tan', L), 'ru')}`, `Substitution ${t} = ${plainish(fn('tan', L), 'en')}`),
+                title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('tan', L), lng) }),
                 dtTex: (Lg) => `d${t} = \\frac{${coefTex(k, Lg) ? coefTex(k, Lg) + '\\,' : ''}d${v}}{\\cos^{2}${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}}`,
-                text: T_('Степени синуса и косинуса чётные, а их сумма не положительна: делим на cos² и заменяем t = tg, dt = dx/cos², 1/cos² = 1 + t².',
-                    'The powers of sine and cosine are even and add up to a non-positive number: divide by cos² and substitute t = tan, dt = dx/cos², 1/cos² = 1 + t².'),
+                text: msg('calculus.integral.trig.powers_of_sine_and_cosine_are'),
             });
         }
         // both even, m + n > 0
@@ -144,13 +142,13 @@ export function mTrig(f, ctx) {
             const s2 = div(add(N1, neg(fn('cos', L2))), N2);
             const c2 = div(add(N1, fn('cos', L2)), N2);
             rewritten = mul(c, pow(s2, num(m / 2)), pow(c2, num(n / 2)));
-            text = T_('Степени чётные: понижаем их формулами двойного угла sin²u = (1 − cos 2u)/2, cos²u = (1 + cos 2u)/2 и раскрываем скобки.', 'Even powers: lower them with the double-angle formulas sin²u = (1 − cos 2u)/2, cos²u = (1 + cos 2u)/2 and expand.');
+            text = msg('calculus.integral.trig.even_powers_lower_them_with_double');
         } else if (n < 0) {
             rewritten = mul(c, pow(add(N1, neg(C2)), num(m / 2)), pow(fn('cos', L), num(n)));
-            text = T_('Выражаем синус через косинус: sin² = 1 − cos², и раскрываем скобки.', 'Write the sine through the cosine, sin² = 1 − cos², and expand.');
+            text = msg('calculus.integral.trig.write_sine_through_cosine_sin_1');
         } else {
             rewritten = mul(c, pow(fn('sin', L), num(m)), pow(add(N1, neg(S2)), num(n / 2)));
-            text = T_('Выражаем косинус через синус: cos² = 1 − sin², и раскрываем скобки.', 'Write the cosine through the sine, cos² = 1 − sin², and expand.');
+            text = msg('calculus.integral.trig.write_cosine_through_sine_cos_1');
         }
         const X = expandSafe(rewritten);
         if (!X || nodeKey(X) === nodeKey(f)) return null;
@@ -159,7 +157,7 @@ export function mTrig(f, ctx) {
         return {
             F: r.F,
             method: 'trig-power',
-            step: step({ title: T_('Понижаем степень', 'Lower the powers'), tex: bt((Lg) => `${iTex(f, v, Lg)} = ${iTex(X, v, Lg)}`), text, rule: 'trig-power', sub: [r.step] }),
+            step: step({ title: msg('calculus.integral.trig.lower_powers'), tex: bt((Lg) => `${iTex(f, v, Lg)} = ${iTex(X, v, Lg)}`), text, rule: 'trig-power', sub: [r.step] }),
         };
     }
     // product to sum: sin a·cos b, sin a·sin b, cos a·cos b with different linear arguments
@@ -171,10 +169,9 @@ export function mTrig(f, ctx) {
             F: r.F,
             method: 'trig-product',
             step: step({
-                title: T_('Произведение в сумму', 'Product to sum'),
+                title: msg('calculus.integral.trig.product_to_sum'),
                 tex: bt((Lg) => `${iTex(f, v, Lg)} = ${iTex(ps.X, v, Lg)}`),
-                text: T_('Произведение синусов и косинусов разных аргументов превращаем в сумму: sin a·cos b = (sin(a + b) + sin(a − b))/2, sin a·sin b = (cos(a − b) − cos(a + b))/2, cos a·cos b = (cos(a − b) + cos(a + b))/2.',
-                    'Turn the product of sines and cosines of different arguments into a sum: sin a·cos b = (sin(a + b) + sin(a − b))/2, sin a·sin b = (cos(a − b) − cos(a + b))/2, cos a·cos b = (cos(a − b) + cos(a + b))/2.'),
+                text: msg('calculus.integral.trig.turn_product_of_sines_and_cosines'),
                 rule: 'trig-product',
                 sub: [r.step],
             }),
@@ -216,10 +213,9 @@ export function mTrigLower(f, ctx) {
         F: r.F,
         method: r.method,
         step: step({
-            title: T_('Понижаем степень', 'Lower the powers'),
+            title: msg('calculus.integral.trig.lower_powers'),
             tex: bt((L) => `${iTex(f, v, L)} = ${iTex(X, v, L)}`),
-            text: T_('Степень синуса или косинуса понижаем формулами sin²u = (1 − cos 2u)/2, cos²u = (1 + cos 2u)/2 (и sin³u = (3 sin u − sin 3u)/4) и раскрываем скобки: получается сумма знакомых интегралов.',
-                'Lower the power of the sine or cosine with sin²u = (1 − cos 2u)/2, cos²u = (1 + cos 2u)/2 (and sin³u = (3 sin u − sin 3u)/4) and expand: a sum of familiar integrals remains.'),
+            text: msg('calculus.integral.trig.lower_power_of_sine_or_cosine'),
             rule: 'trig-power',
             sub: [r.step],
         }),
@@ -346,13 +342,11 @@ export function mTrigSub(f, ctx) {
         F: back,
         method: 'trig-root-substitution',
         step: step({
-            title: kind === 'sin' ? T_(`Подстановка ${v} = a·sin ${t}`, `Substitution ${v} = a·sin ${t}`) : T_(`Подстановка ${v} = a·tg ${t}`, `Substitution ${v} = a·tan ${t}`),
+            title: kind === 'sin' ? msg('calculus.integral.trig.substitution_sin', { v, t }) : msg('calculus.integral.trig.substitution_tan', { v, t }),
             tex: bt((L) => `${iTex(f, v, L)} = \\left[${v} = ${tx(simp(xOfT), L)},\\ d${v} = ${tx(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(back, L)}`),
             text: kind === 'sin'
-                ? T_(`Под корнем a² − ${v}²: подстановка ${v} = a·sin ${t} (${t} ∈ [−π/2; π/2]) превращает корень в a·cos ${t}, и остаётся тригонометрический интеграл. В конце возвращаемся: ${t} = arcsin(${v}/a), cos ${t} = √(a² − ${v}²)/a.`,
-                    `a² − ${v}² under the root: the substitution ${v} = a·sin ${t} (${t} ∈ [−π/2, π/2]) turns the root into a·cos ${t}, leaving a trigonometric integral. At the end go back: ${t} = arcsin(${v}/a), cos ${t} = √(a² − ${v}²)/a.`)
-                : T_(`Под корнем a² + ${v}²: подстановка ${v} = a·tg ${t} (${t} ∈ (−π/2; π/2)) превращает корень в a/cos ${t}. В конце возвращаемся: ${t} = arctg(${v}/a).`,
-                    `a² + ${v}² under the root: the substitution ${v} = a·tan ${t} (${t} ∈ (−π/2, π/2)) turns the root into a/cos ${t}. At the end go back: ${t} = arctan(${v}/a).`),
+                ? msg('calculus.integral.trig.under_root_substitution_sin_2_2', { v, t })
+                : msg('calculus.integral.trig.under_root_substitution_tan_2_2', { v, t }),
             rule: 'trig-root-substitution',
             sub: [r.step],
         }),
@@ -388,10 +382,9 @@ export function mCyclic(f, ctx) {
         F,
         method: 'parts-cyclic',
         step: step({
-            title: T_('По частям дважды (циклический интеграл)', 'By parts twice (a cyclic integral)'),
+            title: msg('calculus.integral.trig.by_parts_twice_cyclic_integral'),
             tex: bt((L) => `I = ${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
-            text: T_(`Интегрируем по частям два раза подряд (оба раза u — тригонометрическая функция): после первого раза появляется интеграл с ${J}, после второго снова исходный интеграл I с другим коэффициентом. Получается уравнение I = (…) − k·I, из которого и находим I.`,
-                `Integrate by parts twice (both times u is the trigonometric function): the first time gives an integral with ${J}, the second brings back the original integral I with another coefficient. This gives an equation I = (…) − k·I, which we solve for I.`),
+            text: msg('calculus.integral.trig.integrate_by_parts_twice_both_times', { J }),
             rule: 'parts-cyclic',
         }),
     };
@@ -420,9 +413,8 @@ export function mWeierstrass(f, ctx) {
     void X;
     return substResult(f, ctx, {
         t, uNode: fn('tan', div(sym(v), N2)), g: gt, rule: 'universal-substitution',
-        title: T_('Универсальная подстановка', 'Universal substitution'),
+        title: msg('calculus.integral.trig.universal_substitution'),
         dtTex: (L) => `\\sin ${v} = \\frac{2${t}}{1 + ${t}^{2}},\\ \\cos ${v} = \\frac{1 - ${t}^{2}}{1 + ${t}^{2}},\\ d${v} = \\frac{2\\,d${t}}{1 + ${t}^{2}}`,
-        text: T_('Подынтегральная функция рационально выражается через sin x и cos x. Универсальная подстановка t = tg(x/2) превращает её в рациональную дробь от t (ответ верен на каждом промежутке, где tg(x/2) определён).',
-            'The integrand is a rational function of sin x and cos x. The universal substitution t = tan(x/2) turns it into a rational function of t (the answer holds on each interval where tan(x/2) is defined).'),
+        text: msg('calculus.integral.trig.integrand_is_rational_function_of_sin'),
     });
 }

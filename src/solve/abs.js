@@ -7,6 +7,7 @@ import { reject, subSolve } from './equation.js';
 import { IntervalSet } from './intervals.js';
 import { partStep, pushPart, solveAnyPoly } from './polynomial.js';
 import { mergeRoots, rootsTex } from './roots.js';
+import { msg, notation } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- absolute value
 
@@ -24,9 +25,9 @@ export function solveAbs(lhs, rhs, E, ctx) {
             const absT = (l) => tex(A[0], l);
             if (!containsVar(g, v)) {
                 const gv = approxOf(g);
-                if (!isolated(lhs, rhs, A[0], g)) steps.push(S(T('Уединяем модуль', 'Isolate the absolute value'), { tex: byLang((l) => `${absT(l)} = ${tex(g, l)}`) }));
+                if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: byLang((l) => `${absT(l)} = ${tex(g, l)}`) }));
                 if (gv < 0 && exactZero(g) !== true) {
-                    steps.push(S(T('Модуль не бывает отрицательным — корней нет', 'An absolute value is never negative: no roots')));
+                    steps.push(S(msg('solve.abs.absolute_value_is_never_negative_no')));
                     return { kind: 'none', roots: [], steps, type: 'abs' };
                 }
                 if (exactZero(g) === true) {
@@ -34,9 +35,9 @@ export function solveAbs(lhs, rhs, E, ctx) {
                     steps.push(partStep(byLang((l) => `${tex(f, l)} = 0`), sub, v));
                     return { ...sub, steps, type: 'abs' };
                 }
-                steps.push(S(T('Модуль равен положительному числу — два случая', 'The absolute value equals a positive number: two cases'), {
+                steps.push(S(msg('solve.abs.absolute_value_equals_positive_number_two'), {
                     tex: byLang((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
-                    text: T('Число на расстоянии $a$ от нуля — это $a$ или $-a$.', 'A number at distance $a$ from zero is $a$ or $-a$.'),
+                    text: msg('solve.abs.number_at_distance_from_zero_is'),
                 }));
                 let roots = [];
                 for (const rhs2 of [g, simpOr(neg(g))]) {
@@ -49,10 +50,10 @@ export function solveAbs(lhs, rhs, E, ctx) {
                 return { kind: roots.length ? 'roots' : 'none', roots, steps, type: 'abs' };
             }
             // |f| = g(x)
-            if (!isolated(lhs, rhs, A[0], g)) steps.push(S(T('Уединяем модуль', 'Isolate the absolute value'), { tex: byLang((l) => `${absT(l)} = ${tex(g, l)}`) }));
-            steps.push(S(T('Раскрываем модуль', 'Open the absolute value'), {
+            if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: byLang((l) => `${absT(l)} = ${tex(g, l)}`) }));
+            steps.push(S(msg('solve.abs.open_absolute_value'), {
                 tex: byLang((l) => `${tex(g, l)} \\ge 0,\\qquad ${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
-                text: T('Модуль неотрицателен, поэтому правая часть должна быть $\\ge 0$; тогда подмодульное выражение равно ей или противоположному числу.', 'An absolute value is non-negative, so the right side must be $\\ge 0$; then the inside equals it or its opposite.'),
+                text: msg('solve.abs.absolute_value_is_non_negative_so'),
             }));
             let cands = [];
             for (const rhs2 of [g, simpOr(neg(g))]) {
@@ -72,9 +73,9 @@ export function solveAbs(lhs, rhs, E, ctx) {
             }
             if (bad.length) {
                 reject(ctx, bad, 'sign');
-                steps.push(S(T(`Отбрасываем корни, при которых $${tex(g)} < 0$`, `Drop the roots where $${tex(g, 'en')} < 0$`), {
+                steps.push(S(msg('solve.abs.drop_roots_where', { g: (lng) => tex(g, lng) }), {
                     tex: byLang((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
-                    text: T('Модуль не может равняться отрицательному числу.', 'An absolute value cannot equal a negative number.'),
+                    text: msg('solve.abs.absolute_value_cannot_equal_negative_number'),
                 }));
             }
             return { kind: good.length ? 'roots' : 'none', roots: good, steps, type: 'abs' };
@@ -86,7 +87,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
         if (sp.every(Boolean) && exactZero(add(sp[0].coef, sp[1].coef)) === true) {
             const f = sp[0].abs.args[0];
             const g = sp[1].abs.args[0];
-            steps.push(S(T('Модули равны — выражения равны или противоположны', 'Equal absolute values: the expressions are equal or opposite'), {
+            steps.push(S(msg('solve.abs.equal_absolute_values_expressions_are_equal'), {
                 tex: byLang((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
             }));
             let roots = [];
@@ -131,9 +132,9 @@ function absIntervals(E, A, ctx) {
     }
     pts = mergeRoots(pts);
     if (pts.length > 12) return null;
-    const steps = [S(T('Отмечаем нули подмодульных выражений', 'Mark the zeros of the expressions inside the absolute values'), {
+    const steps = [S(msg('solve.abs.mark_zeros_of_expressions_inside_absolute'), {
         tex: byLang((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
-        text: T('Между этими точками каждое подмодульное выражение сохраняет знак, поэтому модули раскрываются однозначно.', 'Between these points every expression inside keeps its sign, so each absolute value opens in one way.'),
+        text: msg('solve.abs.between_these_points_every_expression_inside'),
     })];
     const bounds = [null, ...pts, null];
     let roots = [];
@@ -148,11 +149,11 @@ function absIntervals(E, A, ctx) {
             return s >= 0 ? n.args[0] : neg(n.args[0]);
         }));
         const where = byLang((l) => {
-            if (lo === null && hi === null) return l === 'ru' ? 'При всех $x$' : 'For all $x$';
+            if (lo === null && hi === null) return msg('solve.abs.for_all').in(l);
             const a = lo && tex(lo.node, l);
             const b = hi && tex(hi.node, l);
             const w = lo === null ? `${v} < ${b}` : hi === null ? `${v} \\ge ${a}` : `${a} \\le ${v} < ${b}`;
-            return (l === 'ru' ? 'При ' : 'For ') + `$${w}$`;
+            return (msg('solve.abs.for').in(l)) + `$${w}$`;
         });
         const sub = subSolve(Ei, N0, ctx);
         if (sub.kind === 'unsupported') return null;
@@ -160,17 +161,17 @@ function absIntervals(E, A, ctx) {
         let txt;
         if (sub.kind === 'all') {
             set = set.union(IntervalSet.interval(lo && lo.node, hi && hi.node, lo !== null, hi !== null));
-            txt = T('Получилось верное равенство — подходит весь промежуток.', 'A true equality: the whole interval fits.');
+            txt = msg('solve.abs.true_equality_whole_interval_fits');
         } else {
             const ok = sub.roots.filter(inside);
             const no = sub.roots.filter((r) => !inside(r));
             roots.push(...ok);
             txt = no.length
-                ? T(`Не входит в промежуток: $${no.map((r) => tex(r.node)).join(';\\ ')}$.`, `Outside the interval: $${no.map((r) => tex(r.node, 'en')).join(',\\ ')}$.`)
-                : ok.length ? T('Корень входит в промежуток.', 'The root lies in the interval.') : T('Корней на этом промежутке нет.', 'No roots on this interval.');
+                ? msg('solve.abs.outside_interval', { p: (lng) => no.map((r) => tex(r.node, lng)).join(notation(lng).listTex) })
+                : ok.length ? msg('solve.abs.root_lies_in_interval') : msg('solve.abs.no_roots_on_this_interval');
         }
         steps.push(S(where, {
-            tex: byLang((l) => `${tex(Ei, l)} = 0 \\;\\Rightarrow\\; ${sub.kind === 'all' ? (l === 'ru' ? '\\text{верно всегда}' : '\\text{always true}') : rootsTex(sub.roots, v, l)}`),
+            tex: byLang((l) => `${tex(Ei, l)} = 0 \\;\\Rightarrow\\; ${sub.kind === 'all' ? (msg('solve.abs.always_true').in(l)) : rootsTex(sub.roots, v, l)}`),
             text: txt,
             sub: sub.steps,
         }));

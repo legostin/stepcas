@@ -18,6 +18,7 @@ import { expand } from '../core/expand.js';
 import { mapNode } from '../core/ast.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from './derivative/derivative.js';
+import { msg } from '../i18n/index.js';
 
 const YP = 'yp';
 const YPP = 'ypp';
@@ -60,18 +61,18 @@ function readInput(input) {
             conds.push({ fname: m[1], order: m[2].length, at: trySimplify(parse(m[3])), value: trySimplify(parse(m[4])) });
             continue;
         }
-        if (eq) throw new MathError(L('Уравнение должно быть одно, остальное — начальные условия вида y(0) = 1.', 'There must be one equation; the rest are initial conditions like y(0) = 1.'));
+        if (eq) throw new MathError(msg('calculus.ode.there_must_be_one_equation_rest'));
         eq = p;
     }
-    if (!eq) throw new MathError(L('Нет уравнения.', 'No equation.'));
+    if (!eq) throw new MathError(msg('calculus.ode.no_equation'));
     const fm = eq.match(/([a-zA-Z])'/);
     const y = fm ? fm[1] : 'y';
-    if (!fm) throw new MathError(L('В уравнении нет производной (y\').', 'The equation has no derivative (y\').'));
+    if (!fm) throw new MathError(msg('calculus.ode.equation_has_no_derivative_y'));
     const text = eq.replace(new RegExp(`${y}''`, 'g'), ` ${YPP} `).replace(new RegExp(`${y}'`, 'g'), ` ${YP} `);
     const node = parse(text, { vars: [YP, YPP] });
-    if (node.type !== 'rel' || node.op !== '=') throw new MathError(L('Нужно уравнение со знаком «=».', 'An equation with "=" is needed.'));
+    if (node.type !== 'rel' || node.op !== '=') throw new MathError(msg('calculus.ode.equation_with_is_needed'));
     const vars = freeVars(node).filter((v) => v !== y && v !== YP && v !== YPP);
-    if (vars.length > 1) throw new MathError(L(`Слишком много букв: ${vars.join(', ')}.`, `Too many letters: ${vars.join(', ')}.`));
+    if (vars.length > 1) throw new MathError(msg('calculus.ode.too_many_letters', { p: vars.join(', ') }));
     return { eq: node, conds: conds.filter((c) => c.fname === y), y, x: vars[0] ?? 'x' };
 }
 
@@ -254,7 +255,7 @@ function solveFirst(E, x, y, cond, explicitAlready) {
     const C = sym('C');
     const yp = sym("y'");
     const Rt = (l) => tex(R, l);
-    if (!explicitAlready) steps.push(step({ title: L('Выражаем производную', 'Solve for the derivative'), tex: bt((l) => `${tex(yp, l)} = ${Rt(l)}`) }));
+    if (!explicitAlready) steps.push(step({ title: msg('calculus.ode.solve_for_derivative'), tex: bt((l) => `${tex(yp, l)} = ${Rt(l)}`) }));
     const dRy = derivativeOf(R, y);
     const p = !containsVar(dRy, y) ? trySimplify(neg(dRy)) : null;
     const q = p ? tidy(substitute(R, { [y]: N0 })) : null; // R = −p·y + q, so q = R(x, 0)
@@ -265,7 +266,7 @@ function solveFirst(E, x, y, cond, explicitAlready) {
         const I = integrate(R, x, { steps: true });
         if (!I.result) return null;
         const F = I.result;
-        steps.push(step({ title: L('Интегрируем', 'Integrate'), tex: bt((l) => `${y} = \\int ${tex(R, l)}\\,d${x} = ${tex(F, l)} + C`), sub: I.steps }));
+        steps.push(step({ title: msg('calculus.ode.integrate'), tex: bt((l) => `${y} = \\int ${tex(R, l)}\\,d${x} = ${tex(F, l)} + C`), sub: I.steps }));
         return finish({ general: add(F, C), steps, type: 'integrate', x, y, cond, solveC: (c0) => trySimplify(add(F, c0)) });
     }
     // linear with a right-hand side: the integrating factor
@@ -279,11 +280,11 @@ function solveFirst(E, x, y, cond, explicitAlready) {
         const G = Iy.result;
         const F = Ix.result;
         steps.push(step({
-            title: L('Разделяем переменные', 'Separate the variables'),
+            title: msg('calculus.ode.separate_variables'),
             tex: bt((l) => `${sepLeft(sp.g, y, l)} = ${numValue(sp.f)?.isOne() ? `d${x}` : `${tex(sp.f, l)}\\,d${x}`}`),
-            text: L(`Производная — это $\\frac{d${y}}{d${x}}$; умножаем на $d${x}$ и делим на $${tex(sp.g)}$ (при $${tex(sp.g)} \\ne 0$).`, `The derivative is $\\frac{d${y}}{d${x}}$; multiply by $d${x}$ and divide by $${tex(sp.g, 'en')}$ (where it is not zero).`),
+            text: msg('calculus.ode.derivative_is_multiply_by_and_divide', { y, x, p: (lng) => tex(sp.g, lng) }),
         }));
-        steps.push(step({ title: L('Интегрируем обе части', 'Integrate both sides'), tex: bt((l) => `${tex(G, l)} = ${tex(F, l)} + C`), sub: [...(Iy.steps ?? []).slice(-1), ...(Ix.steps ?? []).slice(-1)] }));
+        steps.push(step({ title: msg('calculus.ode.integrate_both_sides'), tex: bt((l) => `${tex(G, l)} = ${tex(F, l)} + C`), sub: [...(Iy.steps ?? []).slice(-1), ...(Ix.steps ?? []).slice(-1)] }));
         const lnForm = G.type === 'fn' && G.name === 'ln' && G.args[0].type === 'fn' && G.args[0].name === 'abs' && G.args[0].args[0].type === 'sym';
         const Fe = lnForm ? dropAbsInLn(F) : F;
         const general = lnForm ? trySimplify(mul(C, pow(E_, Fe))) : invert(G, y, add(F, C), null);
@@ -291,8 +292,8 @@ function solveFirst(E, x, y, cond, explicitAlready) {
             if (lnForm) return trySimplify(mul(c0, pow(E_, Fe)));
             return invert(G, y, add(F, c0), pick);
         };
-        if (lnForm) steps.push(step({ title: L(`Выражаем $${y}$`, `Express $${y}$`), tex: bt((l) => `|${y}| = e^{${tex(F, l)} + C} \\;\\Rightarrow\\; ${y} = ${tex(general, l)}`), text: L('Постоянная $\\pm e^{C}$ снова обозначена $C$; $C = 0$ даёт решение $y = 0$, потерянное при делении.', 'The constant $\\pm e^{C}$ is renamed $C$ again; $C = 0$ gives the solution $y = 0$ lost in the division.') }));
-        else if (general) steps.push(step({ title: L(`Выражаем $${y}$`, `Express $${y}$`), tex: bt((l) => `${y} = ${tex(general, l)}`) }));
+        if (lnForm) steps.push(step({ title: msg('calculus.ode.express', { y }), tex: bt((l) => `|${y}| = e^{${tex(F, l)} + C} \\;\\Rightarrow\\; ${y} = ${tex(general, l)}`), text: msg('calculus.ode.constant_is_renamed_again_gives_solution') }));
+        else if (general) steps.push(step({ title: msg('calculus.ode.express', { y }), tex: bt((l) => `${y} = ${tex(general, l)}`) }));
         return finish({ general: general ?? rel('=', G, add(F, C)), implicit: !general, steps, type: 'separable', x, y, cond, solveC, lnForm, G, F: Fe });
     }
     return homogeneous(R, x, y, cond, steps);
@@ -306,18 +307,18 @@ function linearFirst(p, q, x, y, cond, steps) {
     if (!Iq.result) return null;
     const C = sym('C');
     steps.push(step({
-        title: L('Линейное уравнение первого порядка', 'A first-order linear equation'),
+        title: msg('calculus.ode.first_order_linear_equation'),
         tex: bt((l) => {
             const negP = tex(p, 'en').startsWith('-');
             const py = trySimplify(mul(negP ? trySimplify(neg(p)) : p, sym(y)));
             return tex(rel('=', add(sym(`${y}'`), negP ? neg(py) : py), q), l);
         }),
-        text: L('Вид $y\' + p(x)y = q(x)$. Умножаем на интегрирующий множитель $\\mu = e^{\\int p\\,dx}$: левая часть становится производной $(\\mu y)\'$.', 'The form $y\' + p(x)y = q(x)$. Multiply by the integrating factor $\\mu = e^{\\int p\\,dx}$: the left side becomes $(\\mu y)\'$.'),
+        text: msg('calculus.ode.form_multiply_by_integrating_factor_left'),
     }));
-    steps.push(step({ title: L('Интегрирующий множитель', 'The integrating factor'), tex: bt((l) => `\\mu = e^{\\int ${tex(p, l)}\\,d${x}} = ${tex(mu, l)}`) }));
-    steps.push(step({ title: L('Интегрируем', 'Integrate'), tex: bt((l) => `(${tex(mu, l)}\\,${y})' = ${tex(trySimplify(mul(mu, q)), l)} \\;\\Rightarrow\\; ${tex(mu, l)}\\,${y} = ${tex(Iq.result, l)} + C`), sub: (Iq.steps ?? []).slice(-1) }));
+    steps.push(step({ title: msg('calculus.ode.integrating_factor'), tex: bt((l) => `\\mu = e^{\\int ${tex(p, l)}\\,d${x}} = ${tex(mu, l)}`) }));
+    steps.push(step({ title: msg('calculus.ode.integrate'), tex: bt((l) => `(${tex(mu, l)}\\,${y})' = ${tex(trySimplify(mul(mu, q)), l)} \\;\\Rightarrow\\; ${tex(mu, l)}\\,${y} = ${tex(Iq.result, l)} + C`), sub: (Iq.steps ?? []).slice(-1) }));
     const general = tidy(div(add(Iq.result, C), mu));
-    steps.push(step({ title: L(`Выражаем $${y}$`, `Express $${y}$`), tex: bt((l) => `${y} = ${tex(general, l)}`) }));
+    steps.push(step({ title: msg('calculus.ode.express', { y }), tex: bt((l) => `${y} = ${tex(general, l)}`) }));
     return finish({ general, steps, type: 'linear', x, y, cond, solveC: (c0) => tidy(div(add(Iq.result, c0), mu)) });
 }
 
@@ -339,8 +340,8 @@ function homogeneous(R, x, y, cond, steps) {
     const G = Iu.result;
     const F = fn('ln', fn('abs', X));
     const C = sym('C');
-    steps.push(step({ title: L('Однородное уравнение: замена $y = ux$', 'A homogeneous equation: $y = ux$'), tex: bt((l) => `u + x u' = ${tex(phi, l)}`), text: L("Правая часть зависит только от $y/x$. Тогда $y' = u + xu'$.", "The right side depends on $y/x$ only. Then $y' = u + xu'$.") }));
-    steps.push(step({ title: L('Разделяем переменные', 'Separate the variables'), tex: bt((l) => `${sepLeft(den, 'u', l)} = \\frac{d${x}}{${x}} \\;\\Rightarrow\\; ${tex(G, l)} = \\ln|${x}| + C`) }));
+    steps.push(step({ title: msg('calculus.ode.homogeneous_equation'), tex: bt((l) => `u + x u' = ${tex(phi, l)}`), text: msg('calculus.ode.right_side_depends_on_only_then') }));
+    steps.push(step({ title: msg('calculus.ode.separate_variables'), tex: bt((l) => `${sepLeft(den, 'u', l)} = \\frac{d${x}}{${x}} \\;\\Rightarrow\\; ${tex(G, l)} = \\ln|${x}| + C`) }));
     const pickU = cond ? picker(x, cond, div(cond.value, cond.at)) : null;
     const Uinv = (c, pk = null) => invert(G, 'u', add(F, c), pk);
     const general = Uinv(C);
@@ -510,8 +511,8 @@ function solveSecond(E, x, y, conds) {
     const charEq = rel('=', add(mul(a, pow(K, N2)), mul(b, K), c), N0);
     const steps = [];
     steps.push(step({
-        title: L('Линейное однородное уравнение с постоянными коэффициентами', 'A linear homogeneous equation with constant coefficients'),
-        text: L('Ищем решения вида $y = e^{kx}$: подстановка даёт характеристическое уравнение.', 'Look for solutions $y = e^{kx}$: substituting gives the characteristic equation.'),
+        title: msg('calculus.ode.linear_homogeneous_equation_with_constant_coefficients'),
+        text: msg('calculus.ode.look_for_solutions_substituting_gives_characteristic'),
         tex: bt((l) => tex(trySimplify(charEq.lhs), l) + ' = 0'),
     }));
     const av = approx(a, {});
@@ -528,16 +529,16 @@ function solveSecond(E, x, y, conds) {
         const k = trySimplify(div(neg(b), mul(N2, a)));
         y1 = pow(E_, mul(k, X));
         y2 = mul(X, pow(E_, mul(k, X)));
-        steps.push(step({ title: L('Один корень кратности 2', 'A double root'), tex: bt((l) => `D = 0,\\quad k = ${tex(k, l)}`) }));
-        text = L('Кратному корню $k$ соответствуют решения $e^{kx}$ и $xe^{kx}$.', 'A double root $k$ gives the solutions $e^{kx}$ and $xe^{kx}$.');
+        steps.push(step({ title: msg('calculus.ode.double_root'), tex: bt((l) => `D = 0,\\quad k = ${tex(k, l)}`) }));
+        text = msg('calculus.ode.double_root_gives_solutions_and');
     } else if (D > 0) {
         const r = solveEquation(charEq, 'k', { steps: true });
         if (r.kind !== 'roots' || r.roots.length !== 2) return null;
         const [k1, k2] = r.roots.map((z) => z.node);
         y1 = pow(E_, mul(k1, X));
         y2 = pow(E_, mul(k2, X));
-        steps.push(step({ title: L('Два действительных корня', 'Two real roots'), tex: bt((l) => `k_1 = ${tex(k1, l)},\\quad k_2 = ${tex(k2, l)}`), sub: r.steps.slice(0, -1) }));
-        text = L('Разным корням соответствуют решения $e^{k_1 x}$ и $e^{k_2 x}$.', 'Distinct roots give the solutions $e^{k_1 x}$ and $e^{k_2 x}$.');
+        steps.push(step({ title: msg('calculus.ode.two_real_roots'), tex: bt((l) => `k_1 = ${tex(k1, l)},\\quad k_2 = ${tex(k2, l)}`), sub: r.steps.slice(0, -1) }));
+        text = msg('calculus.ode.distinct_roots_give_solutions_and');
     } else {
         const al = trySimplify(div(neg(b), mul(N2, a)));
         const be = trySimplify(div(pow(neg(Dn), num(Q.HALF)), mul(N2, a)));
@@ -546,14 +547,14 @@ function solveSecond(E, x, y, conds) {
         const sinN = fn('sin', mul(be, X));
         y1 = ex ? mul(ex, cosN) : cosN;
         y2 = ex ? mul(ex, sinN) : sinN;
-        steps.push(step({ title: L('Комплексные корни', 'Complex roots'), tex: bt((l) => `D = ${tex(Dn, l)} < 0,\\quad k = ${tex(al, l)} \\pm ${tex(be, l)}\\,i`) }));
-        text = L('Корням $\\alpha \\pm \\beta i$ соответствуют решения $e^{\\alpha x}\\cos\\beta x$ и $e^{\\alpha x}\\sin\\beta x$.', 'The roots $\\alpha \\pm \\beta i$ give $e^{\\alpha x}\\cos\\beta x$ and $e^{\\alpha x}\\sin\\beta x$.');
+        steps.push(step({ title: msg('calculus.ode.complex_roots'), tex: bt((l) => `D = ${tex(Dn, l)} < 0,\\quad k = ${tex(al, l)} \\pm ${tex(be, l)}\\,i`) }));
+        text = msg('calculus.ode.roots_give_and');
     }
     y1 = trySimplify(y1);
     y2 = trySimplify(y2);
     const cm = (c, f) => (numValue(f)?.isOne() ? c : f.type === 'mul' ? mul(c, ...f.args) : mul(c, f));
     const general0 = add(cm(C1, y1), cm(C2, y2));
-    steps.push(step({ title: homog ? L('Общее решение', 'The general solution') : L('Общее решение однородного уравнения', 'The general solution of the homogeneous equation'), tex: bt((l) => `${homog ? y : `${y}_{0}`} = ${tex(general0, l)}`), text }));
+    steps.push(step({ title: homog ? msg('calculus.ode.general_solution') : msg('calculus.ode.general_solution_of_homogeneous_equation'), tex: bt((l) => `${homog ? y : `${y}_{0}`} = ${tex(general0, l)}`), text }));
     // a right-hand side: variation of parameters, y_p = −y₁∫y₂f/(aW) + y₂∫y₁f/(aW), W = y₁y₂' − y₁'y₂
     let yp = null;
     const uc = homog ? null : undetermined(a, b, c, f, x);
@@ -562,15 +563,15 @@ function solveSecond(E, x, y, conds) {
         const trialNode = add(uc.trials.map((t) => t.node));
         const sNote = uc.trials.filter((t) => t.s > 0);
         steps.push(step({
-            title: L('Частное решение по виду правой части', 'A particular solution from the form of the right-hand side'),
-            tex: bt((l) => `${y}_{${l === 'ru' ? '\\text{ч}' : 'p'}} = ${tex(trialNode, l)}`),
+            title: msg('calculus.ode.particular_solution_from_form_of_right'),
+            tex: bt((l) => `${y}_{${msg('calculus.ode.p').in(l)}} = ${tex(trialNode, l)}`),
             text: sNote.length
-                ? L(`Правая часть — многочлен на экспоненту (синус, косинус), поэтому частное решение ищем в том же виде. Число $${tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))))}$ — корень характеристического уравнения кратности ${sNote[0].s}, поэтому добавлен множитель $x${sNote[0].s > 1 ? '^' + sNote[0].s : ''}$.`, `The right-hand side is a polynomial times an exponential (sine, cosine), so a particular solution has the same form. The number $${tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), 'en')}$ is a characteristic root of multiplicity ${sNote[0].s}, hence the factor $x${sNote[0].s > 1 ? '^' + sNote[0].s : ''}$.`)
-                : L('Правая часть — многочлен на экспоненту (синус, косинус), поэтому частное решение ищем в том же виде с неизвестными коэффициентами.', 'The right-hand side is a polynomial times an exponential (sine, cosine), so a particular solution has the same form with unknown coefficients.'),
+                ? msg('calculus.ode.right_hand_side_is_polynomial_times', { p: (lng) => tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), lng), s: sNote[0].s, p2: sNote[0].s > 1 ? '^' + sNote[0].s : '' })
+                : msg('calculus.ode.right_hand_side_is_polynomial_times_2'),
         }));
         steps.push(step({
-            title: L('Подставляем в уравнение и приравниваем коэффициенты', 'Substitute and match the coefficients'),
-            tex: bt((l) => `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${l === 'ru' ? '\\text{ч}' : 'p'}} = ${tex(yp, l)}`),
+            title: msg('calculus.ode.substitute_and_match_coefficients'),
+            tex: bt((l) => `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${msg('calculus.ode.p').in(l)}} = ${tex(yp, l)}`),
         }));
     } else if (!homog) {
         const W = tidy(add(mul(y1, derivativeOf(y2, x)), neg(mul(derivativeOf(y1, x), y2))));
@@ -581,13 +582,13 @@ function solveSecond(E, x, y, conds) {
         if (!i1.result || !i2.result) return null;
         yp = tidy(add(neg(mul(y1, i1.result)), mul(y2, i2.result)));
         steps.push(step({
-            title: L('Частное решение: вариация постоянных', 'A particular solution: variation of parameters'),
-            tex: bt((l) => `W = ${tex(W, l)},\\quad ${y}_{\\text{ч}} = -${tex(y1, l)}\\int \\frac{${tex(y2, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} + ${tex(y2, l)}\\int \\frac{${tex(y1, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} = ${tex(yp, l)}`.replace('\\text{ч}', l === 'ru' ? '\\text{ч}' : 'p')),
-            text: L('Ищем решение в виде $C_1(x)y_1 + C_2(x)y_2$: условие $C_1\'y_1 + C_2\'y_2 = 0$ и уравнение дают $C_1\' = -\\frac{y_2 f}{aW}$, $C_2\' = \\frac{y_1 f}{aW}$ ($W$ — определитель Вронского).', 'Look for $C_1(x)y_1 + C_2(x)y_2$: the condition $C_1\'y_1 + C_2\'y_2 = 0$ and the equation give $C_1\' = -\\frac{y_2 f}{aW}$, $C_2\' = \\frac{y_1 f}{aW}$ ($W$ is the Wronskian).'),
+            title: msg('calculus.ode.particular_solution_variation_of_parameters'),
+            tex: bt((l) => `W = ${tex(W, l)},\\quad ${y}_{\\text{ч}} = -${tex(y1, l)}\\int \\frac{${tex(y2, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} + ${tex(y2, l)}\\int \\frac{${tex(y1, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} = ${tex(yp, l)}`.replace('\\text{ч}', msg('calculus.ode.p').in(l))),
+            text: msg('calculus.ode.look_for_condition_and_equation_give'),
         }));
     }
     const general = yp ? add([...general0.args, ...(yp.type === 'add' ? yp.args : [yp])]) : general0;
-    if (yp) steps.push(step({ title: L('Общее решение', 'The general solution'), tex: bt((l) => `${y} = ${tex(general, l)}`), text: L('Общее решение неоднородного уравнения = общее решение однородного + частное решение.', 'The general solution = the general solution of the homogeneous equation + a particular solution.') }));
+    if (yp) steps.push(step({ title: msg('calculus.ode.general_solution'), tex: bt((l) => `${y} = ${tex(general, l)}`), text: msg('calculus.ode.general_solution_general_solution_of_homogeneous') }));
     const res = { general, steps, type: uc ? 'undetermined-coefficients' : yp ? 'variation-of-parameters' : 'constant-coefficients' };
     const c0 = conds.find((z) => z.order === 0);
     const c1 = conds.find((z) => z.order === 1);
@@ -607,9 +608,9 @@ function solveSecond(E, x, y, conds) {
     const k2 = trySimplify(div(add(mul(m11, r1), neg(mul(r0, m21))), det));
     const Y = tidy(add([mul(k1, y1), mul(k2, y2), ...(yp ? [yp] : [])]));
     steps.push(step({
-        title: L('Начальные условия', 'The initial conditions'),
+        title: msg('calculus.ode.initial_conditions'),
         tex: bt((l) => `\\begin{cases} ${tex(add(mul(C1, m11), mul(C2, m12)), l)} = ${tex(r0, l)} \\\\ ${tex(add(mul(C1, m21), mul(C2, m22)), l)} = ${tex(r1, l)} \\end{cases} \\;\\Rightarrow\\; C_1 = ${tex(k1, l)},\\ C_2 = ${tex(k2, l)}`),
-        text: L(`Подставляем $x = ${tex(c0.at)}$ в решение и в его производную.`, `Substitute $x = ${tex(c0.at, 'en')}$ into the solution and its derivative.`),
+        text: msg('calculus.ode.substitute_into_solution_and_its_derivative', { p: (lng) => tex(c0.at, lng) }),
     }));
     return { ...res, expr: Y };
 }
@@ -644,7 +645,7 @@ function finish(o) {
     if (!c0) return res;
     const Y = o.solveC(c0);
     if (!Y) return res;
-    steps.push(step({ title: L('Начальное условие', 'The initial condition'), tex: bt((l) => `${y}(${tex(x0, l)}) = ${tex(y0, l)} \\;\\Rightarrow\\; C = ${tex(c0, l)}`) }));
+    steps.push(step({ title: msg('calculus.ode.initial_condition'), tex: bt((l) => `${y}(${tex(x0, l)}) = ${tex(y0, l)} \\;\\Rightarrow\\; C = ${tex(c0, l)}`) }));
     return { ...res, expr: tidy(Y) };
 }
 
@@ -671,20 +672,20 @@ export function solveOde(input, opts = {}) {
         if (!(e instanceof MathError)) throw e;
         r = null;
     }
-    if (!r) return { kind: 'unsupported', reason: L('Такой тип уравнения пока не поддерживается.', 'This kind of equation is not supported yet.'), steps: [] };
+    if (!r) return { kind: 'unsupported', reason: msg('calculus.ode.this_kind_of_equation_is_not'), steps: [] };
     const eqDisp = substitute(eq, { [YP]: sym(`${y}'`), [YPP]: sym(`${y}''`) });
-    const steps = [step({ title: L('Уравнение', 'The equation'), tex: bt((l) => tex(eqDisp, l)) }), ...r.steps];
+    const steps = [step({ title: msg('calculus.ode.equation'), tex: bt((l) => tex(eqDisp, l)) }), ...r.steps];
     // the check: substitute back
-    if (r.expr && !satisfies({ lhs: E, rhs: N0 }, r.expr, x, y)) return { kind: 'unsupported', reason: L('Не удалось проверить решение.', 'Could not verify the solution.'), steps: [] };
+    if (r.expr && !satisfies({ lhs: E, rhs: N0 }, r.expr, x, y)) return { kind: 'unsupported', reason: msg('calculus.ode.could_not_verify_solution'), steps: [] };
     if (r.expr) {
         for (const c of conds) {
             const Yc = c.order === 0 ? r.expr : c.order === 1 ? derivativeOf(r.expr, x) : derivativeOf(derivativeOf(r.expr, x), x);
-            if (Math.abs(approx(Yc, { [x]: approx(c.at, {}) }) - approx(c.value, {})) > 1e-8) return { kind: 'unsupported', reason: L('Решение не удовлетворяет начальному условию.', 'The solution does not meet the initial condition.'), steps: [] };
+            if (Math.abs(approx(Yc, { [x]: approx(c.at, {}) }) - approx(c.value, {})) > 1e-8) return { kind: 'unsupported', reason: msg('calculus.ode.solution_does_not_meet_initial_condition'), steps: [] };
         }
     }
     const answer = r.expr ?? r.general;
     const answerTex = r.implicit && !r.expr ? bt((l) => tex(answer, l)) : bt((l) => `${y} = ${tex(answer, l)}`);
-    steps.push(step({ title: L('Ответ', 'Answer'), tex: answerTex }));
+    steps.push(step({ title: msg('calculus.ode.answer'), tex: answerTex }));
     steps[steps.length - 1].final = true;
     return {
         kind: r.expr ? 'solution' : 'general',

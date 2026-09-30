@@ -7,6 +7,7 @@ import { canonContext } from '../../core/simplify.js';
 import { toTex, toText } from '../../core/print.js';
 import { rng } from '../../core/random.js';
 import { evaluate } from '../../core/evaluate.js';
+import { msg } from '../../i18n/index.js';
 
 export const N0 = num(0);
 export const N1 = num(1);
@@ -30,7 +31,7 @@ export function asNode(x) {
 
 export function checkExpr(node) {
     if (node.type === 'rel' || node.type === 'chain' || node.type === 'list') {
-        throw new MathError({ ru: 'Нужна формула функции, а не уравнение или список', en: 'A formula is needed, not an equation or a list' }, null, null, 'not-expr');
+        throw new MathError(msg('calculus.derivative.display.formula_is_needed_not_equation_or'), null, null, 'not-expr');
     }
 }
 

@@ -4,6 +4,7 @@ import { num, containsVar } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';
 import { canonContext } from '../../core/simplify.js';
 import { E_, HALF, N0, N1, N2, NM1, asNode, checkExpr, isZero } from './display.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- fast canonical derivative
 
@@ -62,11 +63,11 @@ function outerCanon(name, u, C) {
         case 'ceil':
             return N0;
         default:
-            throw new MathError({ ru: `Не умею дифференцировать функцию ${name}`, en: `Cannot differentiate ${name}` }, null, null, 'unsupported');
+            throw new MathError(msg('calculus.derivative.quick.cannot_differentiate', { name }), null, null, 'unsupported');
     }
 }
 
-export const FACT_ERR = () => new MathError({ ru: 'Факториал — функция натурального аргумента, производной у неё нет', en: 'The factorial is defined on whole numbers and has no derivative' }, null, null, 'unsupported');
+export const FACT_ERR = () => new MathError(msg('calculus.derivative.quick.factorial_is_defined_on_whole_numbers'), null, null, 'unsupported');
 
 function dCanon(n, v, C) {
     if (!containsVar(n, v)) return N0;
@@ -102,7 +103,7 @@ function dCanon(n, v, C) {
             }
             if (n.name === 'root') {
                 const r = C.fn('root', n.args);
-                if (r.type === 'fn' && r.name === 'root') throw new MathError({ ru: 'Не умею дифференцировать такой корень', en: 'Cannot differentiate this root' }, null, null, 'unsupported');
+                if (r.type === 'fn' && r.name === 'root') throw new MathError(msg('calculus.derivative.quick.cannot_differentiate_this_root'), null, null, 'unsupported');
                 return dCanon(r, v, C);
             }
             if (n.name === 'fact') throw FACT_ERR();
@@ -113,7 +114,7 @@ function dCanon(n, v, C) {
         }
         default: {
             const s = C.simplify(n);
-            if (s === n) throw new MathError({ ru: 'Не умею дифференцировать это выражение', en: 'Cannot differentiate this expression' }, null, null, 'unsupported');
+            if (s === n) throw new MathError(msg('calculus.derivative.quick.cannot_differentiate_this_expression'), null, null, 'unsupported');
             return dCanon(s, v, C);
         }
     }

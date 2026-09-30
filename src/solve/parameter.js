@@ -15,6 +15,7 @@ import { limit } from '../calculus/limit/index.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from '../calculus/derivative/derivative.js';
+import { msg } from '../i18n/index.js';
 
 const N0 = num(0);
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
@@ -75,20 +76,20 @@ function quadratic(E, x, a, want) {
             const n = !bz ? 1 : cz ? Infinity : 0;
             addPiece(IntervalSet.point(a0), n);
             const lin = rel('=', add(mul(b0, X), c0), N0);
-            lines.push(L(`$${a} = ${tex(a0)}$: $${tex(trySimplify(lin.lhs))} = 0$ — ${n === 1 ? 'один корень' : n === 0 ? 'корней нет' : 'любое $x$'}`, `$${a} = ${tex(a0, 'en')}$: $${tex(trySimplify(lin.lhs), 'en')} = 0$ — ${n === 1 ? 'one root' : n === 0 ? 'no roots' : 'every $x$'}`));
+            lines.push(msg('solve.parameter.formula', { a, a0: (lng) => tex(a0, lng), p: (lng) => tex(trySimplify(lin.lhs), lng), p2: (lng) => n === 1 ? msg('solve.parameter.one_root').in(lng) : n === 0 ? msg('solve.parameter.no_roots').in(lng) : msg('solve.parameter.every').in(lng) }));
         }
         steps.push(step({
-            title: L('Старший коэффициент равен нулю', 'The leading coefficient is zero'),
+            title: msg('solve.parameter.leading_coefficient_is_zero'),
             tex: bt((l) => (A.type === 'sym' ? `${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}` : `${tex(A, l)} = 0 \\;\\Rightarrow\\; ${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`)),
-            text: L(`Тогда уравнение линейное. ${lines.map((z) => z.ru).join('; ')}.`, `Then the equation is linear. ${lines.map((z) => z.en).join('; ')}.`),
+            text: msg('solve.parameter.then_equation_is_linear', { p: (lng) => lines.map((z) => z[lng]).join('; ') }),
         }));
     }
     const notZero = IntervalSet.all().minus(IntervalSet.points(zeroA));
     const D = trySimplify(add(mul(B, B), neg(mul(num(4), A, C))));
     steps.push(step({
-        title: zeroA.length ? L(`При $${tex(A)} \\ne 0$ — квадратное уравнение`, `For $${tex(A, 'en')} \\ne 0$ — a quadratic equation`) : L('Квадратное уравнение', 'A quadratic equation'),
+        title: zeroA.length ? msg('solve.parameter.for_quadratic_equation', { A: (lng) => tex(A, lng) }) : msg('solve.parameter.quadratic_equation'),
         tex: bt((l) => `D = b^2 - 4ac = ${tex(D, l)}`),
-        text: L('Два корня при $D > 0$, один при $D = 0$, ни одного при $D < 0$.', 'Two roots for $D > 0$, one for $D = 0$, none for $D < 0$.'),
+        text: msg('solve.parameter.two_roots_for_one_for_none'),
     }));
     const pos = solveInequality(rel('>', D, N0), a, { steps: true });
     const zer = solveEquation(rel('=', D, N0), a, { steps: true });
@@ -228,17 +229,16 @@ function graphical(E, x, a, want) {
     // steps
     const steps = [];
     steps.push(step({
-        title: L('Выражаем параметр', 'Express the parameter'),
+        title: msg('solve.parameter.express_parameter'),
         tex: bt((l) => `${a} = ${tex(g, l)}`),
-        text: L(`Число корней равно числу точек пересечения горизонтальной прямой $y = ${a}$ с графиком $y = g(${x})$.`, `The number of roots is the number of points where the horizontal line $y = ${a}$ meets the graph $y = g(${x})$.`),
+        text: msg('solve.parameter.number_of_roots_is_number_of', { a, x }),
     }));
-    if (holes.length) steps.push(step({ title: L('Исключённые точки', 'Excluded points'), tex: bt((l) => `${x} \\ne ${holes.map((h) => tex(h, l)).join(',\\ ')}`), text: always ? L('В этой точке уравнение верно при любом $a$.', 'Here the equation holds for every $a$.') : L('В этих точках при делении получился бы ноль в знаменателе, а исходное уравнение там не выполняется.', 'Dividing by zero would happen here, and the original equation does not hold there.') }));
+    if (holes.length) steps.push(step({ title: msg('solve.parameter.excluded_points'), tex: bt((l) => `${x} \\ne ${holes.map((h) => tex(h, l)).join(',\\ ')}`), text: always ? msg('solve.parameter.here_equation_holds_for_every') : msg('solve.parameter.dividing_by_zero_would_happen_here') }));
     const endTex = (e, l) => (e.inf ? (e.inf > 0 ? '+\\infty' : '-\\infty') : tex(e.node, l));
     steps.push(step({
-        title: L(`Исследуем $g(${x})$`, `Study $g(${x})$`),
+        title: msg('solve.parameter.study', { x }),
         tex: bt((l) => pieces.map((p) => `${intervalTex(IntervalSet.interval(p.lo ? p.lo.node : null, p.hi ? p.hi.node : null), l)}\\!:\\ ${p.up ? '\\nearrow' : '\\searrow'}\\ ${endTex(p.left, l)} \\to ${endTex(p.right, l)}`).join(';\\quad ')),
-        text: L(`Производная $g'(${x}) = ${tex(g1)}$; на каждом промежутке функция монотонна, на концах — значения и пределы.${pointVals.length ? ` Значения в точках: ${pointVals.map((p) => `$g(${tex(p.node)}) = ${tex(p.y)}$`).join(', ')}.` : ''}`,
-            `The derivative is $g'(${x}) = ${tex(g1, 'en')}$; g is monotone on each interval, with the values and limits at the ends.${pointVals.length ? ` Values at the points: ${pointVals.map((p) => `$g(${tex(p.node, 'en')}) = ${tex(p.y, 'en')}$`).join(', ')}.` : ''}`),
+        text: msg('solve.parameter.derivative_is_g_is_monotone_on', { x, g1: (lng) => tex(g1, lng), p: (lng) => pointVals.length ? msg('solve.parameter.values_at_points', { p: (lng) => pointVals.map((p) => `$g(${tex(p.node, lng)}) = ${tex(p.y, lng)}$`).join(', ') }).in(lng) : '' }),
     }));
     return { count, steps, method: 'graphical' };
 }
@@ -259,9 +259,9 @@ export function solveWithParameter(input, opts = {}) {
         if (!(e instanceof MathError)) throw e;
         return { kind: 'unsupported', reason: e.msg, steps: [] };
     }
-    if (node.type !== 'rel' || node.op !== '=') return { kind: 'unsupported', reason: L('Нужно уравнение.', 'An equation is needed.'), steps: [] };
+    if (node.type !== 'rel' || node.op !== '=') return { kind: 'unsupported', reason: msg('solve.parameter.equation_is_needed'), steps: [] };
     const others = freeVars(node).filter((v) => v !== a && v !== x);
-    if (others.length) return { kind: 'unsupported', reason: L(`Лишние буквы: ${others.join(', ')}.`, `Extra letters: ${others.join(', ')}.`), steps: [] };
+    if (others.length) return { kind: 'unsupported', reason: msg('solve.parameter.extra_letters', { p: others.join(', ') }), steps: [] };
     const E = trySimplify(add(node.lhs, neg(node.rhs)));
     let r;
     try {
@@ -270,20 +270,20 @@ export function solveWithParameter(input, opts = {}) {
         if (!(e instanceof MathError)) throw e;
         r = null;
     }
-    if (!r) return { kind: 'unsupported', reason: L('Такую задачу с параметром решатель пока не решает.', 'This parameter problem is not supported yet.'), steps: [] };
+    if (!r) return { kind: 'unsupported', reason: msg('solve.parameter.this_parameter_problem_is_not_supported'), steps: [] };
     let set = IntervalSet.empty();
     for (const { set: s, n } of r.count.values()) if (fits(want, n)) set = set.union(s);
     const summary = [...r.count.values()].filter((z) => !z.set.isEmpty()).sort((u, v) => u.n - v.n);
     const steps = [
-        step({ title: L('Задача', 'The problem'), tex: bt((l) => tex(node, l)), text: L(`При каких $${a}$ у уравнения ${want.ru}?`, `For which $${a}$ does the equation have ${want.en}?`) }),
+        step({ title: msg('solve.parameter.problem'), tex: bt((l) => tex(node, l)), text: msg('solve.parameter.for_which_does_equation_have', { a, p: (lng) => want[lng] }) }),
         ...r.steps,
         step({
-            title: L('Число корней в зависимости от параметра', 'The number of roots against the parameter'),
+            title: msg('solve.parameter.number_of_roots_against_parameter'),
             tex: bt((l) => summary.map((z) => `${a} \\in ${intervalTex(z.set, l)}\\!:\\ ${z.n === Infinity ? '\\infty' : z.n}`).join(';\\quad ')),
         }),
     ];
     const answerTex = bt((l) => `${a} \\in ${intervalTex(set, l)}`);
-    steps.push(step({ title: L('Ответ', 'Answer'), tex: answerTex }));
+    steps.push(step({ title: msg('solve.parameter.answer'), tex: answerTex }));
     steps[steps.length - 1].final = true;
     return { kind: 'set', set, method: r.method, steps, answer: { tex: answerTex, text: bt((l) => set.toText(l)) }, text: set.toText('en') };
 }

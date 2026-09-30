@@ -2,6 +2,7 @@
 
 import { numDerivative } from './calculus.js';
 import { EPS, evalSafe, fail, fin, needFn, needInterval, numLinspace } from './common.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- roots
 
@@ -18,19 +19,18 @@ export function numBisect(f, a, b, opts = {}) {
     if (a > b) [a, b] = [b, a];
     let fa = evalSafe(f, a), fb = evalSafe(f, b);
     const done = (root, iterations, converged) => (trace ? { root, iterations, converged, trace } : { root, iterations, converged });
-    if (!fin(fa) || !fin(fb)) throw fail('Функция не определена на конце отрезка.', 'The function is undefined at an end of the interval.', 'domain');
+    if (!fin(fa) || !fin(fb)) throw fail(msg('numbers.numeric.roots.function_is_undefined_at_end_of'), 'domain');
     if (fa === 0) return done(a, 0, true);
     if (fb === 0) return done(b, 0, true);
     if ((fa < 0) === (fb < 0)) {
-        throw fail('На концах отрезка у функции один знак — метод половинного деления начать нельзя.',
-            'The function has the same sign at both ends, so bisection cannot start.', 'no-sign-change');
+        throw fail(msg('numbers.numeric.roots.function_has_same_sign_at_both'), 'no-sign-change');
     }
     for (let it = 1; it <= maxIter; it++) {
         const m = a + (b - a) / 2;
         const fm = evalSafe(f, m);
         if (trace) trace.push({ a, b, m, fa, fb, fm });
         if (fm === 0) return done(m, it, true);
-        if (!fin(fm)) throw fail('Функция не определена внутри отрезка.', 'The function is undefined inside the interval.', 'domain');
+        if (!fin(fm)) throw fail(msg('numbers.numeric.roots.function_is_undefined_inside_interval'), 'domain');
         const stuck = m <= a || m >= b;
         if ((fm < 0) === (fa < 0)) { a = m; fa = fm; } else { b = m; fb = fm; }
         if (b - a <= 2 * tol || stuck) return done(a + (b - a) / 2, it, true);
@@ -45,11 +45,11 @@ export function numBrent(f, a, b, opts = {}) {
     const tol = opts.tol ?? 1e-15;
     const maxIter = opts.maxIter ?? 200;
     let fa = evalSafe(f, a), fb = evalSafe(f, b);
-    if (!fin(fa) || !fin(fb)) throw fail('Функция не определена на конце отрезка.', 'The function is undefined at an end of the interval.', 'domain');
+    if (!fin(fa) || !fin(fb)) throw fail(msg('numbers.numeric.roots.function_is_undefined_at_end_of'), 'domain');
     if (fa === 0) return { root: a, iterations: 0, converged: true };
     if (fb === 0) return { root: b, iterations: 0, converged: true };
     if ((fa < 0) === (fb < 0)) {
-        throw fail('На концах отрезка у функции один знак — корень не выделен.', 'The function has the same sign at both ends, so no root is bracketed.', 'no-sign-change');
+        throw fail(msg('numbers.numeric.roots.function_has_same_sign_at_both_2'), 'no-sign-change');
     }
     let c = b, fc = fb, d = 0, e = 0;
     for (let it = 1; it <= maxIter; it++) {
@@ -75,7 +75,7 @@ export function numBrent(f, a, b, opts = {}) {
         a = b; fa = fb;
         b += Math.abs(d) > tol1 ? d : xm > 0 ? tol1 : -tol1;
         fb = evalSafe(f, b);
-        if (!fin(fb)) throw fail('Функция не определена внутри отрезка.', 'The function is undefined inside the interval.', 'domain');
+        if (!fin(fb)) throw fail(msg('numbers.numeric.roots.function_is_undefined_inside_interval'), 'domain');
     }
     return { root: b, iterations: maxIter, converged: false };
 }

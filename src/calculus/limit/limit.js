@@ -9,6 +9,7 @@ import { DNE, Split, T_, asNode, atPoint, bt, evalAt, fin, infV, isOneV, isZeroV
 import { ev } from './evaluator.js';
 import { FORM_NAME, FORM_TEX, plainNum, quotientParts } from './forms.js';
 import { crossCheck, fmtNum, numericEstimate, tableFor, tableStep } from './table.js';
+import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- public API
 
@@ -23,7 +24,7 @@ function valueOut(L) {
 function valueTex(val, L) {
     if (val === 'inf') return '+\\infty';
     if (val === '-inf') return '-\\infty';
-    if (val === 'dne') return L === 'ru' ? '\\text{не существует}' : '\\text{does not exist}';
+    if (val === 'dne') return msg('calculus.limit.limit.does_not_exist').in(L);
     if (val && typeof val === 'object') return tx(val, L);
     return '?';
 }
@@ -155,7 +156,7 @@ function settleAbs(f, v, P) {
 
 export function limit(node, v = 'x', a = 0, opts = {}) {
     node = asNode(node);
-    if (node.type === 'rel' || node.type === 'list' || node.type === 'chain') throw new MathError({ ru: 'Нужна формула функции', en: 'A formula is needed' }, null, null, 'not-expr');
+    if (node.type === 'rel' || node.type === 'list' || node.type === 'chain') throw new MathError(msg('calculus.limit.limit.formula_is_needed'), null, null, 'not-expr');
     const others = freeVars(node).filter((w) => w !== v);
     const side = opts.side ?? 'both';
     let P = makePoint(asNode(a), side);
@@ -182,13 +183,13 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     const table = others.length ? [] : tableFor(f, v, P);
     const head = (L) => `${limTex(P, v, L)} ${lt(node, L)}`;
     if (wantSteps) {
-        steps.push(step({ title: T_('Что ищем', 'What we look for'), tex: bt(head), rule: 'start' }));
+        steps.push(step({ title: msg('calculus.limit.limit.what_we_look_for'), tex: bt(head), rule: 'start' }));
         if (domainSide) {
             steps.push(step({
-                title: T_('Где определена функция', 'Where the function is defined'),
+                title: msg('calculus.limit.limit.where_function_is_defined'),
                 text: domainSide === 'right'
-                    ? T_(`Левее точки ${v} = ${plainNum(P)} функция не определена, поэтому к точке можно подойти только справа: предел — правосторонний.`, `Left of ${v} = ${plainNum(P)} the function is undefined, so the point can only be approached from the right: the limit is one-sided.`)
-                    : T_(`Правее точки ${v} = ${plainNum(P)} функция не определена, поэтому к точке можно подойти только слева: предел — левосторонний.`, `Right of ${v} = ${plainNum(P)} the function is undefined, so the point can only be approached from the left: the limit is one-sided.`),
+                    ? msg('calculus.limit.limit.left_of_function_is_undefined_so', { v, P: plainNum(P) })
+                    : msg('calculus.limit.limit.right_of_function_is_undefined_so', { v, P: plainNum(P) }),
                 rule: 'domain-side',
             }));
         }
@@ -213,8 +214,8 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
         sidesInfo = { left: valueOut(vl), right: valueOut(vr) };
         const same = vl && vr && vl.k === vr.k && (vl.k !== 'fin' || Math.abs(vl.x - vr.x) < 1e-12) && (vl.k !== 'inf' || vl.s === vr.s);
         if (wantSteps) {
-            steps.push(step({ title: T_('Предел слева', 'Limit from the left'), tex: bt((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`), rule: 'left', sub: l.C?.log ?? [] }));
-            steps.push(step({ title: T_('Предел справа', 'Limit from the right'), tex: bt((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`), rule: 'right', sub: r.C?.log ?? [] }));
+            steps.push(step({ title: msg('calculus.limit.limit.limit_from_left'), tex: bt((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`), rule: 'left', sub: l.C?.log ?? [] }));
+            steps.push(step({ title: msg('calculus.limit.limit.limit_from_right'), tex: bt((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`), rule: 'right', sub: r.C?.log ?? [] }));
         }
         result = same ? { L: vl, C: l.C, method: l.method } : { L: vl && vr ? DNE : null, C: { log: [], methods: new Set() }, method: 'one-sided', splitDiffer: !!(vl && vr) };
     }
@@ -263,18 +264,18 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     if (wantSteps) {
         if (method === 'substitution') {
             steps.push(step({
-                title: T_('Подставляем', 'Substitute'),
+                title: msg('calculus.limit.limit.substitute'),
                 tex: bt((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`),
-                text: T_(`Функция определена и непрерывна в точке ${v} = ${plainNum(P)}, поэтому предел равен её значению в этой точке.`, `The function is defined and continuous at ${v} = ${plainNum(P)}, so the limit is its value there.`),
+                text: msg('calculus.limit.limit.function_is_defined_and_continuous_at', { v, P: plainNum(P) }),
                 rule: 'substitution',
             }));
         } else if (result.C && result.C.log && !result.split) {
             const form = firstForm(f, v, P);
             if (form) {
                 steps.push(step({
-                    title: T_('Определяем вид неопределённости', 'Identify the indeterminate form'),
+                    title: msg('calculus.limit.limit.identify_indeterminate_form'),
                     tex: bt((Lg) => `${head(Lg)} = \\left[${FORM_TEX[form]}\\right]`),
-                    text: T_(`Подстановка даёт неопределённость ${FORM_NAME[form]}: сразу ответ не получить, выражение нужно преобразовать.`, `Substitution gives the indeterminate form ${FORM_NAME[form]}: the expression has to be transformed first.`),
+                    text: msg('calculus.limit.limit.substitution_gives_indeterminate_form_expression_has', { p: FORM_NAME[form] }),
                     rule: 'form',
                 }));
             }
@@ -282,27 +283,27 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
         }
         if (result.splitDiffer || (L && L.k === 'dne')) {
             steps.push(step({
-                title: T_('Предела нет', 'No limit'),
+                title: msg('calculus.limit.limit.no_limit'),
                 text: sidesInfo
-                    ? T_('Пределы слева и справа различаются, поэтому (двусторонний) предел не существует.', 'The limits from the left and from the right differ, so the (two-sided) limit does not exist.')
-                    : T_('Функция колеблется и не приближается ни к какому числу, поэтому предела нет.', 'The function oscillates and approaches no number, so there is no limit.'),
+                    ? msg('calculus.limit.limit.limits_from_left_and_from_right')
+                    : msg('calculus.limit.limit.function_oscillates_and_approaches_no_number'),
                 rule: 'dne',
             }));
         }
         if (table.length) steps.push(tableStep(table, v, P, f));
         if (approx !== undefined) {
             steps.push(step({
-                title: T_('Численная оценка', 'Numeric estimate'),
-                text: T_('Точными методами предел найти не удалось; по таблице значений он примерно равен указанному числу. Это приближение, а не доказательство.', 'The exact methods did not work; judging by the table of values the limit is approximately this number. It is an estimate, not a proof.'),
+                title: msg('calculus.limit.limit.numeric_estimate'),
+                text: msg('calculus.limit.limit.exact_methods_did_not_work_judging'),
                 rule: 'numeric',
             }));
         }
         if (tex) {
-            const s = step({ title: approx !== undefined ? T_('Ответ (приближённо)', 'Answer (approximate)') : T_('Ответ', 'Answer'), tex, rule: 'answer' });
+            const s = step({ title: approx !== undefined ? msg('calculus.limit.limit.answer_approximate') : msg('calculus.limit.limit.answer'), tex, rule: 'answer' });
             s.final = true;
             steps.push(s);
         } else {
-            steps.push(step({ title: T_('Не получилось', 'Not found'), text: T_('Найти этот предел не удалось ни точными методами, ни по таблице значений.', 'This limit could not be found either exactly or from a table of values.'), rule: 'fail' }));
+            steps.push(step({ title: msg('calculus.limit.limit.not_found'), text: msg('calculus.limit.limit.this_limit_could_not_be_found'), rule: 'fail' }));
         }
     }
     const out = { value, method, steps, table, verified, tex };

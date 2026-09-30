@@ -11,6 +11,7 @@ import { step } from '../../core/steps.js';
 import { niceForm, prettyForm } from '../derivative/index.js';
 import { N0, PI, T_, asNode, bt, isNum, paren, simp, trySimp, tx } from './common.js';
 import { answerStep, checkExpr, integrate } from './integrate.js';
+import { msg, notation } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- definite integrals
 
@@ -25,7 +26,7 @@ function boundValue(n) {
     if (isConst(s) && s.name === 'inf') return { node: s, x: Infinity };
     if (s.type === 'mul' && s.args.length === 2 && isNum(s.args[0]) && s.args[0].value.isNeg() && isConst(s.args[1]) && s.args[1].name === 'inf') return { node: s, x: -Infinity };
     const x = evaluate(s);
-    if (!Number.isFinite(x)) throw new MathError({ ru: 'Пределы интегрирования — числа или ±∞', en: 'The limits of integration must be numbers or ±∞' }, null, null, 'range');
+    if (!Number.isFinite(x)) throw new MathError(msg('calculus.integral.definite.limits_of_integration_must_be_numbers'), null, null, 'range');
     return { node: s, x };
 }
 
@@ -233,10 +234,9 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     const head = (L) => `\\int_{${boundTex(A, L)}}^{${boundTex(B, L)}} ${f.type === 'add' ? paren(tx(node, L)) : tx(node, L)}\\,d${v}`;
     if (wantSteps) {
         steps.push(step({
-            title: T_('Что считаем', 'What we compute'),
+            title: msg('calculus.integral.definite.what_we_compute'),
             tex: bt(head),
-            text: T_('Находим первообразную F и пользуемся формулой Ньютона — Лейбница: ∫ₐᵇ f dx = F(b) − F(a). Если предел бесконечен или функция на отрезке не ограничена, интеграл несобственный — вместо значений F берём пределы.',
-                'Find an antiderivative F and use the Newton–Leibniz formula: ∫ₐᵇ f dx = F(b) − F(a). If a limit is infinite or the function is unbounded on the interval, the integral is improper and F is replaced by limits.'),
+            text: msg('calculus.integral.definite.find_antiderivative_f_and_use_newton'),
             rule: 'start',
         }));
     }
@@ -248,7 +248,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     const lo = flip ? B : A;
     const hi = flip ? A : B;
     const others = freeVars(f).filter((w) => w !== v);
-    if (others.length) throw new MathError({ ru: `Для определённого интеграла нужны числовые значения букв: ${others.join(', ')}`, en: `A definite integral needs numeric values for: ${others.join(', ')}` }, null, null, 'unbound');
+    if (others.length) throw new MathError(msg('calculus.integral.definite.definite_integral_needs_numeric_values_for', { p: others.join(', ') }), null, null, 'unbound');
     const fc = compile(f, [v]);
     // domain: f must be defined almost everywhere on the interval
     const pa = Number.isFinite(lo.x) ? lo.x : Math.min(-1, hi.x - 1000);
@@ -258,7 +258,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     if (nan > 4) {
         return out({
             method: 'undefined',
-            steps: wantSteps ? [step({ title: T_('Функция не определена', 'The function is not defined'), text: T_('Подынтегральная функция не определена на части отрезка интегрирования, поэтому такой интеграл (в действительных числах) не имеет смысла.', 'The integrand is undefined on part of the interval, so this integral makes no sense over the reals.'), rule: 'fail' })] : [],
+            steps: wantSteps ? [step({ title: msg('calculus.integral.definite.function_is_not_defined'), text: msg('calculus.integral.definite.integrand_is_undefined_on_part_of'), rule: 'fail' })] : [],
         });
     }
     const inside = (x) => x > lo.x + 1e-9 * Math.max(1, Math.abs(lo.x)) && x < hi.x - 1e-9 * Math.max(1, Math.abs(hi.x));
@@ -322,29 +322,27 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         if (interior.some((p) => p.pole)) improper = true;
         if (wantSteps && (exactNode || diverges)) {
             steps.push(step({
-                title: T_('Первообразная', 'Antiderivative'),
+                title: msg('calculus.integral.definite.antiderivative'),
                 tex: bt((L) => `F(${v}) = ${tx(F, L)}`),
                 rule: 'antiderivative',
                 sub: anti.steps.filter((s) => s.rule !== 'answer' && s.rule !== 'start'),
             }));
             if (flip) {
                 steps.push(step({
-                    title: T_('Меняем пределы местами', 'Swap the limits'),
+                    title: msg('calculus.integral.definite.swap_limits'),
                     tex: bt((L) => `\\int_{${boundTex(A, L)}}^{${boundTex(B, L)}} = -\\int_{${boundTex(B, L)}}^{${boundTex(A, L)}}`),
-                    text: T_('Нижний предел больше верхнего: переставляем пределы и меняем знак.', 'The lower limit is larger than the upper one: swap them and change the sign.'),
+                    text: msg('calculus.integral.definite.lower_limit_is_larger_than_upper'),
                     rule: 'swap',
                 }));
             }
             if (interior.length) {
                 const poles = interior.some((p) => p.pole);
                 steps.push(step({
-                    title: poles ? T_('Особые точки внутри отрезка', 'Singular points inside the interval') : T_('Разрыв первообразной', 'A jump of the antiderivative'),
-                    tex: bt((L) => `${v} = ${interior.map((p) => tx(p.node, L)).join(L === 'ru' ? ';\\ ' : ',\\ ')}`),
+                    title: poles ? msg('calculus.integral.definite.singular_points_inside_interval') : msg('calculus.integral.definite.jump_of_antiderivative'),
+                    tex: bt((L) => `${v} = ${interior.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
                     text: poles
-                        ? T_('Внутри отрезка функция обращается в бесконечность. Формулу Ньютона — Лейбница через такую точку применять нельзя: разбиваем интеграл на части и каждую считаем как несобственный интеграл (через пределы).',
-                            'The function blows up inside the interval. Newton–Leibniz cannot be applied across such a point: split the integral and treat each part as an improper integral (through limits).')
-                        : T_('Найденная первообразная делает скачок внутри отрезка (так бывает после замены t = tg(x/2)). Разбиваем отрезок в этой точке и на каждой части берём пределы первообразной.',
-                            'The antiderivative jumps inside the interval (this happens after the substitution t = tan(x/2)). Split the interval there and take limits of the antiderivative on each part.'),
+                        ? msg('calculus.integral.definite.function_blows_up_inside_interval_newton')
+                        : msg('calculus.integral.definite.antiderivative_jumps_inside_interval_this_happens'),
                     rule: 'split',
                 }));
             }
@@ -353,7 +351,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                 const val = (e) => (e.kind === 'fin' ? null : e.kind === 'inf' ? '+\\infty' : e.kind === '-inf' ? '-\\infty' : '?');
                 const isLim = x.top.how === 'limit' || x.bot.how === 'limit';
                 steps.push(step({
-                    title: isLim ? T_('Несобственный интеграл: пределы', 'Improper integral: limits') : T_('Формула Ньютона — Лейбница', 'Newton–Leibniz formula'),
+                    title: isLim ? msg('calculus.integral.definite.improper_integral_limits') : msg('calculus.integral.definite.newton_leibniz_formula'),
                     tex: bt((L) => {
                         const upper = x.top.kind === 'fin' ? tx(x.top.node, L) : val(x.top);
                         const lower = x.bot.kind === 'fin' ? tx(x.bot.node, L) : val(x.bot);
@@ -363,8 +361,8 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                         return `\\int_{${boundTex(x.p, L)}}^{${boundTex(x.r, L)}} f\\,d${v} = ${lu} - ${ll} = ${upper} - ${/^-/.test(lower) ? `\\left(${lower}\\right)` : lower}${both ? ` = ${tx(niceForm(both), L)}` : ''}`;
                     }),
                     text: isLim
-                        ? T_('На бесконечном пределе, в точке, где функция не ограничена, или в точке скачка первообразной её значение заменяем односторонним пределом.', 'At an infinite limit, at a point where the function is unbounded, or where the antiderivative jumps, its value is replaced by a one-sided limit.')
-                        : T_('Первообразная непрерывна на отрезке, поэтому интеграл равен F(b) − F(a).', 'The antiderivative is continuous on the interval, so the integral equals F(b) − F(a).'),
+                        ? msg('calculus.integral.definite.at_infinite_limit_at_point_where')
+                        : msg('calculus.integral.definite.antiderivative_is_continuous_on_interval_so'),
                     rule: 'newton-leibniz',
                 }));
             }
@@ -375,10 +373,10 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         const contributions = parts.map((x) => signOf(x.top.kind) - signOf(x.bot.kind)).filter((c) => c !== 0);
         const same = contributions.length && contributions.every((c) => Math.sign(c) === Math.sign(contributions[0]));
         const val = same ? ((flip ? -1 : 1) * Math.sign(contributions[0]) > 0 ? 'inf' : '-inf') : null;
-        const tex = bt((L) => `${head(L)}\\ ${L === 'ru' ? '\\text{расходится}' : '\\text{diverges}'}`);
+        const tex = bt((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
         if (wantSteps) {
-            const s = answerStep(T_('Интеграл расходится', 'The integral diverges'), tex);
-            s.text = T_('Предел первообразной бесконечен, значит, несобственный интеграл расходится (площадь под графиком бесконечна).', 'The limit of the antiderivative is infinite, so the improper integral diverges (the area under the graph is infinite).');
+            const s = answerStep(msg('calculus.integral.definite.integral_diverges'), tex);
+            s.text = msg('calculus.integral.definite.limit_of_antiderivative_is_infinite_so');
             steps.push(s);
         }
         return out({ value: val, converges: false, improper: true, antiderivative: anti.result, method: 'improper', tex });
@@ -405,13 +403,13 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         // no exact verdict (the limit of F does not exist, or there is no F), but the tail visibly does not settle
         const s = numDiverges.value === Infinity ? 1 : numDiverges.value === -Infinity ? -1 : 0;
         const val = s ? ((flip ? -s : s) > 0 ? 'inf' : '-inf') : null;
-        const tex = bt((L) => `${head(L)}\\ ${L === 'ru' ? '\\text{расходится}' : '\\text{diverges}'}`);
+        const tex = bt((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
         if (wantSteps) {
-            const st = answerStep(T_('Интеграл расходится', 'The integral diverges'), tex);
+            const st = answerStep(msg('calculus.integral.definite.integral_diverges'), tex);
             st.text = numDiverges.reason === 'pole'
-                ? T_('Функция растёт у особой точки так быстро, что площадь рядом с ней бесконечна: интеграл расходится.', 'The function grows so fast near the singular point that the area there is infinite: the integral diverges.')
-                : s ? T_('На бесконечности функция убывает недостаточно быстро: площадь под графиком бесконечна.', 'The function does not decay fast enough at infinity: the area under the graph is infinite.')
-                    : T_('Интегралы по всё более длинным отрезкам не стремятся ни к какому числу: волны не затухают, и площадь под графиком то набирается, то убывает. Несобственный интеграл расходится.', 'The integrals over longer and longer intervals do not tend to any number: the waves do not die down, and the area keeps growing and shrinking. The improper integral diverges.');
+                ? msg('calculus.integral.definite.function_grows_so_fast_near_singular')
+                : s ? msg('calculus.integral.definite.function_does_not_decay_fast_enough')
+                    : msg('calculus.integral.definite.integrals_over_longer_and_longer_intervals');
             steps.push(st);
         }
         return out({ value: val, converges: false, improper: true, antiderivative: anti.result, method: 'improper-numeric', tex });
@@ -425,7 +423,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         if (agrees) {
             const value = niceForm(exactNode);
             const tex = bt((L) => `${head(L)} = ${tx(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`);
-            if (wantSteps) steps.push(answerStep(T_('Ответ', 'Answer'), tex));
+            if (wantSteps) steps.push(answerStep(msg('calculus.integral.definite.answer'), tex));
             return out({ value, numeric: ex, exact: true, converges: true, improper, antiderivative: anti.result, method: improper ? 'improper' : interior.length ? 'newton-leibniz-pieces' : 'newton-leibniz', tex });
         }
     }
@@ -434,10 +432,10 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     if (!numOk || !Number.isFinite(numeric) || (poles && !exactNode) || !tailOk) {
         if (wantSteps) {
             steps.push(step({
-                title: T_('Не получилось', 'Not found'),
+                title: msg('calculus.integral.definite.not_found'),
                 text: poles || !tailOk
-                    ? T_('Интеграл несобственный, а точно проверить его сходимость не удалось; численно он не устанавливается (похоже, расходится). Ненадёжное число не приводим.', 'The integral is improper and its convergence could not be checked exactly; numerically it does not settle (it seems to diverge). No unreliable number is given.')
-                    : T_('Ни точно, ни численно посчитать этот интеграл не удалось (возможно, он расходится).', 'This integral could not be computed exactly or numerically (it may diverge).'),
+                    ? msg('calculus.integral.definite.integral_is_improper_and_its_convergence')
+                    : msg('calculus.integral.definite.this_integral_could_not_be_computed'),
                 rule: 'fail',
             }));
         }
@@ -445,15 +443,15 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     }
     const tex = bt((L) => `${head(L)} \\approx ${fmtNum(numeric, L)}`);
     if (wantSteps) {
-        if (!anti.result && anti.reason) steps.push(step({ title: T_('Первообразная', 'Antiderivative'), text: anti.reason, rule: 'antiderivative' }));
+        if (!anti.result && anti.reason) steps.push(step({ title: msg('calculus.integral.definite.antiderivative'), text: anti.reason, rule: 'antiderivative' }));
         steps.push(step({
-            title: T_('Численное интегрирование', 'Numerical integration'),
+            title: msg('calculus.integral.definite.numerical_integration'),
             text: !anti.result
-                ? T_('Первообразную в элементарных функциях найти не удалось, поэтому считаем интеграл численно (адаптивная квадратура Гаусса — Кронрода). Значение приближённое.', 'No elementary antiderivative was found, so the integral is computed numerically (adaptive Gauss–Kronrod quadrature). The value is approximate.')
-                : T_('Точное значение подтвердить не удалось, поэтому приводим численное (приближённое).', 'The exact value could not be confirmed, so a numeric (approximate) value is given.'),
+                ? msg('calculus.integral.definite.no_elementary_antiderivative_was_found_so')
+                : msg('calculus.integral.definite.exact_value_could_not_be_confirmed'),
             rule: 'numeric',
         }));
-        steps.push(answerStep(T_('Ответ (приближённо)', 'Answer (approximate)'), tex));
+        steps.push(answerStep(msg('calculus.integral.definite.answer_approximate'), tex));
     }
     return out({ numeric, approx: true, converges: true, improper, antiderivative: anti.result, method: 'numeric', tex });
 }
@@ -483,7 +481,7 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
         let roots;
         if (P && exactRoots && exactRoots.length >= 2) roots = exactRoots.map((r) => ({ node: num(r), x: r.toNumber() }));
         else roots = numFindRoots(dc, -50, 50).filter((r) => r.kind !== 'interval').map((r) => ({ node: exactPoint(r.x) ?? num(Q.of(r.x.toFixed(10))), x: r.x }));
-        if (roots.length < 2) throw new MathError({ ru: 'Графики пересекаются меньше чем в двух точках — укажите границы', en: 'The graphs meet at fewer than two points: give the bounds' }, null, null, 'no-bounds');
+        if (roots.length < 2) throw new MathError(msg('calculus.integral.definite.graphs_meet_at_fewer_than_two'), null, null, 'no-bounds');
         lo = roots[0];
         hi = roots[roots.length - 1];
     } else {
@@ -519,27 +517,27 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
     const tex = bt((L) => `S = \\int_{${tx(lo.node, L)}}^{${tx(hi.node, L)}} \\left|${tx(prettyForm(d), L)}\\right|\\,d${v} ${value ? '= ' + tx(value, L) : '\\approx ' + fmtNum(numeric, L)}`);
     if (opts.steps) {
         steps.push(step({
-            title: T_('Разность функций', 'Difference of the functions'),
+            title: msg('calculus.integral.definite.difference_of_functions'),
             tex: bt((L) => `f(${v}) - g(${v}) = ${tx(prettyForm(d), L)}`),
-            text: T_('Площадь между графиками — интеграл от модуля разности: на каждом участке из верхней функции вычитаем нижнюю.', 'The area between the graphs is the integral of the absolute difference: on each piece subtract the lower function from the upper one.'),
+            text: msg('calculus.integral.definite.area_between_graphs_is_integral_of'),
             rule: 'difference',
         }));
         if (cross.length || a === null) {
             steps.push(step({
-                title: T_('Точки пересечения', 'Intersection points'),
-                tex: bt((L) => `${v} = ${pts.map((p) => tx(p.node, L)).join(L === 'ru' ? ';\\ ' : ',\\ ')}`),
-                text: T_('Между точками пересечения разность сохраняет знак.', 'Between the intersection points the difference keeps its sign.'),
+                title: msg('calculus.integral.definite.intersection_points'),
+                tex: bt((L) => `${v} = ${pts.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
+                text: msg('calculus.integral.definite.between_intersection_points_difference_keeps_its'),
                 rule: 'intersections',
             }));
         }
         for (const pc of pieces) {
             steps.push(step({
-                title: T_('Участок', 'Piece'),
+                title: msg('calculus.integral.definite.piece'),
                 tex: bt((L) => `\\int_{${tx(pc.from, L)}}^{${tx(pc.to, L)}} ${pc.upper === 'f' ? '(f - g)' : '(g - f)'}\\,d${v} = ${pc.value && typeof pc.value === 'object' ? tx(pc.value, L) : '\\approx ' + fmtNum(pc.numeric ?? NaN, L)}`),
                 rule: 'piece',
             }));
         }
-        steps.push(answerStep(T_('Площадь', 'Area'), tex));
+        steps.push(answerStep(msg('calculus.integral.definite.area'), tex));
     }
     return { value, numeric, exact: !!value, approx: !value, points: pts.map((p) => p.node), pieces, steps, tex };
 }
