@@ -118,6 +118,9 @@ Step = { title: Msg, tex?: string | {lang: string}, text?: Msg, rule?: string, d
   without reading their text.
 - `data` holds the step's facts for a program rather than a reader. A row operation is
   `{op: 'add', i: 1, j: 0, k: -2, phase, opTex, matrixTex}`, and the Euclid table is `{rows}`.
+- `data.evidence: 'numeric'` marks a step whose conclusion rests on numbers rather than on a proof, such as the
+  convergence of a series read off its terms. The step's text says so too. Elsewhere, numeric checks only guard
+  exact reasoning, and the engine refuses when they disagree with it.
 - `sub` nests steps. For example, each node of a derivative has its own step tree.
 
 A step is language-neutral until someone reads it: `step.title.en`, `step.title.in('kk')`, or
@@ -221,6 +224,3 @@ The refactoring tools in `scripts/` work on the syntax tree (acorn), so imports 
 
 - Steps record the expression they arrive at only as TeX. A trainer that checks a student's own solution will
   need the expression tree after each step, in `data`, next to the step's type.
-- Some checks are heuristics: a sign on an interval is tested at a few points, and convergence is estimated from
-  a few distant terms. The engine refuses whenever they disagree, but the step text does not yet say that the
-  check was numeric.

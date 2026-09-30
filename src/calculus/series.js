@@ -435,6 +435,7 @@ function pSeries(term, k) {
                 title: msg('calculus.series.comparison_with'),
                 tex: eachLanguage((l) => `${tex(term, l)} \\sim \\frac{c}{${k}^{${r.p.toTex(l)}}},\\quad p = ${r.p.toTex(l)} \\le 1`),
                 text: msg('calculus.series.terms_keep_one_sign_and_decay', { p: r.p.toTex() }),
+                data: { evidence: 'numeric' },
             }),
         ],
     };
@@ -516,7 +517,7 @@ export function sumSeries(input, opts = {}) {
               : msg('calculus.series.absolute_values_of_terms_are_at');
         const steps = [
             head,
-            step({ title: msg('calculus.series.convergence'), text: why }),
+            step({ title: msg('calculus.series.convergence'), text: why, data: { evidence: 'numeric' } }),
             step({
                 title: msg('calculus.series.numeric_estimate'),
                 tex: `S \\approx ${est.toPrecision(digits)}`,

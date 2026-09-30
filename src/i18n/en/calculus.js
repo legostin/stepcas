@@ -560,7 +560,7 @@ export default {
         terms_behave_like_and_harmonic_series: 'The terms behave like $c/k$, and the harmonic series $\\sum 1/k$ diverges, so this one diverges too.',
         comparison_with: 'Comparison with $\\sum 1/k^p$',
         terms_keep_one_sign_and_decay:
-            'The terms keep one sign and decay like $1/k^{%{p}}$; $\\sum 1/k^p$ converges only for $p > 1$, so this series diverges.',
+            'The terms keep one sign and decay like $1/k^{%{p}}$; $\\sum 1/k^p$ converges only for $p > 1$, so this series diverges. This is read off the terms numbered $10^3$ to $10^6$: a numeric observation, not a proof.',
         sum: 'The sum',
         empty_sum: 'An empty sum',
         end_is_below_start_no_terms: 'The end is below the start: no terms.',
@@ -570,11 +570,11 @@ export default {
         could_neither_find_sum_nor_prove: 'Could neither find the sum nor prove convergence.',
         could_not_estimate_sum: 'Could not estimate the sum.',
         series_alternates_and_absolute_values_of:
-            'The series alternates and the absolute values of its terms decrease to zero, so it converges by the Leibniz test.',
+            'The series alternates and the absolute values of its terms decrease to zero, so it converges by the Leibniz test. This is read off the terms numbered $10^3$ to $10^6$: a numeric observation, not a proof.',
         terms_keep_one_sign_and_decay_2:
-            'The terms keep one sign and decay like $1/k^{%{p}}$ with the power above 1, so the series converges (comparison with $\\sum 1/k^p$).',
+            'The terms keep one sign and decay like $1/k^{%{p}}$ with the power above 1, so the series converges (comparison with $\\sum 1/k^p$). This is read off the terms numbered $10^3$ to $10^6$: a numeric observation, not a proof.',
         absolute_values_of_terms_are_at:
-            'The absolute values of the terms are at most $c/k^p$ with $p > 1$, so the series converges absolutely (comparison with $\\sum 1/k^p$).',
+            'The absolute values of the terms are at most $c/k^p$ with $p > 1$, so the series converges absolutely (comparison with $\\sum 1/k^p$). This is read off the terms numbered $10^3$ to $10^6$: a numeric observation, not a proof.',
         convergence: 'Convergence',
         numeric_estimate: 'A numeric estimate',
         no_exact_sum_in_elementary_terms: 'No exact sum in elementary terms was found; the estimate is a partial sum of 200,000 terms with a tail correction.',
