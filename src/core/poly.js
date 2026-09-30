@@ -4,7 +4,7 @@ import { Q, MathError, bigGcd, bigLcm, bigAbs, bigIsqrt, bigBitLength } from './
 import { num, sym, add, mul, pow, isConst, numValue } from './ast.js';
 import { expand } from './expand.js';
 import { toTex } from './print.js';
-import { numPolyRoots } from '../numbers/numeric.js';
+import { numPolyRoots } from '../numbers/numeric/index.js';
 
 const MAX_DEG = 10000;
 const DIV0 = { ru: 'Деление на нулевой многочлен', en: 'Division by the zero polynomial' };

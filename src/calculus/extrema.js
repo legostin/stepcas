@@ -13,9 +13,9 @@ import { parse } from '../core/parse.js';
 import { simplify } from '../core/simplify.js';
 import { evaluate, compile } from '../core/evaluate.js';
 import { toTex, toText } from '../core/print.js';
-import { derivative } from './derivative.js';
+import { derivative } from './derivative/index.js';
 import { solveEquation } from '../solve/index.js';
-import { numFindRoots } from '../numbers/numeric.js';
+import { numFindRoots } from '../numbers/numeric/index.js';
 import { L, step } from '../core/steps.js';
 
 const asNode = (x) => (typeof x === 'string' ? parse(x) : typeof x === 'number' ? num(x) : x);

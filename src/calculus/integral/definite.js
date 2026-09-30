@@ -5,10 +5,10 @@ import { sym, neg, isConst, containsVar, fn, nodeChildren, num, mul, substitute,
 import { evaluate, compile } from '../../core/evaluate.js';
 import { MathError, Q } from '../../core/rational.js';
 import { Poly } from '../../core/poly.js';
-import { numFindRoots, numIntegrate } from '../../numbers/numeric.js';
-import { limit } from '../limit.js';
+import { numFindRoots, numIntegrate } from '../../numbers/numeric/index.js';
+import { limit } from '../limit/index.js';
 import { step } from '../../core/steps.js';
-import { niceForm, prettyForm } from '../derivative.js';
+import { niceForm, prettyForm } from '../derivative/index.js';
 import { N0, PI, T_, asNode, bt, isNum, paren, q, simp, trySimp, tx } from './common.js';
 import { answerStep, checkExpr, integrate } from './integrate.js';
 

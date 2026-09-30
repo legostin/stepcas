@@ -4,7 +4,7 @@
 import { containsVar, mul, sym, div, pow, add, isConst, fn, neg, num, nodeKey, nodeChildren, substitute } from '../../core/ast.js';
 import { step } from '../../core/steps.js';
 import { Poly } from '../../core/poly.js';
-import { prettyForm, calcTex, quickDerivative } from '../derivative.js';
+import { prettyForm, calcTex, quickDerivative } from '../derivative/index.js';
 import { expand } from '../../core/expand.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';

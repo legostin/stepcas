@@ -5,7 +5,7 @@ import { linearForm, Poly } from '../core/poly.js';
 import { rel, num, substitute, add, neg, freeVars, sym, mul, div, nodeKey } from '../core/ast.js';
 import { bigLcm, Q, MathError } from '../core/rational.js';
 import { toText } from '../core/print.js';
-import { matSolveCramer, Matrix, matSolve } from '../linalg/matrix.js';
+import { matSolveCramer, Matrix, matSolve } from '../linalg/index.js';
 import { S, T, approxOf, byLang, close, exactZero, pick, simpOr, tex } from './common.js';
 import { sideValue } from './domain.js';
 import { solveEquation } from './equation.js';

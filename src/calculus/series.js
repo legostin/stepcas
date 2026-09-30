@@ -15,7 +15,7 @@ import { simplify } from '../core/simplify.js';
 import { evaluate } from '../core/evaluate.js';
 import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
-import { limit } from './limit.js';
+import { limit } from './limit/index.js';
 import { numDen } from '../core/expand.js';
 
 const simpO = (n) => {

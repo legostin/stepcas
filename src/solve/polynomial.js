@@ -3,7 +3,7 @@
 import { Q, rootExtract, bigGcd, bigLcm } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { num, sym, mul, div, neg, add, pow, numValue, containsVar, nodeSome, nodeKey } from '../core/ast.js';
-import { numPolyRoots } from '../numbers/numeric.js';
+import { numPolyRoots } from '../numbers/numeric/index.js';
 import { N0, N1, S, T, approxC, approxNode, approxOf, byLang, exactZero, expd, parQ, pick, simp, simpOr, sq, tex } from './common.js';
 import { solveCore } from './equation.js';
 import { IntervalSet } from './intervals.js';

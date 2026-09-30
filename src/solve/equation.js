@@ -2,7 +2,7 @@
 
 import { compile } from '../core/evaluate.js';
 import { nodeSome, containsVar, add, neg, rel, freeVars, fn, nodeKey, nodeChildren } from '../core/ast.js';
-import { numFindRoots } from '../numbers/numeric.js';
+import { numFindRoots } from '../numbers/numeric/index.js';
 import { simplify } from '../core/simplify.js';
 import { MathError } from '../core/rational.js';
 import { Poly } from '../core/poly.js';

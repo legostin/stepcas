@@ -2,7 +2,7 @@
 
 import { containsVar, nodeKey, pow, sym, num, nodeChildren, div, nodeSome, substitute, add, mapNode, mul, nodeSize, neg } from '../../core/ast.js';
 import { Poly } from '../../core/poly.js';
-import { quickDerivative, ratFunctionOf } from '../derivative.js';
+import { quickDerivative, ratFunctionOf } from '../derivative/index.js';
 import { bigLcm } from '../../core/rational.js';
 import { mapPre, plainish } from './basic.js';
 import { E_, NM1, T_, freshVar, isNum, isOne, isVar, isZero, linearParts, paren, q, simp, trySimp, tx } from './common.js';

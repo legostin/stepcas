@@ -2,7 +2,7 @@
 
 import { div, fn, mapNode, containsVar, nodeKey, mul, num, substitute, sym, add, neg, pow, nodeChildren } from '../../core/ast.js';
 import { splitCoeff } from '../../core/simplify.js';
-import { ratFunctionOf } from '../derivative.js';
+import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { expand } from '../../core/expand.js';
 import { Q } from '../../core/rational.js';

@@ -3,7 +3,7 @@
 import { splitCoeff } from '../../core/simplify.js';
 import { containsVar, nodeKey, sym, isConst, pow, mapNode, fn, add, freeVars, nodeSome } from '../../core/ast.js';
 import { Poly } from '../../core/poly.js';
-import { niceForm, prettyForm } from '../derivative.js';
+import { niceForm, prettyForm } from '../derivative/index.js';
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
 import { NM1, T_, asNode, bt, checkAnti, iTex, isNum, isVar, simp, surelyPositive, trySimp, tx } from './common.js';

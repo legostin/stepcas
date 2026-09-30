@@ -4,7 +4,7 @@ import { num, sym, toNode, nodeKey, isConst, freeVars, containsVar, add, mul, fn
 import { Q } from '../../core/rational.js';
 import { parse } from '../../core/parse.js';
 import { simplify, splitCoeff } from '../../core/simplify.js';
-import { calcTex, quickDerivative } from '../derivative.js';
+import { calcTex, quickDerivative } from '../derivative/index.js';
 import { Poly } from '../../core/poly.js';
 import { expand } from '../../core/expand.js';
 import { rng } from '../../core/random.js';

@@ -3,7 +3,7 @@
 
 import { num, mul, pow, div, fn, add, sym, neg, nodeKey } from '../../core/ast.js';
 import { bigLcm, Q } from '../../core/rational.js';
-import { ratFunctionOf } from '../derivative.js';
+import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { Poly } from '../../core/poly.js';
 import { HALF, N0, N1, N2, T_, bt, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';

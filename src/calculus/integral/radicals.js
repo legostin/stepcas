@@ -5,7 +5,7 @@ import { Q } from '../../core/rational.js';
 import { containsVar, mul, sym, pow, add, div, fn, num } from '../../core/ast.js';
 import { Poly } from '../../core/poly.js';
 import { step } from '../../core/steps.js';
-import { calcTex } from '../derivative.js';
+import { calcTex } from '../derivative/index.js';
 import { HALF, N1, N2, T_, bt, iTex, isNum, lnAbs, q, trySimp, tx } from './common.js';
 import { qn, solveQ } from './rational.js';
 

@@ -4,7 +4,7 @@ import { Poly } from '../../core/poly.js';
 import { containsVar, mul, num, add, neg, sym, fn, pow } from '../../core/ast.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { MathError } from '../../core/rational.js';
-import { quickDerivative } from '../derivative.js';
+import { quickDerivative } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { plainish } from './basic.js';
 import { N0, T_, bt, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx } from './common.js';
