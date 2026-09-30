@@ -4,7 +4,7 @@
 // and derivatives return a number (pass {info: true} for {value, error, …}). Invalid input throws
 // MathError with a bilingual message. See README.md for the full contract.
 
-import { MathError } from './rational.js';
+import { MathError } from '../core/rational.js';
 
 const fail = (ru, en, code = null) => new MathError({ ru, en }, null, null, code);
 const EPS = Number.EPSILON;

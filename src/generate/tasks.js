@@ -7,7 +7,7 @@
 // never from the solver, so a generated task can check the solver. The same seed gives the same task.
 // Level 1: small integers; level 2: wider ranges and the usual traps (an extraneous root, a negative leading
 // coefficient); level 3: fractions and longer forms.
-import { Q } from './rational.js';
+import { Q } from '../core/rational.js';
 
 /* ------------------------------------------------------------------ randomness */
 

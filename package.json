@@ -7,17 +7,41 @@
   "exports": {
     ".": "./src/index.js"
   },
-  "files": ["src", "docs", "LICENSE", "README.md"],
+  "files": [
+    "src",
+    "docs",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "test": "node --test test/*.test.cjs",
     "bench": "node bench/run.mjs",
     "bench:verify": "bench/.venv/bin/python bench/verify.py"
   },
-  "engines": { "node": ">=20" },
-  "keywords": ["cas", "computer-algebra", "math", "step-by-step", "equations", "calculus", "symbolic", "education", "russian"],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "cas",
+    "computer-algebra",
+    "math",
+    "step-by-step",
+    "equations",
+    "calculus",
+    "symbolic",
+    "education",
+    "russian"
+  ],
   "author": "legostin (https://legost.in)",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/legostin/stepcas.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/legostin/stepcas.git"
+  },
   "homepage": "https://legost.in/utilities/math/canvas",
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "acorn": "^8.18.0",
+    "acorn-walk": "^8.3.5"
+  }
 }

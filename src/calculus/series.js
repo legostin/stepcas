@@ -7,16 +7,16 @@
 // fractions with poles an integer apart), a table of classic sums (π²/6, ln 2, e, π/4, …) matched up to a factor
 // and a shift of the start, the necessary condition (terms not tending to zero) and the harmonic comparison for
 // divergence; otherwise a numeric estimate marked as approximate.
-import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, nodeKey, containsVar, substitute, numValue, freeVars } from './ast.js';
-import { parse } from './parse.js';
-import { toTex, toText } from './print.js';
-import { simplify } from './simplify.js';
-import { evaluate } from './evaluate.js';
-import { L, step } from './steps.js';
-import { Poly } from './poly.js';
+import { Q, MathError } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, nodeKey, containsVar, substitute, numValue, freeVars } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { toTex, toText } from '../core/print.js';
+import { simplify } from '../core/simplify.js';
+import { evaluate } from '../core/evaluate.js';
+import { L, step } from '../core/steps.js';
+import { Poly } from '../core/poly.js';
 import { limit } from './limit.js';
-import { numDen } from './expand.js';
+import { numDen } from '../core/expand.js';
 
 const simpO = (n) => {
     try {

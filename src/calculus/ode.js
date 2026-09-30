@@ -7,18 +7,18 @@
 // characteristic equation: two real roots, a double root, complex roots). Initial conditions y(x₀) = y₀,
 // y'(x₀) = y₁ fix the constants. Every answer is substituted back into the equation numerically before it is
 // returned; an answer that fails the check is not returned.
-import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, rel, nodeKey, freeVars, containsVar, substitute, numValue, nodeSome } from './ast.js';
-import { parse } from './parse.js';
-import { toTex, toText } from './print.js';
-import { simplify } from './simplify.js';
-import { evaluate } from './evaluate.js';
-import { L, step } from './steps.js';
-import { derivative } from './diff.js';
-import { integrate } from './integrate.js';
-import { solveEquation } from './solve.js';
-import { expand } from './expand.js';
-import { mapNode } from './ast.js';
+import { Q, MathError } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, rel, nodeKey, freeVars, containsVar, substitute, numValue, nodeSome } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { toTex, toText } from '../core/print.js';
+import { simplify } from '../core/simplify.js';
+import { evaluate } from '../core/evaluate.js';
+import { L, step } from '../core/steps.js';
+import { derivative } from './derivative.js';
+import { integrate } from './integral.js';
+import { solveEquation } from '../solve/solve.js';
+import { expand } from '../core/expand.js';
+import { mapNode } from '../core/ast.js';
 
 const YP = 'yp';
 const YPP = 'ypp';

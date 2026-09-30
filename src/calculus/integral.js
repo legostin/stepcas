@@ -10,17 +10,17 @@
 // Every candidate antiderivative is checked by differentiating it back and comparing with the integrand
 // at sample points of its domain; an answer that fails the check is never shown.
 
-import { Q, MathError, bigLcm } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, mapNode, toNode, nodeChildren, nodeSize, nodeSome } from './ast.js';
-import { parse } from './parse.js';
-import { simplify, canonContext, splitCoeff } from './simplify.js';
-import { expand } from './expand.js';
-import { Poly } from './poly.js';
-import { evaluate, compile } from './evaluate.js';
-import { step } from './steps.js';
-import { rng } from './random.js';
-import { numIntegrate, numFindRoots } from './numeric.js';
-import { quickDerivative, niceForm, prettyForm, calcTex, ratFunctionOf } from './diff.js';
+import { Q, MathError, bigLcm } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, mapNode, toNode, nodeChildren, nodeSize, nodeSome } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { simplify, canonContext, splitCoeff } from '../core/simplify.js';
+import { expand } from '../core/expand.js';
+import { Poly } from '../core/poly.js';
+import { evaluate, compile } from '../core/evaluate.js';
+import { step } from '../core/steps.js';
+import { rng } from '../core/random.js';
+import { numIntegrate, numFindRoots } from '../numbers/numeric.js';
+import { quickDerivative, niceForm, prettyForm, calcTex, ratFunctionOf } from './derivative.js';
 import { limit } from './limit.js';
 
 const N0 = num(0);

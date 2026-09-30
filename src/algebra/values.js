@@ -10,13 +10,13 @@
 // trigonometric values through reduction formulas, the double angle, lowering the power. Between them plain
 // arithmetic, one layer at a time; the engine's simplify last. The value is always the engine's exact value —
 // the steps only explain how to get there, and a step that changes the value is never taken.
-import { Q } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, nodeKey, freeVars, numValue, withChildren, nodeChildren, nodeSome } from './ast.js';
-import { parse } from './parse.js';
-import { simplify } from './simplify.js';
-import { evaluate } from './evaluate.js';
-import { toTex } from './print.js';
-import { L, step } from './steps.js';
+import { Q } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, nodeKey, freeVars, numValue, withChildren, nodeChildren, nodeSome } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { simplify } from '../core/simplify.js';
+import { evaluate } from '../core/evaluate.js';
+import { toTex } from '../core/print.js';
+import { L, step } from '../core/steps.js';
 
 const TRIG = new Set(['sin', 'cos', 'tan', 'cot']);
 const simp = (n) => {

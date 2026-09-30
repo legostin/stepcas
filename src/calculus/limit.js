@@ -7,16 +7,16 @@
 // the symbolic methods fail, the numeric estimate is returned and clearly marked ≈.
 // Also: taylorPolynomial (exact coefficients f⁽ᵏ⁾(a)/k!) and taylorRemainderBound (Lagrange form, numeric M).
 
-import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, toNode, nodeChildren, mapNode } from './ast.js';
-import { parse } from './parse.js';
-import { simplify, canonContext, splitCoeff } from './simplify.js';
-import { expand, combineFractions } from './expand.js';
-import { evaluate } from './evaluate.js';
-import { toText } from './print.js';
-import { step } from './steps.js';
-import { quickDerivative, niceForm, prettyForm, calcTex, ratFunctionOf } from './diff.js';
-import { Poly } from './poly.js';
+import { Q, MathError } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, toNode, nodeChildren, mapNode } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { simplify, canonContext, splitCoeff } from '../core/simplify.js';
+import { expand, combineFractions } from '../core/expand.js';
+import { evaluate } from '../core/evaluate.js';
+import { toText } from '../core/print.js';
+import { step } from '../core/steps.js';
+import { quickDerivative, niceForm, prettyForm, calcTex, ratFunctionOf } from './derivative.js';
+import { Poly } from '../core/poly.js';
 
 const N0 = num(0);
 const N1 = num(1);

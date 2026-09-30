@@ -9,10 +9,10 @@
 // are 0-based in data (i, j) and 1-based in explanations (R₁, R₂; x₁, x₂). RU uses E for the identity
 // matrix, EN uses I.
 
-import { MathError, Q, bigGcd, rootExtract } from './rational.js';
-import { ntDivisors } from './numtheory.js';
-import { numPolyRoots } from './numeric.js';
-import { Poly } from './poly.js';
+import { MathError, Q, bigGcd, rootExtract } from '../core/rational.js';
+import { ntDivisors } from '../numbers/theory.js';
+import { numPolyRoots } from '../numbers/numeric.js';
+import { Poly } from '../core/poly.js';
 
 // ---------------------------------------------------------------- tiny internal helpers
 

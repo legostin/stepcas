@@ -10,16 +10,16 @@
 // (tidy equivalent form), prettyForm (display tweaks: 1 − x² rather than −x² + 1, ∛(x²) rather than x^(2/3)),
 // calcTex / calcTexBoth (TeX with |…| after ln instead of ln(|…|)).
 
-import { Q, MathError, bigGcd, bigLcm } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, mapNode, toNode, nodeChildren, withChildren, nodeSome } from './ast.js';
-import { parse } from './parse.js';
-import { simplify, canonContext, splitCoeff } from './simplify.js';
-import { combineFractions, expand } from './expand.js';
-import { toTex, toText } from './print.js';
-import { evaluate } from './evaluate.js';
-import { step } from './steps.js';
-import { Poly } from './poly.js';
-import { rng } from './random.js';
+import { Q, MathError, bigGcd, bigLcm } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, mapNode, toNode, nodeChildren, withChildren, nodeSome } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { simplify, canonContext, splitCoeff } from '../core/simplify.js';
+import { combineFractions, expand } from '../core/expand.js';
+import { toTex, toText } from '../core/print.js';
+import { evaluate } from '../core/evaluate.js';
+import { step } from '../core/steps.js';
+import { Poly } from '../core/poly.js';
+import { rng } from '../core/random.js';
 
 const N0 = num(0);
 const N1 = num(1);

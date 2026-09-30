@@ -13,17 +13,17 @@
 // against the ОДЗ; roots that fail are listed as extraneous with the reason. When no exact method applies the
 // solver says so and, where it makes sense, gives numeric roots marked «≈» together with the search range.
 
-import { Q, MathError, bigGcd, bigLcm, rootExtract } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, rel, isConst, nodeKey, freeVars, containsVar, substitute, nodeSome, numValue, nodeChildren, mapNode } from './ast.js';
-import { parse } from './parse.js';
-import { toTex, toText } from './print.js';
-import { simplify, splitCoeff } from './simplify.js';
-import { expand, collectTerms, numDen } from './expand.js';
-import { Poly, linearForm } from './poly.js';
-import { evaluate, compile } from './evaluate.js';
-import { step as mkStep } from './steps.js';
-import { numFindRoots, numPolyRoots } from './numeric.js';
-import { Matrix, matSolve, matSolveCramer } from './matrix.js';
+import { Q, MathError, bigGcd, bigLcm, rootExtract } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, fn, rel, isConst, nodeKey, freeVars, containsVar, substitute, nodeSome, numValue, nodeChildren, mapNode } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { toTex, toText } from '../core/print.js';
+import { simplify, splitCoeff } from '../core/simplify.js';
+import { expand, collectTerms, numDen } from '../core/expand.js';
+import { Poly, linearForm } from '../core/poly.js';
+import { evaluate, compile } from '../core/evaluate.js';
+import { step as mkStep } from '../core/steps.js';
+import { numFindRoots, numPolyRoots } from '../numbers/numeric.js';
+import { Matrix, matSolve, matSolveCramer } from '../linalg/matrix.js';
 
 // ---------------------------------------------------------------- small helpers
 

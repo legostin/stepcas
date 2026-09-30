@@ -7,7 +7,7 @@
 // ntDiophantine, ntSolveCongruence, ntCrt, ntMillerRabin, ntContinuedFraction, ntRsaKey,
 // ntDivisibilityRule) just gain a `steps` field. Step shape: {title: {ru, en}, tex?, text?, rule?, sub?}.
 
-import { MathError, Q, bigIsqrt, bigIroot } from './rational.js';
+import { MathError, Q, bigIsqrt, bigIroot } from '../core/rational.js';
 
 // ---------------------------------------------------------------- tiny internal helpers
 

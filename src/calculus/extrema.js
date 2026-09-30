@@ -7,16 +7,16 @@
 // A continuous function on a segment takes its greatest and least values at critical points inside the segment
 // (f′ = 0 or f′ undefined) or at the ends. Critical points are found exactly when the equation solver can do it,
 // else numerically with an exact form recognised when there is one (rational, a rational multiple of π, √).
-import { MathError, Q } from './rational.js';
-import { num, rel, substitute, freeVars, numValue } from './ast.js';
-import { parse } from './parse.js';
-import { simplify } from './simplify.js';
-import { evaluate, compile } from './evaluate.js';
-import { toTex, toText } from './print.js';
-import { derivative } from './diff.js';
-import { solveEquation } from './solve.js';
-import { numFindRoots } from './numeric.js';
-import { L, step } from './steps.js';
+import { MathError, Q } from '../core/rational.js';
+import { num, rel, substitute, freeVars, numValue } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { simplify } from '../core/simplify.js';
+import { evaluate, compile } from '../core/evaluate.js';
+import { toTex, toText } from '../core/print.js';
+import { derivative } from './derivative.js';
+import { solveEquation } from '../solve/solve.js';
+import { numFindRoots } from '../numbers/numeric.js';
+import { L, step } from '../core/steps.js';
 
 const asNode = (x) => (typeof x === 'string' ? parse(x) : typeof x === 'number' ? num(x) : x);
 const approx = (n) => { try { const v = evaluate(n, {}); return typeof v === 'number' ? v : NaN; } catch { return NaN; } };

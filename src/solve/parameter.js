@@ -6,15 +6,15 @@
 // A quadratic in x with coefficients depending on a goes the school way: the leading coefficient is zero (the
 // equation is linear), otherwise the discriminant decides. Anything linear in a goes the graphical way: a = g(x),
 // study g (domain, derivative, corners, limits at the ends) and count where the line y = a meets the graph.
-import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, rel, nodeKey, containsVar, substitute, numValue, nodeSome, freeVars } from './ast.js';
-import { parse } from './parse.js';
-import { toTex, toText } from './print.js';
-import { simplify } from './simplify.js';
-import { evaluate } from './evaluate.js';
-import { L, step } from './steps.js';
-import { derivative } from './diff.js';
-import { limit } from './limit.js';
+import { Q, MathError } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, rel, nodeKey, containsVar, substitute, numValue, nodeSome, freeVars } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { toTex, toText } from '../core/print.js';
+import { simplify } from '../core/simplify.js';
+import { evaluate } from '../core/evaluate.js';
+import { L, step } from '../core/steps.js';
+import { derivative } from '../calculus/derivative.js';
+import { limit } from '../calculus/limit.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './solve.js';
 
 const N0 = num(0);

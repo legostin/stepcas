@@ -27,7 +27,7 @@ function table(rows, fn) {
 
 test('every exported name is unique across all engine modules', async () => {
     const index = fs.readFileSync(path.join(ENGINE, 'index.js'), 'utf8');
-    const files = [...index.matchAll(/export \* from '\.\/([\w-]+\.js)'/g)].map((m) => m[1]);
+    const files = [...index.matchAll(/export \* from '\.\/([\w\/-]+\.js)'/g)].map((m) => m[1]);
     assert.ok(files.length >= 19);
     const seen = new Map();
     for (const f of files) {

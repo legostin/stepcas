@@ -8,14 +8,14 @@
 // the difference of squares, the sum and difference of cubes, a perfect square, a quadratic through its roots,
 // a rational root found among the divisors of the free term and divided out (Horner). Every result is checked
 // against the input polynomial.
-import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, nodeKey, freeVars, containsVar, numValue } from './ast.js';
-import { parse } from './parse.js';
-import { toTex, toText } from './print.js';
-import { simplify } from './simplify.js';
-import { expand, numDen } from './expand.js';
-import { L, step } from './steps.js';
-import { Poly } from './poly.js';
+import { Q, MathError } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, nodeKey, freeVars, containsVar, numValue } from '../core/ast.js';
+import { parse } from '../core/parse.js';
+import { toTex, toText } from '../core/print.js';
+import { simplify } from '../core/simplify.js';
+import { expand, numDen } from '../core/expand.js';
+import { L, step } from '../core/steps.js';
+import { Poly } from '../core/poly.js';
 
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const bt = (f) => L(f('ru'), f('en'));
