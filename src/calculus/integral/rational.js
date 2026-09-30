@@ -6,9 +6,7 @@ import { bigLcm, Q } from '../../core/rational.js';
 import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { Poly } from '../../core/poly.js';
-import { HALF, N0, N1, N2, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';
-import { I } from './engine.js';
-import { canonicalRational } from './trig.js';
+import { HALF, N0, N1, N2, iTex, lnAbs, q, simp, trySimp, tx, canonicalRational, qn } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- rational functions
@@ -31,8 +29,6 @@ export function solveQ(A, b) {
     }
     return M.map((row) => row[n]);
 }
-
-export const qn = (x) => num(x);
 
 /** ∫ A/(ax + b)^k dx */
 function intLinearPiece(A, lin, k, v) {
@@ -109,7 +105,7 @@ export function mRational(f, ctx) {
         // a polynomial in disguise, (x² − 1)/(x − 1) − x: integrate its plain form
         const P0 = canonicalRational(f, v);
         if (!P0 || nodeKey(P0) === nodeKey(f)) return null;
-        const rp = I(P0, ctx);
+        const rp = ctx.integrate(P0);
         if (!rp) return null;
         return {
             ...rp,
@@ -163,7 +159,7 @@ export function mRational(f, ctx) {
     const subs = [];
     if (!polyPart.isZero()) {
         const pp = polyPart.toNode(v);
-        const rp = I(simp(pp), ctx);
+        const rp = ctx.integrate(simp(pp));
         if (!rp) return null;
         Fparts.push(rp.F);
         subs.push(rp.step);

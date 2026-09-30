@@ -6,10 +6,7 @@ import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { expand } from '../../core/expand.js';
 import { Poly } from '../../core/poly.js';
-import { plainish } from './basic.js';
-import { HALF, N1, N2, NM1, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx } from './common.js';
-import { I, sub } from './engine.js';
-import { qn } from './rational.js';
+import { plainish, HALF, N1, N2, NM1, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx, qn, substResult } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- trigonometric forms
@@ -60,39 +57,6 @@ function sinCosShape(f, v) {
     const lp = linearParts(L, v);
     if (!lp) return null;
     return { c: consts.length ? mul([num(coef), ...consts]) : num(coef), L, m, n, k: lp.k };
-}
-
-/** A rational function of v in lowest terms as a node (a polynomial when the denominator is a number), else null. */
-export function canonicalRational(node, v) {
-    const r = ratFunctionOf(node, v);
-    if (!r) return null;
-    if (r.den.degree < 1) return trySimp(r.num.scale(r.den.coeff(0).inv()).toNode(v));
-    return trySimp(div(r.num.toNode(v), r.den.toNode(v)));
-}
-
-export function substResult(f, ctx, { t, uNode, g, title, text, rule, dtTex }) {
-    const { v } = ctx;
-    const g0 = trySimp(g);
-    if (!g0) return null;
-    // after t = tg(x/2) and the like the fraction comes out nested: −2/(((t²−1)/(t²+1) − 1)(t²+1)) is just 1
-    const gs = canonicalRational(g0, t) ?? g0;
-    const r = I(gs, sub(ctx, { v: t }));
-    if (!r) return null;
-    const F = substitute(r.F, { [t]: uNode });
-    return {
-        F,
-        method: rule,
-        step: step({
-            title,
-            tex: eachLanguage(
-                (L) =>
-                    `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`,
-            ),
-            text,
-            rule,
-            sub: [r.step],
-        }),
-    };
 }
 
 export function mTrig(f, ctx) {
@@ -170,7 +134,7 @@ export function mTrig(f, ctx) {
         }
         const X = expandSafe(rewritten);
         if (!X || nodeKey(X) === nodeKey(f)) return null;
-        const r = I(X, ctx);
+        const r = ctx.integrate(X);
         if (!r) return null;
         return {
             F: r.F,
@@ -187,7 +151,7 @@ export function mTrig(f, ctx) {
     // product to sum: sin a·cos b, sin a·sin b, cos a·cos b with different linear arguments
     const ps = productToSum(g, v);
     if (ps) {
-        const r = I(ps.X, ctx);
+        const r = ctx.integrate(ps.X);
         if (!r) return null;
         return {
             F: r.F,
@@ -235,7 +199,7 @@ export function mTrigLower(f, ctx) {
     if (!f.args.some((x) => containsVar(x, v) && !(x.type === 'pow' && x.base.type === 'fn' && ['sin', 'cos'].includes(x.base.name)))) return null;
     const X = expandSafe(mul(out));
     if (!X || X.type !== 'add') return null;
-    const r = I(X, ctx);
+    const r = ctx.integrate(X);
     if (!r) return null;
     return {
         F: r.F,
@@ -360,7 +324,7 @@ export function mTrigSub(f, ctx) {
     const dx = kind === 'sin' ? mul(A, fn('cos', T)) : div(A, pow(fn('cos', T), N2));
     g = trySimp(mul(substitute(g, { [v]: xOfT }), dx));
     if (!g || containsVar(g, v)) return null;
-    const r = I(g, sub(ctx, { v: t }));
+    const r = ctx.integrate(g, { v: t });
     if (!r) return null;
     const arc = kind === 'sin' ? fn('asin', div(sym(v), A)) : fn('atan', div(sym(v), A));
     const Ft = mapNode(r.F, (m) =>

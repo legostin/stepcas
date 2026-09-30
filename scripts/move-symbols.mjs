@@ -42,7 +42,12 @@ function refs(node) {
         if (n.type !== 'Identifier') return;
         const parent = anc[anc.length - 2];
         if (parent?.type === 'MemberExpression' && parent.property === n && !parent.computed) return;
-        if ((parent?.type === 'Property' || parent?.type === 'MethodDefinition' || parent?.type === 'PropertyDefinition') && parent.key === n && !parent.computed && !parent.shorthand)
+        if (
+            (parent?.type === 'Property' || parent?.type === 'MethodDefinition' || parent?.type === 'PropertyDefinition') &&
+            parent.key === n &&
+            !parent.computed &&
+            !parent.shorthand
+        )
             return;
         if (parent?.type === 'LabeledStatement' || parent?.type === 'BreakStatement' || parent?.type === 'ContinueStatement') return;
         out.add(n.name);
@@ -53,7 +58,8 @@ function importsOf(ast) {
     const m = new Map(); // local → {source, imported, ns}
     for (const st of ast.body) {
         if (st.type !== 'ImportDeclaration') continue;
-        for (const sp of st.specifiers) m.set(sp.local.name, { source: st.source.value, imported: sp.imported ? sp.imported.name : 'default', ns: sp.type === 'ImportNamespaceSpecifier' });
+        for (const sp of st.specifiers)
+            m.set(sp.local.name, { source: st.source.value, imported: sp.imported ? sp.imported.name : 'default', ns: sp.type === 'ImportNamespaceSpecifier' });
     }
     return m;
 }
@@ -138,7 +144,9 @@ for (const [local, e] of needExt) {
 }
 for (const n of needSource) if (!have.has(n) && !tTop.has(n)) add(rel(toPath, fromPath), n);
 if (needSource.size) console.warn(`warning: ${plan.to} now imports ${[...needSource].join(', ')} from ${plan.from}`);
-const newImports = [...bySource].map(([spec, names]) => (names[0].startsWith('* as') ? `import ${names[0]} from '${spec}';` : `import { ${names.join(', ')} } from '${spec}';`));
+const newImports = [...bySource].map(([spec, names]) =>
+    names[0].startsWith('* as') ? `import ${names[0]} from '${spec}';` : `import { ${names.join(', ')} } from '${spec}';`,
+);
 // the target stops importing what it now declares
 const tLines = target.split('\n');
 for (const st of tAst.body) {
@@ -146,7 +154,8 @@ for (const st of tAst.body) {
     const keep = st.specifiers.filter((sp) => !moved.has(sp.local.name));
     if (keep.length === st.specifiers.length) continue;
     for (let i = st.loc.start.line - 1; i < st.loc.end.line; i++) tLines[i] = null;
-    if (keep.length) tLines[st.loc.start.line - 1] = `import { ${keep.map((sp) => specText(sp.imported.name, sp.local.name)).join(', ')} } from '${st.source.value}';`;
+    if (keep.length)
+        tLines[st.loc.start.line - 1] = `import { ${keep.map((sp) => specText(sp.imported.name, sp.local.name)).join(', ')} } from '${st.source.value}';`;
 }
 const lastImport = tAst.body.filter((st) => st.type === 'ImportDeclaration').at(-1);
 const insertAt = lastImport ? lastImport.loc.end.line : tLines.findIndex((ln) => !isComment(ln)) + 0;

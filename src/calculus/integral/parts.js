@@ -6,10 +6,7 @@ import { splitCoeff } from '../../core/simplify.js';
 import { MathError } from '../../core/rational.js';
 import { quickDerivative } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
-import { plainish } from './basic.js';
-import { N0, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx } from './common.js';
-import { I, sub } from './engine.js';
-import { cleanAnti } from './integrate.js';
+import { plainish, N0, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx, cleanAnti } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- integration by parts
@@ -67,8 +64,8 @@ export function mParts(f, ctx) {
     }
     if (kinds[pick] === 'A' && !(Poly.fromNode(u, v)?.degree >= 1)) return null;
     const dvNode = simp(mul([num(coef), ...fs.filter((_, i) => i !== pick)]));
-    const c2 = sub(ctx, { parts: (ctx.parts ?? 0) + 1 });
-    const rv = I(dvNode, c2);
+    const deeper = { parts: (ctx.parts ?? 0) + 1 };
+    const rv = ctx.integrate(dvNode, deeper);
     if (!rv) return null;
     // v enters the second integral, so tidy it first: arctg(tg x) → x keeps ∫v du elementary-looking
     let V = rv.F;
@@ -86,7 +83,7 @@ export function mParts(f, ctx) {
     }
     const inner = trySimp(mul(V, du));
     if (!inner) return null;
-    const rj = isZero(inner) ? { F: N0, step: null } : I(inner, c2);
+    const rj = isZero(inner) ? { F: N0, step: null } : ctx.integrate(inner, deeper);
     if (!rj) return null;
     const F = add(mul(u, V), neg(rj.F));
     const why = LIATE_WHY[kinds[pick]];

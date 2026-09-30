@@ -4,13 +4,33 @@
 import { containsVar, mul, sym, div, pow, add, isConst, fn, neg, num, nodeKey, nodeChildren, substitute } from '../../core/ast.js';
 import { step } from '../../core/steps.js';
 import { Poly } from '../../core/poly.js';
-import { prettyForm, calcTex, quickDerivative } from '../derivative/index.js';
+import { quickDerivative } from '../derivative/index.js';
 import { expand } from '../../core/expand.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
-import { N1, N2, NM1, PI, coefTex, dTex, freshVar, iTex, isNum, isVar, isZero, linearParts, lnAbs, negLeading, q, simp, trySimp, tx } from './common.js';
-import { I, sub } from './engine.js';
-import { qn } from './rational.js';
+import {
+    N1,
+    N2,
+    NM1,
+    PI,
+    coefTex,
+    dTex,
+    freshVar,
+    iTex,
+    isNum,
+    isVar,
+    isZero,
+    linearParts,
+    lnAbs,
+    negLeading,
+    q,
+    simp,
+    trySimp,
+    tx,
+    qn,
+    mapPre,
+    plainish,
+} from './common.js';
 import { msg, eachLanguage, notation } from '../../i18n/index.js';
 
 // ---- constant and table
@@ -137,7 +157,7 @@ export function mLinearity(f, ctx) {
         const rest = f.args.filter((a) => containsVar(a, v));
         const c = simp(mul(consts));
         const g = simp(rest.length === 1 ? rest[0] : mul(rest));
-        const r = I(g, ctx);
+        const r = ctx.integrate(g);
         if (!r) return null;
         const F = mul(c, r.F);
         return {
@@ -155,7 +175,7 @@ export function mLinearity(f, ctx) {
     if (f.type === 'add') {
         const parts = [];
         for (const t of f.args) {
-            const r = I(t, ctx);
+            const r = ctx.integrate(t);
             if (!r) return null;
             parts.push({ t, r });
         }
@@ -201,32 +221,6 @@ function linearCandidates(f, v) {
     return [...out.values()];
 }
 
-/** Pre-order transform: fnc(node) → replacement (not descended into) or undefined to go deeper. */
-export function mapPre(n, fnc) {
-    const r = fnc(n);
-    if (r !== undefined) return r;
-    const kids = nodeChildren(n);
-    if (!kids.length) return n;
-    const nk = kids.map((c) => mapPre(c, fnc));
-    if (nk.every((c, i) => c === kids[i])) return n;
-    switch (n.type) {
-        case 'add':
-            return add(nk);
-        case 'mul':
-            return mul(nk);
-        case 'div':
-            return div(nk[0], nk[1]);
-        case 'neg':
-            return neg(nk[0]);
-        case 'pow':
-            return pow(nk[0], nk[1]);
-        case 'fn':
-            return fn(n.name, ...nk);
-        default:
-            return n;
-    }
-}
-
 function replaceNode(f, target, by) {
     const key = nodeKey(target);
     return mapPre(f, (m) => (nodeKey(m) === key ? by : undefined));
@@ -242,7 +236,7 @@ export function mLinearSub(f, ctx) {
         const g = trySimp(g0);
         if (!g) continue;
         const { k } = linearParts(Lx, v);
-        const r = I(g, sub(ctx, { v: t }));
+        const r = ctx.integrate(g, { v: t });
         if (!r) continue;
         const F = mul(div(N1, k), substitute(r.F, { [t]: Lx }));
         return {
@@ -262,32 +256,6 @@ export function mLinearSub(f, ctx) {
     }
     return null;
 }
-
-export function plainish(n, L) {
-    return toTextSafe(prettyForm(n), L);
-}
-
-function toTextSafe(n, L) {
-    try {
-        let s = calcTex(n, L);
-        s = s
-            .replace(/\\left|\\right/g, '')
-            .replace(/\\operatorname\{(\w+)\}/g, '$1')
-            .replace(/\\cdot/g, '·')
-            .replace(/\\,/g, ' ');
-        s = s
-            .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)')
-            .replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
-            .replace(/\^\{(-?\d+)\}/g, (m, d) => supDigits(d))
-            .replace(/\\([a-z]+)/g, '$1');
-        return s.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
-    } catch {
-        return '';
-    }
-}
-
-const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '-': '⁻' };
-const supDigits = (d) => [...d].map((c) => SUP[c]).join('');
 
 // ---- expand
 
@@ -310,7 +278,7 @@ export function mExpand(f, ctx) {
         return null;
     }
     if (X.type !== 'add' || X.args.length > 60 || nodeKey(X) === nodeKey(f)) return null;
-    const r = I(X, ctx);
+    const r = ctx.integrate(X);
     if (!r) return null;
     return {
         F: r.F,

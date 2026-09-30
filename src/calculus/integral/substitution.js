@@ -4,10 +4,7 @@ import { containsVar, nodeKey, pow, sym, num, nodeChildren, div, nodeSome, subst
 import { Poly } from '../../core/poly.js';
 import { quickDerivative, ratFunctionOf } from '../derivative/index.js';
 import { bigLcm } from '../../core/rational.js';
-import { mapPre, plainish } from './basic.js';
-import { E_, NM1, freshVar, isNum, isOne, isVar, isZero, linearParts, paren, q, simp, trySimp, tx } from './common.js';
-import { qn } from './rational.js';
-import { substResult } from './trig.js';
+import { mapPre, plainish, E_, NM1, freshVar, isNum, isOne, isVar, isZero, linearParts, paren, q, simp, trySimp, tx, qn, substResult } from './common.js';
 import { msg } from '../../i18n/index.js';
 
 // ---- u-substitution g(h(x))·h′(x)

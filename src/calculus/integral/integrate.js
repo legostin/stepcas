@@ -1,12 +1,12 @@
 // integral/integrate — the public entry integrate(): the cascade, a clean answer, hints for non-elementary integrals.
 
 import { splitCoeff } from '../../core/simplify.js';
-import { containsVar, nodeKey, sym, isConst, pow, mapNode, fn, add, freeVars, nodeSome } from '../../core/ast.js';
+import { containsVar, nodeKey, sym, isConst, pow, freeVars, nodeSome } from '../../core/ast.js';
 import { Poly } from '../../core/poly.js';
-import { niceForm, prettyForm } from '../derivative/index.js';
+import { prettyForm } from '../derivative/index.js';
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
-import { NM1, asNode, checkAnti, iTex, isNum, isVar, simp, surelyPositive, trySimp, tx } from './common.js';
+import { NM1, asNode, checkAnti, iTex, isNum, isVar, simp, trySimp, tx, cleanAnti } from './common.js';
 import { I } from './engine.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
@@ -58,25 +58,6 @@ function nonElementaryHint(f, v) {
 }
 
 // ---------------------------------------------------------------- cleaning the answer
-
-export function cleanAnti(F, v) {
-    let G = simp(F);
-    // atan(tan u) = u up to a piecewise constant — fine for an antiderivative
-    G = simp(mapNode(G, (m) => (m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan' ? m.args[0].args[0] : undefined)));
-    // ln|u| with u > 0 everywhere (after a substitution t = eˣ, …) is just ln u
-    G = simp(
-        mapNode(G, (m) =>
-            m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' && surelyPositive(m.args[0].args[0], v)
-                ? fn('ln', m.args[0].args[0])
-                : undefined,
-        ),
-    );
-    if (G.type === 'add') {
-        const kept = G.args.filter((t) => containsVar(t, v));
-        if (kept.length && kept.length < G.args.length) G = simp(add(kept));
-    }
-    return niceForm(G, v, { fnFractions: false });
-}
 
 // ---------------------------------------------------------------- public API
 

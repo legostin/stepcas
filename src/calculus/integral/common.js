@@ -1,14 +1,35 @@
-// integral/common — helpers shared by the methods: TeX, positivity (ln|u| or ln u) and the check F′ = f.
+// integral/common — what the methods share: constants, TeX, positivity (ln|u| or ln u), the check F′ = f, the answer
+// after a substitution and its cleaning. A leaf of integral/: it imports no method and not the engine.
 
-import { num, sym, toNode, nodeKey, isConst, freeVars, containsVar, add, mul, fn, nodeSize, neg } from '../../core/ast.js';
+import {
+    num,
+    sym,
+    toNode,
+    nodeKey,
+    isConst,
+    freeVars,
+    containsVar,
+    add,
+    mul,
+    fn,
+    nodeSize,
+    neg,
+    nodeChildren,
+    div,
+    pow,
+    mapNode,
+    substitute,
+} from '../../core/ast.js';
 import { Q } from '../../core/rational.js';
 import { parse } from '../../core/parse.js';
 import { simplify, splitCoeff } from '../../core/simplify.js';
-import { calcTex, quickDerivative } from '../derivative/index.js';
+import { calcTex, quickDerivative, prettyForm, niceForm, ratFunctionOf } from '../derivative/index.js';
 import { Poly } from '../../core/poly.js';
 import { expand } from '../../core/expand.js';
 import { rng } from '../../core/random.js';
 import { evaluate } from '../../core/evaluate.js';
+import { step } from '../../core/steps.js';
+import { eachLanguage } from '../../i18n/index.js';
 
 export const N0 = num(0);
 export const N1 = num(1);
@@ -234,3 +255,110 @@ export function checkAnti(F, f, v, opts = {}) {
     if (exact) return true;
     return usable >= 3 ? true : null;
 }
+
+/** Pre-order transform: fnc(node) → replacement (not descended into) or undefined to go deeper. */
+export function mapPre(n, fnc) {
+    const r = fnc(n);
+    if (r !== undefined) return r;
+    const kids = nodeChildren(n);
+    if (!kids.length) return n;
+    const nk = kids.map((c) => mapPre(c, fnc));
+    if (nk.every((c, i) => c === kids[i])) return n;
+    switch (n.type) {
+        case 'add':
+            return add(nk);
+        case 'mul':
+            return mul(nk);
+        case 'div':
+            return div(nk[0], nk[1]);
+        case 'neg':
+            return neg(nk[0]);
+        case 'pow':
+            return pow(nk[0], nk[1]);
+        case 'fn':
+            return fn(n.name, ...nk);
+        default:
+            return n;
+    }
+}
+
+export function plainish(n, L) {
+    return toTextSafe(prettyForm(n), L);
+}
+
+function toTextSafe(n, L) {
+    try {
+        let s = calcTex(n, L);
+        s = s
+            .replace(/\\left|\\right/g, '')
+            .replace(/\\operatorname\{(\w+)\}/g, '$1')
+            .replace(/\\cdot/g, '·')
+            .replace(/\\,/g, ' ');
+        s = s
+            .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)')
+            .replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
+            .replace(/\^\{(-?\d+)\}/g, (m, d) => supDigits(d))
+            .replace(/\\([a-z]+)/g, '$1');
+        return s.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+    } catch {
+        return '';
+    }
+}
+
+export function cleanAnti(F, v) {
+    let G = simp(F);
+    // atan(tan u) = u up to a piecewise constant — fine for an antiderivative
+    G = simp(mapNode(G, (m) => (m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan' ? m.args[0].args[0] : undefined)));
+    // ln|u| with u > 0 everywhere (after a substitution t = eˣ, …) is just ln u
+    G = simp(
+        mapNode(G, (m) =>
+            m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' && surelyPositive(m.args[0].args[0], v)
+                ? fn('ln', m.args[0].args[0])
+                : undefined,
+        ),
+    );
+    if (G.type === 'add') {
+        const kept = G.args.filter((t) => containsVar(t, v));
+        if (kept.length && kept.length < G.args.length) G = simp(add(kept));
+    }
+    return niceForm(G, v, { fnFractions: false });
+}
+
+/** A rational function of v in lowest terms as a node (a polynomial when the denominator is a number), else null. */
+export function canonicalRational(node, v) {
+    const r = ratFunctionOf(node, v);
+    if (!r) return null;
+    if (r.den.degree < 1) return trySimp(r.num.scale(r.den.coeff(0).inv()).toNode(v));
+    return trySimp(div(r.num.toNode(v), r.den.toNode(v)));
+}
+
+export function substResult(f, ctx, { t, uNode, g, title, text, rule, dtTex }) {
+    const { v } = ctx;
+    const g0 = trySimp(g);
+    if (!g0) return null;
+    // after t = tg(x/2) and the like the fraction comes out nested: −2/(((t²−1)/(t²+1) − 1)(t²+1)) is just 1
+    const gs = canonicalRational(g0, t) ?? g0;
+    const r = ctx.integrate(gs, { v: t });
+    if (!r) return null;
+    const F = substitute(r.F, { [t]: uNode });
+    return {
+        F,
+        method: rule,
+        step: step({
+            title,
+            tex: eachLanguage(
+                (L) =>
+                    `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`,
+            ),
+            text,
+            rule,
+            sub: [r.step],
+        }),
+    };
+}
+
+const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '-': '⁻' };
+
+export const supDigits = (d) => [...d].map((c) => SUP[c]).join('');
+
+export const qn = (x) => num(x);

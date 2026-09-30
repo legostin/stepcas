@@ -13,7 +13,8 @@ import { mCyclic, mTrig, mTrigLower, mTrigSub, mWeierstrass } from './trig.js';
 // ---------------------------------------------------------------- the recursive integrator
 
 /**
- * I(f, ctx) → {F, step, method} | null for a canonical integrand f (ctx.v is the variable).
+ * I(f, ctx) → {F, step, method} | null for a canonical integrand f. ctx: {v (the variable), depth, budget: {calls,
+ * max, memo}, parts? (integrations by parts so far)}; a method gets ctx.integrate as well.
  * Each method returns a candidate; a candidate that fails checkAnti is dropped and the next method tried.
  */
 export function I(f, ctx) {
@@ -23,10 +24,14 @@ export function I(f, ctx) {
     if (b.memo.has(key)) return b.memo.get(key);
     b.memo.set(key, null); // in progress: a cycle ends here
     let res = null;
-    for (const m of cascade()) {
+    // a method integrates the parts it makes with ctx.integrate(g, overrides) — the engine hands itself down, so the
+    // methods never import it
+    const inner = { ...ctx, depth: ctx.depth + 1 };
+    inner.integrate = (g, overrides) => I(g, overrides ? { ...inner, ...overrides } : inner);
+    for (const m of METHODS) {
         let r;
         try {
-            r = m(f, { ...ctx, depth: ctx.depth + 1 });
+            r = m(f, inner);
         } catch (e) {
             if (!(e instanceof MathError)) throw e;
             r = null;
@@ -48,12 +53,8 @@ export function I(f, ctx) {
     return res;
 }
 
-export function sub(ctx, extra = {}) {
-    return { ...ctx, ...extra };
-}
-
-// the cascade, in order; a function rather than a constant so that the method modules can be loaded in any order
-const cascade = () => [
+// the cascade, in order
+const METHODS = [
     mConst,
     mTable,
     mLinearity,

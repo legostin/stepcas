@@ -8,14 +8,13 @@
 // y'(x₀) = y₁ fix the constants. Every answer is substituted back into the equation numerically before it is
 // returned; an answer that fails the check is not returned.
 import { Q, MathError } from '../core/rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, rel, freeVars, containsVar, substitute, numValue, nodeSome } from '../core/ast.js';
+import { num, sym, add, mul, div, neg, pow, fn, rel, freeVars, containsVar, substitute, numValue, nodeSome, mapNode } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex, toText, plainText } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { integrate } from './integral/index.js';
 import { solveEquation } from '../solve/index.js';
 import { expand } from '../core/expand.js';
-import { mapNode } from '../core/ast.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from './derivative/derivative.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
