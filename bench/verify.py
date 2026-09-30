@@ -156,7 +156,8 @@ def roots_verdict(eq, var, got, want_vals, want_nodes):
     """SymPy's roots must all be expected ones; expected roots SymPy missed must pass substitution."""
     gs = sorted(set(round(q, 9) for q in got))
     ws = sorted(set(round(q, 9) for q in want_vals))
-    extra = [g for g in gs if not any(close(g, w) for w in ws)]
+    # SymPy sometimes keeps roots where both sides are equal complex numbers (√(−2) = √(−2)): real roots only
+    extra = [g for g in gs if not any(close(g, w) for w in ws) and satisfies(eq, var, sp.Float(g, 30))]
     if extra:
         return 'MISMATCH', f'SymPy has more roots: {extra[:6]}'
     missing = [w for w in ws if not any(close(g, w) for g in gs)]
@@ -288,6 +289,38 @@ def param_check(t, ans):
     return 'ok', 'grid'
 
 
+def ode_check(raw, f):
+    """y(x) = f solves the equation and meets the initial conditions (checked by substitution)."""
+    from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
+    tr = standard_transformations + (implicit_multiplication_application, convert_xor)
+    X = Symbol('x', real=True)
+    Y = sp.Function('y')
+    loc = {'x': X, 'y': Y, 'e': E, 'E': E, 'pi': pi}
+    f = f.subs(x, X)
+
+    def parse(text):
+        s = text.replace("y''", 'D2').replace("y'", 'D1')
+        s = re.sub(r'(?<![A-Za-z_])y(?![A-Za-z_(])', 'Y0', s)
+        e = parse_expr(s, local_dict={**loc, 'D2': Symbol('D2'), 'D1': Symbol('D1'), 'Y0': Symbol('Y0')}, transformations=tr)
+        return e.subs({Symbol('D2'): diff(f, X, 2), Symbol('D1'): diff(f, X), Symbol('Y0'): f})
+    parts = [p.strip() for p in raw.split(';')]
+    lhs, rhs = parts[0].split('=')
+    res = simplify(parse(lhs) - parse(rhs))
+    if res != 0:
+        vals = [abs(fnum(res.subs(X, q))) for q in (0.3, 0.7, 1.9)]
+        if max(vals) > 1e-9:
+            return 'MISMATCH', f'residual {res}'
+    for ic in parts[1:]:
+        m = re.match(r"y('*)\((.+?)\)\s*=\s*(.+)$", ic)
+        order = len(m.group(1))
+        at = parse_expr(m.group(2), local_dict=loc, transformations=tr)
+        val = parse_expr(m.group(3), local_dict=loc, transformations=tr)
+        got = diff(f, X, order).subs(X, at) if order else f.subs(X, at)
+        if not close(fnum(got), fnum(val)):
+            return 'MISMATCH', f'{ic}: got {got}'
+    return 'ok', None
+
+
 def check(t):
     op = t['op']
     ans = t.get('answer', {})
@@ -356,7 +389,7 @@ def check(t):
     if op == 'integral':
         lo, hi = [ev(s) for s in t['bounds']]
         r = integrate(ev(t['task']), (v, lo, hi))
-        if ans.get('diverges'):
+        if ans.get('diverges') or ans.get('value') in ('inf', '-inf'):
             return ('ok', None) if r in (oo, -oo, sp.zoo) or r.has(oo) else ('MISMATCH', str(r))
         if r.has(sp.Integral):
             r = sp.Integral(ev(t['task']), (v, lo, hi)).evalf()
@@ -364,10 +397,15 @@ def check(t):
     if op == 'limit':
         at = ev(t['at'])
         d = {'right': '+', 'left': '-'}.get(t.get('side'), '+-')
-        r = limit(ev(t['task']), v, at, d)
         want = ans['value']
+        try:
+            r = limit(ev(t['task']), v, at, d)
+        except ValueError:
+            r = None  # «the limit does not exist since left … and right … differ»
         if want == 'dne':
-            return ('ok', None) if isinstance(r, sp.AccumBounds) or r.has(sp.AccumBounds) else ('MISMATCH', str(r))
+            return ('ok', None) if r is None or r == sp.zoo or isinstance(r, sp.AccumBounds) or r.has(sp.AccumBounds) else ('MISMATCH', str(r))
+        if r is None:
+            return 'MISMATCH', 'does not exist'
         if want in ('inf', '-inf'):
             return ('ok', None) if r == (oo if want == 'inf' else -oo) else ('MISMATCH', str(r))
         return ('ok', None) if close(fnum(r), fnum(ev(want))) else ('MISMATCH', str(r))
@@ -404,7 +442,7 @@ def check(t):
         if op == 'det':
             return ('ok', None) if close(fnum(M.det()), fnum(ev(ans['value']))) else ('MISMATCH', str(M.det()))
         if op == 'rank':
-            return ('ok', None) if M.rank() == ans['value'] else ('MISMATCH', str(M.rank()))
+            return ('ok', None) if M.rank() == int(ev(str(ans['value']))) else ('MISMATCH', str(M.rank()))
         if op == 'inv':
             if ans.get('none'):
                 return ('ok', None) if M.det() == 0 else ('MISMATCH', 'invertible')
@@ -430,7 +468,15 @@ def check(t):
         r = reduce(gcd, vals) if op == 'gcd' else reduce(lambda p, q: p * q // gcd(p, q), vals)
         return ('ok', None) if str(r) == str(ans['value']) else ('MISMATCH', str(r))
     if op == 'series':
-        return 'unverified', 'series'
+        sr = t['series']
+        kk = Symbol(sr['k'], integer=True)
+        NS[sr['k']] = kk
+        r = sp.summation(ev(sr['expr']), (kk, ev(sr['from']), ev(sr['to'])))
+        if r.has(sp.Sum):
+            return 'unverified', 'SymPy left the sum'
+        return ('ok', None) if close(fnum(r), fnum(ev(ans['value']))) else ('MISMATCH', str(r))
+    if op == 'ode':
+        return ode_check(t['raw'], ev(ans['expr']))
     if op == 'param':
         return param_check(t, ans)
     return 'unverified', f'op {op}'

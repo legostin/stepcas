@@ -1,0 +1,42 @@
+// Первый курс: пределы (замечательные, неопределённости, односторонние, на бесконечности).
+import { set } from '../_helpers.mjs';
+
+const t = set('university', 'limits', 'uni-lim');
+
+export default [
+    t.limit('sin(3x)/x', '0', '3'),
+    t.limit('(1 - cos(x))/x^2', '0', '1/2'),
+    t.limit('(x^2 - 4)/(x - 2)', '2', '4'),
+    t.limit('(sqrt(x + 1) - 1)/x', '0', '1/2'),
+    t.limit('(1 + 2/x)^x', 'inf', 'e^2'),
+    t.limit('(3x^2 + x)/(2x^2 - 5)', 'inf', '3/2'),
+    t.limit('ln(1 + 3x)/x', '0', '3'),
+    t.limit('(e^(2x) - 1)/x', '0', '2'),
+    t.limit('x ln(x)', '0', '0', { side: 'right' }),
+    t.limit('(tg(x) - sin(x))/x^3', '0', '1/2'),
+    t.limit('sqrt(x^2 + x) - x', 'inf', '1/2'),
+    t.limit('(1 - x)^(1/x)', '0', 'e^(-1)'),
+    t.limit('x^x', '0', '1', { side: 'right' }),
+    t.limit('(x - sin(x))/x^3', '0', '1/6'),
+    t.limit('arctg(x)/x', '0', '1'),
+    t.limit('(2^x - 1)/x', '0', 'ln(2)'),
+    t.limit('(x^3 - 1)/(x - 1)', '1', '3'),
+    t.limit('1/x', '0', 'dne'),
+    t.limit('1/x^2', '0', 'inf'),
+    t.limit('sin(x)/x', 'inf', '0'),
+    t.limit('ln(x)/x', 'inf', '0'),
+    t.limit('x^2 e^(-x)', 'inf', '0'),
+    t.limit('(1 + 1/x)^(2x)', 'inf', 'e^2'),
+    t.limit('cos(x)^(1/x^2)', '0', 'e^(-1/2)'),
+    t.limit('(sqrt(1 + x) - sqrt(1 - x))/x', '0', '1'),
+    t.limit('(x^2 + 3x + 2)/(x^2 - 1)', '-1', '-1/2'),
+    t.limit('x^(1/x)', 'inf', '1'),
+    t.limit('(1 - cos(2x))/(x sin(x))', '0', '2'),
+    t.limit('(e^x - 1 - x)/x^2', '0', '1/2'),
+    t.limit('abs(x)/x', '0', '1', { side: 'right' }),
+    t.limit('abs(x)/x', '0', 'dne'),
+    t.limit('(x + 1)/(x - 1)', '1', 'inf', { side: 'right' }),
+    t.limit('(2x^3 - x)/(x^3 + 5x^2)', 'inf', '2'),
+    t.limit('x sin(1/x)', 'inf', '1'),
+    t.limit('(ln(x))^2/sqrt(x)', 'inf', '0'),
+];

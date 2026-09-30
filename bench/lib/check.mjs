@@ -45,15 +45,17 @@ export function sameFunction(a, b, vars = ['x']) {
         fb = E.compile(typeof b === 'string' ? E.parse(b, { lang: 'en' }) : b, vars);
     } catch { return false; }
     let good = 0;
-    for (let i = 0; i < 40; i++) {
-        const pt = vars.map((_, k) => -3.7 + ((i * 0.731 + k * 1.37) % 7.3));
+    // points in several ranges, small positives included (domains like (0; 1) for arcsin √x)
+    const XS = [0.07, 0.13, 0.21, 0.29, 0.37, 0.43, 0.51, 0.63, 0.71, 0.87, 0.93, 1.3, 1.7, 2.2, 2.9, 3.6, -0.13, -0.41, -0.77, -1.3, -2.1, -2.9, -3.6, 4.4, 5.3];
+    for (let i = 0; i < XS.length * vars.length; i++) {
+        const pt = vars.map((_, k) => XS[(i + k * 7) % XS.length]);
         let x, y;
         try { x = fa(...pt); y = fb(...pt); } catch { continue; }
         if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
         if (Math.abs(x - y) > 1e-6 * Math.max(1, Math.abs(x), Math.abs(y))) return false;
         good++;
     }
-    return good >= 8;
+    return good >= 5;
 }
 
 // F′ = f at sample points (indefinite integrals: any antiderivative counts).

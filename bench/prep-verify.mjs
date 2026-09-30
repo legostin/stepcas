@@ -27,7 +27,13 @@ const out = [];
 for (const t of tasks) {
     try {
         const o = { id: t.id, op: t.op, v: t.v || 'x', answer: {}, ask: t.ask };
-        if (['solve', 'ineq', 'value', 'simplify', 'factor', 'diff', 'integrate', 'integral', 'limit', 'extremum', 'param', 'ode', 'series'].includes(t.op)) {
+        if (t.op === 'ode') o.raw = t.task;
+        if (t.op === 'series') {
+            // sum(expr, k, a, b): the pieces go to SymPy separately
+            const m = /^sum\((.*),\s*([a-z])\s*,\s*([^,]+),\s*([^,]+)\)$/.exec(t.task);
+            o.series = { expr: sp(m[1]).src, k: m[2], from: sp(m[3]).src, to: /inf/.test(m[4]) ? 'oo' : sp(m[4]).src };
+        }
+        if (['solve', 'ineq', 'value', 'simplify', 'factor', 'diff', 'integrate', 'integral', 'limit', 'extremum', 'param'].includes(t.op)) {
             if (t.op === 'system') continue;
             const x = sp(t.task);
             o.task = x.src; o.syms = x.syms;
