@@ -87,6 +87,11 @@ for (const s of stmts) {
 
 // the text of each part: its lines, with `export` added where a sibling needs the name
 const lineOwner = lines.map((_, i) => partOf(i + 1));
+// every line after the imports must land somewhere (a range that stops short would silently drop code)
+const lastImport = Math.max(0, ...ast.body.filter((st) => st.type === 'ImportDeclaration').map((st) => st.loc.end.line));
+lines.forEach((ln, i) => {
+    if (i + 1 > lastImport && lineOwner[i] < 0 && ln.trim() !== '') throw new Error(`line ${i + 1} is in no part: ${ln.slice(0, 60)}`);
+});
 const startLines = new Map(stmts.map((s) => [s.st.loc.start.line, s]));
 plan.parts.forEach((p, k) => {
     const body = [];
@@ -123,6 +128,7 @@ plan.parts.forEach((p, k) => {
     }
     for (const [f, names] of [...sib].sort()) imports.push(`import { ${names.sort().join(', ')} } from '${f}';`);
     const out = `${p.doc.trim()}\n\n${imports.join('\n')}\n\n${P.body}`;
+    fs.mkdirSync(path.dirname(path.resolve(root, p.file)), { recursive: true });
     fs.writeFileSync(path.resolve(root, p.file), out);
 });
 

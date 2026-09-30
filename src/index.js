@@ -16,7 +16,7 @@ export * from './numbers/theory.js';
 export * from './numbers/numeric.js';
 export * from './linalg/matrix.js';
 export * from './calculus/derivative.js';
-export * from './calculus/integral.js';
+export * from './calculus/integral/index.js';
 export * from './calculus/limit.js';
 export * from './solve/index.js';
 export * from './calculus/extrema.js';

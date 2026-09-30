@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { TASK_KINDS, generateSet } from '../src/generate.js';
+import { TASK_KINDS, generateSet } from '../src/generate/tasks.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
