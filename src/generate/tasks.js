@@ -47,7 +47,6 @@ function rng(seed) {
 const q = (x) => Q.of(x);
 const qs = (x) => q(x).toString(); // "3", "-3/4"
 // a number as a factor or a term: fractions in brackets
-const qf = (x) => (q(x).isInt() ? qs(x) : `(${qs(x)})`);
 // a polynomial from its coefficients, highest degree first: [1, -5, 6] → "x^2 - 5x + 6"
 function poly(coeffs, v = 'x') {
     const n = coeffs.length - 1;

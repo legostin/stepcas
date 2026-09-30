@@ -292,7 +292,6 @@ export function solveExponential(lhs, rhs, E, ctx) {
 
 /** a^f = K·b^g with different bases: take logarithms of both sides. */
 function solveExpMixed(info, ctx) {
-    const v = ctx.v;
     const { terms, constant } = info;
     if (terms.length !== 2 || !isZeroNode(constant) || terms.some((t) => t.pows.length !== 1)) return null;
     const [A, B] = terms;

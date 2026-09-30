@@ -13,8 +13,6 @@
 import { Q } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, fn, nodeKey, freeVars, numValue, withChildren, nodeChildren, nodeSome } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { simplify } from '../core/simplify.js';
-import { evaluate } from '../core/evaluate.js';
 import { toTex } from '../core/print.js';
 import { L, step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';

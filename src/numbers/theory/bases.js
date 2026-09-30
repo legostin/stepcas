@@ -34,7 +34,7 @@ function qTex(num, den, lang) {
     }
     return `${num < 0n ? '-' : ''}\\frac{${tn(babs(num))}}{${tn(den)}}`;
 }
-const qText = (num, den, lang) => qTex(num, den, lang).replace('{,}', ',').replace(/\\frac\{(.*?)\}\{(.*?)\}/, '$1/$2').replace(/\\,/g, ' ');
+const qText = (num, den, lang) => qTex(num, den, lang).replace('{,}', ',').replace(/\\frac\{(.*?)\}\{(.*?)\}/, '$1/$2').replace(/\\,/g, '\u202f');
 
 /**
  * Convert to base 2–36: integers by repeated division, fractions by repeated multiplication with
@@ -133,7 +133,7 @@ export function ntToBase(x, base, opts = {}) {
  */
 export function ntFromBase(str, base, opts = {}) {
     const b = needBase(base), B = BigInt(b);
-    const s = String(str).replace(/[\s_  ]/g, '').replace(/^[−–]/, '-').toUpperCase();
+    const s = String(str).replace(/[\s_\u00a0\u202f]/g, '').replace(/^[−–]/, '-').toUpperCase();
     const m = s.match(/^([+-]?)([0-9A-Z]*)(?:[.,]([0-9A-Z]*)(?:\(([0-9A-Z]+)\))?)?$/);
     if (!m || (!m[2] && !m[3] && !m[4])) throw fail(`«${str}» — не запись числа.`, `"${str}" is not a numeral.`, 'syntax');
     const [, sg, ip, fp = '', per = ''] = m;

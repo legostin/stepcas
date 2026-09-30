@@ -371,7 +371,7 @@ export function asym(n, v) {
 function mLeading(n, C) {
     const { v, P } = C;
     if (Number.isFinite(P.x)) return null;
-    let S = trySimp(n);
+    const S = trySimp(n);
     if (!S) return null;
     const flip = P.x < 0;
     const work = flip ? trySimp(substitute(S, { [v]: neg(sym(v)) })) : S;

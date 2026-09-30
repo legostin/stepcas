@@ -118,7 +118,7 @@ function oneSide(f0, v, P, opts) {
     }
     f = unfoldAbs(f0, v, P);
     C.root = f;
-    let L = ev(f, C);
+    const L = ev(f, C);
     if (L && L.k === 'inf' && L.s === 0) throw new Split();
     return { L, C, method: C.methods.size ? [...C.methods][C.methods.size - 1] : L ? 'arithmetic' : null };
 }

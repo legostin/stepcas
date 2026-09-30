@@ -123,7 +123,6 @@ export function mRational(f, ctx) {
     const { q: polyPart, r: rem } = P.divmod(D);
     const { constant, factors } = D.factor();
     if (factors.some((x) => x.poly.degree > 2)) return null;
-    const X = sym(v);
     // partial fractions: unknowns per (factor, power)
     const terms = [];
     for (const { poly, mult } of factors) for (let k = 1; k <= mult; k++) terms.push({ poly, k });
@@ -273,7 +272,6 @@ export function mBiquadratic(f, ctx) {
     const subs = [];
     const piece = (coef, sign) => {
         // sign +1: ∫(x² + r)/(…), t = x − r/x;  −1: ∫(x² − r)/(…), t = x + r/x
-        const t = div(add(x2, sign > 0 ? neg(r) : r), X);
         const tView = add(X, sign > 0 ? neg(div(r, X)) : div(r, X));
         const m = simp(sign > 0 ? add(qn(p), mul(N2, r)) : add(qn(p), neg(mul(N2, r))));
         const mv = sign > 0 ? p.toNumber() + 2 * rv : p.toNumber() - 2 * rv;

@@ -11,8 +11,7 @@
 import { Q, MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, nodeKey, freeVars, containsVar, numValue } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { toTex, toText } from '../core/print.js';
-import { simplify } from '../core/simplify.js';
+import { toTex } from '../core/print.js';
 import { expand, numDen } from '../core/expand.js';
 import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
@@ -291,7 +290,7 @@ export function expandSteps(input) {
 /** Simplify: a fraction of polynomials is factored and reduced (with the excluded values); a polynomial is expanded. */
 export function simplifySteps(input) {
     const node = asNode(input);
-    let nd = null;
+    let nd;
     try {
         nd = numDen(node);
     } catch {

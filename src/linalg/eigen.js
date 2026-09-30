@@ -2,7 +2,7 @@
 
 import { Q } from '../core/rational.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
-import { E_, L, R, S, T, fail, qs, qt, qtp, shiftTex } from './common.js';
+import { E_, L, S, T, fail, qs, qt, qtp, shiftTex } from './common.js';
 import { M, Matrix, needSquare, vecTex } from './core.js';
 import { matDet } from './det.js';
 import { fmatSvd } from './float.js';

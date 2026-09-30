@@ -1,6 +1,7 @@
 // numeric/calculus — numerical derivatives and integrals (adaptive, with error estimates), Riemann sums.
 
 import { EPS, evalSafe, fail, fin, needFn, needInterval } from './common.js';
+/* eslint-disable no-loss-of-precision -- quadrature nodes and weights are quoted to their published precision */
 
 // ---------------------------------------------------------------- calculus
 
@@ -108,7 +109,7 @@ function adaptiveGk(f, a, b, tol, maxIntervals) {
 
 function tanhSinh(f, a, b, tol) {
     // double-exponential quadrature; nodes approach the ends without touching them
-    const c = 0.5 * (a + b), hw = 0.5 * (b - a);
+    const hw = 0.5 * (b - a);
     const term = (t) => {
         const u = 0.5 * Math.PI * Math.sinh(t);
         const ch = Math.cosh(u);

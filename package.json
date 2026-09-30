@@ -16,7 +16,9 @@
   "scripts": {
     "test": "node --test test/*.test.cjs",
     "bench": "node bench/run.mjs",
-    "bench:verify": "bench/.venv/bin/python bench/verify.py"
+    "bench:verify": "bench/.venv/bin/python bench/verify.py",
+    "lint": "eslint .",
+    "snapshot": "node bench/snapshot.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -41,7 +43,10 @@
   "homepage": "https://legost.in/utilities/math/canvas",
   "sideEffects": false,
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "acorn": "^8.18.0",
-    "acorn-walk": "^8.3.5"
+    "acorn-walk": "^8.3.5",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0"
   }
 }

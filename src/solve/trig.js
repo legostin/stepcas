@@ -249,7 +249,7 @@ function coeffs2(P, a, b, v) {
     for (const [i, c] of ca) {
         const cb = coeffsIn(c, b, v);
         if (!cb) return null;
-        for (const [j, cc] of cb) if (!isConstNode(cc)) return null;
+        for (const [, cc] of cb) if (!isConstNode(cc)) return null;
         for (const [j, cc] of cb) out.set(`${i},${j}`, cc);
     }
     return out;
@@ -294,7 +294,7 @@ function trigPolyOne(P, F, u, ctx, extraText) {
     const deg = Math.max(...ct.keys());
     if (deg < 1) return null;
     const steps = [];
-    let families = [];
+    const families = [];
     if (deg === 1) {
         const a = simpOr(div(neg(ct.get(0) ?? N0), ct.get(1)));
         const b = basicTrig(F, u, a, ctx);
@@ -417,7 +417,6 @@ function trigSingle(P, names, u, ctx) {
     const done = (r, extra = []) => r && { families: r.families, steps: [...extra, ...r.steps] };
     if (names.length === 1) return done(trigPolyOne(P, names[0], u, ctx));
     const key = names.join(',');
-    const Ut = (f) => (l) => tex(fn(f, u), l);
     if (key === 'cos,sin') {
         const bv = coeffs2(P, '__s', '__c', v);
         if (!bv) return null;
@@ -458,7 +457,6 @@ function bvNode(bv, u) {
 
 /** A polynomial in sin u and cos u given as Map "i,j" → coefficient. */
 function sinCosCore(bv, u, ctx, depth) {
-    const v = ctx.v;
     if (depth > 3) return null;
     for (const [k, c] of [...bv]) if (isZeroNode(simpOr(c))) bv.delete(k);
     if (!bv.size) return null;
@@ -544,7 +542,7 @@ function sinCosCore(bv, u, ctx, depth) {
         for (const [i, c] of [...h]) if (isZeroNode(simpOr(c))) h.delete(i);
         const maxI = Math.max(...h.keys());
         const m = d - maxI; // cos^m is a common factor
-        let families = [];
+        const families = [];
         const steps = [...pre];
         if (m > 0) {
             steps.push(S(T(`Выносим $\\cos${m > 1 ? `^${m}` : ''}$ за скобки`, `Take $\\cos${m > 1 ? `^${m}` : ''}$ out of the brackets`), {
@@ -644,7 +642,7 @@ function sumToProduct(E, ctx) {
 function equalTrig(E, ctx) {
     const v = ctx.v;
     if (E.type !== 'add' || E.args.length !== 2) return null;
-    let [P, R] = E.args.map((t) => trigTerm(t, v));
+    const [P, R] = E.args.map((t) => trigTerm(t, v));
     if (!P || !R) return null;
     const sgn = P.c.eq(R.c.neg()) ? 1 : P.c.eq(R.c) ? -1 : 0;
     if (!sgn) return null;

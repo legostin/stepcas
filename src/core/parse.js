@@ -228,7 +228,7 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
                 }
             }
             if (s[i] === '.' && isDigit(s[i + 1] ?? '')) throw err('Две десятичные точки в одном числе', 'Two decimal points in one number', offset + start, i - start + 2);
-            const raw = s.slice(start, i).replace(/[\s   ]/g, '');
+            const raw = s.slice(start, i).replace(/[\s\u00a0\u202f\u2009]/g, '');
             let q;
             if (period !== null) q = Q.of(`${int || '0'}.${frac}(${period})`);
             else if (frac !== null) q = Q.of(`${int || '0'}.${frac}`);
@@ -717,7 +717,7 @@ class Parser {
 
     parseMul(stopAtFn = false) {
         let cur = [this.parsePower()];
-        let acc = null;
+        let acc;
         for (;;) {
             const t = this.peek();
             if (t.t === 'op' && (t.v === '*' || t.v === '/')) {

@@ -8,7 +8,7 @@
 
 import { Q, MathError, bigGcd, bigLcm } from './rational.js';
 import { num, div, freeVars, nodeKey, containsVar, isConst } from './ast.js';
-import { simplify, splitCoeff, canonContext } from './simplify.js';
+import { splitCoeff, canonContext } from './simplify.js';
 import { Poly } from './poly.js';
 
 const MAX_TERMS = 1000;
@@ -197,7 +197,9 @@ function combine(s, C, opts) {
         return out;
     };
     const parts = terms.map((t) => {
-        let { coef, rest } = splitCoeff(t);
+        const split = splitCoeff(t);
+        let coef = split.coef;
+        const rest = split.rest;
         const factors = rest === null ? [] : rest.type === 'mul' ? rest.args : [rest];
         const numF = [];
         const den = new Map();

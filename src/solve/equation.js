@@ -35,7 +35,7 @@ function solveNumeric(E, ctx) {
     const trig = nodeSome(E, (n) => n.type === 'fn' && TRIG_FN.includes(n.name) && containsVar(n, v));
     let range = trig ? [-2 * Math.PI, 2 * Math.PI] : [-10, 10];
     let rangeT = trig ? byLang((l) => rangeTex('-2\\pi', '2\\pi', l)) : byLang((l) => rangeTex('-10', '10', l));
-    let rs = [];
+    let rs;
     try {
         rs = numFindRoots(f, range[0], range[1], { samples: 4000 });
     } catch {
@@ -210,7 +210,7 @@ export function pickVar(node, v) {
  *    families?, inInterval?, complexRoots?, set?, numeric?, range?, reason?}
  */
 export function solveEquation(input, v = 'x', opts = {}) {
-    let node = relOf(input, v);
+    const node = relOf(input, v);
     const withSteps = opts.steps !== false;
     if (node.type === 'list') return finish({ ...UNSUP(T('Это система уравнений — для неё есть отдельный решатель.', 'This is a system of equations: it has its own solver.')) }, v, withSteps);
     if (node.type === 'chain' || node.op !== '=') return finish({ ...UNSUP(T('Это неравенство, а не уравнение.', 'This is an inequality, not an equation.')) }, v, withSteps);

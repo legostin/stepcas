@@ -35,7 +35,7 @@ export function tp(n) {
 /** Plain text for an integer: narrow no-break spaces between groups, a real minus sign. */
 export function sn(n) {
     const s = String(n);
-    return s[0] === '-' ? '−' + grp(s.slice(1), ' ') : grp(s, ' ');
+    return s[0] === '-' ? '−' + grp(s.slice(1), '\u202f') : grp(s, '\u202f');
 }
 /** A decimal approximation: comma in Russian, point in English; `tex` gives {,}. */
 export function dec(x, digits, lang, tex = false) {
@@ -76,7 +76,7 @@ export function big(x, what) {
             `An integer is required${what ? ` (${what})` : ''}, got ${x}.`, 'not-int');
     }
     if (typeof x === 'string') {
-        const s = x.replace(/[\s_   ']/g, '').replace(/^[−–]/, '-');
+        const s = x.replace(/[\s_\u00a0\u202f\u2009']/g, '').replace(/^[−–]/, '-');
         if (/^[+-]?\d+$/.test(s)) return BigInt(s);
         throw fail(`«${x}» — не целое число.`, `"${x}" is not an integer.`, 'not-int');
     }

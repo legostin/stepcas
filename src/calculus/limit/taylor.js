@@ -34,7 +34,7 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
     for (let k = 0; k <= n; k++) {
         if (k > 0) d = quickDerivative(d, v);
         derivs.push(d);
-        let val = null;
+        let val;
         try {
             val = simp(substitute(d, { [v]: A }));
             if (!Number.isFinite(evaluate(val)) && !freeVars(val).length) val = null;

@@ -136,6 +136,19 @@ const calls = {
     factorIrreducible: () => E.factorSteps('x^2 + x + 1'),
     simplifyFraction: () => E.simplifySteps('(x^3 - 1)/(x^2 - 1)'),
     generateAll: () => E.TASK_KINDS.map((k) => E.generateTask(k, { seed: 3, level: 2 })),
+    integralDiverges: () => E.integrateDefinite('1/x', 'x', '1', 'inf', { steps: true }),
+    integralDivergesInside: () => E.integrateDefinite('1/x^2', 'x', '-1', '1', { steps: true }),
+    integralNumeric: () => E.integrateDefinite('e^(x^2)', 'x', '0', '1', { steps: true }),
+    limitDne: () => E.limit('sin(1/x)', 'x', 0, { steps: true }),
+    limitInfinite: () => E.limit('1/x^2', 'x', 0, { steps: true }),
+    derivativeAbs: () => E.derivative('abs(x^2 - 1)', 'x', { steps: true }),
+    solveComplex: () => E.solveEquation('x^2 + 1 = 0', 'x', { steps: true, domain: 'complex' }),
+    solveNumeric: () => E.solveEquation('x = cos(x)', 'x', { steps: true }),
+    ineqNone: () => E.solveInequality('x^2 + 1 < 0', 'x', { steps: true }),
+    systemNone: () => E.solveLinearSystem(['x + y = 1', 'x + y = 2'], ['x', 'y'], { steps: true }),
+    systemInfinite: () => E.solveLinearSystem(['x + y = 1', '2x + 2y = 2'], ['x', 'y'], { steps: true }),
+    matInverseSingular: () => E.matInverse([[1, 2], [2, 4]], { steps: true }),
+    valuesSteps: () => E.evaluateSteps('sqrt(3 + 2sqrt(2)) - sqrt(2)'),
 };
 const badInputs = ['2 +', '(x + 1', 'sin', 'x ** 2', '1/', 'log_(x)', 'foo(x)', '', 'x = = 2', '3..4', 'sqrt()', '[1, 2', 'x^', '2 3 +'];
 const extras = {};

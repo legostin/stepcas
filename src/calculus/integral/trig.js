@@ -5,7 +5,6 @@ import { splitCoeff } from '../../core/simplify.js';
 import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { expand } from '../../core/expand.js';
-import { Q } from '../../core/rational.js';
 import { Poly } from '../../core/poly.js';
 import { plainish } from './basic.js';
 import { HALF, N1, N2, NM1, T_, bt, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx } from './common.js';

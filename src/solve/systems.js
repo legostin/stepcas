@@ -139,7 +139,7 @@ function sysSubstitution(rows, vars) {
 
 function sysAddition(rows0, vars) {
     const steps = [];
-    let rows = rows0.map((r) => {
+    const rows = rows0.map((r) => {
         let den = 1n;
         for (const q of [...r.a, r.b]) den = bigLcm(den, q.d);
         return den > 1n ? { a: r.a.map((q) => q.mul(new Q(den))), b: r.b.mul(new Q(den)), den } : { ...r, den: 1n };

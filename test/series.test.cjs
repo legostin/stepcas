@@ -47,7 +47,7 @@ test('numeric estimates only with a convergence argument', () => {
     assert.ok(Math.abs(z3.approx - 1.2020569031595942) < 1e-7);
     const lb = S('sum((-1)^k/sqrt(k), k, 1, inf)');
     assert.equal(lb.kind, 'approx');
-    assert.ok(Math.abs(lb.approx + 0.6048986434216303) < 1e-6);
+    assert.ok(Math.abs(lb.approx + 0.60489864342163) < 1e-6);
     assert.equal(S('sum(cos(k)/k, k, 1, inf)').kind, 'unsupported');
     assert.equal(S('1/k^2').kind, 'unsupported');
 });

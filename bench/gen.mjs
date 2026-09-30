@@ -13,7 +13,7 @@ for (const kind of TASK_KINDS) {
     for (const level of [1, 2, 3]) {
         const set = generateSet(kind, { count: per, seed: 1000 * (TASK_KINDS.indexOf(kind) + 1) + 100 * level, level });
         set.forEach((t, i) => {
-            const { family: k, level: lv, seed, prompt, ...rest } = t;
+            const { family: k, level: lv, seed, prompt: _prompt, ...rest } = t;
             out.push({ id: `gen-${k}-${lv}-${String(i + 1).padStart(2, '0')}`, source: 'generated', topic: k, level: lv, seed, ...rest });
         });
     }

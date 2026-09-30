@@ -40,7 +40,6 @@ export function mQuadRoot(f, ctx) {
     const [c, b, a] = [Qp.coeff(0), Qp.coeff(1), Qp.coeff(2)];
     const D = b.mul(b).sub(a.mul(c).mul(4));
     const sqrtQ = pow(radBase, HALF);
-    const lin2 = add(mul(qn(a.mul(2)), X), qn(b));
     const M = B.div(a.mul(2));
     const Nn = C.sub(B.mul(b).div(a.mul(2)));
     const parts = [];

@@ -151,7 +151,7 @@ function rho(n) {
     let budget = RHO_BUDGET;
     for (let c = 1n; c < 200n; c++) {
         const f = (v) => (v * v + c) % n;
-        let y = 2n + c, r = 1, q = 1n, g = 1n, x = 0n, ys = 0n;
+        let y = 2n + c, r = 1, q = 1n, g = 1n, x, ys = 0n;
         const m = 128;
         do {
             x = y;

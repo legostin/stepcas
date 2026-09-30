@@ -405,16 +405,6 @@ function absIneq(E, op, ctx) {
     return { set, steps, type: 'abs' };
 }
 
-/** Map a set of t-values through a monotonic increasing map t → x (fn gets an endpoint node, returns a node or null = ±∞). */
-function mapSet(set, f) {
-    return new IntervalSet(set.parts.map((p) => ({
-        lo: p.lo === null ? null : f(p.lo.node, 'lo'),
-        hi: p.hi === null ? null : f(p.hi.node, 'hi'),
-        loC: p.loC,
-        hiC: p.hiC,
-    })).map((p) => ({ ...p, lo: p.lo && endOf(p.lo), hi: p.hi && endOf(p.hi) })));
-}
-
 // p·b^f − q·b^g op 0 with q/p a power of b: b^f op b^(g + m) → f op g + m (by the monotonicity of b^t)
 function twoPowersIneq(E, op, ctx) {
     const v = ctx.v;
@@ -429,7 +419,7 @@ function twoPowersIneq(E, op, ctx) {
     });
     if (parts.some((x) => !x) || !sameBase(parts[0].bi.c, parts[1].bi.c)) return null;
     let [P1, P2] = parts;
-    let op1 = op;
+    const op1 = op;
     if (P1.coef.isNeg()) {
         [P1, P2] = [P2, P1];
     }

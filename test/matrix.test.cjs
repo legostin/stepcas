@@ -68,7 +68,7 @@ function leibniz(A) {
     return total;
 }
 function applyOps(A, ops) {
-    let W = A.toArray();
+    const W = A.toArray();
     for (const op of ops) {
         if (op.op === 'swap') [W[op.i], W[op.j]] = [W[op.j], W[op.i]];
         else if (op.op === 'scale') W[op.i] = W[op.i].map((v) => v.mul(op.k));

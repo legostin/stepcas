@@ -6,14 +6,11 @@
 // A quadratic in x with coefficients depending on a goes the school way: the leading coefficient is zero (the
 // equation is linear), otherwise the discriminant decides. Anything linear in a goes the graphical way: a = g(x),
 // study g (domain, derivative, corners, limits at the ends) and count where the line y = a meets the graph.
-import { Q, MathError } from '../core/rational.js';
-import { num, sym, add, mul, div, neg, pow, rel, nodeKey, containsVar, substitute, numValue, nodeSome, freeVars } from '../core/ast.js';
+import { MathError } from '../core/rational.js';
+import { num, sym, add, mul, div, neg, pow, rel, containsVar, substitute, numValue, nodeSome, freeVars } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { toTex, toText } from '../core/print.js';
-import { simplify } from '../core/simplify.js';
-import { evaluate } from '../core/evaluate.js';
+import { toTex } from '../core/print.js';
 import { L, step } from '../core/steps.js';
-import { derivative } from '../calculus/derivative/index.js';
 import { limit } from '../calculus/limit/index.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
 import { trySimplify, approx } from '../core/safe.js';
@@ -50,8 +47,8 @@ function quadratic(E, x, a, want) {
     if (containsVar(A, x)) return null;
     const B = trySimplify(substitute(derivativeOf(E, x), { [x]: N0 }));
     const C = trySimplify(substitute(E, { [x]: N0 }));
-    // E = Ax² + Bx + C identically
     const X = sym(x);
+    // E = Ax² + Bx + C identically
     const back = add(mul(A, pow(X, num(2))), mul(B, X), C);
     for (const [xv, av] of [[0.37, 1.3], [-1.2, 0.4], [2.1, -0.7]]) {
         if (Math.abs(approx(E, { [x]: xv, [a]: av }) - approx(back, { [x]: xv, [a]: av })) > 1e-9) return null;
@@ -112,7 +109,6 @@ function graphical(E, x, a, want) {
     if (containsVar(Qn, a)) return null; // not linear in a
     const P = trySimplify(substitute(E, { [a]: N0 }));
     const g = trySimplify(neg(div(P, Qn)));
-    const X = sym(x);
     const Dom = domainSet(E, x);
     if (!Dom) return null;
     // points where Q = 0: roots for every a when P = 0 there too, otherwise never
@@ -162,7 +158,7 @@ function graphical(E, x, a, want) {
     // pieces between neighbouring breakpoints that lie in the domain
     const pieces = [];
     const lim = (b, side) => {
-        let r = null;
+        let r;
         try {
             r = limit(g, x, b, { side });
         } catch {
@@ -267,7 +263,7 @@ export function solveWithParameter(input, opts = {}) {
     const others = freeVars(node).filter((v) => v !== a && v !== x);
     if (others.length) return { kind: 'unsupported', reason: L(`Лишние буквы: ${others.join(', ')}.`, `Extra letters: ${others.join(', ')}.`), steps: [] };
     const E = trySimplify(add(node.lhs, neg(node.rhs)));
-    let r = null;
+    let r;
     try {
         r = quadratic(E, x, a, want) ?? graphical(E, x, a, want);
     } catch (e) {

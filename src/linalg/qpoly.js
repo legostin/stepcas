@@ -80,7 +80,7 @@ export function rationalRootsQ(a) {
     if (pdeg(rest) >= 1) {
         const ints = intPrimitive(rest);
         const a0 = babs(ints[0]), an = babs(ints[ints.length - 1]);
-        let cands = [];
+        const cands = [];
         if (a0 < 10n ** 15n && an < 10n ** 15n) {
             const P = ntDivisors(a0), Qd = ntDivisors(an);
             if (P.length * Qd.length <= 50000) {

@@ -30,7 +30,6 @@ export function S(title, o = {}) {
 export const N0 = num(0);
 export const N1 = num(1);
 export const PI = sym('pi');
-const qn = (q) => num(Q.of(q));
 
 /** Simplify without throwing (null on failure). */
 export function simp(node, opts) {
@@ -186,7 +185,6 @@ export function isolated(lhs, rhs, X, Y) {
 }
 
 export const TMP = '__u';
-const TMP2 = '__w';
 
 /** E = α·U + β in the placeholder U (α constant ≠ 0) → {alpha, beta} or null. */
 export function linearIn(E, name, v) {

@@ -13,7 +13,6 @@ import { familiesTex, familiesToRoots, mergeFamilies } from './trig.js';
 // ---------------------------------------------------------------- polynomials: helpers
 
 export const polyTex = (P, v, lang) => tex(P.toNode(v), lang);
-const polyTexB = (P, v) => byLang((l) => polyTex(P, v, l));
 const X_POW = (v, k) => (k === 1 ? v : `${v}^{${k}}`);
 
 export function multOf(P, m) {
@@ -218,11 +217,8 @@ export function quadSolve(P0, ctx) {
 
 // ---------------------------------------------------------------- higher degree
 
-const OR = T('или', 'or');
-
 /** A nested "solve this part" step: the result in the title line, the details inside. */
 export function partStep(eqTex, res, v) {
-    const found = [...res.roots, ...(res.cplx ?? [])];
     return S(byLang((l) => (l === 'ru' ? `Решаем $${pick(eqTex, 'ru')}$` : `Solve $${pick(eqTex, 'en')}$`)), {
         tex: byLang((l) => (res.kind === 'all' ? `${v} \\in \\mathbb{R}` : rootsTex(res.roots, v, l))),
         sub: res.steps,

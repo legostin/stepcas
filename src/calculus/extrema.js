@@ -10,8 +10,7 @@
 import { MathError, Q } from '../core/rational.js';
 import { num, rel, substitute, freeVars, numValue } from '../core/ast.js';
 import { parse } from '../core/parse.js';
-import { simplify } from '../core/simplify.js';
-import { evaluate, compile } from '../core/evaluate.js';
+import { compile } from '../core/evaluate.js';
 import { toTex, toText } from '../core/print.js';
 import { derivative } from './derivative/index.js';
 import { solveEquation } from '../solve/index.js';
@@ -95,7 +94,7 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     const inside = (t) => t > a + 1e-12 * Math.max(1, Math.abs(a)) && t < b - 1e-12 * Math.max(1, Math.abs(b));
     const crit = [];
     let exactCrit = true;
-    let solved = null;
+    let solved;
     try {
         solved = solveEquation(rel('=', df, num(0)), v, { steps: wantSteps, interval: [A, B] });
     } catch { solved = null; }
@@ -215,7 +214,7 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
     const T = (ru, en) => L(ru, en);
     if (wantSteps) steps.push(step({ title: T('Производная', 'The derivative'), tex: `f'(${v}) = ${texOf(df, 'ru')}`, sub: d.steps }));
     let pts = [];
-    let solved = null;
+    let solved;
     try { solved = solveEquation(rel('=', df, num(0)), v, { steps: wantSteps }); } catch { solved = null; }
     if (solved && solved.kind === 'roots' && !solved.families?.length && !solved.numeric) {
         pts = solved.roots.map((r) => ({ x: r.node, t: typeof r.approx === 'number' ? r.approx : approx(r.node) }));

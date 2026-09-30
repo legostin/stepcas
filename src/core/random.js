@@ -56,7 +56,7 @@ export function rng(seed = 1) {
             if (hi < lo) [lo, hi] = [hi, lo];
             const size = hi - lo + 1 - (lo <= 0 && hi >= 0 ? 1 : 0);
             if (size <= 0) throw new RangeError('nonZero: the range holds only 0');
-            let k = Math.floor(next() * size);
+            const k = Math.floor(next() * size);
             let v = lo + k;
             if (lo <= 0 && v >= 0) v++;
             return v;

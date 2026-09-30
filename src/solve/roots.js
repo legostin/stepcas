@@ -52,7 +52,6 @@ export function rootsTex(roots, v, lang, start = 1) {
     return roots.map((r, k) => `${idx ? `${v}_{${k + start}}` : v} ${rootValueTex(r, lang)}`).join(lang === 'ru' ? ';\\quad ' : ',\\quad ');
 }
 
-const rootsTexB = (roots, v, start) => byLang((l) => rootsTex(roots, v, l, start));
 
 /** Distinct roots, ascending (complex ones after the real ones); equal roots merge (mult added when sum). */
 export function mergeRoots(list, sumMult = false) {

@@ -90,7 +90,6 @@ function sample(a, b, vars, opts) {
     const tol = opts.tol ?? 1e-9;
     const complexMode = !!opts.complex || usesI(a) || usesI(b);
     let usable = 0;
-    let points = 0;
     const N = opts.points ?? 24;
     for (let k = 0; k < N; k++) {
         const env = {};
@@ -102,7 +101,6 @@ function sample(a, b, vars, opts) {
             env[v] = x;
             if (Math.abs(x) > 10) small = false;
         }
-        points++;
         if (!vars.length && k > 0) break;
         let va;
         let vb;

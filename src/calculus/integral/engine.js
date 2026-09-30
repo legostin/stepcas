@@ -24,7 +24,7 @@ export function I(f, ctx) {
     b.memo.set(key, null); // in progress: a cycle ends here
     let res = null;
     for (const m of cascade()) {
-        let r = null;
+        let r;
         try {
             r = m(f, { ...ctx, depth: ctx.depth + 1 });
         } catch (e) {

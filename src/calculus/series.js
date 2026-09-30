@@ -8,11 +8,9 @@
 // and a shift of the start, the necessary condition (terms not tending to zero) and the harmonic comparison for
 // divergence; otherwise a numeric estimate marked as approximate.
 import { Q, MathError } from '../core/rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, nodeKey, containsVar, substitute, numValue, freeVars } from '../core/ast.js';
+import { num, sym, add, mul, div, neg, pow, containsVar, substitute, numValue, freeVars } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex, toText } from '../core/print.js';
-import { simplify } from '../core/simplify.js';
-import { evaluate } from '../core/evaluate.js';
 import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
@@ -388,7 +386,7 @@ export function sumSeries(input, opts = {}) {
     }
     const { term, k, lo, hi } = inp;
     const head = step({ title: L('Сумма', 'The sum'), tex: bt((l) => sumTex(term, k, lo, hi, l)) });
-    let r = null;
+    let r;
     try {
         if (hi) r = hi.lt(lo) ? { value: N0, steps: [step({ title: L('Пустая сумма', 'An empty sum'), text: L('Конец меньше начала — слагаемых нет.', 'The end is below the start: no terms.') })], type: 'empty' } : finiteSum(term, k, lo, hi);
         else r = geometricInfinite(term, k, lo) ?? arithGeoInfinite(term, k, lo) ?? telescoping(term, k, lo) ?? tableSum(term, k, lo) ?? divergence(term, k) ?? pSeries(term, k);

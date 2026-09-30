@@ -57,7 +57,7 @@ export function sampleFunction(f, x0, x1, opts = {}) {
             const ym = ev(xm);
             if (fin(ym) === leftFinite) {
                 if (leftFinite) pts.push([xm, ym]);
-                xa = xm; ya = ym;
+                xa = xm;
             } else {
                 if (!leftFinite) pts.push([xm, ym]);
                 xb = xm; yb = ym;

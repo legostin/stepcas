@@ -9,7 +9,7 @@ import { numFindRoots, numIntegrate } from '../../numbers/numeric/index.js';
 import { limit } from '../limit/index.js';
 import { step } from '../../core/steps.js';
 import { niceForm, prettyForm } from '../derivative/index.js';
-import { N0, PI, T_, asNode, bt, isNum, paren, q, simp, trySimp, tx } from './common.js';
+import { N0, PI, T_, asNode, bt, isNum, paren, simp, trySimp, tx } from './common.js';
 import { answerStep, checkExpr, integrate } from './integrate.js';
 
 // ---------------------------------------------------------------- definite integrals
@@ -269,11 +269,11 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     let diverges = null;
     let unknown = false;
     let interior = fPoles;
-    let parts = [];
+    const parts = [];
     if (anti.result) {
         const F = anti.result;
         const Fs = trySimp(F) ?? F;
-        let Fc = null;
+        let Fc;
         try {
             Fc = compile(Fs, [v]);
         } catch {
@@ -405,7 +405,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         // no exact verdict (the limit of F does not exist, or there is no F), but the tail visibly does not settle
         const s = numDiverges.value === Infinity ? 1 : numDiverges.value === -Infinity ? -1 : 0;
         const val = s ? ((flip ? -s : s) > 0 ? 'inf' : '-inf') : null;
-        const tex = bt((L) => `${head(L)}\ ${L === 'ru' ? '\text{расходится}' : '\text{diverges}'}`);
+        const tex = bt((L) => `${head(L)}\\ ${L === 'ru' ? '\\text{расходится}' : '\\text{diverges}'}`);
         if (wantSteps) {
             const st = answerStep(T_('Интеграл расходится', 'The integral diverges'), tex);
             st.text = numDiverges.reason === 'pole'

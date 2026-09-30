@@ -23,7 +23,7 @@ for (const d of ['src', 'test', 'bench', 'scripts']) if (fs.existsSync(abs(d))) 
 
 const where = (p) => moves.get(p) ?? p;
 const rel = (from, to) => {
-    let r = path.relative(path.dirname(from), to).split(path.sep).join('/');
+    const r = path.relative(path.dirname(from), to).split(path.sep).join('/');
     return r.startsWith('.') ? r : `./${r}`;
 };
 for (const f of files) {

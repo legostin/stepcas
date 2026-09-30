@@ -56,7 +56,6 @@ const REL_TEXT = { '=': '=', '<': '<', '>': '>', '<=': '<=', '>=': '>=', '!=': '
 
 // ---------------------------------------------------------------- shared helpers
 
-const isNumNode = (n) => n.type === 'num';
 const isPlainNum = (n) => n.type === 'num' && !n.raw;
 
 /** Does the printed form start with a minus sign? */
@@ -631,7 +630,9 @@ export function texNumber(value, lang = 'ru', opts = {}) {
     const digits = opts.digits ?? 6;
     const comma = lang === 'ru' ? '{,}' : '.';
     const fix = (s) => {
-        let [i, f] = s.split('.');
+        const parts = s.split('.');
+    let i = parts[0];
+    const f = parts[1];
         const neg = i.startsWith('-');
         if (neg) i = i.slice(1);
         if (opts.group) i = groupDigits(i);

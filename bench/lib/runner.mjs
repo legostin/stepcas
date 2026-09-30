@@ -85,7 +85,7 @@ export function runTask(t) {
         }
         case 'simplify': case 'expand': case 'factor': {
             // the school transformations with steps first, the plain engine calls as a fallback
-            let r = null;
+            let r;
             try {
                 r = t.op === 'expand' ? E.expandSteps(t.task) : t.op === 'factor' ? E.factorSteps(t.task) : E.simplifySteps(t.task);
             } catch {

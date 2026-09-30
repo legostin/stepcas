@@ -107,7 +107,7 @@ plan.parts.forEach((p, k) => {
 const relSpec = (fromFile, spec) => {
     if (!spec.startsWith('.')) return spec;
     const target = path.resolve(path.dirname(srcPath), spec);
-    let r = path.relative(path.dirname(path.resolve(root, fromFile)), target).split(path.sep).join('/');
+    const r = path.relative(path.dirname(path.resolve(root, fromFile)), target).split(path.sep).join('/');
     return r.startsWith('.') ? r : `./${r}`;
 };
 plan.parts.forEach((p, k) => {

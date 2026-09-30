@@ -8,13 +8,10 @@
 // y'(x₀) = y₁ fix the constants. Every answer is substituted back into the equation numerically before it is
 // returned; an answer that fails the check is not returned.
 import { Q, MathError } from '../core/rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, rel, nodeKey, freeVars, containsVar, substitute, numValue, nodeSome } from '../core/ast.js';
+import { num, sym, add, mul, div, neg, pow, fn, rel, freeVars, containsVar, substitute, numValue, nodeSome } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex, toText } from '../core/print.js';
-import { simplify } from '../core/simplify.js';
-import { evaluate } from '../core/evaluate.js';
 import { L, step } from '../core/steps.js';
-import { derivative } from './derivative/index.js';
 import { integrate } from './integral/index.js';
 import { solveEquation } from '../solve/index.js';
 import { expand } from '../core/expand.js';
@@ -32,7 +29,7 @@ const isZ = (n) => n.type === 'num' && n.value.isZero();
 // the shorter of the simplified and the expanded forms: e^(−x)(e^x(x − 1) + 2) → x − 1 + 2e^(−x)
 function tidy(n) {
     const a = trySimplify(n);
-    let b = null;
+    let b;
     try {
         b = trySimplify(expand(a));
     } catch {
@@ -254,8 +251,6 @@ function solveFirst(E, x, y, cond, explicitAlready) {
     const R = explicitFirst(E, y);
     if (!R) return null;
     const steps = [];
-    const Y = sym(y);
-    const X = sym(x);
     const C = sym('C');
     const yp = sym("y'");
     const Rt = (l) => tex(R, l);
@@ -658,7 +653,6 @@ function finish(o) {
  * with initial conditions after «;».
  */
 export function solveOde(input, opts = {}) {
-    const lang = opts.lang === 'en' ? 'en' : 'ru';
     let inp;
     try {
         inp = readInput(typeof input === 'object' && input?.task ? input.task : input);
@@ -669,7 +663,7 @@ export function solveOde(input, opts = {}) {
     const { eq, conds, x, y } = inp;
     const E = trySimplify(add(eq.lhs, neg(eq.rhs)));
     const order = containsVar(E, YPP) ? 2 : 1;
-    let r = null;
+    let r;
     try {
         if (order === 1) r = solveFirst(E, x, y, conds.find((c) => c.order === 0) ?? null, eq.lhs.type === 'sym' && eq.lhs.name === YP && !containsVar(eq.rhs, YP));
         else r = solveSecond(E, x, y, conds);
