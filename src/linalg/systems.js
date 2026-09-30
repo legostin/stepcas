@@ -23,7 +23,7 @@ export function matInverse(A, opts = {}) {
     const st = [];
     st.push(
         step({
-            title: eachLanguage((l) => msg('linalg.systems.append_identity_matrix').in(l)),
+            title: msg('linalg.systems.append_identity_matrix'),
             tex: eachLanguage((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
             text: msg('linalg.systems.using_row_operations_we_turn_left', { p: STRATEGY }),
             rule: 'inverse-plan',
@@ -60,7 +60,7 @@ export function matInverse(A, opts = {}) {
         step({
             title: msg('linalg.systems.answer'),
             tex: `A^{-1} = ${value.toTex()}`,
-            text: eachLanguage((l) => msg('linalg.systems.left_half_is_now_identity_so').in(l)),
+            text: msg('linalg.systems.left_half_is_now_identity_so'),
             rule: 'answer',
         }),
     );

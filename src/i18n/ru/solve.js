@@ -419,7 +419,7 @@ export default {
         solve_for: 'Решаем уравнение относительно $%{vk}$',
         could_not_find_exact_roots_of: 'Не удалось найти точные корни уравнения с одной неизвестной.',
         find_for_each_root: 'Находим $%{vj}$ для каждого корня',
-        check_2: 'Проверка ',
+        check_solution: 'Проверка $%{s}$',
     },
     trig: {
         n_z: ',\\ n \\in \\mathbb{Z}',

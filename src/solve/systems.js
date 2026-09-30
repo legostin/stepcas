@@ -129,7 +129,7 @@ function sysSubstitution(rows, vars) {
     const sub = solveLinearSchool(lhsNode, num(rows[o].b), A, B, { v: vk, domain: 'real', depth: 1 });
     steps.push(
         step({
-            title: eachLanguage((l) => msg('solve.systems.solve_it').in(l)),
+            title: msg('solve.systems.solve_it'),
             tex: eachLanguage((l) =>
                 sub.kind === 'roots'
                     ? rootsTex(sub.roots, vk, l)
@@ -205,6 +205,7 @@ function sysAddition(rows0, vars) {
                     const p0 = parts(l);
                     return p0.charAt(0).toUpperCase() + p0.slice(1);
                 }),
+                rule: 'scale-equations',
                 tex: systemTexB(scaled, vars),
                 text: msg('solve.systems.now_coefficients_of_are_opposite', { p: vars[j] }),
             }),
@@ -471,7 +472,7 @@ export function solveSystem2(input, vars = null, opts = {}) {
         }),
     );
     const r = solveEquation(subst, vk, { steps: true });
-    steps.push(step({ title: eachLanguage((l) => msg('solve.systems.solve_for', { vk }).in(l)), tex: r.answer.tex, sub: r.steps.slice(0, -1) }));
+    steps.push(step({ title: msg('solve.systems.solve_for', { vk }), tex: r.answer.tex, sub: r.steps.slice(0, -1) }));
     if (r.kind === 'none') return done({ kind: 'none', steps });
     if (r.kind !== 'roots' || r.families || r.roots.some((x) => x.approxOnly)) {
         return done({ kind: 'unsupported', steps, reason: r.reason ?? msg('solve.systems.could_not_find_exact_roots_of') });
@@ -493,14 +494,13 @@ export function solveSystem2(input, vars = null, opts = {}) {
         if (ch.ok) good.push(s);
         steps.push(
             step({
-                title: eachLanguage(
-                    (l) =>
-                        msg('solve.systems.check_2').in(l) +
-                        `$${tupleTex(
+                title: msg('solve.systems.check_solution', {
+                    s: (l) =>
+                        tupleTex(
                             vars.map((x) => tex(s[x], l)),
                             l,
-                        )}$`,
-                ),
+                        ),
+                }),
                 tex: ch.step.tex,
                 text: ch.step.text,
             }),

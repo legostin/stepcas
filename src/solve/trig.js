@@ -44,7 +44,7 @@ export function basicTrig(F, u, a, ctx) {
     const av = approxOf(aS);
     if (!Number.isFinite(av)) return null;
     const eqT = (l) => `${tex(fn(F, u), l)} = ${tex(aS, l)}`;
-    const title = eachLanguage((l) => msg('solve.trig.solve', { l: eqT(l) }).in(l));
+    const title = msg('solve.trig.solve', { l: (l) => eqT(l) });
     if ((F === 'sin' || F === 'cos') && Math.abs(av) > 1 + 1e-12) {
         return {
             families: [],
@@ -233,7 +233,7 @@ function trigPolyOne(P, F, u, ctx, extraText) {
     const Fu = (l) => tex(fn(F, u), l);
     steps.push(
         step({
-            title: eachLanguage((l) => msg('solve.trig.substitute', { l: Fu(l) }).in(l)),
+            title: msg('solve.trig.substitute', { l: (l) => Fu(l) }),
             tex: eachLanguage((l) => `${tex(polyT, l)} = 0`),
             text: extraText
                 ? extraText.text
@@ -246,7 +246,7 @@ function trigPolyOne(P, F, u, ctx, extraText) {
     if (!rr) return null;
     steps.push(
         step({
-            title: eachLanguage((l) => msg('solve.trig.solve_2', { polyT: tex(polyT, l) }).in(l)),
+            title: msg('solve.trig.solve_2', { polyT: (l) => tex(polyT, l) }),
             tex: eachLanguage((l) => rootsTex(rr.roots, 't', l)),
             sub: rr.steps,
         }),
@@ -254,7 +254,11 @@ function trigPolyOne(P, F, u, ctx, extraText) {
     for (const t of rr.roots) {
         if ((F === 'sin' || F === 'cos') && Math.abs(t.approx) > 1 + 1e-12) {
             steps.push(
-                step({ title: eachLanguage((l) => `$t = ${tex(t.node, l)}$`), text: msg('solve.trig.rejected', { p: F === 'sin' ? '\\sin' : '\\cos' }) }),
+                step({
+                    title: eachLanguage((l) => `$t = ${tex(t.node, l)}$`),
+                    rule: 'reject-root',
+                    text: msg('solve.trig.rejected', { p: F === 'sin' ? '\\sin' : '\\cos' }),
+                }),
             );
             continue;
         }
@@ -696,7 +700,7 @@ function equalTrig(E, ctx) {
     const eqT = (l) => `${tex(fn(P.F, A), l)} = ${pm}${tex(fn(R.F, B), l)}`;
     const steps = [
         step({
-            title: eachLanguage((l) => msg('solve.trig.compare_arguments', { l: eqT(l) }).in(l)),
+            title: msg('solve.trig.compare_arguments', { l: (l) => eqT(l) }),
             tex: eachLanguage((l) => lines.map((f) => f(l)).join(`${orTex(l)} `) + ZZ(l)),
             text: rule,
         }),

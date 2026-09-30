@@ -353,19 +353,17 @@ export function ntFactor(n, opts = {}) {
             step({
                 title: msg('numbers.theory.primes.divide_by', { p: sn(gr.p) }),
                 tex: `${tn(gr.before)} = ${pieces.join(' = ')}`,
-                text: eachLanguage((l) =>
-                    msg('numbers.theory.primes.is_divisible_by_is_left', {
-                        l: skipTxt(l),
-                        p: sn(gr.before),
-                        p2: sn(gr.p),
-                        p3: ruleHint(Number(gr.p), gr.before, l),
-                        p4: (lng) =>
-                            gr.e > 1
-                                ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng)
-                                : msg('numbers.theory.primes.we_divide').in(lng),
-                        p5: sn(gr.after),
-                    }).in(l),
-                ),
+                text: msg('numbers.theory.primes.is_divisible_by_is_left', {
+                    l: (l) => skipTxt(l),
+                    p: sn(gr.before),
+                    p2: sn(gr.p),
+                    p3: (l) => ruleHint(Number(gr.p), gr.before, l),
+                    p4: (l) => (lng) =>
+                        gr.e > 1
+                            ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng)
+                            : msg('numbers.theory.primes.we_divide').in(lng),
+                    p5: sn(gr.after),
+                }),
                 rule: 'divide',
                 data: { p: gr.p, e: gr.e },
             }),
@@ -379,15 +377,13 @@ export function ntFactor(n, opts = {}) {
             step({
                 title: whole ? msg('numbers.theory.primes.number_is_prime') : msg('numbers.theory.primes.what_is_left_is_prime'),
                 tex: eachLanguage((l) => `\\sqrt{${tn(m)}} \\approx ${dec(r, 1, l, true)}`),
-                text: eachLanguage((l) =>
-                    msg('numbers.theory.primes.and_none_divides_it_so_is', {
-                        p: (lng) =>
-                            whole
-                                ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng)
-                                : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng),
-                        m: sn(m),
-                    }).in(l),
-                ),
+                text: msg('numbers.theory.primes.and_none_divides_it_so_is', {
+                    p: (l) => (lng) =>
+                        whole
+                            ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng)
+                            : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng),
+                    m: sn(m),
+                }),
                 rule: 'sqrt-bound',
             }),
         );

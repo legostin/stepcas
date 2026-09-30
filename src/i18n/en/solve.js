@@ -419,7 +419,7 @@ export default {
         solve_for: 'Solve for $%{vk}$',
         could_not_find_exact_roots_of: 'Could not find exact roots of the equation in one unknown.',
         find_for_each_root: 'Find $%{vj}$ for each root',
-        check_2: 'Check ',
+        check_solution: 'Check $%{s}$',
     },
     trig: {
         n_z: ',\\ n \\in \\mathbb{Z}',

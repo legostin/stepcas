@@ -309,7 +309,7 @@ export function solveEquation(input, v = 'x', opts = {}) {
                 res.inInterval = sel;
                 steps.push(
                     step({
-                        title: eachLanguage((l) => msg('solve.equation.pick_roots_in', { iv: intervalTex(iv, l) }).in(l)),
+                        title: msg('solve.equation.pick_roots_in', { iv: (l) => intervalTex(iv, l) }),
                         tex: eachLanguage((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(notation(l).listTex) : '\\varnothing')),
                         text: msg('solve.equation.we_go_through_integers_that_put'),
                     }),

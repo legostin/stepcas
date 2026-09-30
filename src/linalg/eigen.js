@@ -74,7 +74,7 @@ export function matCharPoly(A, opts = {}) {
         step({
             title: msg('linalg.eigen.what_we_look_for'),
             tex: eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${shifted}`),
-            text: eachLanguage((l) => msg('linalg.eigen.eigenvalue_is_number_with_v_v').in(l)),
+            text: msg('linalg.eigen.eigenvalue_is_number_with_v_v'),
             rule: 'charpoly-def',
         }),
     );

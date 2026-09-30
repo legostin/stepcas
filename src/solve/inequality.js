@@ -212,7 +212,7 @@ function quadIneq(P0, op0, ctx, pre) {
     const roots = q.roots;
     steps.push(
         step({
-            title: eachLanguage((l) => msg('solve.inequality.roots_of_trinomial_solve', { P: polyTex(P, v, l) }).in(l)),
+            title: msg('solve.inequality.roots_of_trinomial_solve', { P: (l) => polyTex(P, v, l) }),
             tex: eachLanguage((l) => rootsTex(roots, v, l)),
             sub: q.steps,
         }),
@@ -446,6 +446,7 @@ function absIneq(E, op, ctx) {
                 steps.push(
                     step({
                         title: eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)}$`),
+                        rule: 'abs-case',
                         tex: eachLanguage((l) => `${v} \\in ${intervalTex(r1.set, l)}`),
                         sub: r1.steps,
                     }),
@@ -453,6 +454,7 @@ function absIneq(E, op, ctx) {
                 steps.push(
                     step({
                         title: eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}$`),
+                        rule: 'abs-case',
                         tex: eachLanguage((l) => `${v} \\in ${intervalTex(r2.set, l)}`),
                         sub: r2.steps,
                     }),
@@ -494,6 +496,7 @@ function absIneq(E, op, ctx) {
             steps.push(
                 step({
                     title: eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)}$`),
+                    rule: 'abs-case',
                     tex: eachLanguage((l) => `${v} \\in ${intervalTex(r1.set, l)}`),
                     sub: r1.steps,
                 }),
@@ -501,6 +504,7 @@ function absIneq(E, op, ctx) {
             steps.push(
                 step({
                     title: eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}$`),
+                    rule: 'abs-case',
                     tex: eachLanguage((l) => `${v} \\in ${intervalTex(r2.set, l)}`),
                     sub: r2.steps,
                 }),
@@ -544,7 +548,7 @@ function absIneq(E, op, ctx) {
         set = set.union(part);
         steps.push(
             step({
-                title: eachLanguage((l) => msg('solve.inequality.on', { piece: intervalTex(piece, l) }).in(l)),
+                title: msg('solve.inequality.on', { piece: (l) => intervalTex(piece, l) }),
                 tex: eachLanguage((l) => `${tex(Ei, l)} ${OP_TEX[op]} 0 \\;\\Rightarrow\\; ${v} \\in ${intervalTex(part, l)}`),
                 sub: sub.steps,
             }),
@@ -845,6 +849,7 @@ function logIneq(lhs, op, rhs, E, ctx) {
                 backSteps.push(
                     step({
                         title: eachLanguage((l) => `$${tex(F, l)} ${OP_TEX[o]} ${tex(c, l)}$`),
+                        rule: 'back-substitution',
                         tex: eachLanguage((l) => `${v} \\in ${intervalTex(r.set, l)}`),
                         sub: r.steps,
                     }),
@@ -1021,6 +1026,7 @@ export function solveInequality(input, v = 'x', opts = {}) {
             steps.push(
                 step({
                     title: eachLanguage((l) => `$${tex(rel(node.ops[k], node.items[k], node.items[k + 1]), l)}$`),
+                    rule: 'chain-part',
                     tex: r.answer.tex,
                     sub: r.steps.slice(0, -1),
                 }),

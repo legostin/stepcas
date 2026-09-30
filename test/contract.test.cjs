@@ -42,6 +42,7 @@ function checkStep(s, where, problems) {
     if ('rule' in s && (typeof s.rule !== 'string' || !s.rule)) bad('rule is not a code');
     if ('data' in s && !isPlain(s.data)) bad('data is not a plain object');
     if ('final' in s && s.final !== true) bad('final is not true');
+    if (!E.stepType(s)) bad(`no type: neither a rule nor a title message with a key (${s.title.in('en').slice(0, 50)})`);
     if ('sub' in s) {
         if (!Array.isArray(s.sub) || !s.sub.length) bad('sub is not a non-empty array');
         else s.sub.forEach((x, i) => checkStep(x, `${where}.sub[${i}]`, problems));
@@ -63,7 +64,7 @@ test('every step of every corpus task has the documented shape', () => {
         steps += r.steps.length;
     }
     assert.ok(steps > 3000, `the corpus produced only ${steps} steps`);
-    assert.deepEqual(problems.slice(0, 20), []);
+    assert.deepEqual(problems.slice(0, 60), []);
 });
 
 test('every solver result follows the contract: ok, kind, answer or reason, steps', () => {

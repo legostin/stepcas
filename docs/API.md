@@ -369,6 +369,8 @@ reduction formulas.
   `{lang: text}` objects become messages, and `tex` may be a string, `{lang: tex}`, an AST node or a message,
   rendered in every language and collapsed to one string when they agree. An empty `sub` and empty `data` are
   dropped. Related: `texBoth(node, opts)` → string | `{lang: tex}`, and `pickLang(value, lang)`.
+- `stepType(step)` → the step's stable type: its `rule`, else the key of its title message. Every step the
+  engine makes has one.
 - `trySimplify(node)` (the node unchanged when it cannot be simplified), `approx(node, env)` (NaN when there is
   no real value): total versions for solver code.
 

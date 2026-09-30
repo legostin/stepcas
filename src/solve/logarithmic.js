@@ -70,9 +70,9 @@ export function solveCommonExp(lhs, rhs, E, ctx) {
         if (!rest || !containsVar(rest, v) || nodeSome(rest, (n) => n.type === 'pow' && containsVar(n.exp, v))) continue;
         const steps = [
             step({
-                title: eachLanguage((l) => msg('solve.logarithmic.take_out_of_brackets', { F: tex(F, l) }).in(l)),
+                title: msg('solve.logarithmic.take_out_of_brackets', { F: (l) => tex(F, l) }),
                 tex: eachLanguage((l) => `${tex(F, l)}\\left(${tex(rest, l)}\\right) = 0`),
-                text: eachLanguage((l) => msg('solve.logarithmic.exponential_is_always_positive_so_this', { F: tex(F, l), rest: tex(rest, l) }).in(l)),
+                text: msg('solve.logarithmic.exponential_is_always_positive_so_this', { F: (l) => tex(F, l), rest: (l) => tex(rest, l) }),
             }),
         ];
         const sub = ctx.solve(rest, N0);

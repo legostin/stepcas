@@ -127,10 +127,18 @@ function quadratic(E, x, a, want) {
     addPiece(pos.set.intersect(notZero), 2);
     addPiece(zeroSet.intersect(notZero), 1);
     addPiece(IntervalSet.all().minus(pos.set).minus(zeroSet).intersect(notZero), 0);
-    steps.push(step({ title: '$D > 0$', tex: eachLanguage((l) => `${a} \\in ${intervalTex(pos.set, l)}`), sub: pos.steps.slice(0, -1) }));
+    steps.push(
+        step({
+            title: '$D > 0$',
+            rule: 'discriminant-positive',
+            tex: eachLanguage((l) => `${a} \\in ${intervalTex(pos.set, l)}`),
+            sub: pos.steps.slice(0, -1),
+        }),
+    );
     steps.push(
         step({
             title: '$D = 0$',
+            rule: 'discriminant-zero',
             tex: eachLanguage((l) =>
                 zer.kind === 'none'
                     ? '\\varnothing'

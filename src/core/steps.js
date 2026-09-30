@@ -60,6 +60,18 @@ export function step({ title, tex, text, rule, data, sub, final } = {}) {
     return s;
 }
 
+/**
+ * What kind of step this is, as a stable code: its rule when it names one, else the key of its title message
+ * ('solve.polynomial.compute_discriminant'). Every step of the engine has one (test/contract.test.cjs).
+ * @param {Step} s
+ * @returns {string | null}
+ */
+export function stepType(s) {
+    if (s.rule) return s.rule;
+    const key = s.title?.key;
+    return key && key !== 'i18n.value' ? key : null;
+}
+
 /** The text of a message, a string or a {lang: …} object in one language. */
 export function pickLang(value, lang = DEFAULT_LANGUAGE) {
     return inLanguage(value, lang);

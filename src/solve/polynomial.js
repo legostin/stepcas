@@ -262,7 +262,7 @@ export function quadSolve(P0, ctx) {
 /** A nested "solve this part" step: the result in the title line, the details inside. */
 export function partStep(eqTex, res, v) {
     return step({
-        title: eachLanguage((l) => msg('solve.polynomial.solve', { eqTex: (lng) => inLanguage(eqTex, lng) }).in(l)),
+        title: msg('solve.polynomial.solve', { eqTex: (lng) => inLanguage(eqTex, lng) }),
         tex: eachLanguage((l) => (res.kind === 'all' ? `${v} \\in \\mathbb{R}` : rootsTex(res.roots, v, l))),
         sub: res.steps,
         text: !res.roots.length && res.cplx?.length ? msg('solve.polynomial.no_real_roots_2') : undefined,
@@ -464,7 +464,13 @@ function highSolve(P, ctx) {
             const mp = composeXm(tMin, m).primitive();
             const tt = (l) => tex(t.node, l);
             if (m % 2 === 0 && t.approx < -1e-12) {
-                back.push(step({ title: eachLanguage((l) => `$${xm} = ${tt(l)}$`), text: msg('solve.polynomial.even_power_is_never_negative_no_2') }));
+                back.push(
+                    step({
+                        title: eachLanguage((l) => `$${xm} = ${tt(l)}$`),
+                        rule: 'back-substitution',
+                        text: msg('solve.polynomial.even_power_is_never_negative_no_2'),
+                    }),
+                );
                 if (ctx.domain === 'complex' && m === 2) {
                     const z = simpOr(mul(sym('i'), pow(simpOr(neg(t.node)), num(Q.HALF))));
                     const im = Math.sqrt(-t.approx);
@@ -476,7 +482,7 @@ function highSolve(P, ctx) {
                 continue;
             }
             if (Math.abs(t.approx) <= 1e-12) {
-                back.push(step({ title: eachLanguage((l) => `$${xm} = 0$`), tex: `${v} = 0` }));
+                back.push(step({ title: eachLanguage((l) => `$${xm} = 0$`), rule: 'back-substitution', tex: `${v} = 0` }));
                 roots.push(qRoot(Q.ZERO));
                 continue;
             }
@@ -484,11 +490,23 @@ function highSolve(P, ctx) {
             const a = Math.sign(t.approx) * Math.abs(t.approx) ** (1 / m);
             const rq = numValue(rootNode);
             if (m % 2 === 0) {
-                back.push(step({ title: eachLanguage((l) => `$${xm} = ${tt(l)}$`), tex: eachLanguage((l) => `${v} = \\pm ${tex(rootNode, l)}`) }));
+                back.push(
+                    step({
+                        title: eachLanguage((l) => `$${xm} = ${tt(l)}$`),
+                        rule: 'back-substitution',
+                        tex: eachLanguage((l) => `${v} = \\pm ${tex(rootNode, l)}`),
+                    }),
+                );
                 roots.push(rq ? qRoot(rq.neg()) : { node: simpOr(neg(rootNode)), approx: -a, mult: 1, minPoly: mp });
                 roots.push(rq ? qRoot(rq) : { node: rootNode, approx: a, mult: 1, minPoly: mp });
             } else {
-                back.push(step({ title: eachLanguage((l) => `$${xm} = ${tt(l)}$`), tex: eachLanguage((l) => `${v} = ${tex(rootNode, l)}`) }));
+                back.push(
+                    step({
+                        title: eachLanguage((l) => `$${xm} = ${tt(l)}$`),
+                        rule: 'back-substitution',
+                        tex: eachLanguage((l) => `${v} = ${tex(rootNode, l)}`),
+                    }),
+                );
                 roots.push(rq ? qRoot(rq) : { node: rootNode, approx: a, mult: 1, minPoly: mp });
             }
         }
@@ -551,6 +569,7 @@ function highSolve(P, ctx) {
                 back.push(
                     step({
                         title: eachLanguage((l) => `$${v} + \\frac{1}{${v}} = ${tex(t.node, l)}$`),
+                        rule: 'back-substitution',
                         tex: eachLanguage((l) => rootsTex(res.roots, v, l)),
                         sub: res.steps,
                     }),

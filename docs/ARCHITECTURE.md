@@ -110,8 +110,12 @@ Step = { title: Msg, tex?: string | {lang: string}, text?: Msg, rule?: string, d
 - There is one constructor, `step({title, tex, text, rule, data, sub, final})` in `core/steps.js`. It turns a plain
   string or a `{lang: text}` object into a message, and it renders an AST node or a message given as `tex` in
   every language.
-- `rule` is a stable code of what the step does (`'discriminant'`, `'chain'`, `'answer'`). The last step of a
+- `rule` is a stable code of what the step does (`'chain'`, `'abs-case'`, `'answer'`). The last step of a
   solution has `rule: 'answer'` and `final: true`.
+- Every step has a type, `stepType(step)`: its `rule` when it names one, else the key of its title message
+  (`'solve.polynomial.compute_discriminant'`). A title glued together from pieces has no key, so such a step
+  names a rule. The contract test holds every step of the corpus to this, which lets a program tell steps apart
+  without reading their text.
 - `data` holds the step's facts for a program rather than a reader. A row operation is
   `{op: 'add', i: 1, j: 0, k: -2, phase, opTex, matrixTex}`, and the Euclid table is `{rows}`.
 - `sub` nests steps. For example, each node of a derivative has its own step tree.
@@ -215,9 +219,8 @@ The refactoring tools in `scripts/` work on the syntax tree (acorn), so imports 
 
 ## Known debts
 
-- Most steps (about seven in ten) still have no `rule` code, and none records the expression it arrives at in
-  `data`. A trainer that checks a student's own solution will need both: a stable code on every step and the
-  expression tree after it.
+- Steps record the expression they arrive at only as TeX. A trainer that checks a student's own solution will
+  need the expression tree after each step, in `data`, next to the step's type.
 - Some checks are heuristics: a sign on an interval is tested at a few points, and convergence is estimated from
   a few distant terms. The engine refuses whenever they disagree, but the step text does not yet say that the
   check was numeric.
