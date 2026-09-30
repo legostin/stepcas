@@ -6,7 +6,7 @@ import { evaluate } from '../../core/evaluate.js';
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
 import { DNE, Split, asNode, atPoint, evalAt, fin, infV, isOneV, isZeroV, limTex, lt, makePoint, sideSignStrict, simp, trySimp, tx } from './common.js';
-import { ev } from './evaluator.js';
+import { ev, limitContext } from './evaluator.js';
 import { FORM_NAME, FORM_TEX, plainNum, quotientParts } from './forms.js';
 import { crossCheck, fmtNum, numericEstimate, tableFor, tableStep } from './table.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
@@ -95,7 +95,7 @@ function rebuild(n, kids) {
 
 function oneSide(f0, v, P, opts) {
     void opts;
-    const C = { v, P, depth: 0, log: [], methods: new Set(), active: new Set(), work: { n: 0 }, rounds: 0, root: null };
+    const C = limitContext(v, P);
     let f = f0;
     // direct substitution (continuity)
     if (P.a && definedAt(f0, v, P.x)) {
@@ -354,7 +354,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
 
 function firstForm(f, v, P) {
     // the form of the top-level expression after naive substitution (for the explanation)
-    const C = { v, P, depth: 99, log: [], methods: new Set(), active: new Set(), work: { n: 0 }, rounds: 0 };
+    const C = limitContext(v, P, { depth: 99 });
     const S = trySimp(f) ?? f;
     try {
         if (S.type === 'add') {

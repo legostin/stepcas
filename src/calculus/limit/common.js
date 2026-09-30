@@ -1,6 +1,6 @@
 // limit/common — helpers, the point a (finite, ±∞, one-sided) and limit values (finite, ±∞, does not exist).
 
-import { num, sym, neg, toNode, nodeKey, isConst } from '../../core/ast.js';
+import { num, sym, neg, toNode, nodeKey, isConst, pow } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';
 import { parse } from '../../core/parse.js';
 import { simplify } from '../../core/simplify.js';
@@ -175,3 +175,63 @@ export const DNE = { k: 'dne' };
 
 export const isZeroV = (L) => L && L.k === 'fin' && (isZeroN(L.node) || (Number.isFinite(L.x) && Math.abs(L.x) < 1e-15 && isZeroN(trySimp(L.node) ?? L.node)));
 export const isOneV = (L) => L && L.k === 'fin' && isNum(L.node) && L.node.value.isOne();
+
+export function splitNumDen(n) {
+    // canonical product → numerator factors, denominator factors (positive powers)
+    const S = n.type === 'mul' ? n.args : [n];
+    const top = [];
+    const bot = [];
+    for (const f of S) {
+        if (f.type === 'pow' && isNum(f.exp) && f.exp.value.isNeg()) bot.push(f.exp.value.eq(-1) ? f.base : pow(f.base, num(f.exp.value.neg())));
+        else if (f.type === 'pow' && !isNum(f.exp) && negLead(f.exp)) bot.push(pow(f.base, trySimp(neg(f.exp)) ?? neg(f.exp)));
+        else top.push(f);
+    }
+    return { top, bot };
+}
+
+/** n ~ c·t^p as t → +∞ (t is the variable): {c: number, p: Q} or null. */
+export function asym(n, v) {
+    switch (n.type) {
+        case 'num':
+            return n.value.isZero() ? null : { c: n.value.toNumber(), p: Q.ZERO };
+        case 'sym':
+            if (n.name === v && !isConst(n)) return { c: 1, p: Q.ONE };
+            if (isConst(n) && (n.name === 'pi' || n.name === 'e')) return { c: evaluate(n), p: Q.ZERO };
+            return null;
+        case 'mul': {
+            let c = 1;
+            let p = Q.ZERO;
+            for (const f of n.args) {
+                const a = asym(f, v);
+                if (!a) return null;
+                c *= a.c;
+                p = p.add(a.p);
+            }
+            return { c, p };
+        }
+        case 'pow': {
+            if (!isNum(n.exp)) return null;
+            const a = asym(n.base, v);
+            if (!a) return null;
+            const r = n.exp.value;
+            if (a.c < 0 && !r.isInt()) return null;
+            return { c: Math.pow(a.c, r.toNumber()), p: a.p.mul(r) };
+        }
+        case 'add': {
+            let best = null;
+            let sum = 0;
+            for (const t of n.args) {
+                const a = asym(t, v);
+                if (!a) return null;
+                if (!best || a.p.gt(best.p)) {
+                    best = { ...a };
+                    sum = a.c;
+                } else if (a.p.eq(best.p)) sum += a.c;
+            }
+            if (!best || Math.abs(sum) < 1e-12 * Math.max(1, Math.abs(best.c))) return null;
+            return { c: sum, p: best.p };
+        }
+        default:
+            return null;
+    }
+}

@@ -9,7 +9,6 @@ import { Poly } from '../../core/poly.js';
 import { toText } from '../../core/print.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
-import { evaluate } from '../../core/evaluate.js';
 import {
     E_,
     HALF,
@@ -33,10 +32,13 @@ import {
     trySimp,
     tx,
 } from './common.js';
-import { ev, splitNumDen } from './evaluator.js';
+import { splitNumDen, asym } from './common.js';
 import { msg, eachLanguage, notation, joined, sameText, DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- indeterminate forms
+
+// the evaluator comes with the context (it calls resolve(), so this module cannot import it)
+const ev = (n, C) => C.ev(n, C);
 
 export const FORM_TEX = {
     '0/0': '\\frac{0}{0}',
@@ -384,53 +386,6 @@ function mConjugate(n, C) {
 }
 
 // ---- leading terms at ±∞ (algebraic expressions)
-
-/** n ~ c·t^p as t → +∞ (t is the variable): {c: number, p: Q} or null. */
-export function asym(n, v) {
-    switch (n.type) {
-        case 'num':
-            return n.value.isZero() ? null : { c: n.value.toNumber(), p: Q.ZERO };
-        case 'sym':
-            if (n.name === v && !isConst(n)) return { c: 1, p: Q.ONE };
-            if (isConst(n) && (n.name === 'pi' || n.name === 'e')) return { c: evaluate(n), p: Q.ZERO };
-            return null;
-        case 'mul': {
-            let c = 1;
-            let p = Q.ZERO;
-            for (const f of n.args) {
-                const a = asym(f, v);
-                if (!a) return null;
-                c *= a.c;
-                p = p.add(a.p);
-            }
-            return { c, p };
-        }
-        case 'pow': {
-            if (!isNum(n.exp)) return null;
-            const a = asym(n.base, v);
-            if (!a) return null;
-            const r = n.exp.value;
-            if (a.c < 0 && !r.isInt()) return null;
-            return { c: Math.pow(a.c, r.toNumber()), p: a.p.mul(r) };
-        }
-        case 'add': {
-            let best = null;
-            let sum = 0;
-            for (const t of n.args) {
-                const a = asym(t, v);
-                if (!a) return null;
-                if (!best || a.p.gt(best.p)) {
-                    best = { ...a };
-                    sum = a.c;
-                } else if (a.p.eq(best.p)) sum += a.c;
-            }
-            if (!best || Math.abs(sum) < 1e-12 * Math.max(1, Math.abs(best.c))) return null;
-            return { c: sum, p: best.p };
-        }
-        default:
-            return null;
-    }
-}
 
 function mLeading(n, C) {
     const { v, P } = C;

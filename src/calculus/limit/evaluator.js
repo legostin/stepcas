@@ -2,10 +2,37 @@
 
 import { containsVar, freeVars, neg, substitute, sym, add, pow, num, mul, div, fn } from '../../core/ast.js';
 import { Q } from '../../core/rational.js';
-import { BND, DNE, N0, N1, PI, fin, infV, isNum, isOneV, isZeroV, needSign, negLead, safeEval, sideSign, sideSignStrict, simp, trySimp } from './common.js';
-import { asym, resolve } from './forms.js';
+import {
+    BND,
+    DNE,
+    N0,
+    N1,
+    PI,
+    fin,
+    infV,
+    isNum,
+    isOneV,
+    isZeroV,
+    needSign,
+    safeEval,
+    sideSign,
+    sideSignStrict,
+    simp,
+    trySimp,
+    asym,
+    splitNumDen,
+} from './common.js';
+import { resolve } from './forms.js';
 
 // ---------------------------------------------------------------- the evaluator
+
+/**
+ * A fresh context for ev(): the variable, the point, the log of steps, the work budget — and ev itself, which the
+ * resolvers of indeterminate forms call back through C.ev (they cannot import it: ev imports them).
+ */
+export function limitContext(v, P, extra = {}) {
+    return { v, P, depth: 0, log: [], methods: new Set(), active: new Set(), work: { n: 0 }, rounds: 0, root: null, ev, ...extra };
+}
 
 /**
  * Limit of n at the point C.P → LV ({k: 'fin', node, x} | {k: 'inf', s} | BND | DNE) or null.
@@ -65,19 +92,6 @@ function evAdd(n, C) {
     if (infs.length) return infV(uns ? 0 : pos ? 1 : -1);
     if (vals.some((x) => x.k === 'bnd')) return BND;
     return fin(add(vals.map((x) => x.node)));
-}
-
-export function splitNumDen(n) {
-    // canonical product → numerator factors, denominator factors (positive powers)
-    const S = n.type === 'mul' ? n.args : [n];
-    const top = [];
-    const bot = [];
-    for (const f of S) {
-        if (f.type === 'pow' && isNum(f.exp) && f.exp.value.isNeg()) bot.push(f.exp.value.eq(-1) ? f.base : pow(f.base, num(f.exp.value.neg())));
-        else if (f.type === 'pow' && !isNum(f.exp) && negLead(f.exp)) bot.push(pow(f.base, trySimp(neg(f.exp)) ?? neg(f.exp)));
-        else top.push(f);
-    }
-    return { top, bot };
 }
 
 function evMul(n, C) {
