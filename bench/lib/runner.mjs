@@ -4,7 +4,13 @@ import * as E from '../../src/index.js';
 import { num, close, sameNumbers, familyRoots, sameFunction, isAntiderivative, sameInterval } from './check.mjs';
 
 const text = (n) => { try { return E.toText(n, { lang: 'en' }); } catch { return String(n); } };
-const stepsOf = (r) => (Array.isArray(r?.steps) ? r.steps.length : 0);
+// the last engine result, for bench/snapshot.mjs (the golden record of answers and steps)
+let last = null;
+export const lastResult = () => last;
+const stepsOf = (r) => {
+    last = r;
+    return Array.isArray(r?.steps) ? r.steps.length : 0;
+};
 const P = (s) => E.parse(String(s), { lang: 'en' });
 
 function rootsCheck(r, t) {
@@ -36,6 +42,7 @@ const ask = (t, vals) => {
 };
 
 export function runTask(t) {
+    last = null;
     const v = t.v || 'x';
     switch (t.op) {
         case 'solve': {
@@ -70,6 +77,7 @@ export function runTask(t) {
         }
         case 'value': {
             const r = E.evaluateSteps(P(t.task));
+            last = r;
             const x = num(r.value);
             // the answer step alone is not an explanation
             const explained = r.steps.filter((st) => st.rule === 'rule' || st.rule === 'arith').length;
@@ -83,6 +91,7 @@ export function runTask(t) {
             } catch {
                 r = null;
             }
+            last = r;
             const n = r?.result ?? (t.op === 'expand' ? E.expand(P(t.task)) : t.op === 'factor' ? factorNode(t.task, v) : E.simplify(P(t.task)));
             if (!n) return { status: 'refused' };
             const eq = sameFunction(n, t.answer.expr, E.freeVars(P(t.task)).length ? E.freeVars(P(t.task)) : [v]);
@@ -176,6 +185,7 @@ function factorNode(text0, v) {
 function callIf(fn, t) {
     if (typeof E[fn] !== 'function') return { status: 'noapi', note: `no ${fn}()` };
     const r = E[fn](t);
+    last = r;
     if (!r || r.kind === 'unsupported') return { status: 'refused', note: r?.reason?.en };
     const ok = t.answer.value != null ? close(num(r.value), num(t.answer.value)) : t.answer.set ? sameInterval(r.set, t.answer.set) : t.answer.expr ? sameFunction(r.expr, t.answer.expr, t.vars || ['x']) : false;
     return { status: ok ? 'correct' : 'wrong', got: r.text, steps: stepsOf(r) };
