@@ -467,6 +467,17 @@ def check(t):
         vals = [int(q) for q in t['args']]
         r = reduce(gcd, vals) if op == 'gcd' else reduce(lambda p, q: p * q // gcd(p, q), vals)
         return ('ok', None) if str(r) == str(ans['value']) else ('MISMATCH', str(r))
+    if op == 'argext':
+        f = ev(t['task'])
+        lo, hi = (-50, 50)
+        if t.get('range'):
+            lo, hi = [fnum(ev(q)) for q in t['range']]
+        df = diff(f, v)
+        pts = scan_roots(df, v, lo + 1e-9, hi - 1e-9)
+        dfn = num_fn(df, v)
+        found = [p for p in pts if (dfn(p - 1e-5) > 0 > dfn(p + 1e-5)) == (t['kind'] == 'max') and (dfn(p - 1e-5) * dfn(p + 1e-5) < 0)]
+        want = [fnum(ev(q)) for q in ans['points']]
+        return ('ok', None) if same_numbers(found, want) else ('MISMATCH', f'{t["kind"]} at {found}')
     if op == 'series':
         sr = t['series']
         kk = Symbol(sr['k'], integer=True)

@@ -19,3 +19,4 @@ export * from './diff.js';
 export * from './integrate.js';
 export * from './limit.js';
 export * from './solve.js';
+export * from './extrema.js';

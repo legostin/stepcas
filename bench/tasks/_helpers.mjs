@@ -18,6 +18,7 @@ export function set(source, topic, prefix) {
         integral: (task, bounds, value, extra) => base('integral', task, { value }, { bounds, ...extra }),
         limit: (task, at, value, extra) => base('limit', task, { value }, { at, ...extra }),
         extremum: (task, kind, segment, value, extra) => base('extremum', task, { value }, { kind, segment, ...extra }),
+        argext: (task, kind, points, extra) => base('argext', task, { points }, { kind, ...extra }),   // точки максимума/минимума
         param: (task, setText, extra) => base('param', task, { set: setText }, extra),
         ode: (task, expr, extra) => base('ode', task, { expr }, extra),
         series: (task, value, extra) => base('series', task, { value }, extra),

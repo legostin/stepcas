@@ -134,7 +134,20 @@ export function runTask(t) {
             return { status: String(val) === String(t.answer.value) ? 'correct' : 'wrong', got: String(val), steps: stepsOf(r) };
         }
         // not in the engine yet: these show what to build next
-        case 'extremum': return callIf('extremeOnSegment', t);
+        case 'extremum': {
+            if (typeof E.extremeOnSegment !== 'function') return { status: 'noapi' };
+            const r = E.extremeOnSegment(t.task, v, t.segment[0], t.segment[1], { kind: t.kind, steps: true });
+            if (r.kind === 'unsupported') return { status: 'refused', note: r.reason?.en };
+            return { status: close(r.approx, num(t.answer.value)) ? 'correct' : 'wrong', got: text(r.value), steps: stepsOf(r), exact: !r.numeric };
+        }
+        case 'argext': {
+            if (typeof E.extremePoints !== 'function') return { status: 'noapi' };
+            const range = t.range ? t.range.map(num) : undefined;
+            const r = E.extremePoints(t.task, v, { steps: true, range });
+            let got = (r[t.kind] || []).map((c) => num(c.x));
+            if (range) got = got.filter((q) => q > range[0] && q < range[1]);
+            return { status: sameNumbers(got, t.answer.points.map(num)) ? 'correct' : 'wrong', got: JSON.stringify(got), steps: stepsOf(r) };
+        }
         case 'param': return callIf('solveWithParameter', t);
         case 'ode': return callIf('solveOde', t);
         case 'series': return callIf('sumSeries', t);

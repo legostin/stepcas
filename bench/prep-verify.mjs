@@ -33,7 +33,7 @@ for (const t of tasks) {
             const m = /^sum\((.*),\s*([a-z])\s*,\s*([^,]+),\s*([^,]+)\)$/.exec(t.task);
             o.series = { expr: sp(m[1]).src, k: m[2], from: sp(m[3]).src, to: /inf/.test(m[4]) ? 'oo' : sp(m[4]).src };
         }
-        if (['solve', 'ineq', 'value', 'simplify', 'factor', 'diff', 'integrate', 'integral', 'limit', 'extremum', 'param'].includes(t.op)) {
+        if (['solve', 'ineq', 'value', 'simplify', 'factor', 'diff', 'integrate', 'integral', 'limit', 'extremum', 'param', 'argext'].includes(t.op)) {
             if (t.op === 'system') continue;
             const x = sp(t.task);
             o.task = x.src; o.syms = x.syms;
@@ -60,6 +60,8 @@ for (const t of tasks) {
         if (a.solutions) o.answer.solutions = a.solutions.map((s) => s.map((x) => sp(x).src));
         if (a.matrix) o.answer.matrix = a.matrix.map((r) => r.map((x) => sp(x).src));
         if (a.values) o.answer.values = a.values.map((x) => sp(x).src);
+        if (a.points) o.answer.points = a.points.map((x) => sp(x).src);
+        if (t.range) o.range = t.range.map((x) => sp(x).src);
         if (a.x) o.answer.x = a.x.map((x) => sp(x).src);
         if (a.diverges) o.answer.diverges = true;
         out.push(o);
