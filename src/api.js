@@ -41,6 +41,36 @@ import { sumSeries as sumSeries0 } from './calculus/series.js';
 import { evaluateSteps as evaluateSteps0 } from './algebra/values.js';
 import { factorSteps as factorSteps0, expandSteps as expandSteps0, simplifySteps as simplifySteps0 } from './algebra/transform.js';
 
+/**
+ * @import { Node } from './core/ast.js'
+ * @import { Step } from './core/steps.js'
+ * @import { Text } from './i18n/index.js'
+ * @import { IntervalSet } from './solve/index.js'
+ */
+/**
+ * @typedef {string | Node} Input  an expression as text (parsed) or as a node
+ * @typedef {{steps?: boolean, lang?: string, [option: string]: unknown}} Options
+ * @typedef {{tex: Text, text: Text}} Answer
+ */
+/**
+ * A solver's answer: `kind` says what it is, the solver's own fields come along.
+ * @template {string} K
+ * @template [X={}]
+ * @typedef {{ok: true, kind: K, answer: Answer, steps: Step[]} & X & Record<string, any>} Solved
+ */
+/**
+ * No answer: the input does not parse ('invalid', with pos and len) or the solver cannot do it ('unsupported').
+ * @typedef {{ok: false, kind: 'invalid' | 'unsupported', reason: Text, steps: Step[], pos?: number, len?: number, code?: string}} Failed
+ */
+/**
+ * @template {string} K
+ * @template [X={}]
+ * @typedef {Solved<K, X> | Failed} Result
+ */
+/**
+ * @typedef {{node: Node, approx: number | {re: number, im: number}, mult: number, approxOnly?: boolean, family?: {base: Node, period: Node, param: string}}} Root
+ */
+
 const INPUT_ERRORS = new Set(['syntax', 'brackets', 'empty', 'no-arg', 'arity', 'unknown-fn', 'not-expr', 'too-big']);
 
 // a node as text in every language (the plain text people type back)
@@ -88,17 +118,35 @@ const notUnsupported = (r) => r.kind !== 'unsupported';
 
 /* ------------------------------------------------------------------ equations, inequalities, systems */
 
-/** Solve an equation in one unknown: solveEquation('x^2 = 4', 'x', {domain, interval}). */
+/**
+ * Solve an equation in one unknown: solveEquation('x^2 = 4', 'x', {domain, interval}).
+ * @type {(input: Input, v?: string | null, opts?: Options & {domain?: 'real' | 'complex', interval?: unknown}) => Result<'roots' | 'none' | 'all' | 'set', {roots: Root[], set?: IntervalSet, type: string}>}
+ */
 export const solveEquation = solver(solveEquation0, { opts: 2, ok: notUnsupported });
-/** A trigonometric equation: families of roots, selection on a segment. */
+/**
+ * A trigonometric equation: families of roots, selection on a segment.
+ * @type {(input: Input, v?: string | null, opts?: Options & {interval?: unknown}) => Result<'roots' | 'none' | 'all' | 'set', {roots: Root[], families?: unknown[]}>}
+ */
 export const solveTrig = solver(solveTrig0, { opts: 2, ok: notUnsupported });
-/** An inequality (also a double one): the answer is a set. */
+/**
+ * An inequality (also a double one): the answer is a set.
+ * @type {(input: Input, v?: string | null, opts?: Options) => Result<'set', {set: IntervalSet}>}
+ */
 export const solveInequality = solver(solveInequality0, { opts: 2, ok: (r) => !!r.set, kind: () => 'set' });
-/** A linear system: unique, none or infinite (parametric) solutions. */
+/**
+ * A linear system: unique, none or infinite (parametric) solutions.
+ * @type {(rels: Input | Input[], vars?: string[] | null, opts?: Options & {method?: 'substitution' | 'addition' | 'cramer' | 'gauss'}) => Result<'unique' | 'none' | 'infinite', {solution?: Record<string, Node>, general?: Record<string, Node>, params?: string[]}>}
+ */
 export const solveLinearSystem = solver(solveLinearSystem0, { opts: 2, ok: notUnsupported });
-/** Two equations, a linear and a quadratic one, by substitution. */
+/**
+ * Two equations, a linear and a quadratic one, by substitution.
+ * @type {(rels: Input | Input[], vars?: string[] | null, opts?: Options) => Result<'solutions' | 'none', {solutions: Record<string, Node>[]}>}
+ */
 export const solveSystem2 = solver(solveSystem20, { opts: 2, ok: notUnsupported });
-/** Is value a root? Substitution with steps; the verdict is isRoot, and why says what failed ('mismatch', 'odz', …). */
+/**
+ * Is value a root? Substitution with steps; the verdict is isRoot, and why says what failed ('mismatch', 'odz', …).
+ * @type {(rel: Input, v: string, value: Input | number, opts?: Options & {complex?: boolean}) => Result<'root' | 'not-root', {isRoot: boolean, why: string | null}>}
+ */
 export const checkRoot = solver(checkRoot0, {
     opts: 3,
     ok: () => true,
@@ -106,28 +154,49 @@ export const checkRoot = solver(checkRoot0, {
     rename: { ok: 'isRoot', reason: 'why' },
     answer: (r) => ({ tex: r.tex, text: r.text }),
 });
-/** For which values of a parameter does an equation have the wanted number of roots? */
+/**
+ * For which values of a parameter does an equation have the wanted number of roots?
+ * @type {(input: Input | {task: Input, param?: string, want?: unknown}, opts?: Options & {param?: string, v?: string, want?: 'two-roots' | 'one-root' | 'has-roots' | 'no-roots' | number}) => Result<'set', {set: IntervalSet}>}
+ */
 export const solveWithParameter = solver(solveWithParameter0, { opts: 1, ok: notUnsupported });
 
 /* ------------------------------------------------------------------ calculus */
 
 const derivativeSpec = (opts) => ({ opts, ok: (r) => !!r.result, kind: () => 'derivative', answer: (r) => ({ tex: r.tex, text: textOf(r.result) }) });
-/** The derivative with a step tree that mirrors the expression. */
+/**
+ * The derivative with a step tree that mirrors the expression.
+ * @type {(f: Input, v?: string, opts?: Options & {simplify?: boolean}) => Result<'derivative', {result: Node}>}
+ */
 export const derivative = solver(derivative0, derivativeSpec(2));
-/** A partial derivative. */
+/**
+ * A partial derivative.
+ * @type {(f: Input, v?: string, opts?: Options) => Result<'derivative', {result: Node}>}
+ */
 export const partialDerivative = solver(partialDerivative0, derivativeSpec(2));
-/** The n-th derivative. */
+/**
+ * The n-th derivative.
+ * @type {(f: Input, v?: string, n?: number, opts?: Options) => Result<'derivative', {result: Node, list: Node[]}>}
+ */
 export const derivativeN = solver(derivativeN0, derivativeSpec(3));
-/** The gradient of a function of several variables. */
+/**
+ * The gradient of a function of several variables.
+ * @type {(f: Input, vars?: string[] | null, opts?: Options) => Result<'gradient', {result: Node, components: Node[]}>}
+ */
 export const gradientOf = solver(gradientOf0, {
     opts: 2,
     ok: (r) => !!r.components,
     kind: () => 'gradient',
     answer: (r) => ({ tex: r.tex, text: eachLanguage((lang) => `(${toText(r.result, { lang })})`) }),
 });
-/** The tangent line at a point. */
+/**
+ * The tangent line at a point.
+ * @type {(f: Input, v?: string, a?: Input | number, opts?: Options) => Result<'line', {line: Node, k: Node, b: Node}>}
+ */
 export const tangentLine = solver(tangentLine0, { opts: 3, ok: (r) => !!r.line, kind: () => 'line', answer: (r) => ({ tex: r.tex, text: textOf(r.line) }) });
-/** An antiderivative, with the method that found it. */
+/**
+ * An antiderivative, with the method that found it.
+ * @type {(f: Input, v?: string, opts?: Options) => Result<'antiderivative', {result: Node, method: string}>}
+ */
 export const integrate = solver(integrate0, {
     opts: 2,
     ok: (r) => !!r.result,
@@ -138,14 +207,20 @@ export const integrate = solver(integrate0, {
 const definiteKind = (r) => (r.converges === false ? 'diverges' : r.value != null && typeof r.value === 'object' ? 'value' : 'approx');
 const definiteText = (r) =>
     r.converges === false ? msg('api.diverges') : r.value != null && typeof r.value === 'object' ? textOf(r.value) : String(r.numeric);
-/** A definite (also improper) integral: exact, numeric or divergent. */
+/**
+ * A definite (also improper) integral: exact, numeric or divergent.
+ * @type {(f: Input, v?: string, a?: Input | number, b?: Input | number, opts?: Options) => Result<'value' | 'approx' | 'diverges', {value: Node | 'inf' | '-inf' | null, numeric: number}>}
+ */
 export const integrateDefinite = solver(integrateDefinite0, {
     opts: 4,
     ok: (r) => (r.value != null && typeof r.value === 'object') || Number.isFinite(r.numeric) || r.converges === false,
     kind: definiteKind,
     answer: (r) => ({ tex: r.tex, text: definiteText(r) }),
 });
-/** The area between two curves. */
+/**
+ * The area between two curves.
+ * @type {(f: Input, g: Input, v?: string, a?: Input | number, b?: Input | number, opts?: Options) => Result<'value' | 'approx', {value: Node | null, numeric: number}>}
+ */
 export const areaBetween = solver(areaBetween0, {
     opts: 5,
     ok: (r) => (r.value != null && typeof r.value === 'object') || Number.isFinite(r.numeric),
@@ -165,21 +240,30 @@ const limitText = (r) =>
             : r.value && typeof r.value === 'object'
               ? textOf(r.value)
               : `≈ ${r.approx}`;
-/** A limit at a point or at ±∞, with the method and a table of values. */
+/**
+ * A limit at a point or at ±∞, with the method and a table of values.
+ * @type {(f: Input, v?: string, a?: Input | number, opts?: Options & {side?: 'both' | 'left' | 'right'}) => Result<'value' | 'infinite' | 'dne' | 'approx', {value: Node | 'inf' | '-inf' | 'dne' | null, approx?: number}>}
+ */
 export const limit = solver(limit0, {
     opts: 3,
     ok: (r) => r.value != null || Number.isFinite(r.approx),
     kind: limitKind,
     answer: (r) => ({ tex: r.tex, text: limitText(r) }),
 });
-/** A Taylor polynomial with exact coefficients. */
+/**
+ * A Taylor polynomial with exact coefficients.
+ * @type {(f: Input, v?: string, a?: Input | number, n?: number, opts?: Options) => Result<'polynomial', {poly: Node, coeffs: Node[]}>}
+ */
 export const taylorPolynomial = solver(taylorPolynomial0, {
     opts: 4,
     ok: (r) => !!r.poly,
     kind: () => 'polynomial',
     answer: (r) => ({ tex: r.tex, text: textOf(r.poly) }),
 });
-/** The greatest or least value on a segment; the kind asked for stays in `extremum`. */
+/**
+ * The greatest or least value on a segment; the kind asked for stays in `extremum`.
+ * @type {(f: Input, v: string, a: Input | number, b: Input | number, opts?: Options & {kind?: 'max' | 'min'}) => Result<'value', {value: Node, at: Node, extremum: string}>}
+ */
 export const extremeOnSegment = solver(extremeOnSegment0, {
     opts: 4,
     ok: notUnsupported,
@@ -187,7 +271,10 @@ export const extremeOnSegment = solver(extremeOnSegment0, {
     extra: (r) => ({ extremum: r.kind }),
     answer: (r) => ({ tex: r.tex, text: r.value ? textOf(r.value) : r.text }),
 });
-/** Points of extremum by the sign of the derivative. */
+/**
+ * Points of extremum by the sign of the derivative.
+ * @type {(f: Input, v?: string, opts?: Options) => Result<'points', {max: {x: Node}[], min: {x: Node}[], critical: unknown[]}>}
+ */
 export const extremePoints = solver(extremePoints0, {
     opts: 2,
     ok: (r) => Array.isArray(r.critical),
@@ -207,9 +294,15 @@ export const extremePoints = solver(extremePoints0, {
         ),
     }),
 });
-/** An ordinary differential equation with initial conditions after «;». */
+/**
+ * An ordinary differential equation with initial conditions after «;».
+ * @type {(input: string, opts?: Options) => Result<'solution' | 'general', {expr: Node, general: Node, type: string}>}
+ */
 export const solveOde = solver(solveOde0, { opts: 1, ok: notUnsupported, answer: (r) => ({ tex: r.tex, text: r.text }) });
-/** The sum of a series: sum(term, k, start, end). */
+/**
+ * The sum of a series: sum(term, k, start, end).
+ * @type {(input: string, opts?: Options) => Result<'value' | 'diverges' | 'approx', {value?: Node, approx?: number, type: string}>}
+ */
 export const sumSeries = solver(sumSeries0, {
     opts: 1,
     ok: notUnsupported,
@@ -223,12 +316,24 @@ export const sumSeries = solver(sumSeries0, {
 
 /* ------------------------------------------------------------------ algebra */
 
-/** The value of a numeric expression step by step. */
+/**
+ * The value of a numeric expression step by step.
+ * @type {(input: Input, opts?: Options & {maxSteps?: number}) => Result<'value', {value: Node, approx: number, exact: boolean}>}
+ */
 export const evaluateSteps = solver(evaluateSteps0, { opts: 1, ok: (r) => r.value != null, kind: () => 'value', answer: (r) => answerOf(r.value) });
 const expressionSpec = { opts: 1, ok: (r) => !!r.result, kind: () => 'expression', answer: (r) => answerOf(r.result) };
-/** Factor a polynomial with the school formulas. */
+/**
+ * Factor a polynomial with the school formulas.
+ * @type {(input: Input, opts?: Options) => Result<'expression', {result: Node}>}
+ */
 export const factorSteps = solver(factorSteps0, expressionSpec);
-/** Open the brackets and collect like terms. */
+/**
+ * Open the brackets and collect like terms.
+ * @type {(input: Input, opts?: Options) => Result<'expression', {result: Node}>}
+ */
 export const expandSteps = solver(expandSteps0, expressionSpec);
-/** Reduce a fraction (with its excluded values) or expand a polynomial. */
+/**
+ * Reduce a fraction (with its excluded values) or expand a polynomial.
+ * @type {(input: Input, opts?: Options) => Result<'expression', {result: Node}>}
+ */
 export const simplifySteps = solver(simplifySteps0, expressionSpec);

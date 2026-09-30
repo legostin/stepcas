@@ -11,6 +11,31 @@
 import { toTex } from './print.js';
 import { eachLanguage, inLanguage, perLanguage, verbatim, Msg, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
+/**
+ * @typedef {object} Step
+ * @property {Msg} title
+ * @property {string | Record<string, string>} [tex]
+ * @property {Msg} [text]
+ * @property {string} [rule]  a stable code of what the step does
+ * @property {Record<string, unknown>} [data]  the step's facts for a program
+ * @property {Step[]} [sub]
+ * @property {true} [final]
+ */
+/**
+ * @import { Text } from '../i18n/index.js'
+ * @import { Node } from './ast.js'
+ */
+/**
+ * @typedef {object} StepInput
+ * @property {Text} [title]
+ * @property {Text | Node} [tex]
+ * @property {Text} [text]
+ * @property {string} [rule]
+ * @property {Record<string, unknown>} [data]
+ * @property {StepInput[]} [sub]
+ * @property {boolean} [final]
+ */
+
 const isNode = (x) => x && typeof x === 'object' && typeof x.type === 'string';
 const asMessage = (x) => (x instanceof Msg ? x : typeof x === 'string' ? verbatim(x) : perLanguage((lang) => inLanguage(x, lang)));
 
@@ -19,7 +44,11 @@ export function texBoth(node, opts = {}) {
     return eachLanguage((lang) => toTex(node, { ...opts, lang }));
 }
 
-/** A step; `sub` holds nested steps (plain objects are made steps too). */
+/**
+ * A step; `sub` holds nested steps (plain objects are made steps too).
+ * @param {StepInput} [input]
+ * @returns {Step}
+ */
 export function step({ title, tex, text, rule, data, sub, final } = {}) {
     const s = { title: asMessage(title ?? '') };
     if (tex !== undefined && tex !== null) s.tex = isNode(tex) ? texBoth(tex) : tex instanceof Msg ? eachLanguage((lang) => tex.in(lang)) : tex;

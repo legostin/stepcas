@@ -395,6 +395,7 @@ export class Poly {
         if (!Number.isInteger(n) || n < 0) throw new TypeError('Poly.pow needs a non-negative integer');
         if (Math.max(this.degree, 0) * n > MAX_DEG) throw new MathError(msg('core.poly.degree_is_too_large'), null, null, 'too-big');
         let r = new Poly([Q.ONE]);
+        /** @type {Poly} */
         let b = this;
         while (n > 0) {
             if (n & 1) r = r.mul(b);
@@ -408,7 +409,7 @@ export class Poly {
     divmod(p) {
         if (p.isZero()) throw new MathError(DIV0, null, null, 'div0');
         const pd = p.degree;
-        if (this.degree < pd) return { q: new Poly([]), r: this };
+        if (this.degree < pd) return { q: new Poly([]), r: /** @type {Poly} */ (this) };
         const r = [...this.c];
         const q = new Array(this.degree - pd + 1).fill(Q.ZERO);
         const L = p.lead;
@@ -428,6 +429,7 @@ export class Poly {
     longDivision(p) {
         if (p.isZero()) throw new MathError(DIV0, null, null, 'div0');
         const steps = [];
+        /** @type {Poly} */
         let cur = this;
         let quotient = new Poly([]);
         while (!cur.isZero() && cur.degree >= p.degree) {
@@ -476,12 +478,14 @@ export class Poly {
         return new Poly(this.c.slice(1).map((x, k) => x.mul(k + 1)));
     }
 
+    /** The same polynomial with leading coefficient 1 (zero stays zero). @returns {Poly} */
     monic() {
         return this.isZero() ? this : this.scale(this.lead.inv());
     }
 
     /** Monic greatest common divisor (zero if both are zero). */
     gcd(p) {
+        /** @type {Poly} */
         let a = this;
         let b = p;
         while (!b.isZero()) [a, b] = [b, a.divmod(b).r];
@@ -502,7 +506,7 @@ export class Poly {
         return this.lead.isNeg() ? c.neg() : c;
     }
 
-    /** Integer coefficients, gcd 1, positive leading coefficient. */
+    /** Integer coefficients, gcd 1, positive leading coefficient. @returns {Poly} */
     primitive() {
         return this.isZero() ? this : this.scale(this.content().inv());
     }
@@ -536,6 +540,7 @@ export class Poly {
             k++;
         }
         if (k) roots.push({ root: Q.ZERO, mult: k });
+        /** @type {Poly} */
         const full = this;
         let cands = null;
         if (p.degree >= 1) {

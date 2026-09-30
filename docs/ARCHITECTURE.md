@@ -91,6 +91,15 @@ Calculators (`ntGcd`, `matDet`, `numIntegrate`, …) keep their own convention. 
 
 `test/contract.test.cjs` runs the whole benchmark corpus and checks every result against this shape.
 
+### Types
+
+The package is JavaScript and its types are declarations generated from JSDoc (`npm run types` writes `types/`;
+`prepare` runs it on install). The contract has hand-written types: `Node` (the AST union, `core/ast.js`), `Text`
+(`i18n`), `Step` and `StepInput` (`core/steps.js`), and in `api.js` `Result<K, X> = Solved<K, X> | Failed` with
+the signature of every solver. Narrowing on `ok` gives the answer or the reason, and `kind` is the solver's own
+union. `test/types/consumer.ts` uses the package the way a TypeScript program would, and it compiles in strict
+mode as part of `npm run check`.
+
 ## Steps
 
 ```
@@ -171,9 +180,10 @@ No module outside `src/i18n/` changes.
 | contract | `test/contract.test.cjs` | the shape of every result and every step over the whole corpus |
 | golden record | `bench/snapshot.mjs`, `bench/golden.json` | every corpus answer and step rendered in every language, and the extra API calls, one hash per record; a refactoring must leave them unchanged |
 | benchmark | `bench/run.mjs`, `bench/verify.py` | ~1480 exam and university tasks; the expected answers are checked by SymPy |
+| types | `test/types/consumer.ts` | the generated declarations serve a strict TypeScript consumer |
 | style | ESLint, Prettier | `npm run lint`, `npm run format:check` |
 
-`npm run check` runs lint, formatting, the tests and the golden record, and CI (`.github/workflows/ci.yml`) runs
+`npm run check` runs lint, formatting, the tests, the type check and the golden record, and CI (`.github/workflows/ci.yml`) runs
 it on Node 20, 22 and 24, followed by the benchmark in strict mode (no wrong answers, errors or timeouts).
 
 A refactoring is done when the golden record does not move. `npm run snapshot:verify` names the records that

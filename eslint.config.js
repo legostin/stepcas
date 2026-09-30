@@ -3,7 +3,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-    { ignores: ['node_modules/', 'bench/.venv/', 'bench/out/'] },
+    { ignores: ['node_modules/', 'bench/.venv/', 'bench/out/', 'types/'] },
     js.configs.recommended,
     {
         languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.es2024 } },

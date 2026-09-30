@@ -18,6 +18,8 @@ Every solver returns the same shape: `{ok, kind, answer: {tex, text}, steps, …
 names the rule it used and gives the formula in TeX, the way a teacher would write it on the board. Answers are
 exact (BigInt rationals, radicals, π, e). When an answer is only numeric, it is marked as approximate.
 
+TypeScript types come with the package: `Result<K, X>` narrows on `ok` to the answer or the reason.
+
 Texts are messages, rendered in any registered language: `r.steps[0].title.en`, `localize(r, 'ru')`. Russian
 and English are built in. A new language is one catalog and one call, `registerLanguage('kk', catalog, {base:
 'ru'})`, with no change to the code.

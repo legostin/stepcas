@@ -21,6 +21,11 @@
 import ruCatalog from './ru/index.js';
 import enCatalog from './en/index.js';
 
+/**
+ * A text as results carry it: a message, a string that reads the same in every language, or {lang: text}.
+ * @typedef {Msg | string | Record<string, string>} Text
+ */
+
 const catalogs = new Map(); // lang → flat Map(key → template)
 const bases = new Map(); // lang → base lang
 export const LANGUAGES = [];
@@ -226,7 +231,12 @@ export class Msg {
     }
 }
 
-/** A message by key with its parameters. */
+/**
+ * A message by key with its parameters.
+ * @param {string} key
+ * @param {Record<string, unknown>} [params]
+ * @returns {Msg}
+ */
 export function msg(key, params) {
     return new Msg(key, params ?? null);
 }
@@ -266,7 +276,13 @@ export function allLanguages(value) {
     return Object.fromEntries(LANGUAGES.map((l) => [l, inLanguage(value, l)]));
 }
 
-/** Replace every message (and {ru, en, …} value) in a result tree with its text in one language. */
+/**
+ * Replace every message (and {ru, en, …} value) in a result tree with its text in one language.
+ * @template T
+ * @param {T} value
+ * @param {string} [lang]
+ * @returns {any}
+ */
 export function localize(value, lang = DEFAULT_LANGUAGE, seen = new WeakSet()) {
     if (value == null || typeof value !== 'object') return value;
     if (value instanceof Msg) return value.in(lang);

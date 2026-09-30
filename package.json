@@ -4,11 +4,16 @@
   "description": "A computer algebra system that shows its work: exact answers with school-style step-by-step solutions in Russian and English.",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./types/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    }
   },
   "files": [
     "src",
+    "types",
     "docs",
     "LICENSE",
     "README.md"
@@ -23,7 +28,10 @@
     "snapshot:update": "node bench/snapshot.mjs --fingerprints bench/golden.json",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.cjs\" \"bench/**/*.mjs\" \"scripts/**/*.mjs\" eslint.config.js",
     "format:check": "prettier --check \"src/**/*.js\" \"test/**/*.cjs\" \"bench/**/*.mjs\" \"scripts/**/*.mjs\" eslint.config.js",
-    "check": "npm run lint && npm run format:check && npm test && npm run snapshot:verify"
+    "types": "tsc -p tsconfig.types.json",
+    "types:check": "npm run types && tsc -p test/types/tsconfig.json",
+    "check": "npm run lint && npm run format:check && npm test && npm run types:check && npm run snapshot:verify",
+    "prepare": "npm run types"
   },
   "engines": {
     "node": ">=20"
@@ -53,6 +61,7 @@
     "acorn-walk": "^8.3.5",
     "eslint": "^10.11.0",
     "globals": "^17.12.0",
-    "prettier": "^3.9.9"
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3"
   }
 }

@@ -13,6 +13,20 @@
 import { Q, MathError } from './rational.js';
 import { msg } from '../i18n/index.js';
 
+/**
+ * @typedef {{readonly type: 'num', readonly value: Q, readonly raw?: string}} NumNode
+ * @typedef {{readonly type: 'sym', readonly name: string, readonly var?: true}} SymNode
+ * @typedef {{readonly type: 'add' | 'mul', readonly args: readonly Node[]}} SumNode
+ * @typedef {{readonly type: 'div', readonly num: Node, readonly den: Node}} DivNode
+ * @typedef {{readonly type: 'neg', readonly arg: Node}} NegNode
+ * @typedef {{readonly type: 'pow', readonly base: Node, readonly exp: Node}} PowNode
+ * @typedef {{readonly type: 'fn', readonly name: string, readonly args: readonly Node[]}} FnNode
+ * @typedef {{readonly type: 'rel', readonly op: '=' | '<' | '<=' | '>' | '>=' | '!=', readonly lhs: Node, readonly rhs: Node}} RelNode
+ * @typedef {{readonly type: 'chain', readonly items: readonly Node[], readonly ops: readonly string[]}} ChainNode
+ * @typedef {{readonly type: 'list', readonly items: readonly Node[]}} ListNode
+ * @typedef {NumNode | SymNode | SumNode | DivNode | NegNode | PowNode | FnNode | RelNode | ChainNode | ListNode} Node
+ */
+
 /** Names of the built-in constants (π, Euler's e, the imaginary unit, infinity). */
 export const CONSTANT_NAMES = new Set(['pi', 'e', 'i', 'inf']);
 
