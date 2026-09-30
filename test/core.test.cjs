@@ -1872,9 +1872,11 @@ test('steps: language-neutral step objects read per language', () => {
     assert.equal(s.title.ru, 'Дискриминант');
     assert.equal(s.title.en, 'Discriminant');
     assert.equal(s.tex, 'D = b^2 - 4ac');
-    assert.deepEqual(s.text, { ru: 'Считаем D', en: 'Compute D' });
+    assert.deepEqual(JSON.parse(JSON.stringify(s.text)), { ru: 'Считаем D', en: 'Compute D' }, 'a {lang: text} object becomes a message');
     assert.equal(s.rule, 'discriminant');
-    assert.equal(s.sub[0].title, 'D = 1');
+    assert.ok(s.sub[0].title instanceof E.Msg, 'a plain string becomes a message too');
+    assert.equal(s.sub[0].title.en, 'D = 1');
+    assert.equal(`${s.sub[0].title}`, 'D = 1');
     assert.deepEqual(s.sub[0].tex, { ru: '\\operatorname{tg} x', en: '\\tan x' });
     assert.equal(E.step({ title: 'x', tex: P('x^2') }).tex, 'x^{2}');
     assert.equal(E.step({ title: 't' }).tex, undefined);

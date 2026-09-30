@@ -75,6 +75,8 @@ test('no language is written into the code', () => {
     const russianText = code.match(/['"`][^'"`\n]*[А-Яа-яЁё][^'"`\n]*['"`]/g) ?? [];
     assert.deepEqual(russianText, [], 'Russian text outside the catalogs');
     assert.ok(!/===\s*'ru'|'ru'\s*===|===\s*'en'|'en'\s*===/.test(code), 'a comparison with a language code');
+    const pairs = code.match(/\(\s*ru\s*,\s*en\b[^)]*\)|\{\s*ru\s*[:,][^}]*\}/g) ?? [];
+    assert.deepEqual(pairs, [], 'a value written per language in the code');
 });
 
 test('plural slots follow the rules of each language', () => {

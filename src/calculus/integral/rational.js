@@ -6,7 +6,7 @@ import { bigLcm, Q } from '../../core/rational.js';
 import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { Poly } from '../../core/poly.js';
-import { HALF, N0, N1, N2, T_, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';
+import { HALF, N0, N1, N2, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';
 import { I } from './engine.js';
 import { canonicalRational } from './trig.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
@@ -406,10 +406,7 @@ function factorNode(constant, factors, v) {
 function pieceStep(node, Fp, pc, v) {
     let text;
     if (pc.t.poly.degree === 1) {
-        text =
-            pc.t.k === 1
-                ? T_('∫A/(ax + b) dx = (A/a)·ln|ax + b| + C.', '∫A/(ax + b) dx = (A/a)·ln|ax + b| + C.')
-                : T_('∫A/(ax + b)ᵏ dx = −A/(a(k − 1)(ax + b)ᵏ⁻¹) + C.', '∫A/(ax + b)ᵏ dx = −A/(a(k − 1)(ax + b)ᵏ⁻¹) + C.');
+        text = pc.t.k === 1 ? '∫A/(ax + b) dx = (A/a)·ln|ax + b| + C.' : '∫A/(ax + b)ᵏ dx = −A/(a(k − 1)(ax + b)ᵏ⁻¹) + C.';
     } else {
         text =
             pc.t.k === 1

@@ -122,7 +122,7 @@ export default {
         check_sign_by_substituting_point_from:
             'Check the sign by substituting a point from the interval. At points of even multiplicity (%{p}) the sign does not change.',
         check_sign_by_substituting_point_from_2: 'Check the sign by substituting a point from the interval; it changes at every root of odd multiplicity.',
-        take_intervals_with: 'Take the intervals with %{p}',
+        take_intervals_with: 'Take the intervals with “%{p}”',
         zeros_of_numerator_are_added_since: 'The zeros of the numerator are added since the inequality is not strict (isolated points count too).',
         multiply_both_sides_by: 'Multiply both sides by $%{den}$',
         number_is_positive_so_sign_stays: 'The number is positive, so the sign stays the same.',

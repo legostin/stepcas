@@ -8,10 +8,10 @@ import { prettyForm, calcTex, quickDerivative } from '../derivative/index.js';
 import { expand } from '../../core/expand.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
-import { N1, N2, NM1, PI, T_, coefTex, dTex, freshVar, iTex, isNum, isVar, isZero, linearParts, lnAbs, negLeading, q, simp, trySimp, tx } from './common.js';
+import { N1, N2, NM1, PI, coefTex, dTex, freshVar, iTex, isNum, isVar, isZero, linearParts, lnAbs, negLeading, q, simp, trySimp, tx } from './common.js';
 import { I, sub } from './engine.js';
 import { qn } from './rational.js';
-import { msg, eachLanguage } from '../../i18n/index.js';
+import { msg, eachLanguage, notation } from '../../i18n/index.js';
 
 // ---- constant and table
 
@@ -35,72 +35,74 @@ function quadIs(P, c0, c1, c2) {
     return P && P.degree === 2 && P.coeff(0).eq(c0) && P.coeff(1).eq(c1) && P.coeff(2).eq(c2);
 }
 
+// a law of the table in the reader's notation: {tan} is a function name (tg or tan), x the variable of integration
+const lawIn = (tpl, v) => (lng) => tpl.replace(/x/g, v).replace(/\{(\w+)\}/g, (m, f) => notation(lng).fnText?.[f] ?? f);
+
 function tableOf(f, v) {
     const X = sym(v);
-    if (isVar(f, v)) return { F: div(pow(X, N2), N2), law: T_(`∫${v} d${v} = ${v}²/2 + C`, `∫${v} d${v} = ${v}²/2 + C`) };
+    if (isVar(f, v)) return { F: div(pow(X, N2), N2), law: lawIn('∫x dx = x²/2 + C', v) };
     if (f.type === 'pow' && isVar(f.base, v) && !containsVar(f.exp, v)) {
         const e = f.exp;
-        if (isNum(e) && e.value.eq(-1)) return { F: lnAbs(X, v), law: T_(`∫d${v}/${v} = ln|${v}| + C`, `∫d${v}/${v} = ln|${v}| + C`) };
+        if (isNum(e) && e.value.eq(-1)) return { F: lnAbs(X, v), law: lawIn('∫dx/x = ln|x| + C', v) };
         const e1 = simp(add(e, N1));
         return {
             F: div(pow(X, e1), e1),
-            law: T_(`∫${v}ⁿ d${v} = ${v}ⁿ⁺¹/(n + 1) + C (n ≠ −1)`, `∫${v}ⁿ d${v} = ${v}ⁿ⁺¹/(n + 1) + C (n ≠ −1)`),
+            law: lawIn('∫xⁿ dx = xⁿ⁺¹/(n + 1) + C (n ≠ −1)', v),
             note: !isNum(e),
         };
     }
     if (f.type === 'pow' && !containsVar(f.base, v) && isVar(f.exp, v)) {
-        if (isConst(f.base) && f.base.name === 'e') return { F: f, law: T_(`∫e^${v} d${v} = e^${v} + C`, `∫e^${v} d${v} = e^${v} + C`) };
-        return { F: div(f, fn('ln', f.base)), law: T_(`∫a^${v} d${v} = a^${v}/ln a + C`, `∫a^${v} d${v} = a^${v}/ln a + C`) };
+        if (isConst(f.base) && f.base.name === 'e') return { F: f, law: lawIn('∫e^x dx = e^x + C', v) };
+        return { F: div(f, fn('ln', f.base)), law: lawIn('∫a^x dx = a^x/ln a + C', v) };
     }
     if (f.type === 'fn' && f.args.length === 1 && isVar(f.args[0], v)) {
         const T = {
             sin: [neg(fn('cos', X)), '∫sin x dx = −cos x + C'],
             cos: [fn('sin', X), '∫cos x dx = sin x + C'],
-            tan: [neg(lnAbs(fn('cos', X), v)), ['∫tg x dx = −ln|cos x| + C', '∫tan x dx = −ln|cos x| + C']],
-            cot: [lnAbs(fn('sin', X), v), ['∫ctg x dx = ln|sin x| + C', '∫cot x dx = ln|sin x| + C']],
-            sinh: [fn('cosh', X), ['∫sh x dx = ch x + C', '∫sinh x dx = cosh x + C']],
-            cosh: [fn('sinh', X), ['∫ch x dx = sh x + C', '∫cosh x dx = sinh x + C']],
-            tanh: [fn('ln', fn('cosh', X)), ['∫th x dx = ln ch x + C', '∫tanh x dx = ln cosh x + C']],
-            coth: [lnAbs(fn('sinh', X), v), ['∫cth x dx = ln|sh x| + C', '∫coth x dx = ln|sinh x| + C']],
+            tan: [neg(lnAbs(fn('cos', X), v)), '∫{tan} x dx = −ln|cos x| + C'],
+            cot: [lnAbs(fn('sin', X), v), '∫{cot} x dx = ln|sin x| + C'],
+            sinh: [fn('cosh', X), '∫{sinh} x dx = {cosh} x + C'],
+            cosh: [fn('sinh', X), '∫{cosh} x dx = {sinh} x + C'],
+            tanh: [fn('ln', fn('cosh', X)), '∫{tanh} x dx = ln {cosh} x + C'],
+            coth: [lnAbs(fn('sinh', X), v), '∫{coth} x dx = ln|{sinh} x| + C'],
             abs: [div(mul(X, fn('abs', X)), N2), '∫|x| dx = x|x|/2 + C'],
             sign: [fn('abs', X), '∫sgn x dx = |x| + C'],
-            sec: [lnAbs(add(fn('sec', X), fn('tan', X)), v), ['∫sec x dx = ln|sec x + tg x| + C', '∫sec x dx = ln|sec x + tan x| + C']],
-            csc: [lnAbs(fn('tan', div(X, N2)), v), ['∫cosec x dx = ln|tg(x/2)| + C', '∫csc x dx = ln|tan(x/2)| + C']],
+            sec: [lnAbs(add(fn('sec', X), fn('tan', X)), v), '∫sec x dx = ln|sec x + {tan} x| + C'],
+            csc: [lnAbs(fn('tan', div(X, N2)), v), '∫{csc} x dx = ln|{tan}(x/2)| + C'],
         }[f.name];
         if (!T) return null;
-        const [ru, en] = Array.isArray(T[1]) ? T[1] : [T[1], T[1]];
-        return { F: T[0], law: T_(ru.replace(/x/g, v), en.replace(/x/g, v)) };
+        return { F: T[0], law: lawIn(T[1], v) };
     }
     if (f.type === 'pow' && isNum(f.exp) && f.base.type === 'fn' && f.base.args.length === 1 && isVar(f.base.args[0], v)) {
         const e = f.exp.value;
         const nm = f.base.name;
         const hit = (name, k) => nm === name && e.eq(k);
-        if (hit('cos', -2) || hit('sec', 2)) return { F: fn('tan', X), law: T_('∫dx/cos² x = tg x + C', '∫dx/cos² x = tan x + C') };
-        if (hit('sin', -2) || hit('csc', 2)) return { F: neg(fn('cot', X)), law: T_('∫dx/sin² x = −ctg x + C', '∫dx/sin² x = −cot x + C') };
-        if (hit('cosh', -2)) return { F: fn('tanh', X), law: T_('∫dx/ch² x = th x + C', '∫dx/cosh² x = tanh x + C') };
-        if (hit('sinh', -2)) return { F: neg(fn('coth', X)), law: T_('∫dx/sh² x = −cth x + C', '∫dx/sinh² x = −coth x + C') };
+        if (hit('cos', -2) || hit('sec', 2)) return { F: fn('tan', X), law: lawIn('∫dx/cos² x = {tan} x + C', v) };
+        if (hit('sin', -2) || hit('csc', 2)) return { F: neg(fn('cot', X)), law: lawIn('∫dx/sin² x = −{cot} x + C', v) };
+        if (hit('cosh', -2)) return { F: fn('tanh', X), law: lawIn('∫dx/{cosh}² x = {tanh} x + C', v) };
+        if (hit('sinh', -2)) return { F: neg(fn('coth', X)), law: lawIn('∫dx/{sinh}² x = −{coth} x + C', v) };
         if (hit('cos', -1))
             return {
                 F: lnAbs(fn('tan', add(div(X, N2), div(PI, num(4)))), v),
-                law: T_('∫dx/cos x = ln|tg(x/2 + π/4)| + C', '∫dx/cos x = ln|tan(x/2 + π/4)| + C'),
+                law: lawIn('∫dx/cos x = ln|{tan}(x/2 + π/4)| + C', v),
             };
-        if (hit('sin', -1)) return { F: lnAbs(fn('tan', div(X, N2)), v), law: T_('∫dx/sin x = ln|tg(x/2)| + C', '∫dx/sin x = ln|tan(x/2)| + C') };
+        if (hit('sin', -1)) return { F: lnAbs(fn('tan', div(X, N2)), v), law: lawIn('∫dx/sin x = ln|{tan}(x/2)| + C', v) };
         return null;
     }
     if (f.type === 'pow' && isNum(f.exp) && f.base.type === 'add') {
         const P = Poly.fromNode(f.base, v);
         const e = f.exp.value;
-        if (e.eq(-1) && quadIs(P, 1, 0, 1)) return { F: fn('atan', X), law: T_('∫dx/(1 + x²) = arctg x + C', '∫dx/(1 + x²) = arctan x + C') };
-        if (e.eq(q(-1, 2)) && quadIs(P, 1, 0, -1)) return { F: fn('asin', X), law: T_('∫dx/√(1 − x²) = arcsin x + C', '∫dx/√(1 − x²) = arcsin x + C') };
+        if (e.eq(-1) && quadIs(P, 1, 0, 1)) return { F: fn('atan', X), law: lawIn('∫dx/(1 + x²) = {atan} x + C', v) };
+        if (e.eq(q(-1, 2)) && quadIs(P, 1, 0, -1)) return { F: fn('asin', X), law: lawIn('∫dx/√(1 − x²) = {asin} x + C', v) };
         if (e.eq(q(-1, 2)) && quadIs(P, 1, 0, 1))
             return {
                 F: fn('ln', add(X, fn('sqrt', add(pow(X, N2), N1)))),
-                law: T_('∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C', '∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C'),
+                law: lawIn('∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C', v),
             };
         if (e.eq(q(-1, 2)) && quadIs(P, -1, 0, 1))
             return {
                 F: lnAbs(add(X, fn('sqrt', add(pow(X, N2), NM1))), v),
-                law: T_('∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C', '∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C'),
+                law: lawIn('∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C', v),
             };
     }
     return null;

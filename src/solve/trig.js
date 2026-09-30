@@ -1,11 +1,11 @@
 // solve/trig — trigonometric equations: families of roots, substitutions, selection on a segment.
 
-import { sym, numValue, add, mul, div, num, fn, neg, containsVar, freeVars, pow, nodeKey } from '../core/ast.js';
+import { sym, numValue, add, mul, div, num, fn, neg, rel, containsVar, freeVars, pow, nodeKey } from '../core/ast.js';
 import { collectTerms, numDen } from '../core/expand.js';
 import { Q } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { splitCoeff } from '../core/simplify.js';
-import { N0, N1, PI, S, T, approxOf, exactZero, expd, isConstNode, orTex, outermost, pick, replaceNode, simpOr, tex } from './common.js';
+import { N0, N1, PI, S, approxOf, exactZero, expd, isConstNode, orTex, outermost, pick, replaceNode, simpOr, tex } from './common.js';
 import { isZeroNode, nodeQuadRoots, solveAnyPoly, sumNode } from './polynomial.js';
 import { mkRoot, rootsTex } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
@@ -413,10 +413,11 @@ function trigCore0(E, ctx) {
         nameSet.add('cos');
         pre.push(
             S(msg('solve.trig.write_tangent_and_cotangent_through_sine'), {
-                text: T(
-                    '$\\operatorname{tg} t = \\frac{\\sin t}{\\cos t}$, $\\operatorname{ctg} t = \\frac{\\cos t}{\\sin t}$.',
-                    '$\\tan t = \\frac{\\sin t}{\\cos t}$, $\\cot t = \\frac{\\cos t}{\\sin t}$.',
-                ),
+                text: eachLanguage((l) => {
+                    const t = sym('t');
+                    const ratio = (f, a, b) => `$${tex(rel('=', fn(f, t), div(fn(a, t), fn(b, t))), l)}$`;
+                    return `${ratio('tan', 'sin', 'cos')}, ${ratio('cot', 'cos', 'sin')}.`;
+                }),
             }),
         );
     }

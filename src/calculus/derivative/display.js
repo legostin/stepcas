@@ -19,7 +19,6 @@ export const E_ = sym('e');
 export const isNum = (n) => n.type === 'num';
 export const isZero = (n) => isNum(n) && n.value.isZero();
 export const isOne = (n) => isNum(n) && n.value.isOne();
-export const T_ = (ru, en) => ({ ru, en });
 
 // ---------------------------------------------------------------- input
 

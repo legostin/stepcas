@@ -63,6 +63,7 @@ export default {
     fnText: {
         tan: 'tg',
         cot: 'ctg',
+        csc: 'cosec',
         asin: 'arcsin',
         acos: 'arccos',
         atan: 'arctg',

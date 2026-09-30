@@ -20,7 +20,6 @@ export const PI = sym('pi');
 export const isNum = (n) => n.type === 'num';
 export const qn2 = (q) => num(q);
 export const isZeroN = (n) => isNum(n) && n.value.isZero();
-export const T_ = (ru, en) => ({ ru, en });
 
 export function asNode(x) {
     if (x && typeof x === 'object' && typeof x.type === 'string') return x;

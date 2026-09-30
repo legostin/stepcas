@@ -7,7 +7,7 @@ import { Poly, linearForm } from '../core/poly.js';
 import { simplify, splitCoeff } from '../core/simplify.js';
 import { collectTerms } from '../core/expand.js';
 import { parse } from '../core/parse.js';
-import { N0, N1, S, T, TMP, approxOf, exactZero, isConstNode, linearIn, orTex, outermost, qGcd, replaceNode, simpOr, tex } from './common.js';
+import { N0, N1, S, TMP, approxOf, exactZero, isConstNode, linearIn, orTex, outermost, qGcd, replaceNode, simpOr, tex } from './common.js';
 import { OP_OF, collectConds, condTex, odzInfo, relHoldsNum } from './domain.js';
 import { pickVar, solveCore, solveEquation } from './equation.js';
 import { analyzeExp, baseInfo, baseNode, exactPower, logNode, logNodeB, sameBase } from './exponential.js';
@@ -92,7 +92,7 @@ function intervalMethod(N, L, op, ctx, pre = []) {
                 : msg('solve.inequality.check_sign_by_substituting_point_from_2'),
         }),
     );
-    const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
+    const want = op === '>' || op === '>=' ? '+' : '−';
     steps.push(
         S(msg('solve.inequality.take_intervals_with', { p: want }), {
             tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
@@ -932,7 +932,7 @@ function rootsIneq(lhs, op, rhs, E, ctx) {
             text: msg('solve.inequality.sign_on_each_interval_is_checked'),
         }),
     );
-    const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
+    const want = op === '>' || op === '>=' ? '+' : '−';
     steps.push(S(msg('solve.inequality.take_intervals_with', { p: want }), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     return { set, steps, type: 'intervals' };
 }

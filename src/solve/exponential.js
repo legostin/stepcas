@@ -3,7 +3,7 @@
 import { sym, num, fn, containsVar, mul, add, nodeKey, pow, div, neg, numValue } from '../core/ast.js';
 import { Q } from '../core/rational.js';
 import { linearForm, Poly } from '../core/poly.js';
-import { N1, S, T, approxOf, exactZero, isolated, qGcd, simpOr, tex } from './common.js';
+import { N1, S, approxOf, exactZero, isolated, qGcd, simpOr, tex } from './common.js';
 import { subSolve } from './equation.js';
 import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
 import { solveNodePoly, termsOfSum } from './rational.js';
@@ -136,7 +136,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
         if (!r) return null;
         const pre = S(msg('solve.exponential.multiply_powers_with_equal_exponents'), {
             tex: eachLanguage((l) => `${tex(merged, l)} = 0`),
-            text: T('$a^{f} \\cdot b^{f} = (ab)^{f}$.', '$a^{f} \\cdot b^{f} = (ab)^{f}$.'),
+            text: '$a^{f} \\cdot b^{f} = (ab)^{f}$.',
         });
         return { ...r, steps: [pre, ...r.steps] };
     }

@@ -235,6 +235,11 @@ export function perLanguage(fn) {
     return msg('i18n.value', { value: fn });
 }
 
+/** A text that reads the same in every language (a formula, a law of a table) as a message. */
+export function verbatim(text) {
+    return msg('i18n.value', { value: String(text) });
+}
+
 /**
  * fn(lang) for every registered language: {ru: …, en: …, …}; with compact (the default) a plain value when every
  * language gives the same one. Values are computed now — for TeX that differs between languages and the like.
