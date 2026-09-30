@@ -5,7 +5,7 @@ import { Q, MathError } from '../../core/rational.js';
 import { simplify } from '../../core/simplify.js';
 import { step } from '../../core/steps.js';
 import { niceForm } from './clean.js';
-import { E_, N0, N1, N2, NM1, T_, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from './display.js';
+import { E_, N0, N1, N2, NM1, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from './display.js';
 import { FACT_ERR } from './quick.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 
@@ -139,59 +139,13 @@ function texPowRaw(base, e, L) {
 
 // ---------------------------------------------------------------- names and table formulas for the texts
 
-const FN_NAME = {
-    sin: ['синус', 'sine'],
-    cos: ['косинус', 'cosine'],
-    tan: ['тангенс', 'tangent'],
-    cot: ['котангенс', 'cotangent'],
-    sec: ['секанс', 'secant'],
-    csc: ['косеканс', 'cosecant'],
-    asin: ['арксинус', 'arcsine'],
-    acos: ['арккосинус', 'arccosine'],
-    atan: ['арктангенс', 'arctangent'],
-    acot: ['арккотангенс', 'arccotangent'],
-    sinh: ['гиперболический синус', 'hyperbolic sine'],
-    cosh: ['гиперболический косинус', 'hyperbolic cosine'],
-    tanh: ['гиперболический тангенс', 'hyperbolic tangent'],
-    coth: ['гиперболический котангенс', 'hyperbolic cotangent'],
-    asinh: ['обратный гиперболический синус', 'inverse hyperbolic sine'],
-    acosh: ['обратный гиперболический косинус', 'inverse hyperbolic cosine'],
-    atanh: ['обратный гиперболический тангенс', 'inverse hyperbolic tangent'],
-    ln: ['натуральный логарифм', 'natural logarithm'],
-    lg: ['десятичный логарифм', 'common logarithm'],
-    log: ['логарифм', 'logarithm'],
-    sqrt: ['квадратный корень', 'square root'],
-    abs: ['модуль', 'absolute value'],
-};
+// the names of the functions and their table derivatives are messages: calculus.derivative.steps.fn.<name>, .table.<name>
+const FN_NAMED = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'asin', 'acos', 'atan', 'acot', 'sinh', 'cosh', 'tanh', 'coth', 'asinh', 'acosh', 'atanh', 'ln', 'lg', 'log', 'sqrt', 'abs']);
 
-const FORMULA = {
-    sin: (u) => [`(sin ${u})′ = cos ${u}`],
-    cos: (u) => [`(cos ${u})′ = −sin ${u}`],
-    tan: (u) => [`(tg ${u})′ = 1/cos² ${u}`, `(tan ${u})′ = 1/cos² ${u}`],
-    cot: (u) => [`(ctg ${u})′ = −1/sin² ${u}`, `(cot ${u})′ = −1/sin² ${u}`],
-    sec: (u) => [`(sec ${u})′ = sec ${u}·tg ${u}`, `(sec ${u})′ = sec ${u}·tan ${u}`],
-    csc: (u) => [`(cosec ${u})′ = −cosec ${u}·ctg ${u}`, `(csc ${u})′ = −csc ${u}·cot ${u}`],
-    asin: (u) => [`(arcsin ${u})′ = 1/√(1 − ${u}²)`],
-    acos: (u) => [`(arccos ${u})′ = −1/√(1 − ${u}²)`],
-    atan: (u) => [`(arctg ${u})′ = 1/(1 + ${u}²)`, `(arctan ${u})′ = 1/(1 + ${u}²)`],
-    acot: (u) => [`(arcctg ${u})′ = −1/(1 + ${u}²)`, `(arccot ${u})′ = −1/(1 + ${u}²)`],
-    sinh: (u) => [`(sh ${u})′ = ch ${u}`, `(sinh ${u})′ = cosh ${u}`],
-    cosh: (u) => [`(ch ${u})′ = sh ${u}`, `(cosh ${u})′ = sinh ${u}`],
-    tanh: (u) => [`(th ${u})′ = 1/ch² ${u}`, `(tanh ${u})′ = 1/cosh² ${u}`],
-    coth: (u) => [`(cth ${u})′ = −1/sh² ${u}`, `(coth ${u})′ = −1/sinh² ${u}`],
-    asinh: (u) => [`(arsh ${u})′ = 1/√(${u}² + 1)`, `(arsinh ${u})′ = 1/√(${u}² + 1)`],
-    acosh: (u) => [`(arch ${u})′ = 1/√(${u}² − 1)`, `(arcosh ${u})′ = 1/√(${u}² − 1)`],
-    atanh: (u) => [`(arth ${u})′ = 1/(1 − ${u}²)`, `(artanh ${u})′ = 1/(1 − ${u}²)`],
-    ln: (u) => [`(ln ${u})′ = 1/${u}`],
-    lg: (u) => [`(lg ${u})′ = 1/(${u}·ln 10)`, `(log₁₀ ${u})′ = 1/(${u}·ln 10)`],
-    sqrt: (u) => [`(√${u})′ = 1/(2√${u})`],
-};
+const FORMULA = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'asin', 'acos', 'atan', 'acot', 'sinh', 'cosh', 'tanh', 'coth', 'asinh', 'acosh', 'atanh', 'ln', 'lg', 'sqrt']);
 
 function formula(name, u) {
-    const f = FORMULA[name];
-    if (!f) return null;
-    const [ru, en] = f(u);
-    return { ru, en: en ?? ru };
+    return FORMULA.has(name) ? msg(`calculus.derivative.steps.table.${name}`, { u }) : null;
 }
 
 /** f'(u) for the step lines (readable, not canonical). */
@@ -611,14 +565,14 @@ function dFn(n, ctx) {
     if (!outer) throw new MathError(msg('calculus.derivative.steps.cannot_differentiate', { name }), null, null, 'unsupported');
     const absNote = name === 'abs'
         ? msg('calculus.derivative.steps.this_holds_for_u_0_absolute')
-        : T_('', '');
+        : '';
     if (u.type === 'sym' && u.name === v && !isConst(u)) {
         const res = niceForm(outer, v);
         const f = formula(name, v);
         let text;
         if (name === 'abs') text = msg('calculus.derivative.steps.it_is_1_for_0_and', { v });
         else if (name === 'log') text = msg('calculus.derivative.steps.table_derivative_log_1_ln', { v });
-        else if (f) text = msg('calculus.derivative.steps.table_derivative', { p: (lng) => f[lng] });
+        else if (f) text = msg('calculus.derivative.steps.table_derivative', { p: f });
         return {
             raw: outer,
             res,
@@ -626,15 +580,15 @@ function dFn(n, ctx) {
         };
     }
     const k = dS(u, ctx);
-    const nm = FN_NAME[name] ?? [name, name];
+    const nm = FN_NAMED.has(name) ? msg(`calculus.derivative.steps.fn.${name}`) : name;
     const f = formula(name, 'u');
     let law;
-    if (name === 'log') law = T_('(logₐ u)′ = u′/(u·ln a)', '(logₐ u)′ = u′/(u·ln a)');
-    else if (name === 'abs') law = T_('(|u|)′ = u/|u|·u′', '(|u|)′ = u/|u|·u′');
-    else law = T_(`${f.ru}·u′`, `${f.en}·u′`);
+    if (name === 'log') law = '(logₐ u)′ = u′/(u·ln a)';
+    else if (name === 'abs') law = '(|u|)′ = u/|u|·u′';
+    else law = eachLanguage((l) => `${f.in(l)}·u′`);
     return finish(n, ctx, {
-        title: msg('calculus.derivative.steps.chain_rule', { p: nm[0], p2: nm[1] }),
-        text: msg('calculus.derivative.steps.outer_function_is_inner_one_is', { p: nm[0], u: (lng) => plain(u, lng), p2: (lng) => law[lng], p3: (lng) => absNote[lng], p4: nm[1] }),
+        title: msg('calculus.derivative.steps.chain_rule', { f: nm }),
+        text: msg('calculus.derivative.steps.outer_function_is_inner_one_is', { f: nm, u: (lng) => plain(u, lng), law, note: absNote }),
         rule: 'chain',
         ruleLine: pProd([pNode(outer), pPrime(u)]),
         assembled: pProd([pNode(outer), pNode(k.res)], { dropOnes: true }),

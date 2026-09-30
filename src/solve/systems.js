@@ -54,8 +54,6 @@ function linEqNode(a, b, vars) {
 export const casesTex = (lines) => (lines.length > 1 ? `\\begin{cases} ${lines.join(' \\\\ ')} \\end{cases}` : lines[0]);
 const systemTexB = (rows, vars) => eachLanguage((l) => casesTex(rows.map((r) => tex(linEqNode(r.a, r.b, vars), l))));
 const tupleTex = (items, lang) => `\\left(${items.join(notation(lang).listTex)}\\right)`;
-const ORD = { ru: ['первого', 'второго', 'третьего'], en: ['first', 'second', 'third'] };
-const ORD_ACC = { ru: ['первое', 'второе', 'третье'], en: ['first', 'second', 'third'] };
 
 /** Substitute a solution into every equation → {ok, step}. */
 function checkSystem(rels, sol) {
@@ -109,11 +107,11 @@ function sysSubstitution(rows, vars) {
     const shown = aij.isOne() ? numer : aij.eq(-1) ? simpOr(neg(numer)) : div(numer, num(aij));
     const expr = simpOr(shown);
     const steps = [];
-    steps.push(S(msg('solve.systems.express_from_equation', { vj, p: (lng) => ORD[lng][i] }), { tex: eachLanguage((l) => `${vj} = ${tex(shown, l)}`) }));
+    steps.push(S(msg('solve.systems.express_from_equation', { vj, n: i + 1 }), { tex: eachLanguage((l) => `${vj} = ${tex(shown, l)}`) }));
     const aoj = rows[o].a[j];
     const aok = rows[o].a[k];
     const lhsNode = sumNode([aoj.isZero() ? null : aoj.isOne() ? shown : mul(num(aoj), shown), aok.isZero() ? null : monoNode(aok, vk)].filter(Boolean));
-    steps.push(S(msg('solve.systems.substitute_into_equation', { p: o === 1 ? 'во' : 'в', p2: (lng) => ORD_ACC[lng][o] }), {
+    steps.push(S(msg('solve.systems.substitute_into_equation', { n: o + 1 }), {
         tex: eachLanguage((l) => `${tex(lhsNode, l)} = ${tex(num(rows[o].b), l)}`),
         text: msg('solve.systems.this_is_equation_in_one_unknown', { vk }),
     }));
@@ -168,7 +166,7 @@ function sysAddition(rows0, vars) {
     if (a0.isNeg() === a1.isNeg()) m1 = m1.neg();
     const scaled = [{ a: rows[0].a.map((q) => q.mul(m0)), b: rows[0].b.mul(m0) }, { a: rows[1].a.map((q) => q.mul(m1)), b: rows[1].b.mul(m1) }];
     if (!m0.isOne() || !m1.isOne()) {
-        const what = (m, idx, l) => (m.isOne() ? '' : msg('solve.systems.multiply_equation_by', { p: (lng) => ORD_ACC[lng][idx], p2: tex(num(m), l) }).in(l));
+        const what = (m, idx, l) => (m.isOne() ? '' : msg('solve.systems.multiply_equation_by', { n: idx + 1, k: tex(num(m), l) }).in(l));
         const parts = (l) => [what(m0, 0, l), what(m1, 1, l)].filter(Boolean).join(msg('solve.systems.and').in(l));
         steps.push(S(eachLanguage((l) => {
             const p0 = parts(l);
@@ -200,7 +198,7 @@ function sysAddition(rows0, vars) {
     const r = rows0[src];
     const yj = r.b.sub(r.a[k].mul(yk)).div(r.a[j]);
     const substituted = sumNode([monoNode(r.a[j], vars[j]), r.a[k].isZero() ? null : mul(num(r.a[k]), num(yk))].filter(Boolean));
-    steps.push(S(msg('solve.systems.substitute_into_equation_2', { p: vars[k], p2: (lng) => tex(num(yk), lng), p3: (lng) => ORD_ACC[lng][src] }), {
+    steps.push(S(msg('solve.systems.substitute_into_equation_2', { v: vars[k], value: (lng) => tex(num(yk), lng), n: src + 1 }), {
         tex: eachLanguage((l) => `${tex(substituted, l)} = ${tex(num(r.b), l)} \\quad\\Rightarrow\\quad ${vars[j]} = ${tex(num(yj), l)}`),
     }));
     return { kind: 'unique', steps, solution: { [vars[j]]: num(yj), [vars[k]]: num(yk) } };

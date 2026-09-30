@@ -325,7 +325,7 @@ function divergence(term, k) {
     }
     const lv = lim && lim.value !== null && typeof lim.value === 'object' ? approx(lim.value) : lim?.value === 'inf' || lim?.value === '-inf' ? Infinity : NaN;
     if (lim && (lim.value === 'dne' || (Number.isFinite(lv) && Math.abs(lv) > 1e-12) || lv === Infinity)) {
-        return { diverges: true, type: 'necessary', steps: [step({ title: msg('calculus.series.necessary_condition_fails'), tex: eachLanguage((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? '\\text{ — не существует}' : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: msg('calculus.series.if_series_converges_its_terms_tend') })] };
+        return { diverges: true, type: 'necessary', steps: [step({ title: msg('calculus.series.necessary_condition_fails'), tex: eachLanguage((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? msg('calculus.series.does_not_exist_tex').in(l) : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: msg('calculus.series.if_series_converges_its_terms_tend') })] };
     }
     // rational term of degree −1 or more: comparison with the harmonic series
     try {

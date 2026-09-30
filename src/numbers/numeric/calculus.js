@@ -289,14 +289,7 @@ export function numIntegrateInfo(f, a, b, opts = {}) {
     return numIntegrate(f, a, b, { ...opts, info: true, check: true });
 }
 
-const REASONS = {
-    tail: ['Интеграл расходится: на бесконечности функция убывает недостаточно быстро.', 'The integral diverges: the function does not decay fast enough at infinity.'],
-    pole: ['Интеграл расходится: функция неограниченно растёт вблизи точки, и площадь там бесконечна.', 'The integral diverges: the function blows up near a point and the area there is infinite.'],
-    domain: ['Функция не определена на части отрезка.', 'The function is undefined on part of the interval.'],
-    oscillating: ['Функция колеблется, не затухая достаточно быстро: численное значение ненадёжно.', 'The function oscillates without decaying fast enough: the numeric value is unreliable.'],
-    inaccurate: ['Точность вычисления недостаточна: значение приблизительное.', 'The computation is not accurate enough: the value is only rough.'],
-    nan: ['Не удалось получить конечное значение.', 'No finite value could be obtained.'],
-};
+// the reasons are messages numbers.numeric.calculus.reason.<key>
 
 // Envelope growth of |g| at point c from one side: |g(c ± δ)| ~ δ^(−p). p ≥ 1 is not integrable
 // (for the mapped tail t → 1, p = 2 − q where |f| ~ x^(−q)); osc — g changes sign near c.
@@ -359,7 +352,7 @@ function withDiagnosis(r, g0, lo, hi, map, toX, tol, maxIntervals) {
     };
     const verdict0 = (reason, extra) => {
         Object.assign(out, { ok: false, reason, ...extra });
-        out.msg = { ru: REASONS[reason][0], en: REASONS[reason][1] };
+        out.msg = msg(`numbers.numeric.calculus.reason.${reason}`);
         return out;
     };
     const verdict = (reason, extra = {}) => {

@@ -1,7 +1,7 @@
 // linalg/det — determinants: small formulas, cofactor expansion, elimination.
 
 import { Q } from '../core/rational.js';
-import { R, S, fail, qs, qt, qtp, rowAccShort, sub } from './common.js';
+import { R, S, fail, qs, qt, qtp, sub } from './common.js';
 import { M, Matrix, needSquare } from './core.js';
 import { arrowLabel, opText } from './reduce.js';
 import { msg } from '../i18n/index.js';
@@ -45,7 +45,7 @@ function detGauss(A, withSteps) {
             if (withSteps) {
                 const mt = new Matrix(W).toTex({ env: 'vmatrix' });
                 st.push(S(msg('linalg.det.swap_rows'), `\\xrightarrow{${R(c)} \\leftrightarrow ${R(p)}} -${mt}`,
-                    msg('linalg.det.pivot_is_handier_swap_rows_and', { p: qs(W[c][c]), c: rowAccShort(c), p2: rowAccShort(p), p3: c + 1, p4: p + 1 }),
+                    msg('linalg.det.pivot_is_handier_swap_rows_and', { pivot: qs(W[c][c]), a: c + 1, b: p + 1 }),
                     { rule: 'row-swap', op: 'swap', i: c, j: p }));
             }
         }
@@ -125,8 +125,8 @@ function detCofactor(A, withSteps, depth = 0, label = '\\det A') {
     const value = terms.reduce((s, t) => s.add(t.v.mul(t.md.value).mul(t.sign < 0 ? Q.MINUS_ONE : Q.ONE)), Q.ZERO);
     if (!withSteps) return { value, steps: [] };
     const which = best.kind === 'row'
-        ? msg('linalg.det.row', { p: ['первой', 'второй', 'третьей', 'четвёртой', 'пятой', 'шестой'][best.idx] ?? best.idx + 1, p2: best.idx + 1 })
-        : msg('linalg.det.column', { p: ['первому', 'второму', 'третьему', 'четвёртому', 'пятому', 'шестому'][best.idx] ?? best.idx + 1, p2: best.idx + 1 });
+        ? msg('linalg.det.row', { n: best.idx + 1 })
+        : msg('linalg.det.column', { n: best.idx + 1 });
     const lineWord = msg('linalg.det.along');
     const expansion = terms.length
         ? terms.map((t, k) => {

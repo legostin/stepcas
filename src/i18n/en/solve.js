@@ -1,4 +1,6 @@
 // English messages of solve/ (keys solve.<module>.<message>).
+import { ordinal } from './grammar.js';
+
 export default {
     abs: {
         isolate_absolute_value: "Isolate the absolute value",
@@ -386,8 +388,8 @@ export default {
         check: "Check",
         we_substituted_values_into_every_equation: "We substituted the values into every equation: all of them hold.",
         not_all_equalities_hold: "Not all the equalities hold.",
-        express_from_equation: "Express $%{vj}$ from the %{p} equation",
-        substitute_into_equation: "Substitute into the %{p2} equation",
+        express_from_equation: (p) => `Express $${p.vj}$ from the ${ordinal(p.n)} equation`,
+        substitute_into_equation: (p) => `Substitute into the ${ordinal(p.n)} equation`,
         this_is_equation_in_one_unknown: "This is an equation in one unknown, $%{vk}$.",
         solve_it: "Solve it",
         true_for_every: "\\text{true for every } ",
@@ -398,7 +400,7 @@ export default {
         both_equations_describe_same_line: "Both equations describe the same line.",
         find: "Find $%{vj}$",
         clear_fractions: "Clear the fractions",
-        multiply_equation_by: "multiply the %{p} equation by $%{p2}$",
+        multiply_equation_by: (p) => `multiply the ${ordinal(p.n)} equation by $${p.k}$`,
         and: " and ",
         now_coefficients_of_are_opposite: "Now the coefficients of $%{p}$ are opposite.",
         add_equations_cancels: "Add the equations: $%{p}$ cancels",
@@ -407,7 +409,7 @@ export default {
         we_get_no_solutions: "We get $0 = %{p}$: no solutions",
         lines_are_parallel_and_never_meet: "The lines are parallel and never meet.",
         find_2: "Find $%{p}$",
-        substitute_into_equation_2: "Substitute $%{p} = %{p2}$ into the %{p3} equation",
+        substitute_into_equation_2: (p, lang, say) => `Substitute $${p.v} = ${say(p.value)}$ into the ${ordinal(p.n)} equation`,
         no_solutions_2: "No solutions.",
         could_not_solve: "Could not solve.",
         could_not_solve_2: "Could not solve",
@@ -436,7 +438,7 @@ export default {
         tangent: "tangent",
         cotangent: "cotangent",
         solve: "Solve $%{l}$",
-        only_takes_values_from_to_and: "The %{p2} only takes values from $-1$ to $1$, and $|%{aS}| > 1$: no roots.",
+        only_takes_values_from_to_and: "The %{f} only takes values from $-1$ to $1$, and $|%{aS}| > 1$: no roots.",
         special_case: "A special case: $\\sin t = 0 \\Leftrightarrow t = \\pi n$.",
         special_case_2: "A special case: $\\sin t = 1 \\Leftrightarrow t = \\frac{\\pi}{2} + 2\\pi n$.",
         special_case_3: "A special case: $\\sin t = -1 \\Leftrightarrow t = -\\frac{\\pi}{2} + 2\\pi n$.",

@@ -130,7 +130,7 @@ export function basicTrig(F, u, a, ctx) {
     if ((F === 'sin' || F === 'cos') && Math.abs(av) > 1 + 1e-12) {
         return {
             families: [],
-            steps: [S(title, { text: msg('solve.trig.only_takes_values_from_to_and', { p: F === 'sin' ? 'Синус' : 'Косинус', aS: (lng) => tex(aS, lng), p2: TRIG_NAME[F].en }) })],
+            steps: [S(title, { text: msg('solve.trig.only_takes_values_from_to_and', { f: TRIG_NAME[F], aS: (lng) => tex(aS, lng) }) })],
         };
     }
     const is = (x) => Math.abs(av - x) < 1e-12 && exactZero(add(aS, num(-x))) !== false;

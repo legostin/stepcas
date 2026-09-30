@@ -1,4 +1,6 @@
 // Russian messages of solve/ (keys solve.<module>.<message>).
+import { equation, capital } from './grammar.js';
+
 export default {
     abs: {
         isolate_absolute_value: "Уединяем модуль",
@@ -386,8 +388,8 @@ export default {
         check: "Проверка",
         we_substituted_values_into_every_equation: "Подставили найденные значения в каждое уравнение — все равенства верны.",
         not_all_equalities_hold: "Не все равенства выполняются.",
-        express_from_equation: "Выражаем $%{vj}$ из %{p} уравнения",
-        substitute_into_equation: "Подставляем %{p} %{p2} уравнение",
+        express_from_equation: (p) => `Выражаем $${p.vj}$ из ${equation.gen(p.n)} уравнения`,
+        substitute_into_equation: (p) => `Подставляем ${equation.into(p.n)} уравнение`,
         this_is_equation_in_one_unknown: "Получилось уравнение с одной неизвестной $%{vk}$.",
         solve_it: "Решаем его",
         true_for_every: "\\text{верно при любом } ",
@@ -398,7 +400,7 @@ export default {
         both_equations_describe_same_line: "Оба уравнения задают одну и ту же прямую.",
         find: "Находим $%{vj}$",
         clear_fractions: "Избавляемся от дробей",
-        multiply_equation_by: "%{p} уравнение умножаем на $%{p2}$",
+        multiply_equation_by: (p) => `${equation.acc(p.n)} уравнение умножаем на $${p.k}$`,
         and: ", ",
         now_coefficients_of_are_opposite: "Теперь коэффициенты при $%{p}$ противоположны.",
         add_equations_cancels: "Складываем уравнения: $%{p}$ исчезает",
@@ -407,7 +409,7 @@ export default {
         we_get_no_solutions: "Получилось $0 = %{p}$ — решений нет",
         lines_are_parallel_and_never_meet: "Прямые параллельны и не пересекаются.",
         find_2: "Находим $%{p}$",
-        substitute_into_equation_2: "Подставляем $%{p} = %{p2}$ в %{p3} уравнение",
+        substitute_into_equation_2: (p, lang, say) => `Подставляем $${p.v} = ${say(p.value)}$ в ${equation.acc(p.n)} уравнение`,
         no_solutions_2: "Решений нет.",
         could_not_solve: "Не удалось решить.",
         could_not_solve_2: "Не удалось решить",
@@ -436,7 +438,7 @@ export default {
         tangent: "тангенс",
         cotangent: "котангенс",
         solve: "Решаем $%{l}$",
-        only_takes_values_from_to_and: "%{p} принимает значения только от $-1$ до $1$, а $|%{aS}| > 1$ — корней нет.",
+        only_takes_values_from_to_and: (p, lang, say) => `${capital(say(p.f))} принимает значения только от $-1$ до $1$, а $|${say(p.aS)}| > 1$ — корней нет.`,
         special_case: "Частный случай: $\\sin t = 0 \\Leftrightarrow t = \\pi n$.",
         special_case_2: "Частный случай: $\\sin t = 1 \\Leftrightarrow t = \\frac{\\pi}{2} + 2\\pi n$.",
         special_case_3: "Частный случай: $\\sin t = -1 \\Leftrightarrow t = -\\frac{\\pi}{2} + 2\\pi n$.",

@@ -1,7 +1,7 @@
 // linalg/reduce — row reduction (Gauss–Jordan) with every elementary operation explained; rank and null space.
 
 import { Q, bigGcd } from '../core/rational.js';
-import { L, R, S, qs, qt, rowAcc, rowAccShort, rowDat, rowGen, rowLoc } from './common.js';
+import { R, S, qs, qt } from './common.js';
 import { M, Matrix } from './core.js';
 import { msg } from '../i18n/index.js';
 
@@ -43,17 +43,16 @@ export function opText(op, phase, why) {
     }
     if (op.op === 'scale') {
         const p = op.pivot;
-        if (p.eq(Q.MINUS_ONE)) return msg('linalg.reduce.multiply_row_by_1_so_that', { p: rowAcc(op.i), p2: op.i + 1 });
-        if (p.isInt()) return msg('linalg.reduce.divide_row_by_so_that_pivot', { p: rowAcc(op.i), p2: qs(p), p3: op.i + 1 });
-        return msg('linalg.reduce.multiply_row_by_so_that_pivot', { p: rowAcc(op.i), p2: qs(op.k), p3: qs(p), p4: op.i + 1 });
+        if (p.eq(Q.MINUS_ONE)) return msg('linalg.reduce.multiply_row_by_1_so_that', { i: op.i + 1 });
+        if (p.isInt()) return msg('linalg.reduce.divide_row_by_so_that_pivot', { i: op.i + 1, k: qs(p) });
+        return msg('linalg.reduce.multiply_row_by_so_that_pivot', { i: op.i + 1, k: qs(op.k), pivot: qs(p) });
     }
     const a = op.k.abs();
-    const times = L(a.isOne() ? '' : `, умноженную на ${qs(a)}`, a.isOne() ? '' : `${qs(a)} times `);
+    const times = a.isOne() ? '' : msg('linalg.reduce.times', { a: qs(a) });
     const where = phase === 'backward' ? msg('linalg.reduce.above') : msg('linalg.reduce.below');
-    const act = op.k.isNeg()
-        ? msg('linalg.reduce.subtract_row_from_row', { p: rowGen(op.i), p2: rowAccShort(op.j), p3: (lng) => times[lng], p4: op.j + 1, p5: op.i + 1 })
-        : msg('linalg.reduce.add_row_to_row', { p: rowDat(op.i), p2: rowAccShort(op.j), p3: (lng) => times[lng], p4: op.j + 1, p5: op.i + 1 });
-    return msg('linalg.reduce.clear_entry_pivot', { p: (lng) => where[lng], p2: (lng) => act[lng] });
+    const rows = { target: op.i + 1, source: op.j + 1, times };
+    const act = op.k.isNeg() ? msg('linalg.reduce.subtract_row_from_row', rows) : msg('linalg.reduce.add_row_to_row', rows);
+    return msg('linalg.reduce.clear_entry_pivot', { where, act });
 }
 
 function applyOp(W, op) {
@@ -97,10 +96,10 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
         if (p !== r) {
             const v = W[p][c], cur = W[r][c];
             const why = cur.isZero()
-                ? msg('linalg.reduce.pivot_position_in_column_holds_0', { p: c + 1, p2: rowLoc(p), v: qs(v), r: rowAccShort(r), p3: rowAccShort(p), p4: p + 1, p5: r + 1 })
+                ? msg('linalg.reduce.pivot_position_in_column_holds_0', { col: c + 1, v: qs(v), from: p + 1, to: r + 1 })
                 : v.isOne() || v.eq(Q.MINUS_ONE)
-                    ? msg('linalg.reduce.pivot_of_is_handier_it_sits', { p: v.isOne() ? 'единица' : 'минус единица', p2: rowLoc(p), r: rowAccShort(r), p3: rowAccShort(p), v: qs(v), p4: p + 1, p5: r + 1 })
-                    : msg('linalg.reduce.we_take_in_row_as_pivot', { v: qs(v), p: rowLoc(p), r: rowAccShort(r), p2: rowAccShort(p), p3: p + 1, p4: r + 1 });
+                    ? msg('linalg.reduce.pivot_of_is_handier_it_sits', { unit: v.isOne() ? 1 : -1, v: qs(v), from: p + 1, to: r + 1 })
+                    : msg('linalg.reduce.we_take_in_row_as_pivot', { v: qs(v), from: p + 1, to: r + 1 });
             record({ op: 'swap', i: r, j: p }, 'forward', msg('linalg.reduce.swap_rows'), why);
         }
         const piv = W[r][c];

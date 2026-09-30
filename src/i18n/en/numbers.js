@@ -2,6 +2,14 @@
 export default {
     numeric: {
         calculus: {
+            reason: {
+                tail: "The integral diverges: the function does not decay fast enough at infinity.",
+                pole: "The integral diverges: the function blows up near a point and the area there is infinite.",
+                domain: "The function is undefined on part of the interval.",
+                oscillating: "The function oscillates without decaying fast enough: the numeric value is unreliable.",
+                inaccurate: "The computation is not accurate enough: the value is only rough.",
+                nan: "No finite value could be obtained.",
+            },
             derivative_order_must_be_1_4: "The derivative order must be 1–4.",
             limits_must_be_numbers: "The limits must be numbers.",
             unknown_method: "Unknown method \"%{method}\".",

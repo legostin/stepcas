@@ -563,14 +563,14 @@ function solveSecond(E, x, y, conds) {
         const sNote = uc.trials.filter((t) => t.s > 0);
         steps.push(step({
             title: msg('calculus.ode.particular_solution_from_form_of_right'),
-            tex: eachLanguage((l) => `${y}_{${msg('calculus.ode.p').in(l)}} = ${tex(trialNode, l)}`),
+            tex: eachLanguage((l) => `${y}_{${msg('calculus.ode.particular_index').in(l)}} = ${tex(trialNode, l)}`),
             text: sNote.length
                 ? msg('calculus.ode.right_hand_side_is_polynomial_times', { p: (lng) => tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), lng), s: sNote[0].s, p2: sNote[0].s > 1 ? '^' + sNote[0].s : '' })
                 : msg('calculus.ode.right_hand_side_is_polynomial_times_2'),
         }));
         steps.push(step({
             title: msg('calculus.ode.substitute_and_match_coefficients'),
-            tex: eachLanguage((l) => `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${msg('calculus.ode.p').in(l)}} = ${tex(yp, l)}`),
+            tex: eachLanguage((l) => `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${msg('calculus.ode.particular_index').in(l)}} = ${tex(yp, l)}`),
         }));
     } else if (!homog) {
         const W = tidy(add(mul(y1, derivativeOf(y2, x)), neg(mul(derivativeOf(y1, x), y2))));
@@ -582,7 +582,7 @@ function solveSecond(E, x, y, conds) {
         yp = tidy(add(neg(mul(y1, i1.result)), mul(y2, i2.result)));
         steps.push(step({
             title: msg('calculus.ode.particular_solution_variation_of_parameters'),
-            tex: eachLanguage((l) => `W = ${tex(W, l)},\\quad ${y}_{\\text{ч}} = -${tex(y1, l)}\\int \\frac{${tex(y2, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} + ${tex(y2, l)}\\int \\frac{${tex(y1, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} = ${tex(yp, l)}`.replace('\\text{ч}', msg('calculus.ode.p').in(l))),
+            tex: eachLanguage((l) => `W = ${tex(W, l)},\\quad ${y}_{${msg('calculus.ode.particular_index').in(l)}} = -${tex(y1, l)}\\int \\frac{${tex(y2, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} + ${tex(y2, l)}\\int \\frac{${tex(y1, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} = ${tex(yp, l)}`),
             text: msg('calculus.ode.look_for_condition_and_equation_give'),
         }));
     }

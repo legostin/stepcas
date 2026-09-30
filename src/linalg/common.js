@@ -5,7 +5,6 @@ import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- tiny internal helpers
 
-export const L = (ru, en) => ({ ru, en });
 export const fail = (msg, code = null) => new MathError(msg, null, null, code);
 export function S(title, tex, text, extra) {
     const s = { title };
@@ -23,13 +22,6 @@ export const E_ = (l) => (msg('linalg.common.i').in(l));
 /** A − λE with a concrete λ: A - E, A + 2E, A - \frac{1}{2}E, A. */
 export const shiftTex = (lam, l) => (lam.isZero() ? 'A' : `A ${lam.isNeg() ? '+' : '-'} ${lam.abs().isOne() ? '' : qt(lam.abs())}${E_(l)}`);
 
-const ORD_GEN = ['первой', 'второй', 'третьей', 'четвёртой', 'пятой', 'шестой', 'седьмой', 'восьмой', 'девятой', 'десятой'];
-const ORD_ACC = ['первую', 'вторую', 'третью', 'четвёртую', 'пятую', 'шестую', 'седьмую', 'восьмую', 'девятую', 'десятую'];
-export const rowGen = (i) => (i < 10 ? `${ORD_GEN[i]} строки` : `строки ${i + 1}`); // из второй строки
-export const rowAcc = (i) => (i < 10 ? `${ORD_ACC[i]} строку` : `строку ${i + 1}`); // делим вторую строку
-export const rowAccShort = (i) => (i < 10 ? ORD_ACC[i] : `строку ${i + 1}`); // вычитаем первую
-export const rowDat = (i) => (i < 10 ? `${i === 1 ? 'ко' : 'к'} ${ORD_GEN[i]} строке` : `к строке ${i + 1}`); // ко второй строке
-export const rowLoc = (i) => (i < 10 ? `${i === 1 ? 'во' : 'в'} ${ORD_GEN[i]} строке` : `в строке ${i + 1}`); // во второй строке
 export const R = (i) => `R_{${i + 1}}`;
 const SUBS = '₀₁₂₃₄₅₆₇₈₉';
 export const sub = (n) => String(n).split('').map((c) => SUBS[+c]).join('');
