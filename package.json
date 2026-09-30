@@ -1,0 +1,23 @@
+{
+  "name": "stepcas",
+  "version": "0.1.0",
+  "description": "A computer algebra system that shows its work: exact answers with school-style step-by-step solutions in Russian and English.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src", "docs", "LICENSE", "README.md"],
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "bench": "node bench/run.mjs",
+    "bench:verify": "bench/.venv/bin/python bench/verify.py"
+  },
+  "engines": { "node": ">=20" },
+  "keywords": ["cas", "computer-algebra", "math", "step-by-step", "equations", "calculus", "symbolic", "education", "russian"],
+  "author": "legostin (https://legost.in)",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/legostin/stepcas.git" },
+  "homepage": "https://legost.in/utilities/math/canvas",
+  "sideEffects": false
+}
