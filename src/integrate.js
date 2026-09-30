@@ -829,6 +829,105 @@ function mRational(f, ctx) {
     };
 }
 
+/**
+ * (c₂x² + c₀)/(x⁴ + px² + q) with a denominator irreducible over ℚ and without real roots (∫dx/(x⁴ + 1)):
+ * write the numerator through x² + r and x² − r (r = √q), divide by x² and substitute t = x ∓ r/x —
+ * (1 ± r/x²)dx = dt and (x⁴ + px² + q)/x² = t² + (p ± 2r).
+ */
+function mBiquadratic(f, ctx) {
+    const { v } = ctx;
+    const rf = ratFunctionOf(f, v);
+    if (!rf || rf.den.degree !== 4 || rf.num.degree > 2) return null;
+    const D = rf.den;
+    const P = rf.num;
+    if (!D.coeff(1).isZero() || !D.coeff(3).isZero() || !P.coeff(1).isZero()) return null;
+    const a4 = D.coeff(4);
+    const p = D.coeff(2).div(a4);
+    const qq = D.coeff(0).div(a4);
+    if (!qq.isPos()) return null;
+    const { factors } = D.factor();
+    if (factors.length !== 1 || factors[0].poly.degree !== 4) return null; // splits over ℚ: mRational does it
+    const X = sym(v);
+    const r = simp(pow(qn(qq), HALF));
+    const rv = Math.sqrt(qq.toNumber());
+    if (!(p.toNumber() > -2 * rv)) return null; // real roots
+    const c2 = P.coeff(2).div(a4);
+    const c0 = P.coeff(0).div(a4);
+    // c₂x² + c₀ = A(x² + r) + B(x² − r)
+    const A = simp(div(add(qn(c2), div(qn(c0), r)), N2));
+    const B = simp(div(add(qn(c2), neg(div(qn(c0), r))), N2));
+    const x2 = pow(X, N2);
+    const denNode = D.scale(a4.inv()).toNode(v);
+    const isZ = (n) => n.type === 'num' && n.value.isZero();
+    const parts = [];
+    const subs = [];
+    const piece = (coef, sign) => {
+        // sign +1: ∫(x² + r)/(…), t = x − r/x;  −1: ∫(x² − r)/(…), t = x + r/x
+        const t = div(add(x2, sign > 0 ? neg(r) : r), X);
+        const tView = add(X, sign > 0 ? neg(div(r, X)) : div(r, X));
+        const m = simp(sign > 0 ? add(qn(p), mul(N2, r)) : add(qn(p), neg(mul(N2, r))));
+        const mv = sign > 0 ? p.toNumber() + 2 * rv : p.toNumber() - 2 * rv;
+        let G;
+        let Gt;
+        const T0 = sym('t');
+        // back to x without fractions inside: t = (x² ∓ r)/x
+        const tTop = add(x2, sign > 0 ? neg(r) : r);
+        if (Math.abs(mv) < 1e-12) {
+            G = neg(div(X, tTop));
+            Gt = neg(div(N1, T0));
+        } else if (mv > 0) {
+            const sm = simp(pow(m, HALF));
+            G = mul(div(N1, sm), fn('atan', div(tTop, mul(sm, X))));
+            Gt = mul(div(N1, sm), fn('atan', div(T0, sm)));
+        } else {
+            const sm = simp(pow(neg(m), HALF));
+            const rr = sign > 0 ? neg(r) : r;
+            G = mul(div(N1, mul(N2, sm)), fn('ln', fn('abs', div(add(x2, neg(mul(sm, X)), rr), add(x2, mul(sm, X), rr)))));
+            Gt = mul(div(N1, mul(N2, sm)), fn('ln', fn('abs', div(add(T0, neg(sm)), add(T0, sm)))));
+        }
+        parts.push(mul(coef, G));
+        const numN = add(x2, sign > 0 ? r : neg(r));
+        const one = add(N1, sign > 0 ? div(r, x2) : neg(div(r, x2)));
+        const inner = add([x2, ...(p.isZero() ? [] : [qn(p)]), div(qn(qq), x2)]);
+        subs.push(step({
+            title: sign > 0 ? T_(`Замена $t = ${tx(tView, 'ru')}$`, `Substitute $t = ${tx(tView, 'en')}$`) : T_(`Замена $t = ${tx(tView, 'ru')}$`, `Substitute $t = ${tx(tView, 'en')}$`),
+            tex: bt((L) => `\\int \\frac{${tx(numN, L)}}{${tx(denNode, L)}}\\,d${v} = \\int \\frac{${tx(one, L)}}{${tx(inner, L)}}\\,d${v} = \\int \\frac{dt}{${tx(simp(add(pow(T0, N2), m)), L)}} = ${tx(simp(Gt), L)} = ${tx(G, L)}`),
+            text: T_(`Делим числитель и знаменатель на $${v}^2$. Тогда $dt = \\left(${tx(one, 'ru')}\\right)d${v}$, а $${tx(inner, 'ru')} = t^2 ${mv >= 0 ? '+' : '-'} ${tx(simp(sign > 0 || mv >= 0 ? m : neg(m)), 'ru')}$.`,
+                `Divide the numerator and the denominator by $${v}^2$. Then $dt = \\left(${tx(one, 'en')}\\right)d${v}$ and $${tx(inner, 'en')} = t^2 ${mv >= 0 ? '+' : '-'} ${tx(simp(sign > 0 || mv >= 0 ? m : neg(m)), 'en')}$.`),
+            rule: 'substitution',
+        }));
+    };
+    if (!isZ(A)) piece(A, 1);
+    if (!isZ(B)) piece(B, -1);
+    if (!parts.length) return null;
+    const F = add(parts);
+    const split = add([...(isZ(A) ? [] : [mul(A, div(add(x2, r), denNode))]), ...(isZ(B) ? [] : [mul(B, div(add(x2, neg(r)), denNode))])]);
+    const fNorm = div(P.scale(a4.inv()).toNode(v), denNode);
+    const steps = [];
+    if (!a4.isOne()) steps.push(step({ title: T_('Выносим старший коэффициент', 'Take out the leading coefficient'), tex: bt((L) => `${tx(f, L)} = ${tx(qn(a4.inv()), L)}\\cdot ${tx(div(P.toNode(v), denNode), L)}`), rule: 'const' }));
+    if (subs.length > 1 || !(isZ(B) ? P.coeff(0).isZero() : false)) {
+        steps.push(step({
+            title: T_(`Раскладываем числитель по $${v}^2 \\pm ${tx(r, 'ru')}$`, `Split the numerator along $${v}^2 \\pm ${tx(r, 'en')}$`),
+            tex: bt((L) => `${tx(fNorm, L)} = ${tx(split, L)}`),
+            text: T_(`Знаменатель не раскладывается над рациональными числами. Приём: $${tx(denNode, 'ru')}$ делим на $${v}^2$ и замечаем, что $\\left(${v} \\mp \\frac{${tx(r, 'ru')}}{${v}}\\right)^2 = ${v}^2 + \\frac{${tx(qn(qq), 'ru')}}{${v}^2} \\mp ${tx(simp(mul(N2, r)), 'ru')}$, а производные этих скобок — $1 \\pm \\frac{${tx(r, 'ru')}}{${v}^2}$.`,
+                `The denominator does not factor over the rationals. The trick: divide $${tx(denNode, 'en')}$ by $${v}^2$ and note that $\\left(${v} \\mp \\frac{${tx(r, 'en')}}{${v}}\\right)^2 = ${v}^2 + \\frac{${tx(qn(qq), 'en')}}{${v}^2} \\mp ${tx(simp(mul(N2, r)), 'en')}$, and the derivatives of the brackets are $1 \\pm \\frac{${tx(r, 'en')}}{${v}^2}$.`),
+            rule: 'split',
+        }));
+    }
+    steps.push(...subs);
+    steps.push(step({
+        title: T_('Собираем ответ', 'Put it together'),
+        tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)} + C`),
+        text: T_(`Первообразная годится на каждом из промежутков $${v} < 0$ и $${v} > 0$ (в нуле замена не определена).`, `The antiderivative holds on each of $${v} < 0$ and $${v} > 0$ (the substitution is undefined at zero).`),
+        rule: 'sum',
+    }));
+    return {
+        F: mul(qn(a4.inv()), F),
+        method: 'biquadratic',
+        step: step({ title: T_('Дробь со знаменателем $x^4 + px^2 + q$', 'A fraction over $x^4 + px^2 + q$'), tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)}`), rule: 'biquadratic', sub: steps }),
+    };
+}
+
 function factorNode(constant, factors, v) {
     const fs = [];
     if (!constant.isOne()) fs.push(num(constant));
@@ -1762,7 +1861,7 @@ function mWeierstrass(f, ctx) {
     });
 }
 
-const METHODS = [mConst, mTable, mLinearity, mLinearSub, mDerivPattern, mRational, mCyclic, mTrig, mExpand, mUSub, mQuadRoot, mRadicalPoly, mRationalizing, mPolyTimes, mParts, mTrigLower, mTrigSub, mWeierstrass];
+const METHODS = [mConst, mTable, mLinearity, mLinearSub, mDerivPattern, mRational, mBiquadratic, mCyclic, mTrig, mExpand, mUSub, mQuadRoot, mRadicalPoly, mRationalizing, mPolyTimes, mParts, mTrigLower, mTrigSub, mWeierstrass];
 
 // ---------------------------------------------------------------- non-elementary integrals
 

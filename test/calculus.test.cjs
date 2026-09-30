@@ -703,3 +703,18 @@ test('limit: a function that lives on one side of the point', () => {
     assert.equal(E.limit(E.parse('1/x'), 'x', 0).value, 'dne');
     assert.equal(E.limit(E.parse('1/x'), 'x', 0).domainSide, undefined);
 });
+
+test('∫(c₂x² + c₀)/(x⁴ + px² + q) through t = x ∓ √q/x', () => {
+    const d = (F, f, x) => {
+        const h = 1e-5;
+        const g = (t) => E.evaluate(F, { x: t });
+        return Math.abs((g(x + h) - g(x - h)) / (2 * h) - E.evaluate(E.parse(f), { x }));
+    };
+    for (const f of ['1/(x^4 + 1)', 'x^2/(x^4 + 1)', '1/(x^4 - x^2 + 1)', '3/(2x^4 + 2)', '1/(x^4 + x^2 + 2)']) {
+        const r = E.integrate(f, 'x', { steps: true });
+        assert.equal(r.method, 'biquadratic', f);
+        for (const x of [-2.3, -0.4, 0.7, 1.9]) assert.ok(d(r.result, f, x) < 1e-6, `${f} at ${x}`);
+    }
+    const def = E.integrateDefinite('1/(x^4 + 1)', 'x', '-1', '1');
+    assert.ok(Math.abs(E.evaluate(def.value, {}) - 1.7339459747) < 1e-8);
+});
