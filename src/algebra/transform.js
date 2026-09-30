@@ -16,16 +16,10 @@ import { simplify } from '../core/simplify.js';
 import { expand, numDen } from '../core/expand.js';
 import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
+import { trySimplify } from '../core/safe.js';
 
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const bt = (f) => L(f('ru'), f('en'));
-const simpO = (n) => {
-    try {
-        return simplify(n);
-    } catch {
-        return n;
-    }
-};
 const asNode = (x) => (typeof x === 'string' ? parse(x) : x);
 const polyTex = (P, v, l) => tex(P.toNode(v), l);
 
@@ -88,7 +82,7 @@ function factorPoly(P, v) {
             steps.push(step({
                 title: L('Разность квадратов', 'The difference of squares'),
                 tex: bt((l) => {
-                    const pb = simpO(mul(num(p), base));
+                    const pb = trySimplify(mul(num(p), base));
                     const pT = pb.type === 'sym' ? tex(pb, l) : `\\left(${tex(pb, l)}\\right)`;
                     return `${polyTex(F, v, l)} = ${pT}^2 - ${q.toTex(l)}^2 = \\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`;
                 }),
@@ -221,7 +215,7 @@ export function factorSteps(input, opts = {}) {
 
 // one product or power expanded by its formula, the terms kept apart: (x + 1)² → x² + 2x + 1
 function expandOne(t) {
-    const S = (n) => simpO(n);
+    const S = (n) => trySimplify(n);
     if (t.type === 'pow' && numValue(t.exp)?.eq(2) && t.base.type === 'add' && t.base.args.length === 2) {
         const [a, b0] = t.base.args;
         const minus = b0.type === 'neg';
@@ -273,7 +267,7 @@ export function expandSteps(input) {
     });
     let result;
     try {
-        result = simpO(expand(node));
+        result = trySimplify(expand(node));
     } catch {
         return null;
     }

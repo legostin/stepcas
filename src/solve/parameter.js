@@ -16,24 +16,10 @@ import { L, step } from '../core/steps.js';
 import { derivative } from '../calculus/derivative/index.js';
 import { limit } from '../calculus/limit/index.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
+import { trySimplify, approx } from '../core/safe.js';
+import { derivativeOf } from '../calculus/derivative/derivative.js';
 
 const N0 = num(0);
-const simpO = (n) => {
-    try {
-        return simplify(n);
-    } catch {
-        return n;
-    }
-};
-const val = (n, env = {}) => {
-    try {
-        const x = evaluate(n, env);
-        return typeof x === 'number' ? x : NaN;
-    } catch {
-        return NaN;
-    }
-};
-const d = (n, v) => simpO(derivative(n, v).result);
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const bt = (f) => L(f('ru'), f('en'));
 const exactRoots = (r) => r && (r.kind === 'none' || (r.kind === 'roots' && !r.families?.length && !r.roots.some((z) => z.approxOnly)));
@@ -60,17 +46,17 @@ const fits = (want, count) => (want.min !== undefined ? count >= want.min : coun
 
 function quadratic(E, x, a, want) {
     if (nodeSome(E, (n) => (n.type === 'fn' && containsVar(n, x)) || (n.type === 'div' && containsVar(n.den, x)) || (n.type === 'pow' && containsVar(n.base, x) && !numValue(n.exp)?.isInt()))) return null;
-    const A = simpO(div(d(d(E, x), x), num(2)));
+    const A = trySimplify(div(derivativeOf(derivativeOf(E, x), x), num(2)));
     if (containsVar(A, x)) return null;
-    const B = simpO(substitute(d(E, x), { [x]: N0 }));
-    const C = simpO(substitute(E, { [x]: N0 }));
+    const B = trySimplify(substitute(derivativeOf(E, x), { [x]: N0 }));
+    const C = trySimplify(substitute(E, { [x]: N0 }));
     // E = Ax² + Bx + C identically
     const X = sym(x);
     const back = add(mul(A, pow(X, num(2))), mul(B, X), C);
     for (const [xv, av] of [[0.37, 1.3], [-1.2, 0.4], [2.1, -0.7]]) {
-        if (Math.abs(val(E, { [x]: xv, [a]: av }) - val(back, { [x]: xv, [a]: av })) > 1e-9) return null;
+        if (Math.abs(approx(E, { [x]: xv, [a]: av }) - approx(back, { [x]: xv, [a]: av })) > 1e-9) return null;
     }
-    if (!containsVar(A, a) && val(A) === 0) return null; // not a quadratic
+    if (!containsVar(A, a) && approx(A) === 0) return null; // not a quadratic
     if (!containsVar(A, a) && !containsVar(B, a) && !containsVar(C, a)) return null;
     const steps = [];
     const count = new Map(); // key → {set, n}
@@ -85,14 +71,14 @@ function quadratic(E, x, a, want) {
         zeroA = rootNodes(r);
         const lines = [];
         for (const a0 of zeroA) {
-            const b0 = simpO(substitute(B, { [a]: a0 }));
-            const c0 = simpO(substitute(C, { [a]: a0 }));
-            const bz = Math.abs(val(b0)) < 1e-12;
-            const cz = Math.abs(val(c0)) < 1e-12;
+            const b0 = trySimplify(substitute(B, { [a]: a0 }));
+            const c0 = trySimplify(substitute(C, { [a]: a0 }));
+            const bz = Math.abs(approx(b0)) < 1e-12;
+            const cz = Math.abs(approx(c0)) < 1e-12;
             const n = !bz ? 1 : cz ? Infinity : 0;
             addPiece(IntervalSet.point(a0), n);
             const lin = rel('=', add(mul(b0, X), c0), N0);
-            lines.push(L(`$${a} = ${tex(a0)}$: $${tex(simpO(lin.lhs))} = 0$ — ${n === 1 ? 'один корень' : n === 0 ? 'корней нет' : 'любое $x$'}`, `$${a} = ${tex(a0, 'en')}$: $${tex(simpO(lin.lhs), 'en')} = 0$ — ${n === 1 ? 'one root' : n === 0 ? 'no roots' : 'every $x$'}`));
+            lines.push(L(`$${a} = ${tex(a0)}$: $${tex(trySimplify(lin.lhs))} = 0$ — ${n === 1 ? 'один корень' : n === 0 ? 'корней нет' : 'любое $x$'}`, `$${a} = ${tex(a0, 'en')}$: $${tex(trySimplify(lin.lhs), 'en')} = 0$ — ${n === 1 ? 'one root' : n === 0 ? 'no roots' : 'every $x$'}`));
         }
         steps.push(step({
             title: L('Старший коэффициент равен нулю', 'The leading coefficient is zero'),
@@ -101,7 +87,7 @@ function quadratic(E, x, a, want) {
         }));
     }
     const notZero = IntervalSet.all().minus(IntervalSet.points(zeroA));
-    const D = simpO(add(mul(B, B), neg(mul(num(4), A, C))));
+    const D = trySimplify(add(mul(B, B), neg(mul(num(4), A, C))));
     steps.push(step({
         title: zeroA.length ? L(`При $${tex(A)} \\ne 0$ — квадратное уравнение`, `For $${tex(A, 'en')} \\ne 0$ — a quadratic equation`) : L('Квадратное уравнение', 'A quadratic equation'),
         tex: bt((l) => `D = b^2 - 4ac = ${tex(D, l)}`),
@@ -122,10 +108,10 @@ function quadratic(E, x, a, want) {
 /* ------------------------------------------------------------------ the graphical way */
 
 function graphical(E, x, a, want) {
-    const Qn = d(E, a);
+    const Qn = derivativeOf(E, a);
     if (containsVar(Qn, a)) return null; // not linear in a
-    const P = simpO(substitute(E, { [a]: N0 }));
-    const g = simpO(neg(div(P, Qn)));
+    const P = trySimplify(substitute(E, { [a]: N0 }));
+    const g = trySimplify(neg(div(P, Qn)));
     const X = sym(x);
     const Dom = domainSet(E, x);
     if (!Dom) return null;
@@ -136,20 +122,20 @@ function graphical(E, x, a, want) {
     const holes = [];
     for (const z of rootNodes(qz)) {
         if (!Dom.contains(z)) continue;
-        if (Math.abs(val(substitute(P, { [x]: z }))) < 1e-12) always += 1;
+        if (Math.abs(approx(substitute(P, { [x]: z }))) < 1e-12) always += 1;
         holes.push(z);
     }
     const G = Dom.minus(IntervalSet.points(holes));
     const gDom = domainSet(g, x);
     const D = gDom ? G.intersect(gDom) : G;
     // breakpoints: critical points, corners, ends of the domain
-    const g1 = d(g, x);
+    const g1 = derivativeOf(g, x);
     const crit = solveEquation(rel('=', g1, N0), x, { steps: false });
     if (!(exactRoots(crit) || crit.kind === 'unsupported' || crit.kind === 'all')) return null;
     const pts = [];
     const push = (n) => {
-        const v = val(n);
-        if (Number.isFinite(v) && !pts.some((p) => Math.abs(p.x - v) < 1e-12)) pts.push({ node: simpO(n), x: v });
+        const v = approx(n);
+        if (Number.isFinite(v) && !pts.some((p) => Math.abs(p.x - v) < 1e-12)) pts.push({ node: trySimplify(n), x: v });
     };
     if (exactRoots(crit)) rootNodes(crit).filter((z) => D.contains(z)).forEach(push);
     // corners: zeros of |u| arguments
@@ -185,7 +171,7 @@ function graphical(E, x, a, want) {
         if (!r) return null;
         if (r.value === 'inf') return { inf: 1 };
         if (r.value === '-inf') return { inf: -1 };
-        if (r.value && typeof r.value === 'object') return { node: simpO(r.value), x: val(r.value) };
+        if (r.value && typeof r.value === 'object') return { node: trySimplify(r.value), x: approx(r.value) };
         return null;
     };
     for (let i = 0; i <= pts.length; i++) {
@@ -195,7 +181,7 @@ function graphical(E, x, a, want) {
         const inside = xs.map((t) => D.contains(t));
         if (inside.every((z) => !z)) continue;
         if (!inside.every(Boolean)) return null;
-        const ys = xs.map((t) => val(g, { [x]: t }));
+        const ys = xs.map((t) => approx(g, { [x]: t }));
         if (!ys.every(Number.isFinite)) return null;
         const diffs = ys.slice(1).map((y, j) => y - ys[j]);
         const up = diffs.every((z) => z > 0);
@@ -210,11 +196,11 @@ function graphical(E, x, a, want) {
         pieces.push({ lo, hi, left, right, up });
     }
     // the value at a breakpoint inside the domain
-    const pointVals = pts.filter((p) => D.contains(p.node)).map((p) => ({ ...p, y: simpO(substitute(g, { [x]: p.node })) }));
+    const pointVals = pts.filter((p) => D.contains(p.node)).map((p) => ({ ...p, y: trySimplify(substitute(g, { [x]: p.node })) }));
     // levels where the count may change
     const levels = [];
     const addLevel = (n) => {
-        const v = val(n);
+        const v = approx(n);
         if (Number.isFinite(v) && !levels.some((z) => Math.abs(z.x - v) < 1e-12)) levels.push({ node: n, x: v });
     };
     for (const p of pieces) {
@@ -230,7 +216,7 @@ function graphical(E, x, a, want) {
         const hi = Math.max(lv, rv);
         return y > lo + 1e-12 && y < hi - 1e-12;
     };
-    const countAt = (y) => always + pieces.filter((p) => inOpen(p, y)).length + pointVals.filter((p) => Math.abs(val(p.y) - y) < 1e-12).length;
+    const countAt = (y) => always + pieces.filter((p) => inOpen(p, y)).length + pointVals.filter((p) => Math.abs(approx(p.y) - y) < 1e-12).length;
     const count = new Map();
     const addPiece = (set, n) => {
         const k = String(n);
@@ -280,7 +266,7 @@ export function solveWithParameter(input, opts = {}) {
     if (node.type !== 'rel' || node.op !== '=') return { kind: 'unsupported', reason: L('Нужно уравнение.', 'An equation is needed.'), steps: [] };
     const others = freeVars(node).filter((v) => v !== a && v !== x);
     if (others.length) return { kind: 'unsupported', reason: L(`Лишние буквы: ${others.join(', ')}.`, `Extra letters: ${others.join(', ')}.`), steps: [] };
-    const E = simpO(add(node.lhs, neg(node.rhs)));
+    const E = trySimplify(add(node.lhs, neg(node.rhs)));
     let r = null;
     try {
         r = quadratic(E, x, a, want) ?? graphical(E, x, a, want);

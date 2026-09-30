@@ -17,22 +17,8 @@ import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
 import { numDen } from '../core/expand.js';
+import { trySimplify, approx } from '../core/safe.js';
 
-const simpO = (n) => {
-    try {
-        return simplify(n);
-    } catch {
-        return n;
-    }
-};
-const val = (n, env = {}) => {
-    try {
-        const x = evaluate(n, env);
-        return typeof x === 'number' ? x : NaN;
-    } catch {
-        return NaN;
-    }
-};
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const bt = (f) => L(f('ru'), f('en'));
 const N0 = num(0);
@@ -66,9 +52,9 @@ function readInput(input) {
     const k = parts[1];
     if (!/^[a-zA-Z]$/.test(k)) throw new MathError(L('Индекс суммирования — одна буква.', 'The index is a single letter.'));
     const term = parse(parts[0], { vars: [k] });
-    const lo = simpO(parse(parts[2]));
+    const lo = trySimplify(parse(parts[2]));
     const hiText = parts[3].replace(/∞|infinity/i, 'inf');
-    const hi = /^\+?inf$/.test(hiText) ? INF : simpO(parse(hiText));
+    const hi = /^\+?inf$/.test(hiText) ? INF : trySimplify(parse(hiText));
     const others = freeVars(term).filter((x) => x !== k);
     if (others.length) throw new MathError(L(`Кроме ${k} в члене есть другие буквы (${others.join(', ')}).`, `Besides ${k} the term has other letters (${others.join(', ')}).`));
     if (!numValue(lo)?.isInt() || (!isInf(hi) && !numValue(hi)?.isInt())) throw new MathError(L('Границы суммирования — целые числа (конец может быть inf).', 'The bounds are integers (the end may be inf).'));
@@ -76,7 +62,7 @@ function readInput(input) {
 }
 
 const sumTex = (term, k, lo, hi, l) => `\\sum_{${k}=${lo.toTex(l)}}^{${hi ? hi.toTex(l) : '\\infty'}} ${tex(term, l)}`;
-const at = (term, k, v) => simpO(substitute(term, { [k]: num(v) }));
+const at = (term, k, v) => trySimplify(substitute(term, { [k]: num(v) }));
 
 /* ------------------------------------------------------------------ finite */
 
@@ -130,7 +116,7 @@ function finiteSum(term, k, lo, hi) {
     if (geo) {
         const first = at(term, k, lo);
         const n = hi.sub(lo).add(Q.ONE);
-        const value = simpO(div(mul(first, add(pow(geo.q, num(n)), num(-1))), add(geo.q, num(-1))));
+        const value = trySimplify(div(mul(first, add(pow(geo.q, num(n)), num(-1))), add(geo.q, num(-1))));
         steps.push(step({
             title: L('Сумма геометрической прогрессии', 'The sum of a geometric progression'),
             tex: bt((l) => `S_n = b_1\\frac{q^n - 1}{q - 1} = ${tex(first, l)}\\cdot\\frac{${tex(geo.q, l)}^{${n.toTex(l)}} - 1}{${tex(geo.q, l)} - 1} = ${tex(value, l)}`),
@@ -141,7 +127,7 @@ function finiteSum(term, k, lo, hi) {
     const count = hi.sub(lo).add(Q.ONE);
     if (count.gt(new Q(2000n))) return null;
     let acc = N0;
-    for (let i = lo; i.le(hi); i = i.add(Q.ONE)) acc = simpO(add(acc, at(term, k, i)));
+    for (let i = lo; i.le(hi); i = i.add(Q.ONE)) acc = trySimplify(add(acc, at(term, k, i)));
     steps.push(step({ title: L('Складываем члены', 'Add the terms'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(acc, l)}`) }));
     return { value: acc, steps, type: 'direct' };
 }
@@ -150,9 +136,9 @@ function finiteSum(term, k, lo, hi) {
 
 // c·qᵏ: the ratio t(k+1)/t(k) is a constant
 function geometricParts(term, k) {
-    const r = simpO(div(substitute(term, { [k]: add(sym(k), N1) }), term));
+    const r = trySimplify(div(substitute(term, { [k]: add(sym(k), N1) }), term));
     if (containsVar(r, k)) return null;
-    const qv = val(r);
+    const qv = approx(r);
     if (!Number.isFinite(qv) || qv === 0) return null;
     return { q: r, qv };
 }
@@ -182,9 +168,9 @@ function arithGeoParts(term, k) {
     // qᵏ with the exponent k + c
     const e = Poly.fromNode(expPart.exp, k);
     if (!e || e.degree !== 1 || !e.coeff(1).isOne()) return null;
-    const q = simpO(expPart.base);
-    const shift = simpO(pow(expPart.base, num(e.coeff(0))));
-    return { P, q, qv: val(q), shift };
+    const q = trySimplify(expPart.base);
+    const shift = trySimplify(pow(expPart.base, num(e.coeff(0))));
+    return { P, q, qv: approx(q), shift };
 }
 
 function geometricInfinite(term, k, lo) {
@@ -196,7 +182,7 @@ function geometricInfinite(term, k, lo) {
         steps.push(step({ title: L('Геометрический ряд расходится', 'The geometric series diverges'), tex: bt((l) => `q = ${tex(g.q, l)},\\quad |q| \\ge 1`), text: L('Члены не стремятся к нулю.', 'The terms do not tend to zero.') }));
         return { diverges: true, steps, type: 'geometric' };
     }
-    const value = simpO(div(first, add(N1, neg(g.q))));
+    const value = trySimplify(div(first, add(N1, neg(g.q))));
     steps.push(step({
         title: L('Геометрический ряд', 'A geometric series'),
         tex: bt((l) => `q = \\frac{a_{${k}+1}}{a_{${k}}} = ${tex(g.q, l)},\\quad |q| < 1`),
@@ -223,7 +209,7 @@ function arithGeoInfinite(term, k, lo) {
     let head = N0;
     for (let i = Q.ZERO; i.lt(lo); i = i.add(Q.ONE)) head = add(head, at(term, k, i));
     for (let i = lo; i.lt(Q.ZERO); i = i.add(Q.ONE)) head = add(head, neg(at(term, k, i)));
-    const value = simpO(add(total, neg(head)));
+    const value = trySimplify(add(total, neg(head)));
     const steps = [
         step({
             title: L('Арифметико-геометрический ряд', 'An arithmetico-geometric series'),
@@ -241,7 +227,7 @@ function telescoping(term, k, lo) {
     let N;
     let D;
     try {
-        const nd = numDen(simpO(term));
+        const nd = numDen(trySimplify(term));
         if (!nd) return null;
         N = Poly.fromNode(nd.num, k);
         D = Poly.fromNode(nd.den, k);
@@ -267,11 +253,11 @@ function telescoping(term, k, lo) {
     });
     const K = sym(k);
     const pieces = A.map((a, i) => mul(num(a), div(N1, add(K, num(roots[i].neg())))));
-    const decomposed = simpO(add(pieces));
+    const decomposed = trySimplify(add(pieces));
     const n = sym('n');
     // S_n = S + Σ Aᵢ Σ_{j=0}^{mᵢ−1} 1/(n + 1 + c + j)
     const tail = add(A.flatMap((a, i) => Array.from({ length: Number(ms[i].n) }, (_, j) => mul(num(a), div(N1, add(n, num(Q.ONE.add(c).add(new Q(BigInt(j))))))))));
-    const Sn = simpO(add(num(S), tail));
+    const Sn = trySimplify(add(num(S), tail));
     const steps = [
         step({ title: L('Раскладываем член на простейшие дроби', 'Split the term into partial fractions'), tex: bt((l) => `${tex(term, l)} = ${tex(decomposed, l)}`) }),
         step({
@@ -303,9 +289,9 @@ function tableSum(term, k, lo) {
         const f = parse(row.f.replace(/k/g, k), { vars: [k] });
         // term = c·f(k) with a constant c
         const ks = [3, 4, 7, 10];
-        const ratios = ks.map((x) => val(term, { [k]: x }) / val(f, { [k]: x }));
+        const ratios = ks.map((x) => approx(term, { [k]: x }) / approx(f, { [k]: x }));
         if (!ratios.every((r) => Number.isFinite(r) && Math.abs(r - ratios[0]) < 1e-12 * Math.max(1, Math.abs(r)))) continue;
-        const c = simpO(div(term, f));
+        const c = trySimplify(div(term, f));
         if (containsVar(c, k)) {
             const cq = Q.of(Math.round(ratios[0] * 1e6) / 1e6);
             if (Math.abs(cq.toNumber() - ratios[0]) > 1e-12) continue;
@@ -316,7 +302,7 @@ function tableSum(term, k, lo) {
         for (let i = s; i.lt(lo); i = i.add(Q.ONE)) head = add(head, at(f, k, i));
         for (let i = lo; i.lt(s); i = i.add(Q.ONE)) head = add(head, neg(at(f, k, i)));
         const V = parse(row.v);
-        const value = simpO(mul(coef, add(V, neg(head))));
+        const value = trySimplify(mul(coef, add(V, neg(head))));
         return {
             value,
             steps: [step({
@@ -339,13 +325,13 @@ function divergence(term, k) {
     } catch {
         lim = null;
     }
-    const lv = lim && lim.value !== null && typeof lim.value === 'object' ? val(lim.value) : lim?.value === 'inf' || lim?.value === '-inf' ? Infinity : NaN;
+    const lv = lim && lim.value !== null && typeof lim.value === 'object' ? approx(lim.value) : lim?.value === 'inf' || lim?.value === '-inf' ? Infinity : NaN;
     if (lim && (lim.value === 'dne' || (Number.isFinite(lv) && Math.abs(lv) > 1e-12) || lv === Infinity)) {
         return { diverges: true, type: 'necessary', steps: [step({ title: L('Необходимый признак не выполнен', 'The necessary condition fails'), tex: bt((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? '\\text{ — не существует}' : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: L('Если ряд сходится, его члены стремятся к нулю. Здесь это не так — ряд расходится.', 'If a series converges, its terms tend to zero. They do not here, so the series diverges.') })] };
     }
     // rational term of degree −1 or more: comparison with the harmonic series
     try {
-        const nd0 = numDen(simpO(term));
+        const nd0 = numDen(trySimplify(term));
         const Np = nd0 && Poly.fromNode(nd0.num, k);
         const Dp = nd0 && Poly.fromNode(nd0.den, k);
         if (Np && Dp && Dp.degree - Np.degree === 1) {
@@ -360,10 +346,10 @@ function divergence(term, k) {
 // |term| ~ c/k^p for large k: p from three far points (must agree), as a simple fraction; the sign must settle
 function powerRate(term, k) {
     const ks = [1e3, 1e4, 1e5, 1e6];
-    const ts = ks.map((x) => val(term, { [k]: x }));
+    const ts = ks.map((x) => approx(term, { [k]: x }));
     if (!ts.every((t) => Number.isFinite(t) && t !== 0)) return null;
     // one sign for all large k: neighbours too, not only these (even) points
-    const signs = [...ks, 1e3 + 1, 1e4 + 1, 1e5 + 3, 1e5 + 7, 12345, 99999].map((x) => Math.sign(val(term, { [k]: x })));
+    const signs = [...ks, 1e3 + 1, 1e4 + 1, 1e5 + 3, 1e5 + 7, 12345, 99999].map((x) => Math.sign(approx(term, { [k]: x })));
     if (!signs.every((z) => z === signs[0])) return null;
     const ps = [0, 1, 2].map((i) => Math.log(Math.abs(ts[i] / ts[i + 1])) / Math.log(10));
     if (!ps.every((p) => Math.abs(p - ps[2]) < 0.02)) return null;
@@ -418,7 +404,7 @@ export function sumSeries(input, opts = {}) {
     if (!r) {
         // a numeric estimate: partial sums with the average of two neighbours (alternating tails)
         if (hi) return { kind: 'unsupported', reason: L('Не удалось сложить.', 'Could not add it up.'), steps: [] };
-        const T = (x) => val(term, { [k]: x });
+        const T = (x) => approx(term, { [k]: x });
         // strictly alternating signs over runs of neighbours, absolute values falling to zero: the Leibniz test
         const run = (K) => Array.from({ length: 12 }, (_, j) => T(K + j));
         const alternating = [1e3, 1e4, 1e5].every((K) => run(K).every((t, j, a) => j === 0 || Math.sign(t) === -Math.sign(a[j - 1])));
@@ -438,10 +424,10 @@ export function sumSeries(input, opts = {}) {
         const last = Number(lo.n) + Nmax - 1;
         for (let i = Number(lo.n); i <= last; i++) {
             prev = s;
-            s += val(term, { [k]: i });
+            s += approx(term, { [k]: i });
         }
         // alternating: the mean of two neighbouring partial sums; one sign: the tail ∫ c/x^p ≈ t(N)(N + ½)/(p − 1)
-        const est = leibniz ? (s + prev) / 2 : s + (rate ? (val(term, { [k]: last }) * (last + 0.5)) / (rate.p.toNumber() - 1) : 0);
+        const est = leibniz ? (s + prev) / 2 : s + (rate ? (approx(term, { [k]: last }) * (last + 0.5)) / (rate.p.toNumber() - 1) : 0);
         const digits = leibniz || rate ? 8 : 6;
         if (!Number.isFinite(est)) return { kind: 'unsupported', reason: L('Не удалось оценить сумму.', 'Could not estimate the sum.'), steps: [] };
         const why = leibniz
@@ -453,8 +439,8 @@ export function sumSeries(input, opts = {}) {
         steps[steps.length - 1].final = true;
         return { kind: 'approx', value: null, approx: est, steps, type: 'numeric', text: `≈ ${est.toPrecision(digits)}` };
     }
-    const value = simpO(r.value);
+    const value = trySimplify(r.value);
     const steps = [head, ...r.steps, step({ title: L('Ответ', 'Answer'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(value, l)}`) })];
     steps[steps.length - 1].final = true;
-    return { kind: 'value', value, approx: val(value), type: r.type, steps, text: toText(value, { lang: 'en' }) };
+    return { kind: 'value', value, approx: approx(value), type: r.type, steps, text: toText(value, { lang: 'en' }) };
 }

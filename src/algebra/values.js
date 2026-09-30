@@ -17,25 +17,12 @@ import { simplify } from '../core/simplify.js';
 import { evaluate } from '../core/evaluate.js';
 import { toTex } from '../core/print.js';
 import { L, step } from '../core/steps.js';
+import { trySimplify, approx } from '../core/safe.js';
 
 const TRIG = new Set(['sin', 'cos', 'tan', 'cot']);
-const simp = (n) => {
-    try {
-        return simplify(n);
-    } catch {
-        return n;
-    }
-};
-const approxOf = (n) => {
-    try {
-        return evaluate(n, {});
-    } catch {
-        return NaN;
-    }
-};
 const qv = (n) => numValue(n);
 const isE = (n) => n?.type === 'sym' && n.name === 'e' && !n.var;
-const same = (a, b) => nodeKey(simp(a)) === nodeKey(simp(b));
+const same = (a, b) => nodeKey(trySimplify(a)) === nodeKey(trySimplify(b));
 const tx = (n) => toTex(n);
 const qt = (q) => q.toTex('ru');
 const hasTrigOrLog = (n) => nodeSome(n, (m) => m.type === 'fn' && (TRIG.has(m.name) || m.name === 'log' || m.name === 'ln' || m.name === 'lg'));
@@ -424,7 +411,7 @@ const FN_TEX_EN = { sin: '\\sin', cos: '\\cos', tan: '\\tan', cot: '\\cot' };
 // In degree mode (the input wrote 135°) angles stay k·π/180, printed back as k°.
 let DEG = false;
 const isDegNode = (n) => n.type === 'div' && n.den.type === 'num' && n.den.value.eq(180) && n.num.type === 'mul' && n.num.args.length === 2 && n.num.args[0].type === 'num' && n.num.args[1].type === 'sym' && n.num.args[1].name === 'pi';
-const piNode = (q) => (DEG && q.mul(180).isInt() && !q.isZero() ? degNode(q) : simp(mul(num(q), sym('pi'))));
+const piNode = (q) => (DEG && q.mul(180).isInt() && !q.isZero() ? degNode(q) : trySimplify(mul(num(q), sym('pi'))));
 function degNode(q) {
     const k = q.mul(180);
     const d = div(mul(num(k.abs()), sym('pi')), num(180));
@@ -439,10 +426,10 @@ function degSteps(steps) {
 // 2u for an angle u, kept in degrees in degree mode
 function double(u) {
     const q = piMultiple(u);
-    return q ? piNode(q.mul(2)) : simp(mul(num(2), u));
+    return q ? piNode(q.mul(2)) : trySimplify(mul(num(2), u));
 }
 // the angle as a rational multiple of π, or null
-const piMultiple = (angle) => qv(simp(div(angle, sym('pi'))));
+const piMultiple = (angle) => qv(trySimplify(div(angle, sym('pi'))));
 
 // f(qπ) → the chain of reduction formulas down to the table value
 function trigChain(name, q) {
@@ -494,7 +481,7 @@ function trigChain(name, q) {
         chain.push(at(piNode(a)));
         notes.push(L('формула приведения', 'a reduction formula'));
     }
-    const val = simp(at(piNode(a)));
+    const val = trySimplify(at(piNode(a)));
     if (nodeSome(val, (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
     chain.push(val);
     return { chain, notes, value: val };
@@ -569,9 +556,9 @@ function ruleDoubleAngle(n) {
 function ruleLowerPower(n) {
     if (n.type !== 'pow' || !qv(n.exp)?.eq(2) || n.base.type !== 'fn' || (n.base.name !== 'cos' && n.base.name !== 'sin')) return null;
     const u = n.base.args[0];
-    if (freeVars(u).length || !nodeSome(simp(n.base), (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
+    if (freeVars(u).length || !nodeSome(trySimplify(n.base), (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
     const c2 = fn('cos', double(u));
-    if (nodeSome(simp(c2), (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
+    if (nodeSome(trySimplify(c2), (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
     const cos = n.base.name === 'cos';
     return {
         node: div(add(num(1), cos ? c2 : neg(c2)), num(2)),
@@ -605,7 +592,7 @@ function arithLayer(n) {
     if (atomic(n)) return n;
     const kids = nodeChildren(n);
     if (kids.every(atomic)) {
-        const v = simp(n);
+        const v = trySimplify(n);
         return atomic(v) ? v : n;
     }
     return withChildren(n, kids.map(arithLayer));
@@ -619,7 +606,7 @@ function ruleArith(n) {
 // a numeric subterm without logs and trigonometry that the engine makes shorter: exponents, roots
 function ruleSimplifyPart(n) {
     if (atomic(n) || freeVars(n).length || hasTrigOrLog(n) || (DEG && isDegNode(n))) return null;
-    const v = simp(n);
+    const v = trySimplify(n);
     if (nodeKey(v) === nodeKey(n) || tx(v).length >= tx(n).length) return null;
     return { node: v, quiet: true };
 }
@@ -658,7 +645,7 @@ const COMPUTE = L('Считаем', 'Compute');
 export function evaluateSteps(input, opts = {}) {
     const maxSteps = opts.maxSteps ?? 40;
     const start = typeof input === 'string' ? parse(input, { lang: opts.lang === 'en' ? 'en' : 'ru' }) : input;
-    const want = approxOf(start);
+    const want = approx(start);
     DEG = nodeSome(start, isDegNode);
     try {
         return run(start, want, maxSteps);
@@ -680,7 +667,7 @@ function run(start, want, maxSteps) {
         }
         if (!r || seen.has(nodeKey(r.node))) break;
         seen.add(nodeKey(r.node));
-        const got = approxOf(r.node);
+        const got = approx(r.node);
         if (Number.isFinite(want) && !(Number.isFinite(got) && Math.abs(got - want) <= 1e-9 * Math.max(1, Math.abs(want)))) break;
         const last = entries[entries.length - 1];
         if (r.quiet && last?.quiet) {
@@ -692,8 +679,8 @@ function run(start, want, maxSteps) {
         cur = r.node;
     }
     // the value: where the steps arrived when the engine agrees it is simpler, else the engine's own form
-    const end = simp(cur);
-    const value = Number.isFinite(want) && tx(end).length > tx(simp(start)).length ? simp(start) : end;
+    const end = trySimplify(cur);
+    const value = Number.isFinite(want) && tx(end).length > tx(trySimplify(start)).length ? trySimplify(start) : end;
     if (tx(value) !== tx(cur)) entries.push({ title: L('Упрощаем', 'Simplify'), texts: [], chain: [cur, value], rule: 'simplify' });
     const steps = entries.map((e) => {
         const title = e.quiet && e.chain.length > 2 ? COMPUTE : e.title;

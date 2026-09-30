@@ -267,3 +267,12 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
     }
     return { k, b, point: { x: A, y: fa }, line, tex, steps };
 }
+
+/** The simplified derivative node (internal: for solvers that need f′ without the steps). */
+export function derivativeOf(node, v = 'x') {
+    try {
+        return simplify(derivative(node, v).result);
+    } catch {
+        return derivative(node, v).result;
+    }
+}

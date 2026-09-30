@@ -19,36 +19,22 @@ import { integrate } from './integral/index.js';
 import { solveEquation } from '../solve/index.js';
 import { expand } from '../core/expand.js';
 import { mapNode } from '../core/ast.js';
+import { trySimplify, approx } from '../core/safe.js';
+import { derivativeOf } from './derivative/derivative.js';
 
 const YP = 'yp';
 const YPP = 'ypp';
 const N0 = num(0);
 const N1 = num(1);
 const N2 = num(2);
-const simpO = (n) => {
-    try {
-        return simplify(n);
-    } catch {
-        return n;
-    }
-};
-const val = (n, env) => {
-    try {
-        const x = evaluate(n, env);
-        return typeof x === 'number' ? x : NaN;
-    } catch {
-        return NaN;
-    }
-};
-const d = (n, v) => simpO(derivative(n, v).result);
 const free = (n, ...vs) => vs.every((v) => !containsVar(n, v));
 const isZ = (n) => n.type === 'num' && n.value.isZero();
 // the shorter of the simplified and the expanded forms: e^(−x)(e^x(x − 1) + 2) → x − 1 + 2e^(−x)
 function tidy(n) {
-    const a = simpO(n);
+    const a = trySimplify(n);
     let b = null;
     try {
-        b = simpO(expand(a));
+        b = trySimplify(expand(a));
     } catch {
         b = null;
     }
@@ -74,7 +60,7 @@ function readInput(input) {
     for (const p of parts) {
         const m = p.match(/^([a-zA-Z])('*)\s*\(\s*([^()]+?)\s*\)\s*=\s*(.+)$/);
         if (m && eq) {
-            conds.push({ fname: m[1], order: m[2].length, at: simpO(parse(m[3])), value: simpO(parse(m[4])) });
+            conds.push({ fname: m[1], order: m[2].length, at: trySimplify(parse(m[3])), value: trySimplify(parse(m[4])) });
             continue;
         }
         if (eq) throw new MathError(L('Уравнение должно быть одно, остальное — начальные условия вида y(0) = 1.', 'There must be one equation; the rest are initial conditions like y(0) = 1.'));
@@ -99,7 +85,7 @@ function invert(G, y, H, pick) {
     let g = G;
     let h = H;
     for (let guard = 0; guard < 20; guard++) {
-        if (g.type === 'sym' && g.name === y) return simpO(h);
+        if (g.type === 'sym' && g.name === y) return trySimplify(h);
         if (g.type === 'neg') {
             h = neg(h);
             g = g.arg;
@@ -176,18 +162,18 @@ function invert(G, y, H, pick) {
 
 // residual of the equation at a few points: y = Y(x) substituted with its derivatives
 function satisfies(eq, Y, x, y) {
-    const Y1 = d(Y, x);
-    const Y2 = d(Y1, x);
+    const Y1 = derivativeOf(Y, x);
+    const Y2 = derivativeOf(Y1, x);
     const E = add(eq.lhs, neg(eq.rhs));
     const pts = [0.37, 0.81, 1.23, -0.44, 0.05, 1.7];
     let good = 0;
     for (const p of pts) {
         const env = { [x]: p };
-        const y0 = val(Y, env);
-        const y1 = val(Y1, env);
-        const y2 = val(Y2, env);
+        const y0 = approx(Y, env);
+        const y1 = approx(Y1, env);
+        const y2 = approx(Y2, env);
         if (![y0, y1, y2].every(Number.isFinite)) continue;
-        const r = val(E, { ...env, [y]: y0, [YP]: y1, [YPP]: y2 });
+        const r = approx(E, { ...env, [y]: y0, [YP]: y1, [YPP]: y2 });
         if (!Number.isFinite(r)) continue;
         if (Math.abs(r) > 1e-6 * Math.max(1, Math.abs(y0), Math.abs(y1), Math.abs(y2))) return false;
         good++;
@@ -200,13 +186,13 @@ function satisfies(eq, Y, x, y) {
 // a sign choice (±, |·|) by the initial condition: the candidate whose value at x₀ is the target
 function picker(x, cond, target) {
     if (!cond) return null;
-    const x0 = val(cond.at, {});
-    const t = val(target ?? cond.value, {});
+    const x0 = approx(cond.at, {});
+    const t = approx(target ?? cond.value, {});
     return (inv, cands) => {
         for (const c of cands) {
             const r = inv(c);
             if (!r) continue;
-            const v0 = val(r, { [x]: x0 });
+            const v0 = approx(r, { [x]: x0 });
             if (Math.abs(v0 - t) < 1e-9 * Math.max(1, Math.abs(t))) return r;
         }
         return null;
@@ -215,18 +201,18 @@ function picker(x, cond, target) {
 
 // dy/g(y) as it is written by hand: e^y dy, u du, but dy/y², dy/(1 + y²)
 function sepLeft(g, v, l) {
-    const inv = simpO(div(N1, g));
+    const inv = trySimplify(div(N1, g));
     const frac = nodeSome(inv, (m) => m.type === 'div' || (m.type === 'pow' && numValue(m.exp)?.isNeg()));
     return frac ? `\\frac{d${v}}{${tex(g, l)}}` : numValue(inv)?.isOne() ? `d${v}` : `${tex(inv, l)}\\,d${v}`;
 }
 
 // y' = R(x, y) from the equation (linear in y')
 function explicitFirst(E, y) {
-    const a = d(E, YP);
+    const a = derivativeOf(E, YP);
     if (containsVar(a, YP) || isZ(a)) return null;
-    const b = simpO(add(E, neg(mul(a, sym(YP)))));
+    const b = trySimplify(add(E, neg(mul(a, sym(YP)))));
     if (containsVar(b, YP)) return null;
-    return simpO(neg(div(b, a)));
+    return trySimplify(neg(div(b, a)));
 }
 
 // e^(u + v) → e^u·e^v so that the factors separate
@@ -261,7 +247,7 @@ function separate(R, x, y) {
         else return null;
     }
     if (!gy.length) return null;
-    return { f: simpO(mul(fx.length ? fx : [N1])), g: simpO(mul(gy)) };
+    return { f: trySimplify(mul(fx.length ? fx : [N1])), g: trySimplify(mul(gy)) };
 }
 
 function solveFirst(E, x, y, cond, explicitAlready) {
@@ -274,8 +260,8 @@ function solveFirst(E, x, y, cond, explicitAlready) {
     const yp = sym("y'");
     const Rt = (l) => tex(R, l);
     if (!explicitAlready) steps.push(step({ title: L('Выражаем производную', 'Solve for the derivative'), tex: bt((l) => `${tex(yp, l)} = ${Rt(l)}`) }));
-    const dRy = d(R, y);
-    const p = !containsVar(dRy, y) ? simpO(neg(dRy)) : null;
+    const dRy = derivativeOf(R, y);
+    const p = !containsVar(dRy, y) ? trySimplify(neg(dRy)) : null;
     const q = p ? tidy(substitute(R, { [y]: N0 })) : null; // R = −p·y + q, so q = R(x, 0)
     const pick = picker(x, cond);
 
@@ -285,14 +271,14 @@ function solveFirst(E, x, y, cond, explicitAlready) {
         if (!I.result) return null;
         const F = I.result;
         steps.push(step({ title: L('Интегрируем', 'Integrate'), tex: bt((l) => `${y} = \\int ${tex(R, l)}\\,d${x} = ${tex(F, l)} + C`), sub: I.steps }));
-        return finish({ general: add(F, C), steps, type: 'integrate', x, y, cond, solveC: (c0) => simpO(add(F, c0)) });
+        return finish({ general: add(F, C), steps, type: 'integrate', x, y, cond, solveC: (c0) => trySimplify(add(F, c0)) });
     }
     // linear with a right-hand side: the integrating factor
     if (p && q && !isZ(q) && !isZ(p) && free(q, y)) return linearFirst(p, q, x, y, cond, steps);
     // separable
     const sp = separate(R, x, y);
     if (sp) {
-        const Iy = integrate(simpO(div(N1, sp.g)), y, { steps: true });
+        const Iy = integrate(trySimplify(div(N1, sp.g)), y, { steps: true });
         const Ix = integrate(sp.f, x, { steps: true });
         if (!Iy.result || !Ix.result) return null;
         const G = Iy.result;
@@ -305,9 +291,9 @@ function solveFirst(E, x, y, cond, explicitAlready) {
         steps.push(step({ title: L('Интегрируем обе части', 'Integrate both sides'), tex: bt((l) => `${tex(G, l)} = ${tex(F, l)} + C`), sub: [...(Iy.steps ?? []).slice(-1), ...(Ix.steps ?? []).slice(-1)] }));
         const lnForm = G.type === 'fn' && G.name === 'ln' && G.args[0].type === 'fn' && G.args[0].name === 'abs' && G.args[0].args[0].type === 'sym';
         const Fe = lnForm ? dropAbsInLn(F) : F;
-        const general = lnForm ? simpO(mul(C, pow(E_, Fe))) : invert(G, y, add(F, C), null);
+        const general = lnForm ? trySimplify(mul(C, pow(E_, Fe))) : invert(G, y, add(F, C), null);
         const solveC = (c0) => {
-            if (lnForm) return simpO(mul(c0, pow(E_, Fe)));
+            if (lnForm) return trySimplify(mul(c0, pow(E_, Fe)));
             return invert(G, y, add(F, c0), pick);
         };
         if (lnForm) steps.push(step({ title: L(`Выражаем $${y}$`, `Express $${y}$`), tex: bt((l) => `|${y}| = e^{${tex(F, l)} + C} \\;\\Rightarrow\\; ${y} = ${tex(general, l)}`), text: L('Постоянная $\\pm e^{C}$ снова обозначена $C$; $C = 0$ даёт решение $y = 0$, потерянное при делении.', 'The constant $\\pm e^{C}$ is renamed $C$ again; $C = 0$ gives the solution $y = 0$ lost in the division.') }));
@@ -320,21 +306,21 @@ function solveFirst(E, x, y, cond, explicitAlready) {
 function linearFirst(p, q, x, y, cond, steps) {
     const Ip = integrate(p, x, { steps: true });
     if (!Ip.result) return null;
-    const mu = simpO(pow(E_, dropAbsInLn(Ip.result)));
-    const Iq = integrate(simpO(mul(mu, q)), x, { steps: true });
+    const mu = trySimplify(pow(E_, dropAbsInLn(Ip.result)));
+    const Iq = integrate(trySimplify(mul(mu, q)), x, { steps: true });
     if (!Iq.result) return null;
     const C = sym('C');
     steps.push(step({
         title: L('Линейное уравнение первого порядка', 'A first-order linear equation'),
         tex: bt((l) => {
             const negP = tex(p, 'en').startsWith('-');
-            const py = simpO(mul(negP ? simpO(neg(p)) : p, sym(y)));
+            const py = trySimplify(mul(negP ? trySimplify(neg(p)) : p, sym(y)));
             return tex(rel('=', add(sym(`${y}'`), negP ? neg(py) : py), q), l);
         }),
         text: L('Вид $y\' + p(x)y = q(x)$. Умножаем на интегрирующий множитель $\\mu = e^{\\int p\\,dx}$: левая часть становится производной $(\\mu y)\'$.', 'The form $y\' + p(x)y = q(x)$. Multiply by the integrating factor $\\mu = e^{\\int p\\,dx}$: the left side becomes $(\\mu y)\'$.'),
     }));
     steps.push(step({ title: L('Интегрирующий множитель', 'The integrating factor'), tex: bt((l) => `\\mu = e^{\\int ${tex(p, l)}\\,d${x}} = ${tex(mu, l)}`) }));
-    steps.push(step({ title: L('Интегрируем', 'Integrate'), tex: bt((l) => `(${tex(mu, l)}\\,${y})' = ${tex(simpO(mul(mu, q)), l)} \\;\\Rightarrow\\; ${tex(mu, l)}\\,${y} = ${tex(Iq.result, l)} + C`), sub: (Iq.steps ?? []).slice(-1) }));
+    steps.push(step({ title: L('Интегрируем', 'Integrate'), tex: bt((l) => `(${tex(mu, l)}\\,${y})' = ${tex(trySimplify(mul(mu, q)), l)} \\;\\Rightarrow\\; ${tex(mu, l)}\\,${y} = ${tex(Iq.result, l)} + C`), sub: (Iq.steps ?? []).slice(-1) }));
     const general = tidy(div(add(Iq.result, C), mu));
     steps.push(step({ title: L(`Выражаем $${y}$`, `Express $${y}$`), tex: bt((l) => `${y} = ${tex(general, l)}`) }));
     return finish({ general, steps, type: 'linear', x, y, cond, solveC: (c0) => tidy(div(add(Iq.result, c0), mu)) });
@@ -343,17 +329,17 @@ function linearFirst(p, q, x, y, cond, steps) {
 // y' = φ(y/x): check φ(tx, ty) = φ(x, y), then y = ux
 function homogeneous(R, x, y, cond, steps) {
     for (const [a, b, t] of [[0.7, 1.3, 2.1], [1.9, -0.6, 0.45], [-1.1, 0.8, 3.3]]) {
-        const r1 = val(R, { [x]: a, [y]: b });
-        const r2 = val(R, { [x]: a * t, [y]: b * t });
+        const r1 = approx(R, { [x]: a, [y]: b });
+        const r2 = approx(R, { [x]: a * t, [y]: b * t });
         if (!Number.isFinite(r1) || !Number.isFinite(r2) || Math.abs(r1 - r2) > 1e-9 * Math.max(1, Math.abs(r1))) return null;
     }
     const U = sym('u');
     const X = sym(x);
     const phi = tidy(substitute(R, { [x]: N1, [y]: U })); // degree 0: φ(u) = R(1, u)
     if (containsVar(phi, x)) return null;
-    const den = simpO(add(phi, neg(U)));
+    const den = trySimplify(add(phi, neg(U)));
     if (isZ(den)) return null;
-    const Iu = integrate(simpO(div(N1, den)), 'u', { steps: true });
+    const Iu = integrate(trySimplify(div(N1, den)), 'u', { steps: true });
     if (!Iu.result) return null;
     const G = Iu.result;
     const F = fn('ln', fn('abs', X));
@@ -364,7 +350,7 @@ function homogeneous(R, x, y, cond, steps) {
     const Uinv = (c, pk = null) => invert(G, 'u', add(F, c), pk);
     const general = Uinv(C);
     return finish({
-        general: general ? simpO(mul(general, X)) : rel('=', substitute(G, { u: div(sym(y), X) }), add(F, C)),
+        general: general ? trySimplify(mul(general, X)) : rel('=', substitute(G, { u: div(sym(y), X) }), add(F, C)),
         implicit: !general,
         steps,
         type: 'homogeneous',
@@ -373,9 +359,9 @@ function homogeneous(R, x, y, cond, steps) {
         cond,
         solveC: (c0) => {
             const u = Uinv(c0, pickU);
-            return u ? simpO(mul(u, X)) : null;
+            return u ? trySimplify(mul(u, X)) : null;
         },
-        constFromIc: (x0, y0) => simpO(add(substitute(G, { u: div(y0, x0) }), neg(substitute(F, { [x]: x0 })))),
+        constFromIc: (x0, y0) => trySimplify(add(substitute(G, { u: div(y0, x0) }), neg(substitute(F, { [x]: x0 })))),
     });
 }
 
@@ -411,7 +397,7 @@ function solveLin(A, b) {
 function rhsGroups(f, x) {
     let e;
     try {
-        e = simpO(expand(f));
+        e = trySimplify(expand(f));
     } catch {
         return null;
     }
@@ -426,7 +412,7 @@ function rhsGroups(f, x) {
         for (const g of fs) {
             if (!containsVar(g, x)) continue;
             const lin = (u) => {
-                const k = simpO(div(u, sym(x)));
+                const k = trySimplify(div(u, sym(x)));
                 return containsVar(k, x) ? null : numValue(k);
             };
             if (g.type === 'pow' && g.base.type === 'sym' && g.base.name === 'e') {
@@ -455,7 +441,7 @@ function rhsGroups(f, x) {
 function undetermined(a, b, c, f, x) {
     const groups = rhsGroups(f, x);
     if (!groups || !groups.length) return null;
-    const [av, bv, cv] = [val(a, {}), val(b, {}), val(c, {})];
+    const [av, bv, cv] = [approx(a, {}), approx(b, {}), approx(c, {})];
     const X = sym(x);
     const basis = [];
     const names = [];
@@ -471,8 +457,8 @@ function undetermined(a, b, c, f, x) {
             const disc = bv * bv - 4 * av * cv;
             if (disc < 0 && Math.abs(al + bv / (2 * av)) < 1e-12 && Math.abs(be * be - (-disc) / (4 * av * av)) < 1e-12) s = 1;
         }
-        const ex = g.alpha.isZero() ? null : pow(E_, simpO(mul(num(g.alpha), X)));
-        const parts = be === 0 ? [null] : [fn('cos', simpO(mul(num(g.beta), X))), fn('sin', simpO(mul(num(g.beta), X)))];
+        const ex = g.alpha.isZero() ? null : pow(E_, trySimplify(mul(num(g.alpha), X)));
+        const parts = be === 0 ? [null] : [fn('cos', trySimplify(mul(num(g.beta), X))), fn('sin', trySimplify(mul(num(g.beta), X)))];
         const groupTrial = [];
         for (const tr of parts) {
             const poly = [];
@@ -494,10 +480,10 @@ function undetermined(a, b, c, f, x) {
     }
     const m = basis.length;
     if (m > 12) return null;
-    const Lb = basis.map((phi) => simpO(add(mul(a, d(d(phi, x), x)), mul(b, d(phi, x)), mul(c, phi))));
+    const Lb = basis.map((phi) => trySimplify(add(mul(a, derivativeOf(derivativeOf(phi, x), x)), mul(b, derivativeOf(phi, x)), mul(c, phi))));
     const pts = Array.from({ length: m + 4 }, (_, i) => -0.9 + (1.8 * (i + 0.5)) / (m + 4));
-    const rows = pts.map((p) => Lb.map((l) => val(l, { [x]: p })));
-    const rhs = pts.map((p) => val(f, { [x]: p }));
+    const rows = pts.map((p) => Lb.map((l) => approx(l, { [x]: p })));
+    const rhs = pts.map((p) => approx(f, { [x]: p }));
     if (rows.flat().some((z) => !Number.isFinite(z)) || rhs.some((z) => !Number.isFinite(z))) return null;
     // least squares through the normal equations
     const AtA = basis.map((_, i) => basis.map((__, j) => rows.reduce((acc, r) => acc + r[i] * r[j], 0)));
@@ -509,20 +495,20 @@ function undetermined(a, b, c, f, x) {
     const yp = tidy(add(basis.map((phi, i) => mul(num(qs[i]), phi))));
     // the check at other points
     for (const p of [0.123, -0.77, 1.31, 2.05]) {
-        const lhs = val(add(mul(a, d(d(yp, x), x)), mul(b, d(yp, x)), mul(c, yp)), { [x]: p });
-        const r = val(f, { [x]: p });
+        const lhs = approx(add(mul(a, derivativeOf(derivativeOf(yp, x), x)), mul(b, derivativeOf(yp, x)), mul(c, yp)), { [x]: p });
+        const r = approx(f, { [x]: p });
         if (!(Math.abs(lhs - r) < 1e-7 * Math.max(1, Math.abs(r)))) return null;
     }
     return { yp, trials, names, values: qs };
 }
 
 function solveSecond(E, x, y, conds) {
-    const a = d(E, YPP);
-    const b = d(E, YP);
-    const c = d(E, y);
+    const a = derivativeOf(E, YPP);
+    const b = derivativeOf(E, YP);
+    const c = derivativeOf(E, y);
     const X = sym(x);
     if (![a, b, c].every((k) => free(k, x, y, YP, YPP))) return null;
-    const f = simpO(neg(add(E, neg(mul(a, sym(YPP))), neg(mul(b, sym(YP))), neg(mul(c, sym(y))))));
+    const f = trySimplify(neg(add(E, neg(mul(a, sym(YPP))), neg(mul(b, sym(YP))), neg(mul(c, sym(y))))));
     if (containsVar(f, y) || containsVar(f, YP) || containsVar(f, YPP)) return null;
     const homog = isZ(f);
     const K = sym('k');
@@ -531,20 +517,20 @@ function solveSecond(E, x, y, conds) {
     steps.push(step({
         title: L('Линейное однородное уравнение с постоянными коэффициентами', 'A linear homogeneous equation with constant coefficients'),
         text: L('Ищем решения вида $y = e^{kx}$: подстановка даёт характеристическое уравнение.', 'Look for solutions $y = e^{kx}$: substituting gives the characteristic equation.'),
-        tex: bt((l) => tex(simpO(charEq.lhs), l) + ' = 0'),
+        tex: bt((l) => tex(trySimplify(charEq.lhs), l) + ' = 0'),
     }));
-    const av = val(a, {});
-    const bv = val(b, {});
-    const cv = val(c, {});
+    const av = approx(a, {});
+    const bv = approx(b, {});
+    const cv = approx(c, {});
     const D = bv * bv - 4 * av * cv;
-    const Dn = simpO(add(mul(b, b), neg(mul(num(4), a, c))));
+    const Dn = trySimplify(add(mul(b, b), neg(mul(num(4), a, c))));
     const C1 = sym('C_1');
     const C2 = sym('C_2');
     let y1;
     let y2;
     let text;
     if (Math.abs(D) < 1e-12) {
-        const k = simpO(div(neg(b), mul(N2, a)));
+        const k = trySimplify(div(neg(b), mul(N2, a)));
         y1 = pow(E_, mul(k, X));
         y2 = mul(X, pow(E_, mul(k, X)));
         steps.push(step({ title: L('Один корень кратности 2', 'A double root'), tex: bt((l) => `D = 0,\\quad k = ${tex(k, l)}`) }));
@@ -558,8 +544,8 @@ function solveSecond(E, x, y, conds) {
         steps.push(step({ title: L('Два действительных корня', 'Two real roots'), tex: bt((l) => `k_1 = ${tex(k1, l)},\\quad k_2 = ${tex(k2, l)}`), sub: r.steps.slice(0, -1) }));
         text = L('Разным корням соответствуют решения $e^{k_1 x}$ и $e^{k_2 x}$.', 'Distinct roots give the solutions $e^{k_1 x}$ and $e^{k_2 x}$.');
     } else {
-        const al = simpO(div(neg(b), mul(N2, a)));
-        const be = simpO(div(pow(neg(Dn), num(Q.HALF)), mul(N2, a)));
+        const al = trySimplify(div(neg(b), mul(N2, a)));
+        const be = trySimplify(div(pow(neg(Dn), num(Q.HALF)), mul(N2, a)));
         const ex = isZ(al) ? null : pow(E_, mul(al, X));
         const cosN = fn('cos', mul(be, X));
         const sinN = fn('sin', mul(be, X));
@@ -568,8 +554,8 @@ function solveSecond(E, x, y, conds) {
         steps.push(step({ title: L('Комплексные корни', 'Complex roots'), tex: bt((l) => `D = ${tex(Dn, l)} < 0,\\quad k = ${tex(al, l)} \\pm ${tex(be, l)}\\,i`) }));
         text = L('Корням $\\alpha \\pm \\beta i$ соответствуют решения $e^{\\alpha x}\\cos\\beta x$ и $e^{\\alpha x}\\sin\\beta x$.', 'The roots $\\alpha \\pm \\beta i$ give $e^{\\alpha x}\\cos\\beta x$ and $e^{\\alpha x}\\sin\\beta x$.');
     }
-    y1 = simpO(y1);
-    y2 = simpO(y2);
+    y1 = trySimplify(y1);
+    y2 = trySimplify(y2);
     const cm = (c, f) => (numValue(f)?.isOne() ? c : f.type === 'mul' ? mul(c, ...f.args) : mul(c, f));
     const general0 = add(cm(C1, y1), cm(C2, y2));
     steps.push(step({ title: homog ? L('Общее решение', 'The general solution') : L('Общее решение однородного уравнения', 'The general solution of the homogeneous equation'), tex: bt((l) => `${homog ? y : `${y}_{0}`} = ${tex(general0, l)}`), text }));
@@ -584,7 +570,7 @@ function solveSecond(E, x, y, conds) {
             title: L('Частное решение по виду правой части', 'A particular solution from the form of the right-hand side'),
             tex: bt((l) => `${y}_{${l === 'ru' ? '\\text{ч}' : 'p'}} = ${tex(trialNode, l)}`),
             text: sNote.length
-                ? L(`Правая часть — многочлен на экспоненту (синус, косинус), поэтому частное решение ищем в том же виде. Число $${tex(simpO(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))))}$ — корень характеристического уравнения кратности ${sNote[0].s}, поэтому добавлен множитель $x${sNote[0].s > 1 ? '^' + sNote[0].s : ''}$.`, `The right-hand side is a polynomial times an exponential (sine, cosine), so a particular solution has the same form. The number $${tex(simpO(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), 'en')}$ is a characteristic root of multiplicity ${sNote[0].s}, hence the factor $x${sNote[0].s > 1 ? '^' + sNote[0].s : ''}$.`)
+                ? L(`Правая часть — многочлен на экспоненту (синус, косинус), поэтому частное решение ищем в том же виде. Число $${tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))))}$ — корень характеристического уравнения кратности ${sNote[0].s}, поэтому добавлен множитель $x${sNote[0].s > 1 ? '^' + sNote[0].s : ''}$.`, `The right-hand side is a polynomial times an exponential (sine, cosine), so a particular solution has the same form. The number $${tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), 'en')}$ is a characteristic root of multiplicity ${sNote[0].s}, hence the factor $x${sNote[0].s > 1 ? '^' + sNote[0].s : ''}$.`)
                 : L('Правая часть — многочлен на экспоненту (синус, косинус), поэтому частное решение ищем в том же виде с неизвестными коэффициентами.', 'The right-hand side is a polynomial times an exponential (sine, cosine), so a particular solution has the same form with unknown coefficients.'),
         }));
         steps.push(step({
@@ -592,9 +578,9 @@ function solveSecond(E, x, y, conds) {
             tex: bt((l) => `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${l === 'ru' ? '\\text{ч}' : 'p'}} = ${tex(yp, l)}`),
         }));
     } else if (!homog) {
-        const W = tidy(add(mul(y1, d(y2, x)), neg(mul(d(y1, x), y2))));
+        const W = tidy(add(mul(y1, derivativeOf(y2, x)), neg(mul(derivativeOf(y1, x), y2))));
         if (isZ(W)) return null;
-        const g = simpO(div(f, a));
+        const g = trySimplify(div(f, a));
         const i1 = integrate(tidy(div(mul(y2, g), W)), x, { steps: true });
         const i2 = integrate(tidy(div(mul(y1, g), W)), x, { steps: true });
         if (!i1.result || !i2.result) return null;
@@ -612,18 +598,18 @@ function solveSecond(E, x, y, conds) {
     const c1 = conds.find((z) => z.order === 1);
     if (!c0 || !c1) return res;
     // C₁y₁(x₀) + C₂y₂(x₀) = y₀, C₁y₁'(x₀) + C₂y₂'(x₀) = y₁ (Cramer)
-    const at = (n, p) => simpO(substitute(n, { [x]: p }));
+    const at = (n, p) => trySimplify(substitute(n, { [x]: p }));
     const m11 = at(y1, c0.at);
     const m12 = at(y2, c0.at);
-    const m21 = at(d(y1, x), c1.at);
-    const m22 = at(d(y2, x), c1.at);
-    const det = simpO(add(mul(m11, m22), neg(mul(m12, m21))));
-    if (Math.abs(val(det, {})) < 1e-12) return null;
+    const m21 = at(derivativeOf(y1, x), c1.at);
+    const m22 = at(derivativeOf(y2, x), c1.at);
+    const det = trySimplify(add(mul(m11, m22), neg(mul(m12, m21))));
+    if (Math.abs(approx(det, {})) < 1e-12) return null;
     // with a particular solution the right-hand sides shift by y_p(x₀), y_p'(x₀)
-    const r0 = yp ? simpO(add(c0.value, neg(at(yp, c0.at)))) : c0.value;
-    const r1 = yp ? simpO(add(c1.value, neg(at(d(yp, x), c1.at)))) : c1.value;
-    const k1 = simpO(div(add(mul(r0, m22), neg(mul(m12, r1))), det));
-    const k2 = simpO(div(add(mul(m11, r1), neg(mul(r0, m21))), det));
+    const r0 = yp ? trySimplify(add(c0.value, neg(at(yp, c0.at)))) : c0.value;
+    const r1 = yp ? trySimplify(add(c1.value, neg(at(derivativeOf(yp, x), c1.at)))) : c1.value;
+    const k1 = trySimplify(div(add(mul(r0, m22), neg(mul(m12, r1))), det));
+    const k2 = trySimplify(div(add(mul(m11, r1), neg(mul(r0, m21))), det));
     const Y = tidy(add([mul(k1, y1), mul(k2, y2), ...(yp ? [yp] : [])]));
     steps.push(step({
         title: L('Начальные условия', 'The initial conditions'),
@@ -644,21 +630,21 @@ function finish(o) {
     const y0 = cond.value;
     let c0 = null;
     if (o.constFromIc) c0 = o.constFromIc(x0, y0);
-    else if (o.lnForm) c0 = simpO(div(y0, pow(E_, substitute(o.F, { [x]: x0 }))));
-    else if (o.type === 'separable' && o.G) c0 = simpO(add(substitute(o.G, { [y]: y0 }), neg(substitute(o.F, { [x]: x0 }))));
+    else if (o.lnForm) c0 = trySimplify(div(y0, pow(E_, substitute(o.F, { [x]: x0 }))));
+    else if (o.type === 'separable' && o.G) c0 = trySimplify(add(substitute(o.G, { [y]: y0 }), neg(substitute(o.F, { [x]: x0 }))));
     else {
         // the solution is linear in C: C = (y₀ − Y(x₀; 0)) / (Y(x₀; 1) − Y(x₀; 0))
         const Y0 = o.solveC(N0);
         const Y1 = o.solveC(N1);
         if (!Y0 || !Y1) return res;
-        const a0 = simpO(substitute(Y0, { [x]: x0 }));
-        const a1 = simpO(substitute(Y1, { [x]: x0 }));
-        const slope = simpO(add(a1, neg(a0)));
-        if (Math.abs(val(slope, {})) < 1e-12) return res;
-        c0 = simpO(div(add(y0, neg(a0)), slope));
+        const a0 = trySimplify(substitute(Y0, { [x]: x0 }));
+        const a1 = trySimplify(substitute(Y1, { [x]: x0 }));
+        const slope = trySimplify(add(a1, neg(a0)));
+        if (Math.abs(approx(slope, {})) < 1e-12) return res;
+        c0 = trySimplify(div(add(y0, neg(a0)), slope));
         // check linearity in C at another value
         const Y2 = o.solveC(N2);
-        if (!Y2 || Math.abs(val(substitute(Y2, { [x]: x0 }), {}) - (val(a0, {}) + 2 * val(slope, {}))) > 1e-9) c0 = null;
+        if (!Y2 || Math.abs(approx(substitute(Y2, { [x]: x0 }), {}) - (approx(a0, {}) + 2 * approx(slope, {}))) > 1e-9) c0 = null;
     }
     if (!c0) return res;
     const Y = o.solveC(c0);
@@ -681,7 +667,7 @@ export function solveOde(input, opts = {}) {
         return { kind: 'unsupported', reason: e.msg, steps: [] };
     }
     const { eq, conds, x, y } = inp;
-    const E = simpO(add(eq.lhs, neg(eq.rhs)));
+    const E = trySimplify(add(eq.lhs, neg(eq.rhs)));
     const order = containsVar(E, YPP) ? 2 : 1;
     let r = null;
     try {
@@ -698,8 +684,8 @@ export function solveOde(input, opts = {}) {
     if (r.expr && !satisfies({ lhs: E, rhs: N0 }, r.expr, x, y)) return { kind: 'unsupported', reason: L('Не удалось проверить решение.', 'Could not verify the solution.'), steps: [] };
     if (r.expr) {
         for (const c of conds) {
-            const Yc = c.order === 0 ? r.expr : c.order === 1 ? d(r.expr, x) : d(d(r.expr, x), x);
-            if (Math.abs(val(Yc, { [x]: val(c.at, {}) }) - val(c.value, {})) > 1e-8) return { kind: 'unsupported', reason: L('Решение не удовлетворяет начальному условию.', 'The solution does not meet the initial condition.'), steps: [] };
+            const Yc = c.order === 0 ? r.expr : c.order === 1 ? derivativeOf(r.expr, x) : derivativeOf(derivativeOf(r.expr, x), x);
+            if (Math.abs(approx(Yc, { [x]: approx(c.at, {}) }) - approx(c.value, {})) > 1e-8) return { kind: 'unsupported', reason: L('Решение не удовлетворяет начальному условию.', 'The solution does not meet the initial condition.'), steps: [] };
         }
     }
     const answer = r.expr ?? r.general;

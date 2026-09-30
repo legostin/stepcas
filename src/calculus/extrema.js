@@ -17,10 +17,9 @@ import { derivative } from './derivative/index.js';
 import { solveEquation } from '../solve/index.js';
 import { numFindRoots } from '../numbers/numeric/index.js';
 import { L, step } from '../core/steps.js';
+import { trySimplify, approx } from '../core/safe.js';
 
 const asNode = (x) => (typeof x === 'string' ? parse(x) : typeof x === 'number' ? num(x) : x);
-const approx = (n) => { try { const v = evaluate(n, {}); return typeof v === 'number' ? v : NaN; } catch { return NaN; } };
-const simp = (n) => { try { return simplify(n); } catch { return n; } };
 const texOf = (n, l) => toTex(n, { lang: l });
 const both = (fn) => ({ ru: fn('ru'), en: fn('en') });
 const sepL = (l) => (l === 'en' ? ',\\ ' : ';\\ ');
@@ -35,22 +34,22 @@ export function exactGuess(x) {
     }
     for (let d = 1; d <= 12; d++) {
         const n = Math.round((x / Math.PI) * d);
-        if (n !== 0 && Math.abs(x - (n * Math.PI) / d) < 1e-10 * Math.max(1, Math.abs(x))) return simp(parse(`${n}pi/${d}`));
+        if (n !== 0 && Math.abs(x - (n * Math.PI) / d) < 1e-10 * Math.max(1, Math.abs(x))) return trySimplify(parse(`${n}pi/${d}`));
     }
     for (let d = 1; d <= 12; d++) {
         const s = (x * d) ** 2;
         const r = Math.round(s);
-        if (r > 1 && Math.abs(s - r) < 1e-8 * Math.max(1, s)) return simp(parse(`${x < 0 ? '-' : ''}sqrt(${r})/${d}`));
+        if (r > 1 && Math.abs(s - r) < 1e-8 * Math.max(1, s)) return trySimplify(parse(`${x < 0 ? '-' : ''}sqrt(${r})/${d}`));
     }
     const e = Math.log(Math.abs(x));
     for (let d = 1; d <= 6; d++) {
         const n = Math.round(e * d);
-        if (x > 0 && n !== 0 && Math.abs(e - n / d) < 1e-10) return simp(parse(`e^(${n}/${d})`));
+        if (x > 0 && n !== 0 && Math.abs(e - n / d) < 1e-10) return trySimplify(parse(`e^(${n}/${d})`));
     }
     const l = Math.exp(x);
     for (let d = 1; d <= 6; d++) {
         const r = Math.round(l ** d);
-        if (r > 1 && Math.abs(l ** d - r) < 1e-8 * r) return simp(parse(`ln(${r})/${d}`));
+        if (r > 1 && Math.abs(l ** d - r) < 1e-8 * r) return trySimplify(parse(`ln(${r})/${d}`));
     }
     return null;
 }
@@ -58,8 +57,8 @@ export function exactGuess(x) {
 export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     const kind = opts.kind || 'both';
     const wantSteps = opts.steps !== false;
-    const f = simp(asNode(fIn));
-    const A = simp(asNode(aIn)), B = simp(asNode(bIn));
+    const f = trySimplify(asNode(fIn));
+    const A = trySimplify(asNode(aIn)), B = trySimplify(asNode(bIn));
     const a = approx(A), b = approx(B);
     if (!(Number.isFinite(a) && Number.isFinite(b)) || !(a < b)) {
         throw new MathError(L('Нужен отрезок [a; b] с числовыми концами, a < b.', 'A segment [a, b] with numeric ends, a < b, is needed.'), null, null, 'segment');
@@ -161,7 +160,7 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
         ...crit,
         { x: B, t: b, why: T('правый конец', 'right end') },
     ].map((c) => {
-        const y = simp(substitute(f, { [v]: c.x }));
+        const y = trySimplify(substitute(f, { [v]: c.x }));
         let yv = approx(y);
         if (!Number.isFinite(yv)) yv = fc(c.t);
         return { ...c, y, approx: yv };
@@ -207,7 +206,7 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
 export function extremePoints(fIn, v = 'x', opts = {}) {
     const wantSteps = opts.steps !== false;
     const [lo, hi] = opts.range || [-50, 50];
-    const f = simp(asNode(fIn));
+    const f = trySimplify(asNode(fIn));
     const fc = compile(f, [v]);
     const d = derivative(f, v, { steps: wantSteps });
     const df = d.result;
@@ -233,7 +232,7 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
         const h = 1e-4 * Math.max(1, Math.abs(p.t));
         const l = dc(p.t - h), r = dc(p.t + h);
         const kindP = l > 0 && r < 0 ? 'max' : l < 0 && r > 0 ? 'min' : 'none';
-        const y = simp(substitute(f, { [v]: p.x }));
+        const y = trySimplify(substitute(f, { [v]: p.x }));
         const item = { x: p.x, y, approx: approx(y), kind: kindP };
         out.critical.push(item);
         if (kindP !== 'none') out[kindP].push(item);
