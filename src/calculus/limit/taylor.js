@@ -6,12 +6,12 @@ import { quickDerivative } from '../derivative/index.js';
 import { evaluate } from '../../core/evaluate.js';
 import { canonContext } from '../../core/simplify.js';
 import { step } from '../../core/steps.js';
-import { evalAt, isZeroN } from './common.js';
+import { evalAt } from './common.js';
 import { limit } from './limit.js';
 import { fmtNum } from './table.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 import { asNode } from '../../core/parse.js';
-import { isNum, simp, N0, N1, calcTex } from '../display.js';
+import { isNum, simp, N0, N1, calcTex, isZero } from '../display.js';
 
 // ---------------------------------------------------------------- Taylor polynomials
 
@@ -52,10 +52,10 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         }
         coeffs.push(simp(div(val, num(factorialQ(k)))));
     }
-    const shift = isZeroN(A) ? X : add(X, neg(A));
+    const shift = isZero(A) ? X : add(X, neg(A));
     const terms = [];
     for (let k = 0; k <= n; k++) {
-        if (isZeroN(coeffs[k])) continue;
+        if (isZero(coeffs[k])) continue;
         const pw = k === 0 ? N1 : k === 1 ? shift : pow(shift, num(k));
         terms.push({ k, coeff: coeffs[k], term: k === 0 ? coeffs[k] : mul(coeffs[k], pw) });
     }

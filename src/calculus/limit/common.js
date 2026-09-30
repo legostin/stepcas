@@ -2,15 +2,11 @@
 
 import { num, sym, neg, isConst, pow } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';
-
 import { evaluate } from '../../core/evaluate.js';
 import { msg } from '../../i18n/index.js';
-import { calcTex, isNum, paren, trySimp } from '../display.js';
+import { calcTex, isNum, paren, trySimp, isZero } from '../display.js';
 
 export const PI = sym('pi');
-
-export const qn2 = (q) => num(q);
-export const isZeroN = (n) => isNum(n) && n.value.isZero();
 
 export const paren2 = (s, n) => (n.type === 'add' ? paren(s) : s);
 /** "a = b = c" without repeating equal neighbours. */
@@ -135,7 +131,7 @@ export const infV = (s) => ({ k: 'inf', s });
 export const BND = { k: 'bnd' };
 export const DNE = { k: 'dne' };
 
-export const isZeroV = (L) => L && L.k === 'fin' && (isZeroN(L.node) || (Number.isFinite(L.x) && Math.abs(L.x) < 1e-15 && isZeroN(trySimp(L.node) ?? L.node)));
+export const isZeroV = (L) => L && L.k === 'fin' && (isZero(L.node) || (Number.isFinite(L.x) && Math.abs(L.x) < 1e-15 && isZero(trySimp(L.node) ?? L.node)));
 export const isOneV = (L) => L && L.k === 'fin' && isNum(L.node) && L.node.value.isOne();
 
 export function splitNumDen(n) {

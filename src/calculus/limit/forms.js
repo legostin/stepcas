@@ -10,9 +10,9 @@ import { Poly } from '../../core/poly.js';
 import { toText } from '../../core/print.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
-import { chainEq, fin, infV, isZeroN, isZeroV, limTex, lt, negLeadNode, paren2, qn2, splitNumDen, asym } from './common.js';
+import { chainEq, fin, infV, isZeroV, limTex, lt, negLeadNode, paren2, splitNumDen, asym } from './common.js';
 import { msg, eachLanguage, notation, joined, sameText, DEFAULT_LANGUAGE } from '../../i18n/index.js';
-import { calcTex, prettyForm, isNum, paren, simp, trySimp, N0, N1, NM1, N2, HALF, E_ } from '../display.js';
+import { calcTex, prettyForm, isNum, paren, simp, trySimp, N0, N1, NM1, N2, HALF, E_, isZero } from '../display.js';
 
 // ---------------------------------------------------------------- indeterminate forms
 
@@ -99,8 +99,8 @@ function mRational(n, C, form) {
         const X = sym(v);
         if (dq === 0 && dp >= 1) {
             // a polynomial: the leading term decides — take x^deg out of the brackets
-            const inner = simp(expand(div(p.toNode(v), mul(qn2(q.lead), pow(X, num(dp))))));
-            const lead = simp(mul(qn2(p.lead.div(q.lead)), pow(X, num(dp))));
+            const inner = simp(expand(div(p.toNode(v), mul(num(q.lead), pow(X, num(dp))))));
+            const lead = simp(mul(num(p.lead.div(q.lead)), pow(X, num(dp))));
             return {
                 val,
                 title: msg('calculus.limit.forms.take_out_highest_power'),
@@ -223,7 +223,7 @@ function tendsTo(n, target, C) {
     const L = ev(n, { ...C, log: [], depth: C.depth + 1 });
     if (!L || L.k !== 'fin') return false;
     const d = trySimp(add(L.node, neg(target)));
-    return d !== null && isZeroN(d);
+    return d !== null && isZero(d);
 }
 
 /** Equivalent of an infinitesimal factor F: {E, law} (the law as text per language) or null. */
@@ -454,7 +454,7 @@ function mLHopital(n, C, form) {
     } catch {
         return null;
     }
-    if (isZeroN(trySimp(dw) ?? dw)) return null;
+    if (isZero(trySimp(dw) ?? dw)) return null;
     const uS = niceForm(qp.u, v);
     const wS = niceForm(qp.w, v);
     const next = div(du, dw);
