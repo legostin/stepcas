@@ -76,10 +76,17 @@ export function runTask(t) {
             return { status: close(x, num(t.answer.value)) ? 'correct' : 'wrong', got: text(r.value), exact: r.exact, steps: explained };
         }
         case 'simplify': case 'expand': case 'factor': {
-            const n = t.op === 'expand' ? E.expand(P(t.task)) : t.op === 'factor' ? factorNode(t.task, v) : E.simplify(P(t.task));
+            // the school transformations with steps first, the plain engine calls as a fallback
+            let r = null;
+            try {
+                r = t.op === 'expand' ? E.expandSteps(t.task) : t.op === 'factor' ? E.factorSteps(t.task) : E.simplifySteps(t.task);
+            } catch {
+                r = null;
+            }
+            const n = r?.result ?? (t.op === 'expand' ? E.expand(P(t.task)) : t.op === 'factor' ? factorNode(t.task, v) : E.simplify(P(t.task)));
             if (!n) return { status: 'refused' };
             const eq = sameFunction(n, t.answer.expr, E.freeVars(P(t.task)).length ? E.freeVars(P(t.task)) : [v]);
-            return { status: eq ? 'correct' : 'wrong', got: text(n), steps: 0 };
+            return { status: eq ? 'correct' : 'wrong', got: text(n), steps: r ? r.steps.filter((st) => !st.final).length - 1 : 0 };
         }
         case 'diff': {
             const r = E.derivative(t.task, v, { steps: true });
@@ -110,7 +117,7 @@ export function runTask(t) {
         case 'det': case 'inv': case 'rank': case 'eigen': case 'linsolve': {
             const M = E.Matrix.from(t.matrix);
             if (t.op === 'det') { const r = E.matDet(M, { steps: true }); return { status: close(num(r.value.toString()), num(t.answer.value)) ? 'correct' : 'wrong', got: r.value.toString(), steps: stepsOf(r) }; }
-            if (t.op === 'rank') { const r = E.matRank(M); return { status: r === t.answer.value ? 'correct' : 'wrong', got: r }; }
+            if (t.op === 'rank') { const r = E.matRref(M, { steps: true }); return { status: r.rank === t.answer.value ? 'correct' : 'wrong', got: r.rank, steps: stepsOf(r) }; }
             if (t.op === 'inv') {
                 const r = E.matInverse(M, { steps: true });
                 if (!r.value) return { status: t.answer.none ? 'correct' : 'wrong', got: 'singular', steps: stepsOf(r) };
