@@ -7,6 +7,7 @@ import core from './core.js';
 import generate from './generate.js';
 import linalg from './linalg.js';
 import numbers from './numbers.js';
+import problems from './problems.js';
 import solve from './solve.js';
 
 export default {
@@ -19,5 +20,6 @@ export default {
     generate,
     linalg,
     numbers,
+    problems,
     solve,
 };

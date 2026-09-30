@@ -1,4 +1,4 @@
-// param — equations with a parameter: for which values of a does the equation have two roots, one root, …
+// problems/parameter — equations with a parameter (ЕГЭ №18): for which values of a does the equation have two roots, one root, …
 //
 //   solveWithParameter("x^2 - 2a x + 4 = 0", {param: 'a', want: 'two-roots'}) → {set, steps, answer, method}
 //   want: 'two-roots' | 'one-root' | 'has-roots' | 'no-roots' | a number (exactly that many roots)
@@ -6,13 +6,14 @@
 // A quadratic in x with coefficients depending on a goes the school way: the leading coefficient is zero (the
 // equation is linear), otherwise the discriminant decides. Anything linear in a goes the graphical way: a = g(x),
 // study g (domain, derivative, corners, limits at the ends) and count where the line y = a meets the graph.
+// problems/ is the top layer of composite school tasks: it may use solve/ and calculus/ together.
 import { MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, rel, containsVar, substitute, numValue, nodeSome, freeVars } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { limit } from '../calculus/limit/index.js';
-import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
+import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from '../solve/index.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from '../calculus/derivative/derivative.js';
 import { msg, eachLanguage, joined, DEFAULT_LANGUAGE, MACHINE } from '../i18n/index.js';
@@ -22,15 +23,15 @@ const tex = (n, l = DEFAULT_LANGUAGE) => toTex(n, { lang: l });
 const exactRoots = (r) => r && (r.kind === 'none' || (r.kind === 'roots' && !r.families?.length && !r.roots.some((z) => z.approxOnly)));
 const rootNodes = (r) => (r.kind === 'none' ? [] : r.roots.map((z) => z.node));
 
-// what is asked, as a count of roots and the phrase (solve.parameter.want.*)
+// what is asked, as a count of roots and the phrase (problems.parameter.want.*)
 const WANT = {
-    'two-roots': { n: 2, phrase: msg('solve.parameter.want.two_roots') },
-    'one-root': { n: 1, phrase: msg('solve.parameter.want.one_root') },
-    'no-roots': { n: 0, phrase: msg('solve.parameter.want.no_roots') },
-    'has-roots': { min: 1, phrase: msg('solve.parameter.want.has_roots') },
+    'two-roots': { n: 2, phrase: msg('problems.parameter.want.two_roots') },
+    'one-root': { n: 1, phrase: msg('problems.parameter.want.one_root') },
+    'no-roots': { n: 0, phrase: msg('problems.parameter.want.no_roots') },
+    'has-roots': { min: 1, phrase: msg('problems.parameter.want.has_roots') },
 };
 function wantOf(w) {
-    if (typeof w === 'number') return { n: w, phrase: msg('solve.parameter.want.exactly', { n: w }) };
+    if (typeof w === 'number') return { n: w, phrase: msg('problems.parameter.want.exactly', { n: w }) };
     return WANT[w] ?? WANT['has-roots'];
 }
 const fits = (want, count) => (want.min !== undefined ? count >= want.min : count === want.n);
@@ -85,28 +86,28 @@ function quadratic(E, x, a, want) {
             addPiece(IntervalSet.point(a0), n);
             const lin = rel('=', add(mul(b0, X), c0), N0);
             lines.push(
-                msg('solve.parameter.formula', {
+                msg('problems.parameter.formula', {
                     a,
                     a0: (lng) => tex(a0, lng),
                     p: (lng) => tex(trySimplify(lin.lhs), lng),
                     p2: (lng) =>
                         n === 1
-                            ? msg('solve.parameter.one_root').in(lng)
+                            ? msg('problems.parameter.one_root').in(lng)
                             : n === 0
-                              ? msg('solve.parameter.no_roots').in(lng)
-                              : msg('solve.parameter.every').in(lng),
+                              ? msg('problems.parameter.no_roots').in(lng)
+                              : msg('problems.parameter.every').in(lng),
                 }),
             );
         }
         steps.push(
             step({
-                title: msg('solve.parameter.leading_coefficient_is_zero'),
+                title: msg('problems.parameter.leading_coefficient_is_zero'),
                 tex: eachLanguage((l) =>
                     A.type === 'sym'
                         ? `${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`
                         : `${tex(A, l)} = 0 \\;\\Rightarrow\\; ${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`,
                 ),
-                text: msg('solve.parameter.then_equation_is_linear', { p: joined(lines, '; ') }),
+                text: msg('problems.parameter.then_equation_is_linear', { p: joined(lines, '; ') }),
             }),
         );
     }
@@ -114,9 +115,9 @@ function quadratic(E, x, a, want) {
     const D = trySimplify(add(mul(B, B), neg(mul(num(4), A, C))));
     steps.push(
         step({
-            title: zeroA.length ? msg('solve.parameter.for_quadratic_equation', { A: (lng) => tex(A, lng) }) : msg('solve.parameter.quadratic_equation'),
+            title: zeroA.length ? msg('problems.parameter.for_quadratic_equation', { A: (lng) => tex(A, lng) }) : msg('problems.parameter.quadratic_equation'),
             tex: eachLanguage((l) => `D = b^2 - 4ac = ${tex(D, l)}`),
-            text: msg('solve.parameter.two_roots_for_one_for_none'),
+            text: msg('problems.parameter.two_roots_for_one_for_none'),
         }),
     );
     const pos = solveInequality(rel('>', D, N0), a, { steps: true });
@@ -282,23 +283,23 @@ function graphical(E, x, a, want) {
     const steps = [];
     steps.push(
         step({
-            title: msg('solve.parameter.express_parameter'),
+            title: msg('problems.parameter.express_parameter'),
             tex: eachLanguage((l) => `${a} = ${tex(g, l)}`),
-            text: msg('solve.parameter.number_of_roots_is_number_of', { a, x }),
+            text: msg('problems.parameter.number_of_roots_is_number_of', { a, x }),
         }),
     );
     if (holes.length)
         steps.push(
             step({
-                title: msg('solve.parameter.excluded_points'),
+                title: msg('problems.parameter.excluded_points'),
                 tex: eachLanguage((l) => `${x} \\ne ${holes.map((h) => tex(h, l)).join(',\\ ')}`),
-                text: always ? msg('solve.parameter.here_equation_holds_for_every') : msg('solve.parameter.dividing_by_zero_would_happen_here'),
+                text: always ? msg('problems.parameter.here_equation_holds_for_every') : msg('problems.parameter.dividing_by_zero_would_happen_here'),
             }),
         );
     const endTex = (e, l) => (e.inf ? (e.inf > 0 ? '+\\infty' : '-\\infty') : tex(e.node, l));
     steps.push(
         step({
-            title: msg('solve.parameter.study', { x }),
+            title: msg('problems.parameter.study', { x }),
             tex: eachLanguage((l) =>
                 pieces
                     .map(
@@ -307,12 +308,12 @@ function graphical(E, x, a, want) {
                     )
                     .join(';\\quad '),
             ),
-            text: msg('solve.parameter.derivative_is_g_is_monotone_on', {
+            text: msg('problems.parameter.derivative_is_g_is_monotone_on', {
                 x,
                 g1: (lng) => tex(g1, lng),
                 p: (lng) =>
                     pointVals.length
-                        ? msg('solve.parameter.values_at_points', {
+                        ? msg('problems.parameter.values_at_points', {
                               p: (lng) => pointVals.map((p) => `$g(${tex(p.node, lng)}) = ${tex(p.y, lng)}$`).join(', '),
                           }).in(lng)
                         : '',
@@ -338,9 +339,9 @@ export function solveWithParameter(input, opts = {}) {
         if (!(e instanceof MathError)) throw e;
         return { kind: 'unsupported', reason: e.msg, steps: [] };
     }
-    if (node.type !== 'rel' || node.op !== '=') return { kind: 'unsupported', reason: msg('solve.parameter.equation_is_needed'), steps: [] };
+    if (node.type !== 'rel' || node.op !== '=') return { kind: 'unsupported', reason: msg('problems.parameter.equation_is_needed'), steps: [] };
     const others = freeVars(node).filter((v) => v !== a && v !== x);
-    if (others.length) return { kind: 'unsupported', reason: msg('solve.parameter.extra_letters', { p: others.join(', ') }), steps: [] };
+    if (others.length) return { kind: 'unsupported', reason: msg('problems.parameter.extra_letters', { p: others.join(', ') }), steps: [] };
     const E = trySimplify(add(node.lhs, neg(node.rhs)));
     let r;
     try {
@@ -349,24 +350,24 @@ export function solveWithParameter(input, opts = {}) {
         if (!(e instanceof MathError)) throw e;
         r = null;
     }
-    if (!r) return { kind: 'unsupported', reason: msg('solve.parameter.this_parameter_problem_is_not_supported'), steps: [] };
+    if (!r) return { kind: 'unsupported', reason: msg('problems.parameter.this_parameter_problem_is_not_supported'), steps: [] };
     let set = IntervalSet.empty();
     for (const { set: s, n } of r.count.values()) if (fits(want, n)) set = set.union(s);
     const summary = [...r.count.values()].filter((z) => !z.set.isEmpty()).sort((u, v) => u.n - v.n);
     const steps = [
         step({
-            title: msg('solve.parameter.problem'),
+            title: msg('problems.parameter.problem'),
             tex: eachLanguage((l) => tex(node, l)),
-            text: msg('solve.parameter.for_which_does_equation_have', { a, want: want.phrase }),
+            text: msg('problems.parameter.for_which_does_equation_have', { a, want: want.phrase }),
         }),
         ...r.steps,
         step({
-            title: msg('solve.parameter.number_of_roots_against_parameter'),
+            title: msg('problems.parameter.number_of_roots_against_parameter'),
             tex: eachLanguage((l) => summary.map((z) => `${a} \\in ${intervalTex(z.set, l)}\\!:\\ ${z.n === Infinity ? '\\infty' : z.n}`).join(';\\quad ')),
         }),
     ];
     const answerTex = eachLanguage((l) => `${a} \\in ${intervalTex(set, l)}`);
-    steps.push(step({ title: msg('solve.parameter.answer'), tex: answerTex }));
+    steps.push(step({ title: msg('problems.parameter.answer'), tex: answerTex }));
     steps[steps.length - 1].final = true;
     return { kind: 'set', set, method: r.method, steps, answer: { tex: answerTex, text: eachLanguage((l) => set.toText(l)) }, text: set.toText(MACHINE) };
 }

@@ -60,7 +60,7 @@ test('every key the code names exists, and every message is used', () => {
     const code = sources();
     const ru = flatten(RU);
     // a key is used when the code names it: msg('key', …) or a key chosen by a condition, msg(c ? 'a' : 'b')
-    const used = new Set([...code.matchAll(/'((?:api|core|algebra|solve|calculus|linalg|numbers|generate)\.[\w.]+)'/g)].map((m) => m[1]));
+    const used = new Set([...code.matchAll(/'((?:api|core|algebra|solve|calculus|linalg|numbers|generate|problems)\.[\w.]+)'/g)].map((m) => m[1]));
     const prefixes = [...code.matchAll(/msg\(`([\w.]+)\.\$\{/g)].map((m) => `${m[1]}.`);
     const missing = [...used].filter((k) => !ru.has(k));
     assert.deepEqual(missing, [], 'keys used in the code but absent from the catalogs');
@@ -90,7 +90,7 @@ test('plural slots follow the rules of each language', () => {
 });
 
 test('messages render lazily, stringify in the default language and serialise in every language', () => {
-    const m = E.msg('solve.parameter.express_parameter');
+    const m = E.msg('problems.parameter.express_parameter');
     assert.equal(m.ru, 'Выражаем параметр');
     assert.equal(m.en, 'Express the parameter');
     assert.equal(`${m}`, 'Выражаем параметр');
@@ -107,15 +107,15 @@ test('a third language joins with one call: its own words, the rest from its bas
         'xx',
         {
             notation: { decimalTex: '{\\cdot}', listTex: ' \\mid ' },
-            solve: { parameter: { express_parameter: 'XX: express %{a}' } },
+            problems: { parameter: { express_parameter: 'XX: express %{a}' } },
             algebra: { values: { answer: 'XX answer' } },
         },
         { base: 'ru' },
     );
     assert.ok(E.LANGUAGES.includes('xx'));
-    const m = E.msg('solve.parameter.express_parameter');
+    const m = E.msg('problems.parameter.express_parameter');
     assert.equal(m.xx, 'XX: express %{a}'.replace('%{a}', ''));
-    assert.equal(E.msg('solve.parameter.problem').in('xx'), 'Задача', 'a missing message comes from the base language');
+    assert.equal(E.msg('problems.parameter.problem').in('xx'), 'Задача', 'a missing message comes from the base language');
     assert.equal(E.toTex(E.parse('2,5'), { lang: 'xx' }), '2{\\cdot}5', 'its own notation');
     assert.equal(E.toTex(E.parse('tan(x)'), { lang: 'xx' }), '\\operatorname{tg} x', 'notation it does not define comes from the base');
     assert.deepEqual(

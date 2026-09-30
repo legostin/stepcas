@@ -4,7 +4,7 @@ import { Q, MathError, bigGcd, bigLcm, bigAbs, bigIsqrt, bigBitLength } from './
 import { num, sym, add, mul, pow, isConst, numValue } from './ast.js';
 import { expand } from './expand.js';
 import { toTex } from './print.js';
-import { numPolyRoots } from '../numbers/numeric/index.js';
+import { numPolyRoots } from './polyroots.js';
 import { msg, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 const MAX_DEG = 10000;

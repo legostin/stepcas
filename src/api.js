@@ -25,7 +25,7 @@ import {
     solveSystem2 as solveSystem20,
     checkRoot as checkRoot0,
 } from './solve/index.js';
-import { solveWithParameter as solveWithParameter0 } from './solve/parameter.js';
+import { solveWithParameter as solveWithParameter0 } from './problems/parameter.js';
 import {
     derivative as derivative0,
     partialDerivative as partialDerivative0,
