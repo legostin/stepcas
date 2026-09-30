@@ -1,10 +1,13 @@
 // stepcas — a computer algebra system that shows its work. Pure ES modules, no DOM; runs in the browser and in node.
 //
-// Layers, each using only the ones above it:
-//   i18n      messages in catalogs, languages, notation
-//   core      numbers (Q), expressions (AST), parse, print, simplify, polynomials, steps
-//   domains   numbers (theory, numerics) · linalg · algebra · solve · calculus · generate
-//   api       the solvers with one contract: {ok, kind, answer, steps, reason, …}
+// Layers, lowest first; a module uses only its own unit and the layers below it, with no import cycles
+// (test/architecture.test.cjs checks both):
+//   i18n        messages in catalogs, languages, notation
+//   core        numbers (Q), expressions (AST), parse, print, simplify, polynomials, steps
+//   domains     numbers (theory, numerics) < linalg < algebra < solve < calculus (derivative < limit < integral,
+//               series < extrema, ode)
+//   tasks       problems (composite school tasks) · generate (task generators)
+//   api         the solvers with one contract: {ok, kind, answer, steps, reason, …}
 // Every exported name is unique (a test checks), so the star re-exports never collide.
 
 // languages
