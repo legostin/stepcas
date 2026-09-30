@@ -1,14 +1,14 @@
 // solve/signs — sign charts: the method of intervals.
 
-import { numDen } from '../core/expand.js';
+import { numDen } from '../core/fractions.js';
 import { Poly } from '../core/poly.js';
 import { Q } from '../core/rational.js';
-import { containsVar } from '../core/ast.js';
+import { containsVar, summands } from '../core/ast.js';
 import { approxNode, approxOf, simp, texB } from './common.js';
 import { relHoldsNum } from './domain.js';
 import { IntervalSet, endOf } from './intervals.js';
 import { solveAnyPoly } from './polynomial.js';
-import { polyLcm, termsOfSum } from './rational.js';
+import { polyLcm } from './rational.js';
 import { mergeRoots, sameRoot } from './roots.js';
 
 // ---------------------------------------------------------------- sign charts (the method of intervals)
@@ -16,7 +16,7 @@ import { mergeRoots, sameRoot } from './roots.js';
 /** Sum of polynomial fractions → {N, L} with E = N / L (L primitive, no cancelling), or null. */
 export function ratParts(E, v) {
     const parts = [];
-    for (const t of termsOfSum(E)) {
+    for (const t of summands(E)) {
         let nd;
         try {
             nd = numDen(t);

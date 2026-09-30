@@ -6,7 +6,7 @@ import { numFindRoots } from '../numbers/numeric/index.js';
 import { simplify } from '../core/simplify.js';
 import { MathError } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
-import { numDen } from '../core/expand.js';
+import { numDen } from '../core/fractions.js';
 import { parse } from '../core/parse.js';
 import { solveAbs } from './abs.js';
 import { N0, S, approxNode, approxOf, close, exactZero, pick, tex } from './common.js';

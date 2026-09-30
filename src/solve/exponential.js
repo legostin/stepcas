@@ -1,12 +1,12 @@
 // solve/exponential — powers of a common base and exponential equations.
 
-import { sym, num, fn, containsVar, mul, add, nodeKey, pow, div, neg, numValue } from '../core/ast.js';
+import { sym, num, fn, containsVar, mul, add, nodeKey, pow, div, neg, numValue, summands } from '../core/ast.js';
 import { Q } from '../core/rational.js';
 import { linearForm, Poly } from '../core/poly.js';
 import { N1, S, approxOf, exactZero, isolated, qGcd, simpOr, tex } from './common.js';
 import { subSolve } from './equation.js';
 import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
-import { solveNodePoly, termsOfSum } from './rational.js';
+import { solveNodePoly } from './rational.js';
 import { mergeRoots } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
 
@@ -76,7 +76,7 @@ export function analyzeExp(E, v) {
     let mixed = false;
     const terms = [];
     const constant = [];
-    for (const t of termsOfSum(E)) {
+    for (const t of summands(E)) {
         if (!containsVar(t, v)) {
             constant.push(t);
             continue;
@@ -107,7 +107,7 @@ export function analyzeExp(E, v) {
 /** a^f · b^f → (ab)^f inside each term (numeric bases), or null when nothing merges. */
 function mergeSameExponent(E, v) {
     let changed = false;
-    const terms = termsOfSum(E).map((t) => {
+    const terms = summands(E).map((t) => {
         if (t.type !== 'mul') return t;
         const groups = new Map();
         const rest = [];

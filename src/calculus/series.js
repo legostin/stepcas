@@ -14,7 +14,7 @@ import { toTex, plainText } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
-import { numDen } from '../core/expand.js';
+import { numDen } from '../core/fractions.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE, wordsPattern } from '../i18n/index.js';
 

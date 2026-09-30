@@ -1,7 +1,8 @@
 // solve/trig — trigonometric equations: families of roots, substitutions, selection on a segment.
 
 import { sym, numValue, add, mul, div, num, fn, neg, rel, containsVar, freeVars, pow, nodeKey } from '../core/ast.js';
-import { collectTerms, numDen } from '../core/expand.js';
+import { collectTerms } from '../core/expand.js';
+import { numDen } from '../core/fractions.js';
 import { Q } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { splitCoeff } from '../core/simplify.js';

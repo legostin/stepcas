@@ -347,3 +347,8 @@ export function numValue(node) {
 export function isNumber(node) {
     return numValue(node) !== null;
 }
+
+/** The terms of a sum (a node that is not a sum is its only term). */
+export function summands(node) {
+    return node.type === 'add' ? node.args : [node];
+}

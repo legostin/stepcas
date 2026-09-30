@@ -1,7 +1,8 @@
 // solve/rational — equations with fractions of polynomials; algebraic equations with irrational coefficients.
 
-import { pow, num, mul, substitute, div, neg, nodeKey } from '../core/ast.js';
-import { numDen, collectTerms } from '../core/expand.js';
+import { pow, num, mul, substitute, div, neg, nodeKey, summands } from '../core/ast.js';
+import { collectTerms } from '../core/expand.js';
+import { numDen } from '../core/fractions.js';
 import { Poly } from '../core/poly.js';
 import { Q } from '../core/rational.js';
 import { N0, S, exactZero, isConstNode, simpOr, tex } from './common.js';
@@ -26,15 +27,11 @@ export function factoredNode(P, v) {
     return parts.length ? (parts.length === 1 ? parts[0] : mul(parts)) : num(f.constant);
 }
 
-export function termsOfSum(n) {
-    return n.type === 'add' ? n.args : [n];
-}
-
 /** f(x) = g(x) with polynomial fractions: common denominator, numerator = 0, poles excluded. */
 export function solveRational(lhs, rhs, E, ctx) {
     const v = ctx.v;
     const parts = [];
-    for (const t of termsOfSum(E)) {
+    for (const t of summands(E)) {
         let nd;
         try {
             nd = numDen(t);

@@ -17,6 +17,7 @@ export * from './core/parse.js';
 export * from './core/print.js';
 export * from './core/simplify.js';
 export * from './core/expand.js';
+export * from './core/fractions.js';
 export * from './core/poly.js';
 export * from './core/equiv.js';
 export * from './core/evaluate.js';

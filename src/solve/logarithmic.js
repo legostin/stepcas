@@ -1,13 +1,13 @@
 // solve/logarithmic — logarithmic equations.
 
 import { Q } from '../core/rational.js';
-import { num, containsVar, numValue, mul, pow, nodeSome, add, fn, div, neg, nodeKey } from '../core/ast.js';
+import { num, containsVar, numValue, mul, pow, nodeSome, add, fn, div, neg, nodeKey, summands } from '../core/ast.js';
 import { Poly } from '../core/poly.js';
 import { N0, N1, S, approxOf, expd, isConstNode, isolated, outermost, simpOr, tex } from './common.js';
 import { subSolve } from './equation.js';
 import { E_SYM, baseInfo, baseNode, isE, logNode, sameBase } from './exponential.js';
 import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
-import { termsOfSum } from './rational.js';
+import {} from './rational.js';
 import { mergeRoots } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
 
@@ -27,7 +27,7 @@ function logInfoOf(f, v) {
 export function analyzeLog(E, v) {
     const vt = [];
     const constant = [];
-    for (const t of termsOfSum(E)) {
+    for (const t of summands(E)) {
         if (!containsVar(t, v)) {
             constant.push(t);
             continue;

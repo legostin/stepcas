@@ -1,10 +1,10 @@
 // solve/radical — irrational equations (roots of the unknown).
 
-import { containsVar, numValue, nodeSome, mul, nodeKey, div, neg, pow, num, substitute } from '../core/ast.js';
+import { containsVar, numValue, nodeSome, mul, nodeKey, div, neg, pow, num, substitute, summands } from '../core/ast.js';
 import { N0, N1, S, approxOf, exactZero, expd, isolated, simpOr, tex } from './common.js';
 import { reject, subSolve } from './equation.js';
 import { pushPart, sumNode } from './polynomial.js';
-import { termsOfSum } from './rational.js';
+import {} from './rational.js';
 import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- radicals (irrational equations)
@@ -32,7 +32,7 @@ export function splitRadicalTerm(t, v) {
 export function solveRadical(lhs, rhs, E, ctx) {
     const v = ctx.v;
     if (ctx.depth > 6) return null;
-    const terms = termsOfSum(E);
+    const terms = summands(E);
     const rads = terms.filter((t) => hasRadical(t, v));
     if (!rads.length) return null;
     // prefer the radical that stands alone on a side of the original equation
@@ -60,7 +60,7 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const qn2 = Number(q);
     const lhs2 = expd(p === 1n ? f : pow(f, num(p))) ?? f;
     const rhs2 = expd(pow(g, num(q))) ?? pow(g, num(q));
-    const gNonNeg = !gConst && hasRadical(g, v) && termsOfSum(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
+    const gNonNeg = !gConst && hasRadical(g, v) && summands(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
     const powWord = qn2 === 2 ? msg('solve.radical.squared') : qn2 === 3 ? msg('solve.radical.cubed') : msg('solve.radical.to_power', { qn2 });
     steps.push(
         S(msg('solve.radical.raise_both_sides', { p: powWord }), {

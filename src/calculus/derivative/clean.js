@@ -5,7 +5,8 @@ import { nodeChildren, nodeKey, freeVars, num, mul, mapNode, sym, pow, isConst, 
 import { splitCoeff, canonContext, simplify } from '../../core/simplify.js';
 import { Q, bigGcd, bigLcm, MathError } from '../../core/rational.js';
 import { Poly } from '../../core/poly.js';
-import { combineFractions, expand } from '../../core/expand.js';
+import { expand } from '../../core/expand.js';
+import { combineFractions } from '../../core/fractions.js';
 import { N0, N1, NM1, agree, calcTex, isNum, negLeading, prettyForm } from './display.js';
 import { DEFAULT_LANGUAGE } from '../../i18n/index.js';
 

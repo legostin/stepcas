@@ -2,7 +2,7 @@
 // the generalised method of intervals as the last resort.
 
 import { bigLcm, Q, MathError } from '../core/rational.js';
-import { nodeKey, num, add, neg, containsVar, rel, nodeSome, numValue, div, pow, sym, mapNode, mul, freeVars } from '../core/ast.js';
+import { nodeKey, num, add, neg, containsVar, rel, nodeSome, numValue, div, pow, sym, mapNode, mul, freeVars, summands } from '../core/ast.js';
 import { Poly, linearForm } from '../core/poly.js';
 import { simplify, splitCoeff } from '../core/simplify.js';
 import { collectTerms } from '../core/expand.js';
@@ -15,7 +15,7 @@ import { IntervalSet, cmpEnd, endOf, intervalTex, intervalText, relToSet } from 
 import { analyzeLog } from './logarithmic.js';
 import { isZeroNode, monoNode, polyTex, quadSolve, solveAnyPoly, sumNode } from './polynomial.js';
 import { hasRadical, splitRadicalTerm } from './radical.js';
-import { factoredNode, termsOfSum } from './rational.js';
+import { factoredNode } from './rational.js';
 import { mergeRoots, rootsTex } from './roots.js';
 import { chartOf, chartOut, ratParts, realRootsMult, setFromChart, signSet } from './signs.js';
 import { casesTex } from './systems.js';
@@ -287,7 +287,7 @@ function ineqCore(lhs, op, rhs, ctx) {
 /** A single even root against a constant: √f op c. */
 function radIneq(E, op, ctx) {
     const v = ctx.v;
-    const terms = termsOfSum(E);
+    const terms = summands(E);
     const rads = terms.filter((t) => hasRadical(t, v));
     if (rads.length !== 1) return null;
     const sp = splitRadicalTerm(rads[0], v);
@@ -522,7 +522,7 @@ function absIneq(E, op, ctx) {
 // p·b^f − q·b^g op 0 with q/p a power of b: b^f op b^(g + m) → f op g + m (by the monotonicity of b^t)
 function twoPowersIneq(E, op, ctx) {
     const v = ctx.v;
-    const ts = termsOfSum(E);
+    const ts = summands(E);
     if (ts.length !== 2) return null;
     const parts = ts.map((t) => {
         const { coef, rest } = splitCoeff(t);

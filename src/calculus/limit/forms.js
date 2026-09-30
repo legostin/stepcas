@@ -4,7 +4,8 @@
 import { prettyForm, ratFunctionOf, calcTex, niceForm, quickDerivative } from '../derivative/index.js';
 import { nodeKey, num, sym, div, mul, pow, add, neg, fn, containsVar, isConst, substitute } from '../../core/ast.js';
 import { step } from '../../core/steps.js';
-import { expand, combineFractions } from '../../core/expand.js';
+import { expand } from '../../core/expand.js';
+import { combineFractions } from '../../core/fractions.js';
 import { Poly } from '../../core/poly.js';
 import { toText } from '../../core/print.js';
 import { splitCoeff } from '../../core/simplify.js';
