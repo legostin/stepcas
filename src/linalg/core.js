@@ -2,7 +2,6 @@
 
 import { Q } from '../core/rational.js';
 import { fail, qt } from './common.js';
-import { matPower } from './eigen.js';
 import { msg } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- the Matrix class
@@ -147,8 +146,19 @@ export class Matrix {
         return this.a.reduce((s, r, i) => s.add(r[i]), Q.ZERO);
     }
 
+    /** Aⁿ for a whole n ≥ 0 by repeated squaring (a negative power needs the inverse: matPower). */
     pow(n) {
-        return matPower(this, n);
+        if (!this.isSquare()) throw fail(msg('linalg.core.power_is_defined_for_square_matrices'), 'shape');
+        let N = BigInt(n);
+        if (N < 0n) throw fail(msg('linalg.core.negative_power_needs_inverse'), 'domain');
+        let base = this;
+        let result = Matrix.identity(this.rows);
+        while (N > 0n) {
+            if (N & 1n) result = result.mul(base);
+            N >>= 1n;
+            if (N) base = base.mul(base);
+        }
+        return result;
     }
 
     /** [A | B] */

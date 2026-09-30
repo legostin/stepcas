@@ -13,6 +13,8 @@ export default {
         cannot_multiply_matrix_by_one_columns:
             'Нельзя умножить матрицу %{rows}×%{cols} на %{rows2}×%{cols2}: число столбцов первой должно равняться числу строк второй.',
         trace_is_defined_for_square_matrices: 'След определён только для квадратной матрицы.',
+        power_is_defined_for_square_matrices: 'Степень определена только для квадратной матрицы.',
+        negative_power_needs_inverse: 'Для отрицательной степени нужна обратная матрица.',
         matrices_have_different_numbers_of_rows: 'У матриц разное число строк.',
         is_defined_for_square_matrices_only: '%{p} определён только для квадратной матрицы.',
     },

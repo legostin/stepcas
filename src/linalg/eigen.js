@@ -420,11 +420,5 @@ export function matPower(A, n) {
         if (!base) throw fail(msg('linalg.eigen.matrix_is_singular_negative_powers_do'), 'singular');
         N = -N;
     }
-    let result = Matrix.identity(A.rows);
-    while (N > 0n) {
-        if (N & 1n) result = result.mul(base);
-        N >>= 1n;
-        if (N) base = base.mul(base);
-    }
-    return result;
+    return base.pow(N);
 }

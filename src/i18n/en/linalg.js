@@ -11,6 +11,8 @@ export default {
         cannot_multiply_matrix_by_one_columns:
             'Cannot multiply a %{rows}×%{cols} matrix by a %{rows2}×%{cols2} one: the columns of the first must match the rows of the second.',
         trace_is_defined_for_square_matrices: 'The trace is defined for square matrices only.',
+        power_is_defined_for_square_matrices: 'A power is defined for square matrices only.',
+        negative_power_needs_inverse: 'A negative power needs the inverse matrix.',
         matrices_have_different_numbers_of_rows: 'The matrices have different numbers of rows.',
         is_defined_for_square_matrices_only: '%{p} is defined for square matrices only.',
     },
