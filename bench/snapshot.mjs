@@ -43,10 +43,14 @@ for (const f of fs.readdirSync(path.join(here, 'gen')).filter((x) => x.endsWith(
 
 const LANGS = ['ru', 'en'];
 // a bilingual value (a {ru, en} object, a message with language getters, or a plain string) → {ru, en}
+// the same text in every language collapses to a string, so the record does not depend on how it is stored
 const text = (x) => {
     if (x == null) return undefined;
     if (typeof x === 'string') return x;
-    if (typeof x === 'object' && LANGS.every((l) => l in x || typeof x[l] === 'string')) return Object.fromEntries(LANGS.map((l) => [l, x[l]]));
+    if (typeof x === 'object' && LANGS.every((l) => l in x || typeof x[l] === 'string')) {
+        const v = LANGS.map((l) => x[l]);
+        return v.every((s) => s === v[0]) ? v[0] : Object.fromEntries(LANGS.map((l, i) => [l, v[i]]));
+    }
     return String(x);
 };
 const stepOut = (s) => ({ title: text(s.title), tex: text(s.tex), text: text(s.text), rule: s.rule, final: s.final || undefined, sub: s.sub?.map(stepOut) });
@@ -79,7 +83,7 @@ const ser = (x, depth = 0) => {
         }
     }
     if (Array.isArray(x)) return x.map((y) => ser(y, depth + 1));
-    if (LANGS.every((l) => typeof x[l] === 'string')) return Object.fromEntries(LANGS.map((l) => [l, x[l]]));
+    if (LANGS.every((l) => typeof x[l] === 'string')) return text(x);
     const o = {};
     for (const k of Object.keys(x).sort()) o[k] = ser(x[k], depth + 1);
     return o;
