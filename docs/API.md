@@ -1,9 +1,8 @@
-# Math engine (`resources/js/math/engine`)
+# stepcas API
 
-Pure ES modules, zero dependencies, no DOM; runs in browsers and in node 24.
-`import * as E from '../engine/index.js'`. Every exported name is unique across all modules (star
-re-exports drop collisions silently — `tests/Js/math-engine-core.test.cjs` checks it). Tests:
-`node --test tests/Js/math-engine-core.test.cjs`.
+Pure ES modules, zero dependencies, no DOM; runs in browsers and in node ≥ 20.
+`import * as E from 'stepcas'` (or `./src/index.js`). Every exported name is unique across all modules
+(star re-exports drop collisions silently — a test checks it). Tests: `npm test`.
 
 ## Conventions for every module
 
@@ -765,7 +764,8 @@ is returned; nothing unchecked is ever shown as exact.
 ### Known limits of the calculus modules
 
 - Integrals: no Euler substitutions, no x = a/cos t for √(x² − a²)·R(x), no partial fractions with
-  factors irreducible over Q of degree ≥ 3 or real-reducible quartics such as x⁴ + 1, none with
+  factors irreducible over Q of degree ≥ 3 (the even quartic x⁴ + px² + q alone goes through
+  t = x ∓ √q/x), none with
   symbolic coefficients, no reduction for (Bx+C)/qᵏ when q has real irrational roots, no hyperbolic
   power reduction; sh/ch only through the table and parts; x·tg x, √(sin x) and the like are refused.
   Answers are valid on each interval of the domain (C may differ between intervals, e.g. after
@@ -777,3 +777,76 @@ is returned; nothing unchecked is ever shown as exact.
   functions without a factor tending to 0 give 'dne'; limits with parameters work symbolically but
   are not cross-checked numerically (`verified: false`).
 - Definite integrals need numeric bounds and no other letters; numeric fallbacks are approximate.
+
+## School solutions: values, extrema, algebra
+
+### evalsteps.js — `evaluateSteps(input, {lang, maxSteps = 40})`
+
+The value of a numeric expression the way a school solution goes (ЕГЭ task 7): one named rule per step,
+«before = after» with the reason → `{value, approx, exact, steps}`. Rules: logs of one base added or
+subtracted, change of base, `a^(log_a b) = b` (also for a power of the base), `log_a(a^k)`, powers brought to
+one base or to primes, a power of a power, rational powers, roots (products, squares, factors out, denesting
+√(a ± k√b)), the difference of squares both ways, the square of a sum, reduction formulas with the chain shown
+(degrees stay degrees), co-functions, the double angle, lowering the power; arithmetic one layer at a time. A
+step that would change the value is never taken; the value is always the engine's exact one.
+
+### extrema.js
+
+- `extremeOnSegment(f, v, a, b, {kind})` → `{kind, value, at, max, min, candidates, steps, tex}` — the greatest
+  or least value on [a; b]: the derivative, critical points (corners of |u| too), the table of values.
+- `extremePoints(f, v)` → `{max, min, critical, steps, derivative}` — points of extremum by the sign of f′.
+- `exactGuess(x)` — a float back to p/q, pπ/q, √n/q, e^(p/q), ln n/d when it is one.
+
+### algebra.js — polynomials in one variable
+
+- `factorSteps(input)` → `{result, steps, factors, constant}`: the common factor, the difference of squares
+  (x⁴ − 16 too), the sum/difference of cubes, a perfect square, a quadratic through its roots (a fractional
+  root goes into its bracket: 2x − 1), a rational root divided out (Horner). Checked by multiplying back.
+- `expandSteps(input)` → `{result, steps}`: the square/cube of a sum, the difference of squares, distribution,
+  then like terms.
+- `simplifySteps(input)` → `{result, steps, restrictions}`: a fraction of polynomials factored and reduced,
+  with the excluded values and integer coefficients on both floors; a polynomial is expanded.
+
+## Equations beyond one unknown
+
+### param.js — `solveWithParameter(input, {param = 'a', v = 'x', want})`
+
+`want`: `'two-roots' | 'one-root' | 'no-roots' | 'has-roots' |` a number. `input` may be a string or
+`{task, param, want}` → `{kind: 'set', set: IntervalSet, method, steps, answer, text}`. A quadratic in x with
+coefficients in a goes through the leading coefficient and the discriminant; anything linear in a goes the
+graphical way (a = g(x), monotone pieces, limits at the ends, the count for every level).
+
+### ode.js — `solveOde("y' + y = x; y(0) = 1")`
+
+→ `{kind: 'solution' | 'general' | 'unsupported', expr, general, type, steps, tex, text}`. First order:
+y′ = f(x), separable, linear (integrating factor), homogeneous (y = ux). Second order a·y″ + b·y′ + c·y = f with
+constant coefficients: the characteristic equation; f = P(x)e^(αx)cos/sin βx by undetermined coefficients
+(resonance adds xˢ), anything else by variation of parameters. Initial conditions after «;» fix the constants;
+every particular answer is substituted back.
+
+### series.js — `sumSeries("sum(1/(k(k + 1)), k, 1, inf)")`
+
+→ `{kind: 'value' | 'diverges' | 'approx' | 'unsupported', value, approx, type, steps, text}`. Finite:
+arithmetic progressions, power sums (Faulhaber to k³), geometric, term by term. Infinite: geometric,
+arithmetico-geometric (P(k)qᵏ, deg ≤ 2), telescoping (partial fractions, S_n shown), a table of classic sums
+up to a factor and the start; divergence by the necessary condition, the harmonic comparison, p ≤ 1. A numeric
+estimate only with a convergence argument (Leibniz, or |t| ≤ c/kᵖ with p > 1).
+
+### solve.js additions
+
+- `domainSet(input, v)` — the domain of a function as an IntervalSet (null when it cannot be found exactly).
+- Inequalities also go through: a sum of logs with one base as one log, a polynomial in one log (t = log f),
+  and the generalised method of intervals as the last resort (zeros from `solveEquation`, the sign checked at
+  five points per interval; any disagreement refuses).
+- Equations: a fraction with a non-polynomial denominator is zero when its numerator is.
+
+## Task generators — generate.js
+
+- `TASK_KINDS` — 26 families: linear/quadratic/exponential/logarithmic/radical/rational/abs equations,
+  trigonometric equations with roots on a segment, quadratic/rational/log/exp inequalities, values (logs,
+  powers, trigonometry), extrema, definite integrals, antiderivatives, linear and nonlinear systems, factoring,
+  reducing fractions, ODEs, geometric series, parameters, limits.
+- `generateTask(kind, {seed, level})` → `{family, level, seed, op, task, prompt: {ru, en}, answer, …}` — built
+  backwards from the answer (roots → equation), never through the solver; the same seed gives the same task.
+  Level 1: small integers; 2: wider ranges and the usual traps; 3: fractions.
+- `generateSet(kind, {count, seed, level})` — a reproducible batch without duplicates.
