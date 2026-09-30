@@ -8,14 +8,19 @@ import { solveEquation, evaluateSteps, integrate, solveOde, solveWithParameter }
 
 solveEquation('log_2(x + 3) = 5').answer.text;            // "29"
 evaluateSteps('36^(log_6(5))').steps;                       // 36 = 6², a^(log_a b) = b, … = 25
-integrate('1/(x^4 + 1)', 'x', { steps: true }).steps;      // split along x² ± 1, t = x ∓ 1/x, …
+integrate('1/(x^4 + 1)').steps;                             // split along x² ± 1, t = x ∓ 1/x, …
 solveOde("y'' + y = x; y(0) = 0; y'(0) = 0").text;         // "x - sin(x)"
 solveWithParameter({ task: 'x^3 - 3x = a', want: 3 }).text; // "(-2, 2)"
 ```
 
-Every result carries `steps`: `{title: {ru, en}, tex, text?: {ru, en}, sub?}`. Each step names the rule it
-used and gives the formula in TeX, the way a teacher would write it on the board. Answers are exact (BigInt
-rationals, radicals, π, e). When an answer is only numeric, it is marked as approximate.
+Every solver returns the same shape: `{ok, kind, answer: {tex, text}, steps, …}`, or `{ok: false, kind:
+'invalid' | 'unsupported', reason}` when there is no answer. It never throws on what a person types. Each step
+names the rule it used and gives the formula in TeX, the way a teacher would write it on the board. Answers are
+exact (BigInt rationals, radicals, π, e). When an answer is only numeric, it is marked as approximate.
+
+Texts are messages, rendered in any registered language: `r.steps[0].title.en`, `localize(r, 'ru')`. Russian
+and English are built in. A new language is one catalog and one call, `registerLanguage('kk', catalog, {base:
+'ru'})`, with no change to the code.
 
 ## What it covers
 
@@ -36,9 +41,10 @@ rationals, radicals, π, e). When an answer is only numeric, it is marked as app
   eigenvalues, least squares.
 - **Number theory**: gcd/lcm, primes and factorisation, congruences.
 - **Task generators**: 26 families of exam-style tasks built backwards from their answers, with a seed, a level
-  (1–3) and RU/EN wording. They are meant for trainers and tests.
+  (1–3) and wording in every language. They are meant for trainers and tests.
 
-The full API is in [docs/API.md](docs/API.md).
+The full API is in [docs/API.md](docs/API.md). How the engine is built — its layers, the result contract, the
+step model, languages and the tests that hold it together — is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## The bench
 
@@ -61,7 +67,7 @@ cannot solve something to guessing: numeric fallbacks are labelled as such, and 
 answers by substituting them back.
 
 ```sh
-npm test                 # 499 unit tests
+npm run check            # lint, formatting and 514 tests (architecture, i18n and the result contract included)
 npm run bench            # the corpus → bench/REPORT.md
 node bench/gen.mjs       # rebuild the generated part from fixed seeds
 npm run bench:verify     # recheck the expected answers with SymPy (needs bench/.venv with sympy)

@@ -1,29 +1,56 @@
 # stepcas API
 
-Pure ES modules, zero dependencies, no DOM; runs in browsers and in node ≥ 20.
-`import * as E from 'stepcas'` (or `./src/index.js`). Every exported name is unique across all modules
-(star re-exports drop collisions silently — a test checks it). Tests: `npm test`.
+Pure ES modules with zero dependencies and no DOM. The engine runs in browsers and in Node ≥ 20. Import it as
+`import * as E from 'stepcas'` (or from `./src/index.js`). Every exported name is unique across the package, and
+a test checks it. How the engine is built, including its layers, the step model and languages, is described in
+[ARCHITECTURE.md](ARCHITECTURE.md). The sections below follow the layers from the bottom up; each heading names
+the module under `src/`.
 
 ## Conventions for every module
 
-- **Errors** are `MathError` (from rational.js): `.msg = {ru, en}`, `.message` = English text,
-  `.pos`/`.len` (position in the parsed string, when there is one), `.code` (`syntax`, `brackets`,
-  `empty`, `no-arg`, `arity`, `unknown-fn`, `unsupported`, `div0`, `too-big`, `unbound`, `nan`,
-  `not-expr`, …). Anything a stranger can type ends in a node or a `MathError`, never another
-  exception.
-- **Nodes are immutable** frozen plain objects (ast.js). Never mutate; build new ones.
-- **Exact numbers** are `Q` (BigInt rationals); floats appear only in evaluate/compile/Complex.
-- **Canonical form** is what `simplify()` returns (see simplify.js); `canon*` constructors keep it.
-- **Languages**: RU is the default everywhere (`lang: 'ru' | 'en'`). RU: tg, ctg, arctg, arcctg,
-  sh/ch/th, lg, decimal comma (`2{,}5` in TeX), list separator `;`. EN: tan, cot, arctan, sinh,
-  `\log_{10}`, `2.5`, `,`.
-- **Steps** (steps.js): `{title: {ru, en}, tex?: string | {ru, en}, text?: {ru, en}, rule?: string,
-  sub?: Step[]}` — rendered by kit/steps.js.
+- **Results of the solvers** follow one contract (`api.js`): `{ok, kind, answer: {tex, text} when ok, reason when
+  not, steps, …the solver's own fields}`. A failure has `kind` `'invalid'` (the input does not parse; `pos` and
+  `len` point into it) or `'unsupported'`. Steps are on by default. The table at the end lists each solver's
+  kinds. Calculators (`nt*`, `num*`, `mat*`, …) return a bare value, or `{value, steps}` with `{steps: true}`.
+- **Errors** inside the engine are `MathError` (`core/rational.js`). `.msg` is a message, `.message` is its
+  English text, `.pos`/`.len` give the position in the parsed string when there is one, and `.code` is one of
+  `syntax`, `brackets`, `empty`, `no-arg`, `arity`, `unknown-fn`, `unsupported`, `div0`, `too-big`, `unbound`,
+  `nan`, `not-expr`, …. Anything a stranger types ends in a node or a `MathError`, never in another exception.
+  The API layer turns it into `{ok: false}`.
+- **Nodes are immutable** frozen plain objects (`core/ast.js`). Never mutate them; build new ones.
+- **Exact numbers** are `Q` (BigInt rationals). Floats appear only in evaluate/compile/Complex and in the
+  numeric calculators.
+- **Canonical form** is what `simplify()` returns (see `core/simplify.js`). The `canon*` constructors keep it.
+- **Languages.** Texts are messages (see i18n below), rendered in any registered language: `m.ru`, `m.en`,
+  `m.in(lang)`, `localize(result, lang)`. Functions that print or read take `lang`, and the default is `'ru'`.
+  Russian writes tg, ctg, arctg, arcctg, sh/ch/th, lg, a decimal comma (`2{,}5` in TeX) and `;` between items.
+  English writes tan, cot, arctan, sinh, `\log_{10}`, `2.5` and `,`.
+- **Steps**: `{title: Msg, tex?: string | {lang: string}, text?: Msg, rule?: string, data?: object, sub?: Step[],
+  final?: true}`, built by `step()` (`core/steps.js`). `data` holds a step's facts for programs (a row operation,
+  a table).
 
-## rational.js
+## i18n — messages and languages
 
-- `class MathError extends Error` — `new MathError({ru, en}, pos?, len?, code?)` or
-  `new MathError(msg, {pos, len, code})`; `.text(lang)`.
+- `msg(key, params?)` → `Msg`, a frozen message rendered on demand: `.ru`, `.en`, `.in(lang)`, `toString()` (the
+  default language), and `toJSON()` (every language). Keys are `domain.module.name`, and templates live in
+  `src/i18n/<lang>/<domain>.js`. `perLanguage(fn)` makes a message from `fn(lang)`, `verbatim(text)` makes one
+  that reads the same in every language, and `joined(list, sep)` joins messages.
+- `localize(value, lang)` replaces every message (and `{lang: …}` value) in a result tree with its text.
+  `inLanguage(value, lang)` renders one value, `allLanguages(value)` gives `{lang: text}` for all languages,
+  `eachLanguage(fn, {compact = true})` gives `{lang: fn(lang)}` (a plain value when all agree), and
+  `sameText(a, b)` compares two texts in every language.
+- `registerLanguage(code, catalog, {base})` adds or extends a language, and the missing keys come from `base`.
+  `LANGUAGES`, `DEFAULT_LANGUAGE` (`'ru'`), `MACHINE` (`'en'`: the notation of machine-readable text),
+  `resolveLanguage(lang)`.
+- `notation(lang)` is how the language writes mathematics: separators, interval brackets, function names, the
+  identity matrix, and the words people type in answers. Related: `decimalIn(s, lang, {tex})`,
+  `wordsPattern(notion)`, `lookalikes()`.
+
+## core/rational.js
+
+- `class MathError extends Error` — `new MathError(message, pos?, len?, code?)` or
+  `new MathError(message, {pos, len, code})`. The message is a `msg(…)`, a string or a `{lang: text}` object;
+  `.msg` keeps it, `.message` is its machine (English) text, `.text(lang)` renders it.
 - `class Q` — `new Q(n, d = 1n)` (bigint or integer number; reduced, d > 0; d = 0 → MathError
   `div0`). `Q.of(x)`: Q | bigint | number (integers, finite decimals through the shortest decimal
   string: `0.1` → 1/10) | string (`"3/4"`, `"-2.5"`, `"2,5"`, `"1e-3"`, `"0.(3)"` periodic,
@@ -40,7 +67,7 @@ Pure ES modules, zero dependencies, no DOM; runs in browsers and in node ≥ 20.
   n = out^k · in, `in` free of k-th powers (trial division to 10⁵ plus an exact perfect-power test of
   the rest — for gigantic n with two big equal primes `in` may keep a square).
 
-## ast.js
+## core/ast.js
 
 Node shapes (all frozen):
 
@@ -69,15 +96,18 @@ Utilities: `CONSTANT_NAMES` (Set), `FUNCTION_NAMES` (Map name → arity), `isCon
 name)`, `nodeSome(node, pred)`, `nodeChildren(node)`, `withChildren(node, kids)`, `mapNode(node, f)`
 (post-order; `f` returns a replacement or undefined), `substitute(node, {x: 2, y: node})` (variables
 only), `nodeSize(node)`, `numValue(node)` (exact Q of a numeric literal: nums with + − · / and integer
-powers, else null), `isNumber(node)`.
+powers, else null), `isNumber(node)`, `summands(node)` (the terms of a sum; any other node is its only term).
 
-## parse.js
+## core/parse.js
 
-`parse(text, opts?)` → node (throws MathError with a bilingual message and `pos`/`len`);
-`tryParse(text, opts?)` → `{ok: true, node}` | `{ok: false, error}`.
+`parse(text, opts?)` → node (throws MathError with a message and `pos`/`len`);
+`tryParse(text, opts?)` → `{ok: true, node}` | `{ok: false, error}`;
+`asNode(x, opts?)` — what the engine's functions accept as an expression: a node as it is, a string parsed, a
+number/bigint/Q as a number node, ±Infinity as ±∞.
 Options: `vars: ['i', 'speed', 'x1']` (extra variable names; constants listed here become ordinary
-variables), `foldCase: true` (X → x), `lang: 'en'` (a comma before exactly three digits is a
-thousands separator: `1,000` = 1000), `maxLength` (default 2000 characters).
+variables), `foldCase: true` (X → x), `lang` (a language whose notation reads a comma before exactly three digits
+as a thousands separator — English: `1,000` = 1000), `maxLength` (default 2000 characters). Look-alike letters of
+other keyboard layouts come from the notation of every registered language.
 
 What it reads:
 
@@ -122,7 +152,7 @@ What it reads:
   in place (∓: minus first): `±2` → `2; -2`, `x = 1 ± √2` → `x = 1 + √2; x = 1 - √2`, `(1 ± √5)/2` →
   two fractions, `1 ± 2 + 3` → `1 + 2 + 3; 1 - 2 + 3`. Items are split at separators outside brackets (and
   inside brackets that wrap the whole input: `{1 ± 1; 7}`). Two ± in one item → MathError `unsupported`.
-  `+-` is not ± here (it stays `a + (−b)`); kit/check.js reads `+-` as ± too and splits answers the same way.
+  `+-` is not ± here (it stays `a + (−b)`).
 
 Not read (clear errors): primes `f'(x)`, intervals `[1; 2)` as intervals (brackets must match),
 `d/dx`, sums/limits/integrals notation.
@@ -136,7 +166,7 @@ the body's letter: `opts.v`, then x, t, y, z, u, v, w, s, n, k, else the first a
 the whole text; an equation that defines no function (`x^2 + y^2 = 1`, `x = 3`, `y = x + y`), an
 inequality or a list → MathError `not-expr`.
 
-## print.js
+## core/print.js
 
 - `toTex(node, {lang = 'ru', mulDot = false, decimals = false, roots = false})` — KaTeX-ready TeX.
   Minimal brackets by precedence; `a + (−b)` and `a + (−2)·b` print as `a - b`, `a - 2b`. Implicit
@@ -174,7 +204,7 @@ inequality or a list → MathError `not-expr`.
   digits with trailing zeros dropped, huge/tiny ones as `1{,}5 \cdot 10^{-7}`; `group` adds `\,`
   thousands; NaN → `\text{—}`, Infinity → `\infty`, −Infinity → `-\infty`.
 
-## simplify.js
+## core/simplify.js
 
 `simplify(node, {complex = false, mainVar})` → canonical node. Idempotent (tested on fuzz), never
 expands products of sums, has a work budget (runaway input → MathError `too-big`); explicit division
@@ -239,7 +269,7 @@ Not done by simplify (on purpose): expanding, factoring, cancelling rational fun
 `combineFractions`), log rules like ln(xy) = ln x + ln y, trig identities beyond sin² + cos² and the
 reduction formulas.
 
-## expand.js
+## core/expand.js, core/fractions.js
 
 - `expand(node, {complex})` — simplify, then distribute products over sums and expand positive
   integer powers of sums (binomial formula for two terms, repeated multiplication otherwise),
@@ -251,7 +281,7 @@ reduction formulas.
   are numbers; 0.5 for √x, −1 for 1/x; coefficients may contain other letters); a relation is taken
   as lhs − rhs; null when the variable occurs non-polynomially (sin x). E.g. `(x+a)^2 = 2x` →
   {2: 1, 1: 2a − 2, 0: a²}.
-- `combineFractions(node, {cancel = true})` (alias `rationalize`) — one fraction over the common
+- `combineFractions(node, {cancel = true})` (alias `rationalize`; `core/fractions.js`) — one fraction over the common
   denominator as a `div` node (a plain node when the denominator is 1): numerator expanded,
   denominator factored; with one variable and several different denominators the common denominator is the
   least one built from their factors over Q (`1/x + 1/(x²−x) − 2` → over x(x − 1), also with
@@ -260,7 +290,7 @@ reduction formulas.
   `(x²−1)/(x−1)` → x + 1. Relations/lists side by side.
 - `numDen(node)` → `{num, den}` (canonical nodes; den = 1 without a fraction).
 
-## poly.js
+## core/poly.js
 
 `class Poly` — univariate, coefficients `c[k]` of x^k (Q), immutable.
 
@@ -291,7 +321,7 @@ reduction formulas.
   included), constant: Q}` with node = Σ coeffs·var + constant (for a relation: of lhs − rhs), or null
   if not linear with rational coefficients (other letters → null).
 
-## equiv.js
+## core/equiv.js
 
 - `equivalent(a, b, {vars, complex, tol = 1e-9, seed})` — nodes or strings (parsed with the same
   options). 1) exact: `expand(simplify(a − b))` is 0 → true; a nonzero polynomial with rational
@@ -312,7 +342,7 @@ reduction formulas.
 - `sameSet(listA, listB, {multiset = false})` — arrays of values or list nodes / `"1; 2"` strings,
   order-free, duplicates ignored unless `multiset`; items with variables go through `equivalent`.
 
-## evaluate.js, complex.js
+## core/evaluate.js, core/complex.js
 
 - `evaluate(node, env = {}, {complex = false})` — env values: numbers, Q, bigint (Complex in complex
   mode). Real mode returns a number and **NaN for anything undefined** (√−1, ln 0, 1/0, 0⁻¹,
@@ -330,20 +360,22 @@ reduction formulas.
   isNaN equals(b, eps)`; `toString(lang = 'en', digits = 6)` → `3 + 2i`, `-i`, `2,5 - 1,5i`;
   `toTex(lang = 'ru', digits = 6)` → `2{,}5 + i`.
 
-## random.js, steps.js
+## core/random.js, core/steps.js, core/safe.js
 
 - `rng(seed)` (number or string) → `{seed, next() ∈ [0, 1), int(a, b) (inclusive), real(a, b),
   pick(arr), shuffle(arr) (a copy), sign(), nonZero(a, b), chance(p), sample(arr, k)}` — mulberry32,
   same seed → same sequence.
-- `L(ru, en = ru)` → `{ru, en}`; `step({title, tex, text, rule, sub})` → normalised step (`title`/`text`
-  strings become `{ru, en}`; `tex` may be a string, `{ru, en}` or an AST node, printed for both
-  languages and collapsed to one string when they agree; empty `sub` dropped); `texBoth(node, opts)`
-  → string | `{ru, en}`; `pickLang(value, lang)`.
+- `step({title, tex, text, rule, data, sub, final})` → a step. Titles and texts given as strings or
+  `{lang: text}` objects become messages, and `tex` may be a string, `{lang: tex}`, an AST node or a message,
+  rendered in every language and collapsed to one string when they agree. An empty `sub` and empty `data` are
+  dropped. Related: `texBoth(node, opts)` → string | `{lang: tex}`, and `pickLang(value, lang)`.
+- `trySimplify(node)` (the node unchanged when it cannot be simplified), `approx(node, env)` (NaN when there is
+  no real value): total versions for solver code.
 
 ## Examples
 
 ```js
-import * as E from '../engine/index.js';
+import * as E from 'stepcas';
 const n = E.parse('x²−5x+6=0');                  // rel(=, x^2 - 5x + 6, 0)
 E.toTex(n);                                       // 'x^{2} - 5x + 6 = 0'
 E.Poly.fromNode(n).rationalRoots();               // [{root: 2, mult: 1}, {root: 3, mult: 1}]
@@ -353,6 +385,7 @@ E.equivalent('ln(x^2)', '2ln|x|');                // true
 E.toTex(E.parse('tg x'), { lang: 'en' });         // '\tan x'
 const f = E.compile(E.parse('x^3 - x'));          // f(2) === 6
 E.tryParse('sqr(x)').error.msg.ru;                // 'Функция «sqr» здесь не поддерживается'
+E.solveEquation('x^2 = 4').answer.text.en;        // '-2, 2'
 ```
 
 ## Known limits of the core
@@ -371,22 +404,19 @@ E.tryParse('sqr(x)').error.msg.ru;                // 'Функция «sqr» з�
 - `equivalent` is exact for polynomials and probabilistic (24 points, 1e-9) otherwise; functions that
   differ only on tiny sets or beyond |x| = 40 can pass.
 
-<!-- Sections below: numtheory.js, numeric.js, matrix.js (written by the numbers/matrices agent). -->
-
-## Conventions of numtheory.js, numeric.js, matrix.js
+## Calculators: numbers/theory, numbers/numeric, linalg
 
 - **Steps:** a function returns its bare value; with `{steps: true}` it returns `{value, steps, …}`.
   Functions whose natural result is already an object (`ntEgcd`, `ntCrt`, `matSolve`, `matEigen`, …)
-  just gain a `steps` field. Step = `{title: {ru, en}, tex?: string | {ru, en}, text?: {ru, en},
-  rule?, sub?}` (the shape of steps.js); every step has a TeX line where there is something to show,
-  and the text says what we do and why. Empty `sub` is omitted.
+  just gain a `steps` field. Steps have the shape of `core/steps.js`; every step has a TeX line where there is
+  something to show, and the text says what we do and why. Tables and row operations are in `step.data`.
 - **Numbers in TeX:** integers from five digits on are grouped with `\,` (`600\,851\,475\,143`);
   in plain text with a narrow no-break space. RU decimals use `{,}` in TeX and `,` in text.
-- **Errors:** invalid input throws `MathError` with `.msg = {ru, en}` and a `.code`
+- **Errors:** invalid input throws `MathError` with a message and a `.code`
   (`not-int`, `modulus`, `base`, `digit`, `shape`, `singular`, `no-sign-change`, `domain`, `too-big`, …).
 - **Indices:** 0-based in data (`i`, `j`, `index`), 1-based in explanations (R₁, x₁, M₁₂).
 
-## numtheory.js — number theory on BigInt
+## numbers/theory — number theory on BigInt
 
 Inputs: BigInt, integer numbers, digit strings (`'600 851 475 143'`), Q; where a fraction makes
 sense also `'1/3'`, `'0,1'`, `'0.(3)'`, numbers like `0.1` (read by their decimal form). Outputs: BigInt.
@@ -416,7 +446,7 @@ sense also `'1/3'`, `'0,1'`, `'0.(3)'`, numbers like `0.1` (read by their decima
 | `ntCrt(residues, moduli)` | `{solvable: true, x, m}` (m = lcm) or `{solvable: false, conflict: i}`; non-coprime moduli handled | + substitution steps (small moduli solved by trying values) |
 | `ntOrder(a, m)`, `ntPrimitiveRoot(m)` | BigInt / null | — |
 | `ntRsaKey(p, q, {e?})` | `{n, phi, e, d}` (e = 65537 or the smallest valid odd e) | + steps |
-| `ntToBase(x, base)` | string: `'-ABC'`, `'0.0(0011)'` (period in brackets, `…` when cut at `maxDigits`, 60) | `{value, int, pre, period, truncated, negative, tex: {ru, en}, steps}` |
+| `ntToBase(x, base)` | string: `'-ABC'`, `'0.0(0011)'` (period in brackets, `…` when cut at `maxDigits`, 60) | `{value, int, pre, period, truncated, negative, tex: {lang: tex}, steps}` |
 | `ntFromBase(str, base)` | BigInt, or Q for fractions (`'1A.8'`, `'0.(3)'`, comma allowed) | place-value sum, Horner, period rule |
 | `ntContinuedFraction(x)` | `{terms: BigInt[], exact, tex}`; `{sqrt: n}` → `+ {a0, period, periodic}`; a double → terms of its exact binary value until the convergent reproduces it (`exact: false`) | Euclid-style steps (rationals), √n steps |
 | `ntConvergents(terms \| cf, {count?})` | `[{p, q}]` (count unrolls a period) | — |
@@ -430,7 +460,7 @@ with a budget of ~4·10⁶ iterations (≈1 s): numbers whose second-largest pri
 ~10¹² factor quickly (two 13-digit primes: ~0.3 s); harder ones throw `MathError` code `too-big`
 (2¹²⁸ + 1 does).
 
-## numeric.js — floating-point methods
+## numbers/numeric — floating-point methods
 
 - Roots: `numBisect(f, a, b, {tol = 1e-12, maxIter, trace})` → `{root, iterations, converged,
   trace?: [{a, b, m, fa, fb, fm}]}` (throws `no-sign-change`); `numBrent(f, a, b, {tol})`;
@@ -448,7 +478,7 @@ with a budget of ~4·10⁶ iterations (≈1 s): numbers whose second-largest pri
   intervals}`. Accuracy near a singular end is limited by how f is written: `1/√(1 − x²)` near ±1
   loses ~1e-8 because `1 − x·x` cancels. **The bare number is never checked for divergence**
   (∫₁^∞ dx/x gives ≈ 37): use `numIntegrateInfo(f, a, b, opts)` (= `numIntegrate` with `{info: true,
-  check: true}`) → `{value, error, ok, divergent, reason, msg: {ru, en}, at?, estimate, method, evaluations,
+  check: true}`) → `{value, error, ok, divergent, reason, msg (a message), at?, estimate, method, evaluations,
   intervals}`. `reason` (null when ok): `'tail'` (an infinite limit and f decays too slowly or oscillates
   without decaying: ∫₁^∞ dx/x, ∫₀^∞ sin x dx), `'pole'` (non-integrable blow-up at `at`: ∫₀² dx/(x² − 1),
   ∫₀¹ dx/x, tg on [0, 3]), `'domain'` (f undefined on part of the interval: √(1 − x) on [0, 2]),
@@ -495,22 +525,21 @@ with a budget of ~4·10⁶ iterations (≈1 s): numbers whose second-largest pri
   (barycentric evaluation, monomial coefficients ascending), `numPolyRoots(coefs ascending)` →
   `[{re, im}]` (Aberth–Ehrlich, multiple roots polished as clusters, sorted by re then im).
 
-## matrix.js — exact matrices over Q (+ a float toolkit)
+## linalg — exact matrices over Q (+ a float toolkit)
 
 `class Matrix` (entries are Q): `Matrix.from([[1, 2], ['1/2', 3]])` (numbers, strings, BigInt, Q;
 a flat array is a column), `Matrix.identity(n)`, `Matrix.zeros(r, c)`, `Matrix.fromColumns(cols)`,
 `Matrix.diag(values)`; fields `rows, cols`; `get(i, j)`, `set(i, j, v)` (returns a new matrix — all
 methods are immutable), `row(i)`, `col(j)`, `add, sub, mul` (matrix, vector → Q[], or scalar),
-`scale, neg, transpose, equals, isSquare, isZero, isSymmetric, trace, pow(n), augment(B), minor(i, j),
+`scale, neg, transpose, equals, isSquare, isZero, isSymmetric, trace, pow(n ≥ 0), augment(B), minor(i, j),
 toArray()` (Q[][]), `toNumbers(), toStrings(), toString(),
 toTex({augmented: k, env: 'pmatrix' | 'vmatrix' | 'bmatrix', boxed: [[i, j]]})` — `augmented`
 draws `\left(\begin{array}{cc|c} … \end{array}\right)`.
 
 - `matRref(A, {steps, augmented: k})` → `{matrix, pivots, rank, ops: [{op, i, j, k, phase}], steps?}`.
-  One step per elementary operation: `{op: 'swap' | 'scale' | 'add', i, j, k (Q), phase:
-  'forward' | 'backward', opTex: 'R_{2} \to R_{2} - 3\,R_{1}', matrixTex (after), tex:
-  '\xrightarrow{R_{2} - 3\,R_{1}} …', text}` («Обнуляем элемент под ведущим: из второй строки
-  вычитаем первую, умноженную на 3»). Pivot strategy: 1, then −1, then an entry that divides its
+  One step per elementary operation: `tex: '\xrightarrow{R_{2} - 3\,R_{1}} …'`, a text («Обнуляем элемент под
+  ведущим: из второй строки вычитаем первую, умноженную на 3») and `data: {op: 'swap' | 'scale' | 'add', i, j,
+  k (Q), phase: 'forward' | 'backward', opTex: 'R_{2} \to R_{2} - 3\,R_{1}', matrixTex (after)}`. Pivot strategy: 1, then −1, then an entry that divides its
   whole row, else the smallest |entry|; ties keep the current row. Pivots are made 1, then
   forward elimination, then backward.
 - `matRank(A)`, `matNullspace(A, {integer = true})` → Q[][] (primitive integer vectors).
@@ -530,10 +559,10 @@ draws `\left(\begin{array}{cc|c} … \end{array}\right)`.
   `'quadratic'` (`exact: {p, q, s, sign}` = p ± q√s, s < 0 complex; `tex` like
   `\frac{1 + \sqrt{5}}{2}`, `1 - \sqrt{2}\,i`; `vectorsApprox` for real simple ones) — quadratic
   factors of higher-degree remainders are found over Z — or `'approx'` (numeric roots of an
-  irreducible factor of degree ≥ 3, `tex` = `{ru: '\approx 1{,}259921', en: …}`).
+  irreducible factor of degree ≥ 3, `tex` = `{ru: '\approx 1{,}259921', en: '\approx 1.259921'}`).
 - `matDiagonalize(A, {steps})` → `{diagonalizable: true, P, D, Pinv}` or `{diagonalizable: false,
   reason: 'defective' | 'irrational', overReals?, overComplex?}` (exact over Q only).
-- `matPower(A, n)` (square-and-multiply; n < 0 via the inverse), `matGramSchmidt(vectors, {steps})`
+- `matPower(A, n)` (square-and-multiply; n < 0 via the inverse; `A.pow(n)` for n ≥ 0), `matGramSchmidt(vectors, {steps})`
   → `{orthogonal (exact, unnormalised), normalized (floats), dropped}`, `matProjection(v, u | [u…])`
   → Q[], `matLeastSquares(A, b, {steps})` → normal equations AᵀA·x = Aᵀb solved exactly, + `residual`.
 - Float toolkit (number[][]): `fmatMul(A, B | v)`, `fmatTranspose`, `fmatSolve(A, b)` (null if
@@ -542,18 +571,18 @@ draws `\left(\begin{array}{cc|c} … \end{array}\right)`.
   {oversample = 10, powerIters = 2, seed})` (randomised; top-20 of 200×200 ≈ 15 ms — for image
   compression), `fmatLowRank(svd, k)` → U·diag(S)·Vᵀ, `fmatQr(A)` → `{Q, R}` thin Householder.
 
-## solve.js — equations, inequalities, systems
+## solve — equations, inequalities, systems
 
-Tests: `node --test tests/Js/math-engine-solve.test.cjs`. Everything returns school-style steps in
-the steps.js shape (RU default, EN alongside); the last step is `{title: 'Ответ', final: true}`.
-`opts.steps: false` returns `steps: []`. Input is text (read by `parse`) or a node.
+Everything returns school-style steps; the last step is the answer (`rule: 'answer'`, `final: true`).
+`opts.steps: false` returns `steps: []`. Input is text (read by `parse`) or a node. The fields below come on
+top of the contract (`ok`, `kind`, `answer`, `reason`, `steps`).
 
 **`solveEquation(input, v = 'x', {steps, domain: 'real' | 'complex', interval, lang})`** — an
 expression means `= 0`; if `v` is absent and there is exactly one letter, that letter is used.
-Result `{kind, roots, steps, check, answer: {tex, text}, type, odz?, extraneous?, v, …}`:
+Result `{ok, kind, roots, steps, check, answer: {tex, text}, type, odz?, extraneous?, v, …}`:
 
 - `kind`: `'roots'` · `'none'` · `'all'` (identity; `set` = where it holds, ОДЗ applied) · `'set'`
-  (whole intervals, e.g. `|x−1| + |x+2| = 3` → `[−2; 1]`) · `'unsupported'` (+ `reason: {ru, en}`).
+  (whole intervals, e.g. `|x−1| + |x+2| = 3` → `[−2; 1]`); a failure is `ok: false` with a `reason`.
 - `roots: [{node, approx, mult, approxOnly?, family?}]` ascending, distinct; `approx` is a number
   (or `{re, im}` in the complex domain); `approxOnly` marks numeric roots (TeX `x \approx 1{,}1673`); their
   `node` is a short decimal (`num` with `raw`, prints `2{,}09455`), and checks substitute 4-decimal values
@@ -613,8 +642,8 @@ Classes and methods (steps say what we do and why):
   π/2 + πn → πn/2), checked for n = −2…2 and filtered by the ОДЗ (split into sub-series when needed).
   `interval: '[0; 2pi]' | [a, b] | IntervalSet` → `inInterval` (exact roots in it, ЕГЭ part 2 style).
 
-**`solveInequality(input, v = 'x', {steps})`** → `{set: IntervalSet | null, steps, signChart,
-answer, type, odz?, approx?, reason?}`; a chain `a < f ≤ b` is split and intersected, `f ≠ g` is the
+**`solveInequality(input, v = 'x', {steps})`** → `{ok, kind: 'set', set: IntervalSet, steps, signChart,
+answer, type, odz?, approx?}`; a chain `a < f ≤ b` is split and intersected, `f ≠ g` is the
 complement of the roots. Linear (sign flip when dividing by a negative), quadratic (parabola
 reasoning), polynomial and rational by the method of intervals (factored; multiplicities — the sign
 does not change at even ones; poles always excluded; isolated points: `(x−1)²(x+2) ≤ 0` →
@@ -636,43 +665,42 @@ isEmpty, isAll, isFinite, pointList, toTex(lang), toText(lang), toJSON()`.
 `x < 2 или x > 3`, `x ≠ 1`, `∅`, `нет решений`, `R`, TeX with `\infty`, `\cup`; throws
 `MathError('interval')`. `intervalEquals(a, b, lang)` compares sets or texts (false on bad input).
 
-**`checkRoot(rel, v, value, {complex})`** → `{ok, defined, exact, reason, lhs, rhs, lhsApprox,
-rhsApprox, tex, text, steps}`; works for inequalities too (`ok` = holds). TeX:
+**`checkRoot(rel, v, value, {complex})`** → `{ok: true, kind: 'root' | 'not-root', isRoot, why, defined, exact,
+lhs, rhs, lhsApprox, rhsApprox, answer, steps}` (`why`: `'mismatch'`, `'odz'`, …); works for inequalities too
+(`isRoot` = holds). TeX:
 `\sqrt{-1 + 2} = 1 \,\ne\, -1`, `2^{2} = 4\ \checkmark`.
 
 **Systems.** `solveLinearSystem(rels, vars?, {steps, method: 'substitution' | 'addition' |
 'cramer' | 'gauss'})` — rels: array of texts/nodes or one text with `;`; vars default to the letters
 (x, y, z, t, u, v, w first). Default: 2×2 → substitution when a coefficient is ±1, else addition;
 otherwise Gauss via `matSolve` (every row operation also shows the system as equations). Cramer via
-`matSolveCramer` (≤ 3×3; Δ = 0 → Gauss). → `{kind: 'unique' | 'none' | 'infinite' | 'unsupported',
+`matSolveCramer` (≤ 3×3; Δ = 0 → Gauss). → `{ok, kind: 'unique' | 'none' | 'infinite',
 solution?: {x: node}, general?: {x: node in params}, params?: ['t'] (2×2: the free unknown itself),
 method, vars, steps, check, answer}`; answers `\left(x;\ y\right) = \left(2;\ 1\right)` (one unknown: `x = 2`);
-`answer.text` is always `{ru, en}`.
+`answer.text` is always `{lang: text}`.
 `solveSystem2(rels, vars?)` — a linear and a non-linear equation: express an unknown from the linear
-one, substitute, solve with `solveEquation`, back-substitute, check → `{kind: 'solutions' | 'none' |
-'unsupported', solutions: [{x, y}] (sorted), steps, check, answer}`.
+one, substitute, solve with `solveEquation`, back-substitute, check → `{ok, kind: 'solutions' | 'none',
+solutions: [{x, y}] (sorted), steps, check, answer}`.
 
-**Refusals** (`kind: 'unsupported'` with a reason): letters besides the unknown (parameters),
+**Refusals** (`ok: false`, `kind: 'unsupported'` with a reason): letters besides the unknown (parameters),
 inequalities passed to `solveEquation` and vice versa, systems passed to `solveEquation`,
 trigonometric equations with unrelated arguments or other structures (cubic in sin with mixed terms,
 sin 3x + sin x + cos x = 0) and mixed algebraic–transcendental equations (they go to the
 numeric fallback), trigonometric/radical inequalities other than √f ≶ c, non-linear systems other
 than linear + one non-linear equation, `solveSystem2` whose one-variable equation has no exact roots.
 
-<!-- Sections below: diff.js, integrate.js, limit.js (written by the calculus agent). -->
+## calculus — derivatives, integrals, limits
 
-## Calculus: diff.js, integrate.js, limit.js
+The tests check 173 derivatives against central differences, differentiate 205 antiderivatives back
+numerically, and cover 29 definite integrals, 153 limits, Taylor coefficients and the shape of every step.
+Inputs are nodes or strings (parsed); results are display nodes (print them with `calcTex` from
+`calculus/display.js`), answers carry `tex` (string or `{lang: tex}`), and the final step has `rule: 'answer'` and
+`final: true`. Every result is checked numerically before it is returned; nothing unchecked is ever shown as
+exact.
 
-Tests: `node --test tests/Js/math-engine-calculus.test.cjs` (173 derivatives against central
-differences, 205 antiderivatives differentiated back numerically, 29 definite integrals, 153 limits,
-Taylor coefficients, step shapes). Inputs are nodes or strings (parsed); results are display nodes
-(print them with `calcTex`), answers carry `tex` (string or `{ru, en}`), steps have the steps.js shape;
-the final step has `rule: 'answer'` and `final: true`. Every result is checked numerically before it
-is returned; nothing unchecked is ever shown as exact.
+### calculus/derivative — derivatives
 
-### diff.js — derivatives
-
-- **`derivative(f, v = 'x', {steps, simplify = true, partial})`** → `{result, steps, verified, tex}`
+- **`derivative(f, v = 'x', {steps, simplify = true, partial})`** → `{ok, kind: 'derivative', answer, result, steps, verified, tex}`
   (`tex` = `f'(x) = …`). Rules: constant, variable, sum/difference, constant factor, n-ary product,
   quotient (and `c/v` → `−c·v′/v²`, `c/xᵏ` rewritten as `c·x⁻ᵏ`), power `xⁿ` for any rational or
   symbolic n, roots (`√`, `ⁿ√` as powers), `aᵘ`, `eᵘ`, `uᵛ` (logarithmic differentiation), ln, lg,
@@ -680,7 +708,7 @@ is returned; nothing unchecked is ever shown as exact.
   `|u|` (`u/|u|·u′`, u ≠ 0), sgn/floor/ceil (0 away from the jumps), other letters are constants.
   The chain rule names the inner function (`u = 3x + 1`). The step tree mirrors the expression as it
   was typed: every node shows `(…)' = rule form = assembled = clean`. `simplify: false` returns the
-  assembled derivative. Throws `MathError` for relations/lists (`not-expr`) and `x!` (`unsupported`).
+  assembled derivative. Relations/lists (`not-expr`) and `x!` are refused.
 - **Clean form** (`niceForm(node, v, {fnFractions})`, also used for integrals and limits): canonical
   simplification plus candidates — expanded, one fraction (numerator expanded / common factor out /
   collected by functions / factored), rational function reduced by `Poly.gcd`, inner fractions
@@ -700,10 +728,10 @@ is returned; nothing unchecked is ever shown as exact.
   `tangentLine(f, v, a)` → `{k, b, point, line, tex: 'y = 2x - 1', steps}` (throws `undefined` /
   `no-derivative`).
 
-### integrate.js — integrals
+### calculus/integral — integrals
 
-- **`integrate(f, v = 'x', {steps})`** → `{result | null, method, steps, verified, reason?, tex}`
-  (`tex` ends with `+ C`). The cascade on the canonical form, every step saying why it applies:
+- **`integrate(f, v = 'x', {steps})`** → `{ok, kind: 'antiderivative', answer, result, method, steps, verified,
+  tex}` (`tex` and `answer.text` end with `+ C`). The cascade on the canonical form, every step saying why it applies:
   constant → table (xⁿ, 1/x, aˣ, trig, 1/cos², sh/ch, 1/(1+x²), 1/√(1−x²), 1/√(x²±1), |x|, sec…) →
   linearity (constants out, sums split) → linear substitution `∫f(kx+b)dx = F(kx+b)/k` →
   `c·h′·hᵏ` (derivative of the denominator on top: `ln|h|`) → rational functions (division, factoring
@@ -724,12 +752,12 @@ is returned; nothing unchecked is ever shown as exact.
   `universal-substitution`, `linearity`, `constant`).
   Every candidate is verified: `F′ − f` expanded to exactly 0, or `F′ = f` at sample points of the
   domain; either way F must be defined where f is (`ln x` for `1/x` is rejected). The answer is
-  tidied (`arctg(tg u) → u`, constant terms go to C, `ln|u|` only where u can be negative). Refusals: `result: null` with `reason` — a named
+  tidied (`arctg(tg u) → u`, constant terms go to C, `ln|u|` only where u can be negative). Refusals: `ok: false` with a `reason` — a named
   non-elementary integral (`e^{±x²}` → erf, sin x/x → Si, cos x/x → Ci, eˣ/x → Ei, 1/ln x → li,
   sin x²/cos x² → Fresnel, xˣ) or «не удалось».
 - **`integrateDefinite(f, v, a, b, {steps})`** (a, b: numbers, strings, nodes, `inf`, ±Infinity) →
-  `{value: node | 'inf' | '-inf' | null, numeric, exact, approx, converges, improper, antiderivative,
-  method, steps, tex}`. Newton–Leibniz with the interval split at points where f blows up (zeros of
+  `{ok, kind: 'value' | 'approx' | 'diverges', answer, value: node | 'inf' | '-inf' | null, numeric, exact, approx,
+  converges, improper, antiderivative, method, steps, tex}`. Newton–Leibniz with the interval split at points where f blows up (zeros of
   denominators and log arguments, poles of tg…) or where the antiderivative jumps (after t = tg(x/2));
   infinite and singular ends are one-sided limits of F (`limit`); an infinite limit → «расходится»
   (`∫₋₁¹ dx/x` and `∫₋₁¹ dx/x²` diverge). Exact values are cross-checked with `numIntegrate`.
@@ -739,10 +767,11 @@ is returned; nothing unchecked is ever shown as exact.
   steps, tex}`: ∫|f − g| split at the crossings (exact roots via Poly when possible); without bounds
   the outermost intersections are used.
 
-### limit.js — limits and Taylor polynomials
+### calculus/limit — limits and Taylor polynomials
 
 - **`limit(f, v, a, {steps, side: 'both' | 'left' | 'right'})`**, a: node/number/string, `'inf'`,
-  `'-inf'`, ±Infinity → `{value: node | 'inf' | '-inf' | 'dne' | null, method, steps, table:
+  `'-inf'`, ±Infinity → `{ok, kind: 'value' | 'infinite' | 'dne' | 'approx', answer, value: node | 'inf' | '-inf' |
+  'dne' | null, method, steps, table:
   [{x, fx, side}], verified, approx?, sides?: {left, right}, tex}`. Direct substitution when f is
   defined and continuous at a (0⁰, ln 0, poles of tg are not «defined»); otherwise limit arithmetic
   with ±∞ and a bounded factor (sin x/x → 0 at ∞), c/0 with the sign of the side, and for the
@@ -780,7 +809,7 @@ is returned; nothing unchecked is ever shown as exact.
 
 ## School solutions: values, extrema, algebra
 
-### evalsteps.js — `evaluateSteps(input, {lang, maxSteps = 40})`
+### algebra/values.js — `evaluateSteps(input, {maxSteps = 40, lang})`
 
 The value of a numeric expression the way a school solution goes (ЕГЭ task 7): one named rule per step,
 «before = after» with the reason → `{value, approx, exact, steps}`. Rules: logs of one base added or
@@ -790,14 +819,14 @@ one base or to primes, a power of a power, rational powers, roots (products, squ
 (degrees stay degrees), co-functions, the double angle, lowering the power; arithmetic one layer at a time. A
 step that would change the value is never taken; the value is always the engine's exact one.
 
-### extrema.js
+### calculus/extrema.js
 
 - `extremeOnSegment(f, v, a, b, {kind})` → `{kind, value, at, max, min, candidates, steps, tex}` — the greatest
   or least value on [a; b]: the derivative, critical points (corners of |u| too), the table of values.
 - `extremePoints(f, v)` → `{max, min, critical, steps, derivative}` — points of extremum by the sign of f′.
 - `exactGuess(x)` — a float back to p/q, pπ/q, √n/q, e^(p/q), ln n/d when it is one.
 
-### algebra.js — polynomials in one variable
+### algebra/transform.js — polynomials in one variable
 
 - `factorSteps(input)` → `{result, steps, factors, constant}`: the common factor, the difference of squares
   (x⁴ − 16 too), the sum/difference of cubes, a perfect square, a quadratic through its roots (a fractional
@@ -809,30 +838,30 @@ step that would change the value is never taken; the value is always the engine'
 
 ## Equations beyond one unknown
 
-### param.js — `solveWithParameter(input, {param = 'a', v = 'x', want})`
+### problems/parameter.js — `solveWithParameter(input, {param = 'a', v = 'x', want})`
 
 `want`: `'two-roots' | 'one-root' | 'no-roots' | 'has-roots' |` a number. `input` may be a string or
-`{task, param, want}` → `{kind: 'set', set: IntervalSet, method, steps, answer, text}`. A quadratic in x with
+`{task, param, want}` → `{ok, kind: 'set', set: IntervalSet, method, steps, answer, text}`. A quadratic in x with
 coefficients in a goes through the leading coefficient and the discriminant; anything linear in a goes the
 graphical way (a = g(x), monotone pieces, limits at the ends, the count for every level).
 
-### ode.js — `solveOde("y' + y = x; y(0) = 1")`
+### calculus/ode.js — `solveOde("y' + y = x; y(0) = 1")`
 
-→ `{kind: 'solution' | 'general' | 'unsupported', expr, general, type, steps, tex, text}`. First order:
+→ `{ok, kind: 'solution' | 'general', answer, expr, general, type, steps, tex, text}`. First order:
 y′ = f(x), separable, linear (integrating factor), homogeneous (y = ux). Second order a·y″ + b·y′ + c·y = f with
 constant coefficients: the characteristic equation; f = P(x)e^(αx)cos/sin βx by undetermined coefficients
 (resonance adds xˢ), anything else by variation of parameters. Initial conditions after «;» fix the constants;
 every particular answer is substituted back.
 
-### series.js — `sumSeries("sum(1/(k(k + 1)), k, 1, inf)")`
+### calculus/series.js — `sumSeries("sum(1/(k(k + 1)), k, 1, inf)")`
 
-→ `{kind: 'value' | 'diverges' | 'approx' | 'unsupported', value, approx, type, steps, text}`. Finite:
+→ `{ok, kind: 'value' | 'diverges' | 'approx', answer, value, approx, type, steps, text}`. Finite:
 arithmetic progressions, power sums (Faulhaber to k³), geometric, term by term. Infinite: geometric,
 arithmetico-geometric (P(k)qᵏ, deg ≤ 2), telescoping (partial fractions, S_n shown), a table of classic sums
 up to a factor and the start; divergence by the necessary condition, the harmonic comparison, p ≤ 1. A numeric
 estimate only with a convergence argument (Leibniz, or |t| ≤ c/kᵖ with p > 1).
 
-### solve.js additions
+### More in solve
 
 - `domainSet(input, v)` — the domain of a function as an IntervalSet (null when it cannot be found exactly).
 - Inequalities also go through: a sum of logs with one base as one log, a polynomial in one log (t = log f),
@@ -840,13 +869,40 @@ estimate only with a convergence argument (Leibniz, or |t| ≤ c/kᵖ with p > 1
   five points per interval; any disagreement refuses).
 - Equations: a fraction with a non-polynomial denominator is zero when its numerator is.
 
-## Task generators — generate.js
+## generate/tasks.js — task generators
 
 - `TASK_KINDS` — 26 families: linear/quadratic/exponential/logarithmic/radical/rational/abs equations,
   trigonometric equations with roots on a segment, quadratic/rational/log/exp inequalities, values (logs,
   powers, trigonometry), extrema, definite integrals, antiderivatives, linear and nonlinear systems, factoring,
   reducing fractions, ODEs, geometric series, parameters, limits.
-- `generateTask(kind, {seed, level})` → `{family, level, seed, op, task, prompt: {ru, en}, answer, …}` — built
+- `generateTask(kind, {seed, level})` → `{family, level, seed, op, task, prompt (a message), answer, …}` — built
   backwards from the answer (roots → equation), never through the solver; the same seed gives the same task.
   Level 1: small integers; 2: wider ranges and the usual traps; 3: fractions.
 - `generateSet(kind, {count, seed, level})` — a reproducible batch without duplicates.
+
+## api — the contract, solver by solver
+
+| Solver | `kind` when ok | `answer` |
+|---|---|---|
+| `solveEquation`, `solveTrig` | `roots`, `none`, `all`, `set` | the roots (families for trigonometry) |
+| `solveInequality` | `set` | the set as intervals |
+| `solveLinearSystem` | `unique`, `none`, `infinite` | `(x; y) = (…)` or the general solution |
+| `solveSystem2` | `solutions`, `none` | the pairs |
+| `checkRoot` | `root`, `not-root` | the substitution; `isRoot`, `why` |
+| `solveWithParameter` | `set` | the values of the parameter |
+| `derivative`, `partialDerivative`, `derivativeN` | `derivative` | f′ |
+| `gradientOf` | `gradient` | the components |
+| `tangentLine` | `line` | y = kx + b |
+| `integrate` | `antiderivative` | F + C |
+| `integrateDefinite`, `areaBetween` | `value`, `approx`, `diverges` | the number |
+| `limit` | `value`, `infinite`, `dne`, `approx` | the limit |
+| `taylorPolynomial` | `polynomial` | the polynomial |
+| `extremeOnSegment` | `value` (the kind asked for is in `extremum`) | the value |
+| `extremePoints` | `points` | x_max, x_min |
+| `solveOde` | `solution`, `general` | y = … |
+| `sumSeries` | `value`, `diverges`, `approx` | the sum |
+| `evaluateSteps` | `value` | the value |
+| `factorSteps`, `expandSteps`, `simplifySteps` | `expression` | the result |
+
+A failure of any of them is `{ok: false, kind: 'invalid' | 'unsupported', reason, steps}`: the steps show how far
+the solver got and are often empty; an input error adds `pos`, `len` and `code`.

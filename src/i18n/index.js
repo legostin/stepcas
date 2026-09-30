@@ -2,9 +2,10 @@
 //
 // Code holds no text. It names a message by key and passes parameters:
 //
-//   msg('solve.quadratic.two_roots')
-//   msg('solve.roots.count', { n: 3 })                       'Корней: %{n}' / '%{n} %{n|root|roots}'
-//   msg('calculus.ode.mu', { mu: (lng) => tex(mu, lng) })     a parameter that depends on the language
+//   msg('solve.polynomial.two_roots')                                '$D > 0$ — два корня'
+//   msg('numbers.theory.modular.solutions_modulo', { d, n, M })      '%{d} %{n|решение|решения|решений} по модулю %{M}'
+//   msg('calculus.ode.substitute_into_solution_and_its_derivative', { p: (lng) => tex(x0, lng) })
+//                                                                    a parameter that depends on the language
 //
 // A message renders in a language on demand — msg.ru, msg.en, msg.in('kk'), `${msg}` (the default language) — so a
 // result stays language-neutral until someone reads it. Templates live in i18n/<lang>/<domain>.js; each is a string
