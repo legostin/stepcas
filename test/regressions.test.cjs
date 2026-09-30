@@ -1,4 +1,4 @@
-// tests/Js/math-engine-polish2.test.cjs — regressions from the engine polish round 2:
+// regressions from a polish round of the engine:
 // rational roots without the candidate explosion, the true LCD, numeric roots printed as decimals,
 // substitutions keeping their term order, complex coefficients, huge trig values, systems, logs.
 const { test, before } = require('node:test');

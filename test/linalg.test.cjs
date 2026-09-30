@@ -1,4 +1,4 @@
-// tests/Js/math-engine-matrix.test.cjs — exact linear algebra (matrix.js) and the float toolkit
+// linalg — exact linear algebra over Q and the float toolkit
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 

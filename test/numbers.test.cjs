@@ -1,4 +1,4 @@
-// tests/Js/math-engine-numbers.test.cjs — number theory (numtheory.js) and numerical methods (numeric.js)
+// numbers — number theory (numbers/theory) and numerical methods (numbers/numeric)
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 

@@ -1,4 +1,4 @@
-// tests/Js/math-engine-solve.test.cjs — equations, inequalities, systems and sets (solve.js)
+// solve — equations, inequalities, systems and sets
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 

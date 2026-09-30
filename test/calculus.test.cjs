@@ -1,6 +1,5 @@
-// tests/Js/math-engine-calculus.test.cjs — derivatives (diff.js), integrals (integrate.js), limits and
-// Taylor polynomials (limit.js). Every answer is checked independently: derivatives against central
-// differences of f, antiderivatives by differentiating them numerically, limits against the expected values
+// calculus — derivatives, integrals, limits and Taylor polynomials. Every answer is checked independently:
+// derivatives against central differences of f, antiderivatives by differentiating them numerically, limits against the expected values
 // and the numbers near the point, definite integrals against numeric quadrature.
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');

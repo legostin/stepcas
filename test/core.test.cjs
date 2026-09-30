@@ -1,4 +1,4 @@
-// «Царица наук»: the core of the maths engine — rationals, AST, parser, printer, simplifier, expansion,
+// core — the building blocks: rationals, AST, parser, printer, simplifier, expansion,
 // polynomials, equivalence, evaluation, complex numbers, random, steps.
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
