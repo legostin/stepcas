@@ -8,7 +8,7 @@
 // Also: taylorPolynomial (exact coefficients f⁽ᵏ⁾(a)/k!) and taylorRemainderBound (Lagrange form, numeric M).
 
 import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, toNode, nodeChildren } from './ast.js';
+import { num, sym, add, mul, div, neg, pow, fn, isConst, containsVar, freeVars, nodeKey, substitute, toNode, nodeChildren, mapNode } from './ast.js';
 import { parse } from './parse.js';
 import { simplify, canonContext, splitCoeff } from './simplify.js';
 import { expand, combineFractions } from './expand.js';
@@ -1429,6 +1429,29 @@ function oneSide(f0, v, P, opts) {
  *    approx?: number (a numeric estimate when no symbolic method worked; value is null then),
  *    sides?: {left, right} (when a two-sided limit splits), tex}.
  */
+// |u| where the sign of u has settled near the point — x → ±∞ or a one-sided approach — is ±u there
+function settleAbs(f, v, P) {
+    if (P.side === 'both' && Number.isFinite(P.x)) return f;
+    const probes = Number.isFinite(P.x)
+        ? [1e-3, 1e-4, 1e-6, 1e-8].map((h) => P.x + (P.side === 'left' ? -h : h) * Math.max(1, Math.abs(P.x)))
+        : [1e3, 1e4, 1e5, 1e6, 1e8].map((t) => (P.x > 0 ? t : -t));
+    let changed = false;
+    const g = mapNode(f, (n) => {
+        if (n.type !== 'fn' || n.name !== 'abs' || !containsVar(n.args[0], v)) return undefined;
+        const signs = probes.map((x) => Math.sign(evalAt(n.args[0], v, x)));
+        if (!signs.every((z) => z === signs[0]) || !(signs[0] === 1 || signs[0] === -1)) return undefined;
+        changed = true;
+        const inner = settleAbs(n.args[0], v, P);
+        return signs[0] > 0 ? inner : neg(inner);
+    });
+    if (!changed) return f;
+    try {
+        return simp(g);
+    } catch {
+        return g;
+    }
+}
+
 export function limit(node, v = 'x', a = 0, opts = {}) {
     node = asNode(node);
     if (node.type === 'rel' || node.type === 'list' || node.type === 'chain') throw new MathError({ ru: 'Нужна формула функции', en: 'A formula is needed' }, null, null, 'not-expr');
@@ -1452,6 +1475,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             P = { ...P, side: domainSide };
         }
     }
+    if (!others.length) f = settleAbs(f, v, P);
     const wantSteps = !!opts.steps;
     const steps = [];
     const table = others.length ? [] : tableFor(f, v, P);

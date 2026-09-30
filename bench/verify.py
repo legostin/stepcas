@@ -21,7 +21,7 @@ from sympy.solvers.inequalities import solve_univariate_inequality
 HERE = Path(__file__).parent
 x, y, z, t, n, k, a, b, c = symbols('x y z t n k a b c', real=True)
 NS = {name: obj for name, obj in vars(sp).items() if not name.startswith('_')}
-NS.update(dict(x=x, y=y, z=z, t=t, n=n, k=k, a=a, b=b, c=c, E=E, I=I, oo=oo, pi=pi))
+NS.update(dict(x=x, y=y, z=z, t=t, n=n, k=k, a=a, b=b, c=c, E=E, e=E, I=I, oo=oo, pi=pi))
 TOL = 1e-7
 
 
@@ -227,11 +227,18 @@ def scan_roots(expr, var, lo, hi, steps=24000):
     return res
 
 
+def real_scan(eq, var, lo, hi):
+    """Roots where both sides are real numbers: lg(x² − 15) = lg(2x) has no root at −3, even though lg(−6) = lg(−6)
+    in the complex numbers (SymPy's view)."""
+    fl, fr = num_fn(eq.lhs, var), num_fn(eq.rhs, var)
+    return [r for r in scan_roots(eq.lhs - eq.rhs, var, lo, hi) if fl(r) == fl(r) and fr(r) == fr(r)]
+
+
 def numeric_solve_check(eq, var, t, ans):
     lo, hi = (-60.0, 60.0)
     if t.get('interval'):
         lo, hi = fnum(ev(t['interval'][0])), fnum(ev(t['interval'][1]))
-    got = scan_roots(eq.lhs - eq.rhs, var, lo, hi)
+    got = real_scan(eq, var, lo, hi)
     if 'families' in ans:
         want = fam_values(ans['families'], lo, hi)
     elif ans.get('none'):
@@ -276,14 +283,18 @@ def param_check(t, ans):
         grid += [sp.nsimplify(bnd)]
     for av in grid:
         e2 = (eq.lhs - eq.rhs).subs(a, av)
-        sol = solveset(e2, x, S.Reals)
-        if isinstance(sol, FiniteSet):
+        try:
+            sol = solveset(e2, x, S.Reals)
+        except Exception:
+            sol = None
+        if isinstance(sol, FiniteSet) and all(s.is_real for s in sol):
             cnt = len(sol)
         elif sol == EmptySet:
             cnt = 0
         else:
-            cnt = 99
-        ok_here = {'two-roots': cnt == 2, 'one-root': cnt == 1, 'has-roots': cnt >= 1}[kind]
+            # transcendental: count real roots numerically (both sides real)
+            cnt = len(real_scan(Eq(eq.lhs.subs(a, av), eq.rhs.subs(a, av)), x, -60.0, 60.0))
+        ok_here = (cnt == kind) if isinstance(kind, int) else {'two-roots': cnt == 2, 'one-root': cnt == 1, 'has-roots': cnt >= 1, 'no-roots': cnt == 0}[kind]
         if ok_here != (av in want):
             return 'MISMATCH', f'a = {av}: {cnt} roots'
     return 'ok', 'grid'

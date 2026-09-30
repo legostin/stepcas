@@ -4555,8 +4555,49 @@ function mapSet(set, f) {
     })).map((p) => ({ ...p, lo: p.lo && endOf(p.lo), hi: p.hi && endOf(p.hi) })));
 }
 
+// p·b^f − q·b^g op 0 with q/p a power of b: b^f op b^(g + m) → f op g + m (by the monotonicity of b^t)
+function twoPowersIneq(E, op, ctx) {
+    const v = ctx.v;
+    const ts = termsOfSum(E);
+    if (ts.length !== 2) return null;
+    const parts = ts.map((t) => {
+        const { coef, rest } = splitCoeff(t);
+        const r = rest ?? N1;
+        if (r.type !== 'pow' || containsVar(r.base, v) || !containsVar(r.exp, v)) return null;
+        const bi = baseInfo(r.base);
+        return bi && { coef, base: r.base, exp: r.exp, bi };
+    });
+    if (parts.some((x) => !x) || !sameBase(parts[0].bi.c, parts[1].bi.c)) return null;
+    let [P1, P2] = parts;
+    let op1 = op;
+    if (P1.coef.isNeg()) {
+        [P1, P2] = [P2, P1];
+    }
+    if (!P1.coef.isPos() || !P2.coef.isNeg()) return null;
+    // P1.coef·b1^f + P2.coef·b2^g op 0  ⇔  b1^f op (−P2.coef/P1.coef)·b2^g
+    const k = P2.coef.neg().div(P1.coef);
+    const m = exactPower(P1.bi.c, num(k));
+    if (m === null) return null;
+    // everything as powers of the primitive base c: b1^f = c^(k1 f)
+    const c = P1.bi.c;
+    const cN = baseNode(c);
+    const left = simpOr(mul(num(P1.bi.k), P1.exp));
+    const right = simpOr(add(mul(num(P2.bi.k), P2.exp), num(m)));
+    const dec = approxOf(cN) < 1;
+    const op3 = dec ? OP_FLIP[op1] : op1;
+    const steps = [S(T('Приводим обе части к одному основанию', 'Bring both sides to one base'), {
+        tex: byLang((l) => `${tex(pow(cN, left), l)} ${OP_TEX[op1]} ${tex(pow(cN, right), l)}`),
+        text: T(`Переносим степень в правую часть и записываем $${num(k).value.toTex('ru')} = ${tex(pow(cN, num(m)))}$; $a^x \\cdot a^y = a^{x+y}$.`, `Move one power to the right and write $${num(k).value.toTex('en')} = ${tex(pow(cN, num(m)), 'en')}$; $a^x \\cdot a^y = a^{x+y}$.`),
+    }), S(dec ? T(`Основание $${tex(cN)}$ меньше 1 — функция убывает, знак меняется`, `The base $${tex(cN, 'en')}$ is below 1: the function decreases, so the sign flips`) : T(`Основание $${tex(cN)}$ больше 1 — функция возрастает, знак сохраняется`, `The base $${tex(cN, 'en')}$ is above 1: the function increases, so the sign stays`), { tex: ineqTexB(left, op3, right) })];
+    const r = ineqCore(left, op3, right, { ...ctx, depth: ctx.depth + 1 });
+    if (!r.set) return null;
+    return { set: r.set, steps: [...steps, ...r.steps], chart: r.chart, type: 'exponential' };
+}
+
 function expIneq(E, op, ctx) {
     const v = ctx.v;
+    const tp = twoPowersIneq(E, op, ctx);
+    if (tp) return tp;
     const info = analyzeExp(E, v);
     if (!info || info.mixed) return null;
     const { c, terms, constant } = info;
@@ -4823,7 +4864,7 @@ function rootsIneq(lhs, op, rhs, E, ctx) {
         if (inside.every((z) => !z)) continue;
         if (!inside.every(Boolean)) return null;
         const ys = xs.map(f);
-        if (ys.some((y) => !Number.isFinite(y))) return null;
+        if (ys.some((y) => Number.isNaN(y))) return null; // ±∞ from an overflow still has a sign
         const sg = ys.filter((y) => Math.abs(y) > 1e-12).map(Math.sign);
         if (!sg.length || sg.some((z) => z !== sg[0])) return null;
         signs.push({ a, b, sign: sg[0] });
