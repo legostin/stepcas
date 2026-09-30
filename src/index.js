@@ -23,3 +23,4 @@ export * from './extrema.js';
 export * from './evalsteps.js';
 export * from './ode.js';
 export * from './series.js';
+export * from './param.js';

@@ -4752,16 +4752,8 @@ function logIneq(lhs, op, rhs, E, ctx) {
     return { set, steps, chart: res.chart, type: 'logarithmic' };
 }
 
-/**
- * The generalised method of intervals: f(x) = lhs − rhs is continuous on the domain, so its sign can change only at
- * its zeros and at the ends of the domain. The zeros come from solveEquation (exact, finite); the sign on every
- * interval is checked at several points, and any disagreement (a zero the equation solver missed) refuses.
- */
-function rootsIneq(lhs, op, rhs, E, ctx) {
-    const v = ctx.v;
-    const JUMPY = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'floor', 'ceil', 'frac', 'sign', 'round', 'mod']);
-    if (nodeSome(E, (n) => n.type === 'fn' && JUMPY.has(n.name))) return null;
-    const node = rel(op, lhs, rhs);
+/** The domain of a node in v as an IntervalSet (trigonometric conditions are not handled) → {D, odz} or null. */
+function domainOf(node, v, ctx = { v, domain: 'real', depth: 0 }) {
     const conds = collectConds(node, v);
     if (conds.some((c) => c.kind === 'cos' || c.kind === 'sin')) return null;
     const odz = conds.length ? odzInfo(conds, v) : null;
@@ -4773,10 +4765,32 @@ function rootsIneq(lhs, op, rhs, E, ctx) {
             const e = solveEquation(rel('=', c.expr, N0), v, { steps: false });
             if (e.kind === 'none') cs = IntervalSet.all();
             else if (e.kind === 'roots' && !e.families?.length && !e.roots.some((x) => x.approxOnly)) cs = IntervalSet.all().minus(IntervalSet.points(e.roots.map((x) => x.node)));
-        } else if (!cs) cs = ineqCore(c.expr, OP_OF[c.kind], N0, { ...ctx, depth: ctx.depth + 1 }).set;
+        } else if (!cs) cs = ineqCore(c.expr, OP_OF[c.kind], N0, { ...ctx, v, depth: (ctx.depth ?? 0) + 1 }).set;
         if (!cs) return null;
         D = D.intersect(cs);
     }
+    return { D, odz };
+}
+
+/** The set where a function of one variable is defined (null when it cannot be found exactly). */
+export function domainSet(input, v = 'x') {
+    const node = typeof input === 'string' ? parse(input) : input;
+    return domainOf(node, v)?.D ?? null;
+}
+
+/**
+ * The generalised method of intervals: f(x) = lhs − rhs is continuous on the domain, so its sign can change only at
+ * its zeros and at the ends of the domain. The zeros come from solveEquation (exact, finite); the sign on every
+ * interval is checked at several points, and any disagreement (a zero the equation solver missed) refuses.
+ */
+function rootsIneq(lhs, op, rhs, E, ctx) {
+    const v = ctx.v;
+    const JUMPY = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'floor', 'ceil', 'frac', 'sign', 'round', 'mod']);
+    if (nodeSome(E, (n) => n.type === 'fn' && JUMPY.has(n.name))) return null;
+    const node = rel(op, lhs, rhs);
+    const dom = domainOf(node, v, ctx);
+    if (!dom) return null;
+    const { D, odz } = dom;
     const eq = solveEquation(rel('=', lhs, rhs), v, { steps: true });
     let roots;
     if (eq.kind === 'none') roots = [];
