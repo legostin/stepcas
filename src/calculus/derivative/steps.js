@@ -5,9 +5,9 @@ import { Q, MathError } from '../../core/rational.js';
 import { simplify } from '../../core/simplify.js';
 import { step } from '../../core/steps.js';
 import { niceForm } from './clean.js';
-import { E_, N0, N1, N2, NM1, T_, bt, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from './display.js';
+import { E_, N0, N1, N2, NM1, T_, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from './display.js';
 import { FACT_ERR } from './quick.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- tidy assembly (unsimplified answers and step lines)
 
@@ -114,7 +114,7 @@ const pNeg = (a) => ({ t: (L) => '-' + (a.k === 'sum' || a.k === 'neg' ? paren(a
 
 /** "lhs = a = b = c" without repeating equal neighbours. */
 function chainTex(parts) {
-    return bt((L) => {
+    return eachLanguage((L) => {
         const out = [];
         for (const p of parts) {
             if (!p) continue;
@@ -279,7 +279,7 @@ export function dS(n, ctx) {
         const others = freeVars(n).filter((w) => w !== v);
         const st = step({
             title: msg('calculus.derivative.steps.derivative_of_constant'),
-            tex: bt((L) => `${paren(calcTex(n, L))}' = 0`),
+            tex: eachLanguage((L) => `${paren(calcTex(n, L))}' = 0`),
             text: others.length
                 ? msg('calculus.derivative.steps.it_does_not_depend_on_when', { v, p: others.join(', ') })
                 : msg('calculus.derivative.steps.derivative_of_number_is_zero_constant'),
@@ -604,7 +604,7 @@ function dFn(n, ctx) {
         const text = name === 'sign'
             ? msg('calculus.derivative.steps.sgn_is_constant_on_each_side')
             : msg('calculus.derivative.steps.function_is_constant_between_consecutive_whole');
-        return { raw: N0, res: N0, step: step({ title: msg('calculus.derivative.steps.step_function'), tex: bt((L) => `${paren(calcTex(n, L))}' = 0`), text, rule: 'step-fn' }) };
+        return { raw: N0, res: N0, step: step({ title: msg('calculus.derivative.steps.step_function'), tex: eachLanguage((L) => `${paren(calcTex(n, L))}' = 0`), text, rule: 'step-fn' }) };
     }
     const u = name === 'log' ? n.args[1] : n.args[0];
     const outer = outerReadable(name, u, n.args);

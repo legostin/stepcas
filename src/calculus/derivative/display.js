@@ -7,7 +7,7 @@ import { canonContext } from '../../core/simplify.js';
 import { toTex, toText } from '../../core/print.js';
 import { rng } from '../../core/random.js';
 import { evaluate } from '../../core/evaluate.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 export const N0 = num(0);
 export const N1 = num(1);
@@ -255,16 +255,9 @@ export function calcTex(node, lang = 'ru') {
 
 /** calcTex in both languages: a string when they agree, else {ru, en}. */
 export function calcTexBoth(node) {
-    const ru = calcTex(node, 'ru');
-    const en = calcTex(node, 'en');
-    return ru === en ? ru : { ru, en };
+    return eachLanguage((lang) => calcTex(node, lang));
 }
 
-export function bt(f) {
-    const ru = f('ru');
-    const en = f('en');
-    return ru === en ? ru : { ru, en };
-}
 
 const tall = (s) => /\\frac|\\sqrt|\\left|\\dfrac|\^\{/.test(s);
 export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);

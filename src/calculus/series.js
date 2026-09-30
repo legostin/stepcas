@@ -16,10 +16,9 @@ import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
 import { numDen } from '../core/expand.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
-const bt = (f) => L(f('ru'), f('en'));
 const N0 = num(0);
 const N1 = num(1);
 const INF = sym('inf');
@@ -98,7 +97,7 @@ function finiteSum(term, k, lo, hi) {
             const n = hi.sub(lo).add(Q.ONE);
             steps.push(step({
                 title: msg('calculus.series.sum_of_arithmetic_progression'),
-                tex: bt((l) => `S = \\frac{a_1 + a_n}{2}\\cdot n = \\frac{${first.toTex(l)} + ${last.toTex(l)}}{2}\\cdot ${n.toTex(l)} = ${total.toTex(l)}`),
+                tex: eachLanguage((l) => `S = \\frac{a_1 + a_n}{2}\\cdot n = \\frac{${first.toTex(l)} + ${last.toTex(l)}}{2}\\cdot ${n.toTex(l)} = ${total.toTex(l)}`),
                 text: msg('calculus.series.terms_grow_by_same_step_first', { p: (lng) => first.toTex(lng), p2: (lng) => last.toTex(lng), p3: (lng) => n.toTex(lng) }),
             }));
         } else {
@@ -107,7 +106,7 @@ function finiteSum(term, k, lo, hi) {
                 tex: used.map((m) => FAUL_TEX[m]).join(',\\qquad '),
                 text: msg('calculus.series.split_term_by_powers_of_and'),
             }));
-            steps.push(step({ title: msg('calculus.series.substitute_bounds'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${total.toTex(l)}`) }));
+            steps.push(step({ title: msg('calculus.series.substitute_bounds'), tex: eachLanguage((l) => `${sumTex(term, k, lo, hi, l)} = ${total.toTex(l)}`) }));
         }
         return { value: num(total), steps, type: P.degree === 1 ? 'arithmetic' : 'power-sums' };
     }
@@ -118,7 +117,7 @@ function finiteSum(term, k, lo, hi) {
         const value = trySimplify(div(mul(first, add(pow(geo.q, num(n)), num(-1))), add(geo.q, num(-1))));
         steps.push(step({
             title: msg('calculus.series.sum_of_geometric_progression'),
-            tex: bt((l) => `S_n = b_1\\frac{q^n - 1}{q - 1} = ${tex(first, l)}\\cdot\\frac{${tex(geo.q, l)}^{${n.toTex(l)}} - 1}{${tex(geo.q, l)} - 1} = ${tex(value, l)}`),
+            tex: eachLanguage((l) => `S_n = b_1\\frac{q^n - 1}{q - 1} = ${tex(first, l)}\\cdot\\frac{${tex(geo.q, l)}^{${n.toTex(l)}} - 1}{${tex(geo.q, l)} - 1} = ${tex(value, l)}`),
             text: msg('calculus.series.ratio_of_neighbouring_terms_is_constant', { p: (lng) => tex(geo.q, lng) }),
         }));
         return { value, steps, type: 'geometric' };
@@ -127,7 +126,7 @@ function finiteSum(term, k, lo, hi) {
     if (count.gt(new Q(2000n))) return null;
     let acc = N0;
     for (let i = lo; i.le(hi); i = i.add(Q.ONE)) acc = trySimplify(add(acc, at(term, k, i)));
-    steps.push(step({ title: msg('calculus.series.add_terms'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(acc, l)}`) }));
+    steps.push(step({ title: msg('calculus.series.add_terms'), tex: eachLanguage((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(acc, l)}`) }));
     return { value: acc, steps, type: 'direct' };
 }
 
@@ -178,16 +177,16 @@ function geometricInfinite(term, k, lo) {
     const first = at(term, k, lo);
     const steps = [];
     if (Math.abs(g.qv) >= 1) {
-        steps.push(step({ title: msg('calculus.series.geometric_series_diverges'), tex: bt((l) => `q = ${tex(g.q, l)},\\quad |q| \\ge 1`), text: msg('calculus.series.terms_do_not_tend_to_zero') }));
+        steps.push(step({ title: msg('calculus.series.geometric_series_diverges'), tex: eachLanguage((l) => `q = ${tex(g.q, l)},\\quad |q| \\ge 1`), text: msg('calculus.series.terms_do_not_tend_to_zero') }));
         return { diverges: true, steps, type: 'geometric' };
     }
     const value = trySimplify(div(first, add(N1, neg(g.q))));
     steps.push(step({
         title: msg('calculus.series.geometric_series'),
-        tex: bt((l) => `q = \\frac{a_{${k}+1}}{a_{${k}}} = ${tex(g.q, l)},\\quad |q| < 1`),
+        tex: eachLanguage((l) => `q = \\frac{a_{${k}+1}}{a_{${k}}} = ${tex(g.q, l)},\\quad |q| < 1`),
         text: msg('calculus.series.ratio_of_neighbouring_terms_is_constant_2'),
     }));
-    steps.push(step({ title: msg('calculus.series.sum_of_infinite_geometric_progression'), tex: bt((l) => `S = \\frac{b_1}{1 - q} = \\frac{${tex(first, l)}}{1 - ${tex(g.q, l)}} = ${tex(value, l)}`) }));
+    steps.push(step({ title: msg('calculus.series.sum_of_infinite_geometric_progression'), tex: eachLanguage((l) => `S = \\frac{b_1}{1 - q} = \\frac{${tex(first, l)}}{1 - ${tex(g.q, l)}} = ${tex(value, l)}`) }));
     return { value, steps, type: 'geometric' };
 }
 
@@ -215,7 +214,7 @@ function arithGeoInfinite(term, k, lo) {
             tex: L(`\\sum_{k=0}^{\\infty} q^k = \\frac{1}{1-q},\\quad \\sum_{k=0}^{\\infty} k q^k = \\frac{q}{(1-q)^2},\\quad \\sum_{k=0}^{\\infty} k^2 q^k = \\frac{q(1+q)}{(1-q)^3}`),
             text: msg('calculus.series.term_is_polynomial_in_times_with', { q: (lng) => tex(q, lng) }),
         }),
-        step({ title: msg('calculus.series.substitute'), tex: bt((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) }),
+        step({ title: msg('calculus.series.substitute'), tex: eachLanguage((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) }),
     ];
     return { value, steps, type: 'arithmetico-geometric' };
 }
@@ -258,13 +257,13 @@ function telescoping(term, k, lo) {
     const tail = add(A.flatMap((a, i) => Array.from({ length: Number(ms[i].n) }, (_, j) => mul(num(a), div(N1, add(n, num(Q.ONE.add(c).add(new Q(BigInt(j))))))))));
     const Sn = trySimplify(add(num(S), tail));
     const steps = [
-        step({ title: msg('calculus.series.split_term_into_partial_fractions'), tex: bt((l) => `${tex(term, l)} = ${tex(decomposed, l)}`) }),
+        step({ title: msg('calculus.series.split_term_into_partial_fractions'), tex: eachLanguage((l) => `${tex(term, l)} = ${tex(decomposed, l)}`) }),
         step({
             title: msg('calculus.series.series_telescopes'),
-            tex: bt((l) => `S_n = ${tex(Sn, l)}`),
+            tex: eachLanguage((l) => `S_n = ${tex(Sn, l)}`),
             text: msg('calculus.series.pieces_of_neighbouring_terms_cancel_only'),
         }),
-        step({ title: msg('calculus.series.take_limit'), tex: bt((l) => `S = \\lim_{n\\to\\infty} S_n = ${S.toTex(l)}`) }),
+        step({ title: msg('calculus.series.take_limit'), tex: eachLanguage((l) => `S = \\lim_{n\\to\\infty} S_n = ${S.toTex(l)}`) }),
     ];
     void constant;
     return { value: num(S), steps, type: 'telescoping' };
@@ -306,9 +305,9 @@ function tableSum(term, k, lo) {
             value,
             steps: [step({
                 title: row.name,
-                tex: bt((l) => `\\sum_{${k}=${row.s}}^{\\infty} ${tex(f, l)} = ${tex(V, l)}`),
+                tex: eachLanguage((l) => `\\sum_{${k}=${row.s}}^{\\infty} ${tex(f, l)} = ${tex(V, l)}`),
                 text: msg('calculus.series.classic_sum_term_differs_from_table'),
-            }), step({ title: msg('calculus.series.substitute'), tex: bt((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) })],
+            }), step({ title: msg('calculus.series.substitute'), tex: eachLanguage((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) })],
             type: 'table',
         };
     }
@@ -326,7 +325,7 @@ function divergence(term, k) {
     }
     const lv = lim && lim.value !== null && typeof lim.value === 'object' ? approx(lim.value) : lim?.value === 'inf' || lim?.value === '-inf' ? Infinity : NaN;
     if (lim && (lim.value === 'dne' || (Number.isFinite(lv) && Math.abs(lv) > 1e-12) || lv === Infinity)) {
-        return { diverges: true, type: 'necessary', steps: [step({ title: msg('calculus.series.necessary_condition_fails'), tex: bt((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? '\\text{ — не существует}' : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: msg('calculus.series.if_series_converges_its_terms_tend') })] };
+        return { diverges: true, type: 'necessary', steps: [step({ title: msg('calculus.series.necessary_condition_fails'), tex: eachLanguage((l) => `\\lim_{${k}\\to\\infty} ${tex(term, l)} ${lim.value === 'dne' ? '\\text{ — не существует}' : `= ${typeof lim.value === 'object' ? tex(lim.value, l) : '\\infty'} \\ne 0`}`), text: msg('calculus.series.if_series_converges_its_terms_tend') })] };
     }
     // rational term of degree −1 or more: comparison with the harmonic series
     try {
@@ -334,7 +333,7 @@ function divergence(term, k) {
         const Np = nd0 && Poly.fromNode(nd0.num, k);
         const Dp = nd0 && Poly.fromNode(nd0.den, k);
         if (Np && Dp && Dp.degree - Np.degree === 1) {
-            return { diverges: true, type: 'harmonic', steps: [step({ title: msg('calculus.series.comparison_with_harmonic_series'), tex: bt((l) => `${tex(term, l)} \\sim \\frac{${Np.lead.div(Dp.lead).toTex(l)}}{${k}}`), text: msg('calculus.series.terms_behave_like_and_harmonic_series') })] };
+            return { diverges: true, type: 'harmonic', steps: [step({ title: msg('calculus.series.comparison_with_harmonic_series'), tex: eachLanguage((l) => `${tex(term, l)} \\sim \\frac{${Np.lead.div(Dp.lead).toTex(l)}}{${k}}`), text: msg('calculus.series.terms_behave_like_and_harmonic_series') })] };
         }
     } catch {
         /* not rational */
@@ -368,7 +367,7 @@ function pSeries(term, k) {
         type: 'p-series',
         steps: [step({
             title: msg('calculus.series.comparison_with'),
-            tex: bt((l) => `${tex(term, l)} \\sim \\frac{c}{${k}^{${r.p.toTex(l)}}},\\quad p = ${r.p.toTex(l)} \\le 1`),
+            tex: eachLanguage((l) => `${tex(term, l)} \\sim \\frac{c}{${k}^{${r.p.toTex(l)}}},\\quad p = ${r.p.toTex(l)} \\le 1`),
             text: msg('calculus.series.terms_keep_one_sign_and_decay', { pT, p: r.p.toTex('en') }),
         })],
     };
@@ -386,7 +385,7 @@ export function sumSeries(input, opts = {}) {
         return { kind: 'unsupported', reason: e.msg, steps: [] };
     }
     const { term, k, lo, hi } = inp;
-    const head = step({ title: msg('calculus.series.sum'), tex: bt((l) => sumTex(term, k, lo, hi, l)) });
+    const head = step({ title: msg('calculus.series.sum'), tex: eachLanguage((l) => sumTex(term, k, lo, hi, l)) });
     let r;
     try {
         if (hi) r = hi.lt(lo) ? { value: N0, steps: [step({ title: msg('calculus.series.empty_sum'), text: msg('calculus.series.end_is_below_start_no_terms') })], type: 'empty' } : finiteSum(term, k, lo, hi);
@@ -439,7 +438,7 @@ export function sumSeries(input, opts = {}) {
         return { kind: 'approx', value: null, approx: est, steps, type: 'numeric', text: `≈ ${est.toPrecision(digits)}` };
     }
     const value = trySimplify(r.value);
-    const steps = [head, ...r.steps, step({ title: msg('calculus.series.answer'), tex: bt((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(value, l)}`) })];
+    const steps = [head, ...r.steps, step({ title: msg('calculus.series.answer'), tex: eachLanguage((l) => `${sumTex(term, k, lo, hi, l)} = ${tex(value, l)}`) })];
     steps[steps.length - 1].final = true;
     return { kind: 'value', value, approx: approx(value), type: r.type, steps, text: toText(value, { lang: 'en' }) };
 }

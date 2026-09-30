@@ -5,10 +5,10 @@ import { collectTerms, numDen } from '../core/expand.js';
 import { Q } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { splitCoeff } from '../core/simplify.js';
-import { N0, N1, PI, S, T, approxOf, byLang, exactZero, expd, isConstNode, orTex, outermost, pick, replaceNode, simpOr, tex } from './common.js';
+import { N0, N1, PI, S, T, approxOf, exactZero, expd, isConstNode, orTex, outermost, pick, replaceNode, simpOr, tex } from './common.js';
 import { isZeroNode, nodeQuadRoots, solveAnyPoly, sumNode } from './polynomial.js';
 import { mkRoot, rootsTex } from './roots.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- trigonometric equations
 
@@ -126,7 +126,7 @@ export function basicTrig(F, u, a, ctx) {
     const av = approxOf(aS);
     if (!Number.isFinite(av)) return null;
     const eqT = (l) => `${tex(fn(F, u), l)} = ${tex(aS, l)}`;
-    const title = byLang((l) => (msg('solve.trig.solve', { l: eqT(l) }).in(l)));
+    const title = eachLanguage((l) => (msg('solve.trig.solve', { l: eqT(l) }).in(l)));
     if ((F === 'sin' || F === 'cos') && Math.abs(av) > 1 + 1e-12) {
         return {
             families: [],
@@ -214,7 +214,7 @@ export function basicTrig(F, u, a, ctx) {
         }
         return fams.map((f) => familyTex(f, v, l)).join(notation(l).listWideTex);
     };
-    group.tex = byLang(xTex);
+    group.tex = eachLanguage(xTex);
     for (const f of fams) f.group = group;
     const uTex = (l) => {
         const us = tex(u, l);
@@ -222,7 +222,7 @@ export function basicTrig(F, u, a, ctx) {
         if (general && F === 'cos') return `${us} = \\pm ${tex(A, l)} + 2\\pi n`;
         return uf.map(([b, P]) => `${us} = ${plusTex([simpOr(b), periodN(simpOr(P))], l)}`).join(notation(l).listWideTex);
     };
-    const texLines = byLang((l) => (isX ? xTex(l) : `${uTex(l)} \\;\\Rightarrow\\; ${xTex(l)}`) + ZZ(l));
+    const texLines = eachLanguage((l) => (isX ? xTex(l) : `${uTex(l)} \\;\\Rightarrow\\; ${xTex(l)}`) + ZZ(l));
     return { families: fams, steps: [S(title, { tex: texLines, text: rule })] };
 }
 
@@ -300,23 +300,23 @@ function trigPolyOne(P, F, u, ctx, extraText) {
         const a = simpOr(div(neg(ct.get(0) ?? N0), ct.get(1)));
         const b = basicTrig(F, u, a, ctx);
         if (!b) return null;
-        if (extraText) steps.push(S(extraText.title, { tex: byLang((l) => `${tex(fn(F, u), l)} = ${tex(a, l)}`), text: extraText.text }));
+        if (extraText) steps.push(S(extraText.title, { tex: eachLanguage((l) => `${tex(fn(F, u), l)} = ${tex(a, l)}`), text: extraText.text }));
         steps.push(...b.steps);
         return { families: b.families, steps };
     }
     const tName = 't';
     const polyT = polyNodeFrom(ct, tName);
     const Fu = (l) => tex(fn(F, u), l);
-    steps.push(S(byLang((l) => (msg('solve.trig.substitute', { l: Fu(l) }).in(l))), {
-        tex: byLang((l) => `${tex(polyT, l)} = 0`),
+    steps.push(S(eachLanguage((l) => (msg('solve.trig.substitute', { l: Fu(l) }).in(l))), {
+        tex: eachLanguage((l) => `${tex(polyT, l)} = 0`),
         text: extraText ? extraText.text : (F === 'sin' || F === 'cos' ? msg('solve.trig.equation_is_now_algebraic_in_remember') : msg('solve.trig.equation_is_now_algebraic_in')),
     }));
     const rr = rootsOfNodePoly(ct, tName);
     if (!rr) return null;
-    steps.push(S(byLang((l) => (msg('solve.trig.solve_2', { polyT: tex(polyT, l) }).in(l))), { tex: byLang((l) => rootsTex(rr.roots, 't', l)), sub: rr.steps }));
+    steps.push(S(eachLanguage((l) => (msg('solve.trig.solve_2', { polyT: tex(polyT, l) }).in(l))), { tex: eachLanguage((l) => rootsTex(rr.roots, 't', l)), sub: rr.steps }));
     for (const t of rr.roots) {
         if ((F === 'sin' || F === 'cos') && Math.abs(t.approx) > 1 + 1e-12) {
-            steps.push(S(byLang((l) => `$t = ${tex(t.node, l)}$`), { text: msg('solve.trig.rejected', { p: F === 'sin' ? '\\sin' : '\\cos' }) }));
+            steps.push(S(eachLanguage((l) => `$t = ${tex(t.node, l)}$`), { text: msg('solve.trig.rejected', { p: F === 'sin' ? '\\sin' : '\\cos' }) }));
             continue;
         }
         const b = basicTrig(F, u, t.node, ctx);
@@ -350,7 +350,7 @@ function trigFraction(E, ctx) {
     const r = trigCore(nd.num, { ...ctx, trigFrac: true });
     if (!r) return null;
     const steps = [S(msg('solve.trig.fraction_is_zero_when_its_numerator'), {
-        tex: byLang((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
+        tex: eachLanguage((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
         text: msg('solve.trig.solve_numerator_0_roots_where_denominator'),
     })];
     return { families: r.families, steps: [...steps, ...r.steps] };
@@ -403,7 +403,7 @@ function trigCore0(E, ctx) {
             P = expd(mul(P, pow(sym(PH[name]), num(k))));
             if (!P) return null;
             pre.push(S(msg('solve.trig.multiply_both_sides_by', { p: (lng) => Uf(name)(lng), p2: k > 1 ? `^{${k}}` : '' }), {
-                tex: byLang((l) => `${tex(simpOr(replaceNode(replaceNode(replaceNode(replaceNode(P, sym(PH.sin), fn('sin', u)), sym(PH.cos), fn('cos', u)), sym(PH.tan), fn('tan', u)), sym(PH.cot), fn('cot', u))), l)} = 0`),
+                tex: eachLanguage((l) => `${tex(simpOr(replaceNode(replaceNode(replaceNode(replaceNode(P, sym(PH.sin), fn('sin', u)), sym(PH.cos), fn('cos', u)), sym(PH.tan), fn('tan', u)), sym(PH.cot), fn('cot', u))), l)} = 0`),
                 text: msg('solve.trig.it_stands_in_denominator_so_by'),
             }));
         }
@@ -437,7 +437,7 @@ function trigSingle(P, names, u, ctx) {
         if (!ct.size) return null;
         const polyT = polyNodeFrom(ct, PH.tan);
         const pre = S(msg('solve.trig.replace_and_multiply_by', { p: mj > 1 ? `^${mj}` : '' }), {
-            tex: byLang((l) => `${tex(simpOr(replaceNode(polyT, sym(PH.tan), fn('tan', u))), l)} = 0`),
+            tex: eachLanguage((l) => `${tex(simpOr(replaceNode(polyT, sym(PH.tan), fn('tan', u))), l)} = 0`),
             text: msg('solve.trig.since_cotangent_is_defined_multiplication_is'),
         });
         const r = trigPolyOne(polyT, 'tan', u, ctx);
@@ -480,7 +480,7 @@ function sinCosCore(bv, u, ctx, depth) {
         const fac = simpOr(mul(pow(fn('sin', u), num(a)), pow(fn('cos', u), num(b))));
         const redNode = bvNode(red, u);
         const steps = [S(msg('solve.trig.take_common_factor_out_of_brackets'), {
-            tex: byLang((l) => `${tex(fac, l)}\\left(${tex(redNode, l)}\\right) = 0`),
+            tex: eachLanguage((l) => `${tex(fac, l)}\\left(${tex(redNode, l)}\\right) = 0`),
             text: msg('solve.trig.product_is_zero_when_one_of'),
         })];
         const families = [];
@@ -520,7 +520,7 @@ function sinCosCore(bv, u, ctx, depth) {
         if (!P2) return null;
         const r = trigPolyOne(P2, F, u, ctx);
         const pre = S(msg('solve.trig.replace_with', { p: (lng) => Ut(G)(lng), p2: (lng) => Ut(F)(lng) }), {
-            tex: byLang((l) => `${tex(simpOr(replaceNode(P2, sym(other), fn(F, u))), l)} = 0`),
+            tex: eachLanguage((l) => `${tex(simpOr(replaceNode(P2, sym(other), fn(F, u))), l)} = 0`),
             text: msg('solve.trig.pythagorean_identity_leaves_one_function_in'),
         });
         return done(r, [pre]);
@@ -536,7 +536,7 @@ function sinCosCore(bv, u, ctx, depth) {
             h.set(2, simpOr(add(h.get(2) ?? N0, c0)));
             h.set(0, simpOr(add(h.get(0) ?? N0, c0)));
             pre.push(S(msg('solve.trig.write_number_as'), {
-                tex: byLang((l) => `${tex(simpOr(sumNode([...h.entries()].filter(([, c]) => !isZeroNode(c)).map(([i, c]) => mul(c, pow(fn('sin', u), num(i)), pow(fn('cos', u), num(d - i)))))), l)} = 0`),
+                tex: eachLanguage((l) => `${tex(simpOr(sumNode([...h.entries()].filter(([, c]) => !isZeroNode(c)).map(([i, c]) => mul(c, pow(fn('sin', u), num(i)), pow(fn('cos', u), num(d - i)))))), l)} = 0`),
                 text: msg('solve.trig.now_every_term_has_same_degree'),
             }));
         }
@@ -560,7 +560,7 @@ function sinCosCore(bv, u, ctx, depth) {
             for (const [i, c] of h) ct.set(i, c);
             const polyT = polyNodeFrom(ct, PH.tan);
             steps.push(S(msg('solve.trig.homogeneous_equation_divide_by', { p: dd > 1 ? `^${dd}` : '', p2: (lng) => tex(u, lng).length > 1 ? `(${tex(u, lng)})` : tex(u, lng) }), {
-                tex: byLang((l) => `${tex(simpOr(replaceNode(polyT, sym(PH.tan), fn('tan', u))), l)} = 0`),
+                tex: eachLanguage((l) => `${tex(simpOr(replaceNode(polyT, sym(PH.tan), fn('tan', u))), l)} = 0`),
                 text: msg('solve.trig.this_is_allowed_if_then_and', { p: (lng) => Ut('cos')(lng), p2: (lng) => Ut('sin')(lng), p3: (lng) => tex(h.get(dd), lng) }),
             }));
             const r = trigPolyOne(polyT, 'tan', u, ctx);
@@ -582,7 +582,7 @@ function sinCosCore(bv, u, ctx, depth) {
         const u2 = simpOr(add(u, phi));
         const rhs2 = simpOr(div(cRight, R));
         const pre = S(msg('solve.trig.auxiliary_angle_method'), {
-            tex: byLang((l) => `${tex(simpOr(add(mul(a, fn('sin', u)), mul(b, fn('cos', u)))), l)} = ${tex(R, l)}\\sin\\left(${tex(u2, l)}\\right)`),
+            tex: eachLanguage((l) => `${tex(simpOr(add(mul(a, fn('sin', u)), mul(b, fn('cos', u)))), l)} = ${tex(R, l)}\\sin\\left(${tex(u2, l)}\\right)`),
             text: msg('solve.trig.with_here', { R: (lng) => tex(R, lng), phi: (lng) => tex(phi, lng) }),
         });
         const r = basicTrig('sin', u2, rhs2, ctx);
@@ -621,7 +621,7 @@ function sumToProduct(E, ctx) {
     const lhsT = (l) => `${tex(fn(A.F, A.u), l)} ${plus ? '+' : '-'} ${tex(fn(B.F, B.u), l)}`;
     const prodT = (l) => `${A.F === 'cos' && !plus ? '-' : ''}2${tex(fn(G1, sum), l)}${tex(fn(G2, dif), l)}`;
     const steps = [S(msg('solve.trig.turn_it_into_product', { p: (lng) => name[lng] }), {
-        tex: byLang((l) => `${lhsT(l)} = ${prodT(l)} = 0`),
+        tex: eachLanguage((l) => `${lhsT(l)} = ${prodT(l)} = 0`),
         text: msg('solve.trig.product_is_zero_when_one_of'),
     })];
     const families = [];
@@ -658,7 +658,7 @@ function equalTrig(E, ctx) {
     if (key === 'tan,tan' || key === 'cot,cot') {
         rels = [{ X: A, Y: B, c: N0, s: sgn, P: PI }];
         const f = key === 'tan,tan' ? 'tg' : 'ctg';
-        rule = byLang((l) => {
+        rule = eachLanguage((l) => {
             const F = l === 'ru' ? `\\operatorname{${f}}` : key === 'tan,tan' ? '\\tan' : '\\cot';
             return msg('solve.trig.where_both_sides_are_defined_which', { F, p: (lng) => sgn < 0 ? msg('solve.trig.here_2', { F }).in(lng) : '' }).in(l);
         });
@@ -691,11 +691,11 @@ function equalTrig(E, ctx) {
     }
     const eqT = (l) => `${tex(fn(P.F, A), l)} = ${pm}${tex(fn(R.F, B), l)}`;
     const steps = [
-        S(byLang((l) => (msg('solve.trig.compare_arguments', { l: eqT(l) }).in(l))), {
-            tex: byLang((l) => lines.map((f) => f(l)).join(`${orTex(l)} `) + ZZ(l)),
+        S(eachLanguage((l) => (msg('solve.trig.compare_arguments', { l: eqT(l) }).in(l))), {
+            tex: eachLanguage((l) => lines.map((f) => f(l)).join(`${orTex(l)} `) + ZZ(l)),
             text: rule,
         }),
-        S(msg('solve.trig.solve_for', { v }), { tex: byLang((l) => families.map((f) => familyTex(f, v, l)).join(notation(l).listWideTex) + ZZ(l)) }),
+        S(msg('solve.trig.solve_for', { v }), { tex: eachLanguage((l) => families.map((f) => familyTex(f, v, l)).join(notation(l).listWideTex) + ZZ(l)) }),
     ];
     return { families, steps };
 }
@@ -738,7 +738,7 @@ function doubleAngle(E, tn, args, ctx) {
     const E3 = expd(E2);
     if (!E3) return null;
     const pre = S(msg('solve.trig.double_angle_formulas'), {
-        tex: byLang((l) => reps.map(([t, r]) => `${tex(t, l)} = ${tex(r, l)}`).join(';\\quad ') + `\\;\\Rightarrow\\; ${tex(E3, l)} = 0`),
+        tex: eachLanguage((l) => reps.map(([t, r]) => `${tex(t, l)} = ${tex(r, l)}`).join(';\\quad ') + `\\;\\Rightarrow\\; ${tex(E3, l)} = 0`),
         text: msg('solve.trig.now_there_is_single_argument'),
     });
     const r = trigCore(E3, { ...ctx, trigDepth: 1 });

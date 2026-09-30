@@ -5,11 +5,11 @@ import { nodeChildren, neg, num, add, mul, div, pow, fn, substitute, freeVars, m
 import { evaluate } from '../../core/evaluate.js';
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
-import { DNE, Split, T_, asNode, atPoint, bt, evalAt, fin, infV, isOneV, isZeroV, limTex, lt, makePoint, sideSignStrict, simp, trySimp, tx } from './common.js';
+import { DNE, Split, asNode, atPoint, evalAt, fin, infV, isOneV, isZeroV, limTex, lt, makePoint, sideSignStrict, simp, trySimp, tx } from './common.js';
 import { ev } from './evaluator.js';
 import { FORM_NAME, FORM_TEX, plainNum, quotientParts } from './forms.js';
 import { crossCheck, fmtNum, numericEstimate, tableFor, tableStep } from './table.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- public API
 
@@ -183,7 +183,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     const table = others.length ? [] : tableFor(f, v, P);
     const head = (L) => `${limTex(P, v, L)} ${lt(node, L)}`;
     if (wantSteps) {
-        steps.push(step({ title: msg('calculus.limit.limit.what_we_look_for'), tex: bt(head), rule: 'start' }));
+        steps.push(step({ title: msg('calculus.limit.limit.what_we_look_for'), tex: eachLanguage(head), rule: 'start' }));
         if (domainSide) {
             steps.push(step({
                 title: msg('calculus.limit.limit.where_function_is_defined'),
@@ -214,8 +214,8 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
         sidesInfo = { left: valueOut(vl), right: valueOut(vr) };
         const same = vl && vr && vl.k === vr.k && (vl.k !== 'fin' || Math.abs(vl.x - vr.x) < 1e-12) && (vl.k !== 'inf' || vl.s === vr.s);
         if (wantSteps) {
-            steps.push(step({ title: msg('calculus.limit.limit.limit_from_left'), tex: bt((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`), rule: 'left', sub: l.C?.log ?? [] }));
-            steps.push(step({ title: msg('calculus.limit.limit.limit_from_right'), tex: bt((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`), rule: 'right', sub: r.C?.log ?? [] }));
+            steps.push(step({ title: msg('calculus.limit.limit.limit_from_left'), tex: eachLanguage((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`), rule: 'left', sub: l.C?.log ?? [] }));
+            steps.push(step({ title: msg('calculus.limit.limit.limit_from_right'), tex: eachLanguage((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`), rule: 'right', sub: r.C?.log ?? [] }));
         }
         result = same ? { L: vl, C: l.C, method: l.method } : { L: vl && vr ? DNE : null, C: { log: [], methods: new Set() }, method: 'one-sided', splitDiffer: !!(vl && vr) };
     }
@@ -257,15 +257,15 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     const value = approx !== undefined ? null : valueOut(L);
     if (value === null && approx === undefined) method = null;
     const tex = approx !== undefined
-        ? bt((Lg) => `${head(Lg)} \\approx ${fmtNum(approx, Lg)}`)
+        ? eachLanguage((Lg) => `${head(Lg)} \\approx ${fmtNum(approx, Lg)}`)
         : value !== null
-            ? bt((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`)
+            ? eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`)
             : null;
     if (wantSteps) {
         if (method === 'substitution') {
             steps.push(step({
                 title: msg('calculus.limit.limit.substitute'),
-                tex: bt((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`),
+                tex: eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`),
                 text: msg('calculus.limit.limit.function_is_defined_and_continuous_at', { v, P: plainNum(P) }),
                 rule: 'substitution',
             }));
@@ -274,7 +274,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             if (form) {
                 steps.push(step({
                     title: msg('calculus.limit.limit.identify_indeterminate_form'),
-                    tex: bt((Lg) => `${head(Lg)} = \\left[${FORM_TEX[form]}\\right]`),
+                    tex: eachLanguage((Lg) => `${head(Lg)} = \\left[${FORM_TEX[form]}\\right]`),
                     text: msg('calculus.limit.limit.substitution_gives_indeterminate_form_expression_has', { p: FORM_NAME[form] }),
                     rule: 'form',
                 }));

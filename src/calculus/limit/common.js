@@ -48,11 +48,6 @@ export function trySimp(n) {
     }
 }
 
-export function bt(f) {
-    const ru = f('ru');
-    const en = f('en');
-    return ru === en ? ru : { ru, en };
-}
 
 export const tx = (n, L) => calcTex(n, L);
 const tall = (s) => /\\frac|\\sqrt|\\left|\^\{/.test(s);

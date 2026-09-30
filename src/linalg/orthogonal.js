@@ -1,7 +1,7 @@
 // linalg/orthogonal — Gram–Schmidt, projections and least squares.
 
 import { Q } from '../core/rational.js';
-import { L, S, fail, qt, sub } from './common.js';
+import { S, fail, qt, sub } from './common.js';
 import { M, Matrix, toQ, vecTex } from './core.js';
 import { matSolve } from './systems.js';
 import { msg } from '../i18n/index.js';

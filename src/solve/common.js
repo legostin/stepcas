@@ -7,20 +7,14 @@ import { Q, bigGcd } from '../core/rational.js';
 import { simplify } from '../core/simplify.js';
 import { expand, collectTerms } from '../core/expand.js';
 import { evaluate } from '../core/evaluate.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- small helpers
 
 export const T = (ru, en = ru) => ({ ru, en });
-/** {ru, en} from a function of the language; a plain string when both agree. */
-export const byLang = (f) => {
-    const ru = f('ru');
-    const en = f('en');
-    return ru === en ? ru : { ru, en };
-};
 export const pick = (x, lang) => (typeof x === 'string' ? x : x?.[lang] ?? '');
 export const tex = (node, lang = 'ru', o = {}) => toTex(node, { ...o, lang });
-export const texB = (node, o = {}) => byLang((l) => tex(node, l, o));
+export const texB = (node, o = {}) => eachLanguage((l) => tex(node, l, o));
 
 export function S(title, o = {}) {
     const s = mkStep({ title, tex: o.tex, text: o.text, rule: o.rule, sub: o.sub });

@@ -6,10 +6,10 @@ import { quickDerivative } from '../derivative/index.js';
 import { evaluate } from '../../core/evaluate.js';
 import { canonContext } from '../../core/simplify.js';
 import { step } from '../../core/steps.js';
-import { N0, N1, T_, asNode, bt, evalAt, isNum, isZeroN, simp, tx } from './common.js';
+import { N0, N1, asNode, evalAt, isNum, isZeroN, simp, tx } from './common.js';
 import { limit } from './limit.js';
 import { fmtNum } from './table.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- Taylor polynomials
 
@@ -66,7 +66,7 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         return mul(t.coeff, pw);
     };
     const polyShown = terms.length ? (terms.length === 1 ? termNode(terms[0]) : add(terms.map(termNode))) : N0;
-    const tex = bt((L) => `T_{${n}}(${v}) = ${tx(polyShown, L)}`);
+    const tex = eachLanguage((L) => `T_{${n}}(${v}) = ${tx(polyShown, L)}`);
     const steps = [];
     if (opts.steps) {
         steps.push(step({
@@ -78,7 +78,7 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         for (let k = 0; k <= n; k++) {
             steps.push(step({
                 title: msg('calculus.limit.taylor.coefficient_of_degree', { k }),
-                tex: bt((L) => `\\frac{f^{(${k})}(${tx(A, L)})}{${k}!} = ${tx(coeffs[k], L)}`),
+                tex: eachLanguage((L) => `\\frac{f^{(${k})}(${tx(A, L)})}{${k}!} = ${tx(coeffs[k], L)}`),
                 rule: 'coefficient',
             }));
         }
@@ -112,6 +112,6 @@ export function taylorRemainderBound(node, v = 'x', a = 0, n = 5, x = 1) {
     M *= 1.0001;
     const fact = Number(factorialQ(n + 1));
     const bound = (M * Math.abs(X - A) ** (n + 1)) / fact;
-    const tex = bt((L) => `\\left|R_{${n}}\\right| \\le \\frac{M\\,|${v} - a|^{${n + 1}}}{${n + 1}!} \\approx ${fmtNum(bound, L)}`);
+    const tex = eachLanguage((L) => `\\left|R_{${n}}\\right| \\le \\frac{M\\,|${v} - a|^{${n + 1}}}{${n + 1}!} \\approx ${fmtNum(bound, L)}`);
     return { bound, M, tex };
 }

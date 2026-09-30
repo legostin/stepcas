@@ -3,13 +3,13 @@
 import { Q } from '../core/rational.js';
 import { num, containsVar, numValue, mul, pow, nodeSome, add, fn, div, neg, nodeKey } from '../core/ast.js';
 import { Poly } from '../core/poly.js';
-import { N0, N1, S, T, approxOf, byLang, expd, isConstNode, isolated, outermost, simpOr, tex } from './common.js';
+import { N0, N1, S, approxOf, expd, isConstNode, isolated, outermost, simpOr, tex } from './common.js';
 import { subSolve } from './equation.js';
 import { E_SYM, baseInfo, baseNode, isE, logNode, sameBase } from './exponential.js';
 import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
 import { termsOfSum } from './rational.js';
 import { mergeRoots } from './roots.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- logarithmic equations
 
@@ -64,9 +64,9 @@ export function solveCommonExp(lhs, rhs, E, ctx) {
     for (const F of first.filter(varExp)) {
         const rest = expd(mul(E, pow(F, num(-1))));
         if (!rest || !containsVar(rest, v) || nodeSome(rest, (n) => n.type === 'pow' && containsVar(n.exp, v))) continue;
-        const steps = [S(byLang((l) => (msg('solve.logarithmic.take_out_of_brackets', { F: tex(F, l) }).in(l))), {
-            tex: byLang((l) => `${tex(F, l)}\\left(${tex(rest, l)}\\right) = 0`),
-            text: byLang((l) => (msg('solve.logarithmic.exponential_is_always_positive_so_this', { F: tex(F, l), rest: tex(rest, l) }).in(l))),
+        const steps = [S(eachLanguage((l) => (msg('solve.logarithmic.take_out_of_brackets', { F: tex(F, l) }).in(l))), {
+            tex: eachLanguage((l) => `${tex(F, l)}\\left(${tex(rest, l)}\\right) = 0`),
+            text: eachLanguage((l) => (msg('solve.logarithmic.exponential_is_always_positive_so_this', { F: tex(F, l), rest: tex(rest, l) }).in(l))),
         })];
         const sub = subSolve(rest, N0, ctx);
         if (sub.kind === 'unsupported' || sub.numeric) return null;
@@ -120,7 +120,7 @@ export function solveTakeLog(lhs, rhs, E, ctx) {
     const L2 = simpOr(expd(LB) ?? LB);
     const lt = (l) => (lname === 'ln' ? '\\ln' : lname === 'lg' ? (notation(l).log10Tex) : `\\log_{${tex(base, l)}}`);
     const steps = [S(msg('solve.logarithmic.take_logarithm_of_both_sides'), {
-        tex: byLang((l) => `${tex(L1, l)} = ${tex(L2, l)}`),
+        tex: eachLanguage((l) => `${tex(L1, l)} = ${tex(L2, l)}`),
         text: msg('solve.logarithmic.base_of_power_with_variable_exponent', { p: (lng) => lt(lng) }),
     })];
     const sub = subSolve(L1, L2, ctx);
@@ -143,9 +143,9 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
         const { coef, info, F } = vt[0];
         const R = simpOr(div(neg(C), coef));
         if (!isConstNode(R)) return null;
-        if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: byLang((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
+        if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: eachLanguage((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
         const l2 = expd(pow(info.base, R)) ?? pow(info.base, R);
-        steps.push(S(msg('solve.logarithmic.rewrite_as_power'), { tex: byLang((l) => `${tex(l2, l)} = ${tex(info.arg, l)}`), text: defText }));
+        steps.push(S(msg('solve.logarithmic.rewrite_as_power'), { tex: eachLanguage((l) => `${tex(l2, l)} = ${tex(info.arg, l)}`), text: defText }));
         const sub = subSolve(l2, info.arg, ctx);
         if (sub.kind === 'unsupported') return null;
         pushPart(steps, l2, info.arg, sub, v);
@@ -163,10 +163,10 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
             const { coef, info, F } = vt[0];
             const R = simpOr(div(neg(C), coef));
             if (!isConstNode(R)) return null;
-            if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: byLang((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
+            if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: eachLanguage((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
             const val = simpOr(pow(info.base, R));
             steps.push(S(msg('solve.logarithmic.go_from_logarithm_to_power'), {
-                tex: byLang((l) => `${tex(u, l)} = ${tex(pow(info.base, R), l)}${nodeKey(val) !== nodeKey(pow(info.base, R)) ? ` = ${tex(val, l)}` : ''}`),
+                tex: eachLanguage((l) => `${tex(u, l)} = ${tex(pow(info.base, R), l)}${nodeKey(val) !== nodeKey(pow(info.base, R)) ? ` = ${tex(val, l)}` : ''}`),
                 text: defText,
             }));
             const sub = subSolve(u, val, ctx);
@@ -191,18 +191,18 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
         if (Pt.degree < 1) return null;
         const tN = logNode(c, u);
         steps.push(S(msg('solve.logarithmic.substitute', { tN: (lng) => tex(tN, lng) }), {
-            tex: byLang((l) => `${polyTex(Pt, 't', l)} = 0`),
+            tex: eachLanguage((l) => `${polyTex(Pt, 't', l)} = 0`),
             text: normalize ? msg('solve.logarithmic.logarithms_to_different_bases_are_converted', { cN: (lng) => tex(cN, lng) }) : undefined,
         }));
         const tr = solveAnyPoly(Pt, { v: 't', domain: 'real' });
-        steps.push(partStep(byLang((l) => `${polyTex(Pt, 't', l)} = 0`), tr, 't'));
+        steps.push(partStep(eachLanguage((l) => `${polyTex(Pt, 't', l)} = 0`), tr, 't'));
         let roots = [];
         for (const r of tr.roots) {
             const val = simpOr(pow(cN, r.node));
             const sub = subSolve(u, val, ctx);
             if (sub.kind === 'unsupported') return null;
             roots.push(...sub.roots);
-            steps.push(partStep(byLang((l) => `${tex(tN, l)} = ${tex(r.node, l)} \\quad\\Rightarrow\\quad ${tex(u, l)} = ${tex(val, l)}`), sub, v));
+            steps.push(partStep(eachLanguage((l) => `${tex(tN, l)} = ${tex(r.node, l)} \\quad\\Rightarrow\\quad ${tex(u, l)} = ${tex(val, l)}`), sub, v));
         }
         roots = mergeRoots(roots);
         return { kind: roots.length ? 'roots' : 'none', roots, steps, type: 'logarithmic' };
@@ -249,7 +249,7 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
     const simpleEq = vt.length === 2 && !hasG && isZeroNode(R) && ups.length === 1 && downs.length === 1 && vt.every((x) => numValue(x.coef)?.abs().isOne() && x.info.k.isOne());
     if (simpleEq) {
         steps.push(S(msg('solve.logarithmic.equal_logarithms_to_same_base_arguments'), {
-            tex: byLang((l) => `${tex(ups[0], l)} = ${tex(downs[0], l)}`),
+            tex: eachLanguage((l) => `${tex(ups[0], l)} = ${tex(downs[0], l)}`),
             text: msg('solve.logarithmic.logarithm_is_monotonic_this_step_ignores'),
         }));
         const sub = subSolve(ups[0], downs[0], ctx);
@@ -258,11 +258,11 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
         return { ...sub, steps, type: 'logarithmic' };
     }
     steps.push(S(msg('solve.logarithmic.combine_logarithms_into_one'), {
-        tex: byLang((l) => `${tex(logF, l)} = ${rightT(l)}`),
+        tex: eachLanguage((l) => `${tex(logF, l)} = ${rightT(l)}`),
         text: msg('solve.logarithmic.rules_hold_for_so_we_check', { p: (lng) => normalize ? msg('solve.logarithmic.all_logarithms_are_converted_to_base', { cN: (lng) => tex(cN, lng) }).in(lng) : '' }),
     }));
     steps.push(S(msg('solve.logarithmic.pass_from_logarithms_to_their_arguments'), {
-        tex: byLang((l) => `${tex(F, l)} = ${tex(K, l)}`),
+        tex: eachLanguage((l) => `${tex(F, l)} = ${tex(K, l)}`),
         text: defText,
     }));
     const sub = subSolve(F, K, ctx);

@@ -1,9 +1,9 @@
 // limit/table — the table of values approaching the point and the numeric cross-check.
 
 import { step } from '../../core/steps.js';
-import { HS, T_, atPoint, bt, evalAt } from './common.js';
+import { HS, atPoint, evalAt } from './common.js';
 import { plainNum } from './forms.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric table and check
 
@@ -117,7 +117,7 @@ export function fmtNum(x, L) {
 }
 
 export function tableStep(rows, v, P, n) {
-    const tex = bt((L) => {
+    const tex = eachLanguage((L) => {
         const lines = rows.map((r) => `${fmtNum(r.x, L)} & ${fmtNum(r.fx, L)}`).join(' \\\\ ');
         return `\\begin{array}{r|r} ${v} & f(${v}) \\\\ \\hline ${lines} \\end{array}`;
     });

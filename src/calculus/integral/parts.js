@@ -7,10 +7,10 @@ import { MathError } from '../../core/rational.js';
 import { quickDerivative } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { plainish } from './basic.js';
-import { N0, T_, bt, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx } from './common.js';
+import { N0, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx } from './common.js';
 import { I, sub } from './engine.js';
 import { cleanAnti } from './integrate.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- integration by parts
 
@@ -97,7 +97,7 @@ export function mParts(f, ctx) {
         method: 'parts',
         step: step({
             title: msg('calculus.integral.parts.integration_by_parts'),
-            tex: bt((L) => `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', { u: (lng) => plainish(u, lng), p: (lng) => why ? why[lng] : msg('calculus.integral.parts.this_makes_integral_simpler').in(lng), Vs: (lng) => plainish(Vs, lng) }),
             rule: 'parts',
             sub: [rv.step, rj.step].filter(Boolean),
@@ -150,7 +150,7 @@ export function mPolyTimes(f, ctx) {
         method: 'parts',
         step: step({
             title: msg('calculus.integral.parts.by_parts_times', { degree: P.degree }),
-            tex: bt((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text: msg('calculus.integral.parts.integrate_by_parts_times_each_time', { degree: P.degree }),
             rule: 'parts-tabular',
         }),

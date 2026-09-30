@@ -4,10 +4,10 @@ import { nodeSome, num, add, neg, mul } from '../core/ast.js';
 import { Q } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { toText } from '../core/print.js';
-import { T, approxC, approxOf, approxTex, byLang, close, exactZero, simpOr, tex } from './common.js';
+import { approxC, approxOf, approxTex, close, exactZero, simpOr, tex } from './common.js';
 import { IntervalSet, intervalTex, intervalText, parseIntervalSet } from './intervals.js';
 import { N_SYM, familiesTex } from './trig.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- roots and their TeX
 
@@ -114,16 +114,16 @@ export function answerOf(res, v) {
                     ? { tex: msg('solve.roots.any_in_domain', { v }), text: msg('solve.roots.any_number_in_domain') }
                     : { tex: `${v} \\in \\mathbb{R}`, text: msg('solve.roots.any_number') };
             }
-            return { tex: byLang((l) => `${v} \\in ${intervalTex(set, l)}`), text: byLang((l) => intervalText(set, l)) };
+            return { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`), text: eachLanguage((l) => intervalText(set, l)) };
         }
         case 'roots':
             if (res.families) {
                 return {
-                    tex: byLang((l) => familiesTex(res.families, v, l)),
-                    text: byLang((l) => `${res.families.map((f) => `${v} = ${toText(simpOr(add(f.base, mul(f.period, N_SYM))), { lang: l })}`).join('; ')}, n ∈ Z`),
+                    tex: eachLanguage((l) => familiesTex(res.families, v, l)),
+                    text: eachLanguage((l) => `${res.families.map((f) => `${v} = ${toText(simpOr(add(f.base, mul(f.period, N_SYM))), { lang: l })}`).join('; ')}, n ∈ Z`),
                 };
             }
-            return { tex: byLang((l) => rootsTex(res.roots, v, l)), text: byLang((l) => res.roots.map((r) => (r.approxOnly ? `≈ ${approxText(r.approx, l)}` : toText(r.node, { lang: l }))).join(notation(l).listText)) };
+            return { tex: eachLanguage((l) => rootsTex(res.roots, v, l)), text: eachLanguage((l) => res.roots.map((r) => (r.approxOnly ? `≈ ${approxText(r.approx, l)}` : toText(r.node, { lang: l }))).join(notation(l).listText)) };
         default:
             return { tex: '', text: res.reason ?? msg('solve.roots.could_not_solve') };
     }

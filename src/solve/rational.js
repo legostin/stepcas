@@ -4,12 +4,12 @@ import { pow, num, mul, substitute, div, neg, nodeKey } from '../core/ast.js';
 import { numDen, collectTerms } from '../core/expand.js';
 import { Poly } from '../core/poly.js';
 import { Q } from '../core/rational.js';
-import { N0, S, T, byLang, exactZero, isConstNode, simpOr, tex } from './common.js';
+import { N0, S, exactZero, isConstNode, simpOr, tex } from './common.js';
 import { reject } from './equation.js';
 import { IntervalSet } from './intervals.js';
 import { multOf, nodeQuadRoots, partStep, polyTex, solveAnyPoly } from './polynomial.js';
 import { hasI, mergeRoots, mkRoot, mkRootC } from './roots.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- rational equations
 
@@ -61,12 +61,12 @@ export function solveRational(lhs, rhs, E, ctx) {
     const steps = [];
     const Lnode = factoredNode(Lp, v);
     steps.push(S(msg('solve.rational.move_everything_to_left_and_bring'), {
-        tex: byLang((l) => `\\frac{${polyTex(N, v, l)}}{${tex(Lnode, l)}} = 0`),
+        tex: eachLanguage((l) => `\\frac{${polyTex(N, v, l)}}{${tex(Lnode, l)}} = 0`),
         text: msg('solve.rational.fraction_is_zero_when_its_numerator'),
     }));
     const poles = Lp.degree >= 1 ? solveAnyPoly(Lp, { v, domain: 'real' }).roots : [];
     const res = N.degree >= 1 ? solveAnyPoly(N, { ...ctx }) : { kind: N.isZero() ? 'all' : 'none', roots: [], cplx: [], steps: [] };
-    if (N.degree >= 1) steps.push(partStep(byLang((l) => `${polyTex(N, v, l)} = 0`), res, v));
+    if (N.degree >= 1) steps.push(partStep(eachLanguage((l) => `${polyTex(N, v, l)} = 0`), res, v));
     const Np = N.primitive();
     for (const r of res.roots ?? []) if (r.minPoly && !r.approxOnly) r.mult = multOf(Np, r.minPoly.primitive());
     let roots = mergeRoots(res.roots ?? []);
@@ -75,7 +75,7 @@ export function solveRational(lhs, rhs, E, ctx) {
         reject(ctx, bad, 'pole');
         roots = roots.filter((r) => !bad.includes(r));
         steps.push(S(msg('solve.rational.drop_roots_that_make_denominator_zero'), {
-            tex: byLang((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
+            tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
             text: msg('solve.rational.at_these_values_denominator_is_zero'),
         }));
     }
@@ -108,7 +108,7 @@ export function solveNodePoly(E, ctx) {
     const c2 = ct.get(2) ?? N0;
     const c1 = ct.get(1) ?? N0;
     const c0 = ct.get(0) ?? N0;
-    const steps = [S(msg('solve.rational.move_everything_to_left'), { tex: byLang((l) => `${tex(E, l)} = 0`) })];
+    const steps = [S(msg('solve.rational.move_everything_to_left'), { tex: eachLanguage((l) => `${tex(E, l)} = 0`) })];
     const cx = [c0, c1, c2].some(hasI);
     if (!ct.has(2)) {
         if (!ct.has(1)) return null;
@@ -116,7 +116,7 @@ export function solveNodePoly(E, ctx) {
         const r = simpOr(q, cx ? { complex: true } : undefined);
         const shown = cx && nodeKey(r) !== nodeKey(simpOr(q)) ? simpOr(q) : null;
         steps.push(S(msg('solve.rational.solve_for', { v }), {
-            tex: byLang((l) => `${v} = ${shown ? `${tex(shown, l)} = ` : ''}${tex(r, l)}`),
+            tex: eachLanguage((l) => `${v} = ${shown ? `${tex(shown, l)} = ` : ''}${tex(r, l)}`),
             text: shown ? msg('solve.rational.to_divide_by_complex_number_multiply') : undefined,
         }));
         const root = cx ? mkRootC(r) : mkRoot(r);

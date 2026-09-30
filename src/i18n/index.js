@@ -204,6 +204,16 @@ export function perLanguage(fn) {
     return msg('i18n.value', { value: fn });
 }
 
+/**
+ * fn(lang) for every registered language: {ru: …, en: …, …}; with compact (the default) a plain value when every
+ * language gives the same one. Values are computed now — for TeX that differs between languages and the like.
+ */
+export function eachLanguage(fn, { compact = true } = {}) {
+    const values = LANGUAGES.map((l) => fn(l));
+    if (compact && values.every((v) => v === values[0])) return values[0];
+    return Object.fromEntries(LANGUAGES.map((l, i) => [l, values[i]]));
+}
+
 /** Any bilingual value → a plain {lang: text} object for every registered language. */
 export function allLanguages(value) {
     return Object.fromEntries(LANGUAGES.map((l) => [l, inLanguage(value, l)]));

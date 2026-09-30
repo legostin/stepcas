@@ -9,9 +9,9 @@ import { numFindRoots, numIntegrate } from '../../numbers/numeric/index.js';
 import { limit } from '../limit/index.js';
 import { step } from '../../core/steps.js';
 import { niceForm, prettyForm } from '../derivative/index.js';
-import { N0, PI, T_, asNode, bt, isNum, paren, simp, trySimp, tx } from './common.js';
+import { N0, PI, asNode, isNum, paren, simp, trySimp, tx } from './common.js';
 import { answerStep, checkExpr, integrate } from './integrate.js';
-import { msg, notation } from '../../i18n/index.js';
+import { msg, notation, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- definite integrals
 
@@ -235,14 +235,14 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     if (wantSteps) {
         steps.push(step({
             title: msg('calculus.integral.definite.what_we_compute'),
-            tex: bt(head),
+            tex: eachLanguage(head),
             text: msg('calculus.integral.definite.find_antiderivative_f_and_use_newton'),
             rule: 'start',
         }));
     }
     const out = (o) => ({ value: null, numeric: null, exact: false, approx: false, converges: null, improper: false, antiderivative: null, method: null, steps, tex: null, ...o });
     if (A.x === B.x) {
-        return out({ value: N0, numeric: 0, exact: true, converges: true, method: 'equal-limits', tex: bt((L) => `${head(L)} = 0`) });
+        return out({ value: N0, numeric: 0, exact: true, converges: true, method: 'equal-limits', tex: eachLanguage((L) => `${head(L)} = 0`) });
     }
     const flip = A.x > B.x;
     const lo = flip ? B : A;
@@ -323,14 +323,14 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         if (wantSteps && (exactNode || diverges)) {
             steps.push(step({
                 title: msg('calculus.integral.definite.antiderivative'),
-                tex: bt((L) => `F(${v}) = ${tx(F, L)}`),
+                tex: eachLanguage((L) => `F(${v}) = ${tx(F, L)}`),
                 rule: 'antiderivative',
                 sub: anti.steps.filter((s) => s.rule !== 'answer' && s.rule !== 'start'),
             }));
             if (flip) {
                 steps.push(step({
                     title: msg('calculus.integral.definite.swap_limits'),
-                    tex: bt((L) => `\\int_{${boundTex(A, L)}}^{${boundTex(B, L)}} = -\\int_{${boundTex(B, L)}}^{${boundTex(A, L)}}`),
+                    tex: eachLanguage((L) => `\\int_{${boundTex(A, L)}}^{${boundTex(B, L)}} = -\\int_{${boundTex(B, L)}}^{${boundTex(A, L)}}`),
                     text: msg('calculus.integral.definite.lower_limit_is_larger_than_upper'),
                     rule: 'swap',
                 }));
@@ -339,7 +339,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                 const poles = interior.some((p) => p.pole);
                 steps.push(step({
                     title: poles ? msg('calculus.integral.definite.singular_points_inside_interval') : msg('calculus.integral.definite.jump_of_antiderivative'),
-                    tex: bt((L) => `${v} = ${interior.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
+                    tex: eachLanguage((L) => `${v} = ${interior.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
                     text: poles
                         ? msg('calculus.integral.definite.function_blows_up_inside_interval_newton')
                         : msg('calculus.integral.definite.antiderivative_jumps_inside_interval_this_happens'),
@@ -352,7 +352,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                 const isLim = x.top.how === 'limit' || x.bot.how === 'limit';
                 steps.push(step({
                     title: isLim ? msg('calculus.integral.definite.improper_integral_limits') : msg('calculus.integral.definite.newton_leibniz_formula'),
-                    tex: bt((L) => {
+                    tex: eachLanguage((L) => {
                         const upper = x.top.kind === 'fin' ? tx(x.top.node, L) : val(x.top);
                         const lower = x.bot.kind === 'fin' ? tx(x.bot.node, L) : val(x.bot);
                         const lu = lim(x.top, x.r, '-') ?? `F\\left(${boundTex(x.r, L)}\\right)`;
@@ -373,7 +373,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         const contributions = parts.map((x) => signOf(x.top.kind) - signOf(x.bot.kind)).filter((c) => c !== 0);
         const same = contributions.length && contributions.every((c) => Math.sign(c) === Math.sign(contributions[0]));
         const val = same ? ((flip ? -1 : 1) * Math.sign(contributions[0]) > 0 ? 'inf' : '-inf') : null;
-        const tex = bt((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
+        const tex = eachLanguage((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
         if (wantSteps) {
             const s = answerStep(msg('calculus.integral.definite.integral_diverges'), tex);
             s.text = msg('calculus.integral.definite.limit_of_antiderivative_is_infinite_so');
@@ -403,7 +403,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         // no exact verdict (the limit of F does not exist, or there is no F), but the tail visibly does not settle
         const s = numDiverges.value === Infinity ? 1 : numDiverges.value === -Infinity ? -1 : 0;
         const val = s ? ((flip ? -s : s) > 0 ? 'inf' : '-inf') : null;
-        const tex = bt((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
+        const tex = eachLanguage((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
         if (wantSteps) {
             const st = answerStep(msg('calculus.integral.definite.integral_diverges'), tex);
             st.text = numDiverges.reason === 'pole'
@@ -422,7 +422,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         const agrees = Number.isFinite(ex) && (!numOk || Math.abs(ex - numeric) <= tol * Math.max(1, Math.abs(ex)) || (improper && truncatedAgrees(anti.result, fc, v, lo, hi, interior)));
         if (agrees) {
             const value = niceForm(exactNode);
-            const tex = bt((L) => `${head(L)} = ${tx(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`);
+            const tex = eachLanguage((L) => `${head(L)} = ${tx(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`);
             if (wantSteps) steps.push(answerStep(msg('calculus.integral.definite.answer'), tex));
             return out({ value, numeric: ex, exact: true, converges: true, improper, antiderivative: anti.result, method: improper ? 'improper' : interior.length ? 'newton-leibniz-pieces' : 'newton-leibniz', tex });
         }
@@ -441,7 +441,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         }
         return out({ improper, antiderivative: anti.result, method: 'failed' });
     }
-    const tex = bt((L) => `${head(L)} \\approx ${fmtNum(numeric, L)}`);
+    const tex = eachLanguage((L) => `${head(L)} \\approx ${fmtNum(numeric, L)}`);
     if (wantSteps) {
         if (!anti.result && anti.reason) steps.push(step({ title: msg('calculus.integral.definite.antiderivative'), text: anti.reason, rule: 'antiderivative' }));
         steps.push(step({
@@ -514,18 +514,18 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
         else total = null;
     }
     const value = exact && total ? niceForm(total) : null;
-    const tex = bt((L) => `S = \\int_{${tx(lo.node, L)}}^{${tx(hi.node, L)}} \\left|${tx(prettyForm(d), L)}\\right|\\,d${v} ${value ? '= ' + tx(value, L) : '\\approx ' + fmtNum(numeric, L)}`);
+    const tex = eachLanguage((L) => `S = \\int_{${tx(lo.node, L)}}^{${tx(hi.node, L)}} \\left|${tx(prettyForm(d), L)}\\right|\\,d${v} ${value ? '= ' + tx(value, L) : '\\approx ' + fmtNum(numeric, L)}`);
     if (opts.steps) {
         steps.push(step({
             title: msg('calculus.integral.definite.difference_of_functions'),
-            tex: bt((L) => `f(${v}) - g(${v}) = ${tx(prettyForm(d), L)}`),
+            tex: eachLanguage((L) => `f(${v}) - g(${v}) = ${tx(prettyForm(d), L)}`),
             text: msg('calculus.integral.definite.area_between_graphs_is_integral_of'),
             rule: 'difference',
         }));
         if (cross.length || a === null) {
             steps.push(step({
                 title: msg('calculus.integral.definite.intersection_points'),
-                tex: bt((L) => `${v} = ${pts.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
+                tex: eachLanguage((L) => `${v} = ${pts.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
                 text: msg('calculus.integral.definite.between_intersection_points_difference_keeps_its'),
                 rule: 'intersections',
             }));
@@ -533,7 +533,7 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
         for (const pc of pieces) {
             steps.push(step({
                 title: msg('calculus.integral.definite.piece'),
-                tex: bt((L) => `\\int_{${tx(pc.from, L)}}^{${tx(pc.to, L)}} ${pc.upper === 'f' ? '(f - g)' : '(g - f)'}\\,d${v} = ${pc.value && typeof pc.value === 'object' ? tx(pc.value, L) : '\\approx ' + fmtNum(pc.numeric ?? NaN, L)}`),
+                tex: eachLanguage((L) => `\\int_{${tx(pc.from, L)}}^{${tx(pc.to, L)}} ${pc.upper === 'f' ? '(f - g)' : '(g - f)'}\\,d${v} = ${pc.value && typeof pc.value === 'object' ? tx(pc.value, L) : '\\approx ' + fmtNum(pc.numeric ?? NaN, L)}`),
                 rule: 'piece',
             }));
         }

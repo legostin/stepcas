@@ -3,7 +3,7 @@
 // Step = { title: {ru, en}, tex?: string | {ru, en}, text?: {ru, en}, rule?: string, sub?: Step[] }
 
 import { toTex } from './print.js';
-import { msg } from '../i18n/index.js';
+import { eachLanguage } from '../i18n/index.js';
 
 /** Bilingual string; en defaults to ru (for formulas and names that do not change). */
 export function L(ru, en = ru) {
@@ -21,9 +21,7 @@ const isNode = (x) => x && typeof x === 'object' && typeof x.type === 'string';
 
 /** TeX of a node in both languages: a plain string when they agree, else {ru, en}. */
 export function texBoth(node, opts = {}) {
-    const ru = toTex(node, { ...opts, lang: 'ru' });
-    const en = toTex(node, { ...opts, lang: 'en' });
-    return ru === en ? ru : { ru, en };
+    return eachLanguage((lang) => toTex(node, { ...opts, lang }));
 }
 
 /**

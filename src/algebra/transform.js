@@ -16,10 +16,9 @@ import { expand, numDen } from '../core/expand.js';
 import { L, step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { trySimplify } from '../core/safe.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
-const bt = (f) => L(f('ru'), f('en'));
 const asNode = (x) => (typeof x === 'string' ? parse(x) : x);
 const polyTex = (P, v, l) => tex(P.toNode(v), l);
 
@@ -53,7 +52,7 @@ function factorPoly(P, v) {
         if (R.degree >= 1) {
             steps.push(step({
                 title: msg('algebra.transform.take_common_factor_out'),
-                tex: bt((l) => `${polyTex(P, v, l)} = ${tex(common, l)}\\left(${polyTex(R, v, l)}\\right)`),
+                tex: eachLanguage((l) => `${polyTex(P, v, l)} = ${tex(common, l)}\\left(${polyTex(R, v, l)}\\right)`),
             }));
         }
     }
@@ -81,7 +80,7 @@ function factorPoly(P, v) {
             const f2 = u.add(new Poly([q]));
             steps.push(step({
                 title: msg('algebra.transform.difference_of_squares'),
-                tex: bt((l) => {
+                tex: eachLanguage((l) => {
                     const pb = trySimplify(mul(num(p), base));
                     const pT = pb.type === 'sym' ? tex(pb, l) : `\\left(${tex(pb, l)}\\right)`;
                     return `${polyTex(F, v, l)} = ${pT}^2 - ${q.toTex(l)}^2 = \\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`;
@@ -100,7 +99,7 @@ function factorPoly(P, v) {
             const plus = q.isPos();
             steps.push(step({
                 title: plus ? msg('algebra.transform.sum_of_cubes') : msg('algebra.transform.difference_of_cubes'),
-                tex: bt((l) => `${polyTex(F, v, l)} = \\left(${polyTex(lin, v, l)}\\right)\\left(${polyTex(quad, v, l)}\\right)`),
+                tex: eachLanguage((l) => `${polyTex(F, v, l)} = \\left(${polyTex(lin, v, l)}\\right)\\left(${polyTex(quad, v, l)}\\right)`),
                 text: plus ? L('$a^3 + b^3 = (a + b)(a^2 - ab + b^2)$.') : L('$a^3 - b^3 = (a - b)(a^2 + ab + b^2)$.'),
             }));
             queue.push(lin, quad);
@@ -111,14 +110,14 @@ function factorPoly(P, v) {
             if (D.isNeg()) {
                 constant = constant.mul(F.content());
                 out.push({ poly: F.primitive(), mult: 1 });
-                steps.push(step({ title: msg('algebra.transform.quadratic_does_not_factor'), tex: bt((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)} < 0`), text: msg('algebra.transform.it_has_no_real_roots') }));
+                steps.push(step({ title: msg('algebra.transform.quadratic_does_not_factor'), tex: eachLanguage((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)} < 0`), text: msg('algebra.transform.it_has_no_real_roots') }));
                 continue;
             }
             const sd = D.exactRoot(2);
             if (!sd) {
                 constant = constant.mul(F.content());
                 out.push({ poly: F.primitive(), mult: 1 });
-                steps.push(step({ title: msg('algebra.transform.roots_are_irrational'), tex: bt((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)}`), text: msg('algebra.transform.quadratic_does_not_factor_over_rationals') }));
+                steps.push(step({ title: msg('algebra.transform.roots_are_irrational'), tex: eachLanguage((l) => `${polyTex(F, v, l)}:\\ D = ${D.toTex(l)}`), text: msg('algebra.transform.quadratic_does_not_factor_over_rationals') }));
                 continue;
             }
             const x1 = b.neg().sub(sd).div(a.mul(new Q(2n)));
@@ -130,7 +129,7 @@ function factorPoly(P, v) {
                 out.push({ poly: f, mult: 2 });
                 steps.push(step({
                     title: msg('algebra.transform.perfect_square'),
-                    tex: bt((l) => `${polyTex(F, v, l)} = ${k.isOne() ? '' : k.toTex(l)}\\left(${polyTex(f, v, l)}\\right)^2`),
+                    tex: eachLanguage((l) => `${polyTex(F, v, l)} = ${k.isOne() ? '' : k.toTex(l)}\\left(${polyTex(f, v, l)}\\right)^2`),
                     text: msg('algebra.transform.discriminant_is_zero'),
                 }));
                 continue;
@@ -142,7 +141,7 @@ function factorPoly(P, v) {
             out.push({ poly: f1, mult: 1 }, { poly: f2, mult: 1 });
             steps.push(step({
                 title: msg('algebra.transform.factor_quadratic_through_its_roots'),
-                tex: bt((l) => `D = ${D.toTex(l)},\\ ${v}_1 = ${x1.toTex(l)},\\ ${v}_2 = ${x2.toTex(l)} \\;\\Rightarrow\\; ${polyTex(F, v, l)} = ${k.isOne() ? '' : k.eq(-1) ? '-' : k.toTex(l)}\\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`),
+                tex: eachLanguage((l) => `D = ${D.toTex(l)},\\ ${v}_1 = ${x1.toTex(l)},\\ ${v}_2 = ${x2.toTex(l)} \\;\\Rightarrow\\; ${polyTex(F, v, l)} = ${k.isOne() ? '' : k.eq(-1) ? '-' : k.toTex(l)}\\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`),
                 text: x1.isInt() && x2.isInt()
                     ? L(`$a${v}^2 + b${v} + c = a(${v} - ${v}_1)(${v} - ${v}_2)$.`)
                     : msg('algebra.transform.fractional_root_goes_into_its_bracket', { v, p: (lng) => [x1, x2].filter((z) => !z.isInt()).map((z) => `$${v} - ${z.toTex(lng)} \\to ${polyTex(linFromRoot(z), v, lng)}$`).join(', ') }),
@@ -158,7 +157,7 @@ function factorPoly(P, v) {
             if (!rem.isZero()) break;
             steps.push(step({
                 title: msg('algebra.transform.find_root_and_divide'),
-                tex: bt((l) => `${polyTex(F, v, l)} = \\left(${polyTex(f, v, l)}\\right)\\left(${polyTex(G, v, l)}\\right)`),
+                tex: eachLanguage((l) => `${polyTex(F, v, l)} = \\left(${polyTex(f, v, l)}\\right)\\left(${polyTex(G, v, l)}\\right)`),
                 text: msg('algebra.transform.root_is_sought_among_divisors_of', { v, p: (lng) => r.toTex(lng), f: (lng) => polyTex(f, v, lng) }),
             }));
             queue.push(f, G);
@@ -204,9 +203,9 @@ export function factorSteps(input, opts = {}) {
     let back = new Poly([r.constant]);
     for (const { poly, mult } of r.factors) back = back.mul(poly.pow(mult));
     if (!back.equals(P)) return null;
-    const steps = [step({ title: msg('algebra.transform.expression'), tex: bt((l) => tex(node, l)) }), ...r.steps];
+    const steps = [step({ title: msg('algebra.transform.expression'), tex: eachLanguage((l) => tex(node, l)) }), ...r.steps];
     if (!r.steps.length) steps.push(step({ title: msg('algebra.transform.it_does_not_factor'), text: msg('algebra.transform.polynomial_is_irreducible_over_rationals') }));
-    steps.push(step({ title: msg('algebra.transform.answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
+    steps.push(step({ title: msg('algebra.transform.answer'), tex: eachLanguage((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
     steps[steps.length - 1].final = true;
     return { result, steps, factors: r.factors, constant: r.constant };
 }
@@ -271,17 +270,17 @@ export function expandSteps(input) {
     } catch {
         return null;
     }
-    const steps = [step({ title: msg('algebra.transform.expression'), tex: bt((l) => tex(node, l)) })];
+    const steps = [step({ title: msg('algebra.transform.expression'), tex: eachLanguage((l) => tex(node, l)) })];
     const mid = opened.length === 1 ? opened[0] : add(opened);
     if (changed) {
         steps.push(step({
             title: msg('algebra.transform.open_brackets'),
-            tex: bt((l) => `${tex(node, l)} = ${tex(mid, l)}`),
+            tex: eachLanguage((l) => `${tex(node, l)} = ${tex(mid, l)}`),
             text: msg('algebra.transform.by_formulas', { p: (lng) => rules.map((r) => r[lng]).join('; ') }),
         }));
     }
-    if (tex(mid) !== tex(result)) steps.push(step({ title: msg('algebra.transform.collect_like_terms'), tex: bt((l) => `${tex(mid, l)} = ${tex(result, l)}`) }));
-    steps.push(step({ title: msg('algebra.transform.answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
+    if (tex(mid) !== tex(result)) steps.push(step({ title: msg('algebra.transform.collect_like_terms'), tex: eachLanguage((l) => `${tex(mid, l)} = ${tex(result, l)}`) }));
+    steps.push(step({ title: msg('algebra.transform.answer'), tex: eachLanguage((l) => `${tex(node, l)} = ${tex(result, l)}`) }));
     steps[steps.length - 1].final = true;
     return { result, steps };
 }
@@ -305,14 +304,14 @@ export function simplifySteps(input) {
     if (!N || !D) return null;
     const fN = factorPoly(N, v);
     const fD = factorPoly(D, v);
-    const steps = [step({ title: msg('algebra.transform.expression'), tex: bt((l) => tex(node, l)) })];
+    const steps = [step({ title: msg('algebra.transform.expression'), tex: eachLanguage((l) => tex(node, l)) })];
     // the excluded values: zeros of the denominator
     const zeros = D.rationalRoots().map((r) => r.root ?? r);
     const G = N.gcd(D);
     const numF = productNode(fN.constant, fN.factors, v);
     const denF = productNode(fD.constant, fD.factors, v);
     if (fN.steps.length || fD.steps.length) {
-        steps.push(step({ title: msg('algebra.transform.factor_numerator_and_denominator'), tex: bt((l) => `${tex(node, l)} = \\frac{${tex(numF, l)}}{${tex(denF, l)}}`), sub: [...fN.steps, ...fD.steps] }));
+        steps.push(step({ title: msg('algebra.transform.factor_numerator_and_denominator'), tex: eachLanguage((l) => `${tex(node, l)} = \\frac{${tex(numF, l)}}{${tex(denF, l)}}`), sub: [...fN.steps, ...fD.steps] }));
     }
     const Nr = N.divmod(G).q;
     const Dr = D.divmod(G).q;
@@ -325,15 +324,15 @@ export function simplifySteps(input) {
         const bottom = Dr.primitive().scale(new Q(k.d));
         result = div(top.toNode(v), bottom.toNode(v));
     }
-    const restr = zeros.length ? bt((l) => zeros.map((z) => `${v} \\ne ${z.toTex(l)}`).join(',\\ ')) : null;
+    const restr = zeros.length ? eachLanguage((l) => zeros.map((z) => `${v} \\ne ${z.toTex(l)}`).join(',\\ ')) : null;
     if (G.degree >= 1) {
         steps.push(step({
             title: msg('algebra.transform.reduce_fraction'),
-            tex: bt((l) => `\\frac{${tex(numF, l)}}{${tex(denF, l)}} = ${tex(result, l)}`),
+            tex: eachLanguage((l) => `\\frac{${tex(numF, l)}}{${tex(denF, l)}} = ${tex(result, l)}`),
             text: msg('algebra.transform.cancel_this_is_allowed_while_denominator', { p: (lng) => polyTex(G.primitive(), v, lng), p2: (lng) => zeros.map((z) => `$${v} \\ne ${z.toTex(lng)}$`).join(', ') }),
         }));
     }
-    steps.push(step({ title: msg('algebra.transform.answer'), tex: bt((l) => `${tex(node, l)} = ${tex(result, l)}${restr ? `,\\quad ${restr[l] ?? restr}` : ''}`) }));
+    steps.push(step({ title: msg('algebra.transform.answer'), tex: eachLanguage((l) => `${tex(node, l)} = ${tex(result, l)}${restr ? `,\\quad ${restr[l] ?? restr}` : ''}`) }));
     steps[steps.length - 1].final = true;
     return { result, steps, restrictions: zeros };
 }

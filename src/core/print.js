@@ -17,7 +17,7 @@
 
 import { Q } from './rational.js';
 import { mul, num, pow, isConst, freeVars, nodeSome } from './ast.js';
-import { msg, notation } from '../i18n/index.js';
+import { notation } from '../i18n/index.js';
 
 const FN_TEX = {
     sin: ['\\sin', '\\sin'],

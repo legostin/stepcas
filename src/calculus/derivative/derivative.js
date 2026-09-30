@@ -9,10 +9,10 @@ import { MathError } from '../../core/rational.js';
 import { parse } from '../../core/parse.js';
 import { simplify, canonContext } from '../../core/simplify.js';
 import { niceForm, penalty, score } from './clean.js';
-import { N0, NM1, T_, agree, asNode, bt, calcTex, checkExpr, isZero, negLeading, randomEnv } from './display.js';
+import { N0, NM1, agree, asNode, calcTex, checkExpr, isZero, negLeading, randomEnv } from './display.js';
 import { quickDerivative } from './quick.js';
 import { dS } from './steps.js';
-import { msg, notation } from '../../i18n/index.js';
+import { msg, notation, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric check against central differences
 
@@ -101,7 +101,7 @@ export function derivative(node, v = 'x', opts = {}) {
             const others = freeVars(node).filter((w) => w !== v);
             steps.push(step({
                 title: msg('calculus.derivative.derivative.what_we_differentiate'),
-                tex: bt((L) => `f(${v}) = ${calcTex(node, L)}`),
+                tex: eachLanguage((L) => `f(${v}) = ${calcTex(node, L)}`),
                 text: others.length
                     ? msg('calculus.derivative.derivative.we_differentiate_with_respect_to_other', { v, p: others.join(', ') })
                     : msg('calculus.derivative.derivative.we_differentiate_with_respect_to_going', { v }),
@@ -117,7 +117,7 @@ export function derivative(node, v = 'x', opts = {}) {
                     const from = result;
                     steps.push(step({
                         title: msg('calculus.derivative.derivative.simplify'),
-                        tex: bt((L) => `${calcTex(from, L)} = ${calcTex(alt, L)}`),
+                        tex: eachLanguage((L) => `${calcTex(from, L)} = ${calcTex(alt, L)}`),
                         text: msg('calculus.derivative.derivative.expand_bring_to_common_denominator_and'),
                         rule: 'simplify',
                     }));
@@ -135,7 +135,7 @@ export function derivative(node, v = 'x', opts = {}) {
         verified = agree(result, fast, v, { tol: 1e-8 }).ok !== false;
     }
     if (numericCheck(node, result, v) === false) verified = false;
-    const tex = bt((L) => `${primeTex(v, 1, partial)} = ${calcTex(result, L)}`);
+    const tex = eachLanguage((L) => `${primeTex(v, 1, partial)} = ${calcTex(result, L)}`);
     if (wantSteps) steps.push(answerStep(msg('calculus.derivative.derivative.answer'), tex));
     return { result, steps, verified, tex };
 }
@@ -166,7 +166,7 @@ export function derivativeN(node, v = 'x', n = 2, opts = {}) {
             const src = cur;
             steps.push(step({
                 title: msg('calculus.derivative.derivative.derivative_of_order', { k }),
-                tex: bt((L) => `${primeTex(v, k)} = \\left(${prevTex ?? calcTex(src, L)}\\right)' = ${calcTex(r.result, L)}`),
+                tex: eachLanguage((L) => `${primeTex(v, k)} = \\left(${prevTex ?? calcTex(src, L)}\\right)' = ${calcTex(r.result, L)}`),
                 text: k === 1 ? undefined : msg('calculus.derivative.derivative.differentiate_previous_derivative'),
                 rule: 'order',
                 sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
@@ -179,7 +179,7 @@ export function derivativeN(node, v = 'x', n = 2, opts = {}) {
         }
     }
     const result = list[n - 1];
-    const tex = bt((L) => `${primeTex(v, n)} = ${calcTex(result, L)}`);
+    const tex = eachLanguage((L) => `${primeTex(v, n)} = ${calcTex(result, L)}`);
     if (opts.steps) steps.push(answerStep(msg('calculus.derivative.derivative.answer'), tex));
     return { result, list, steps, verified, tex };
 }
@@ -206,7 +206,7 @@ export function gradientOf(node, vars = null, opts = {}) {
         }
     }
     const result = Object.freeze({ type: 'list', items: Object.freeze(vs.map((w) => components[w])) });
-    const tex = bt((L) => {
+    const tex = eachLanguage((L) => {
         const sep = notation(L).listTex;
         return `\\nabla f = \\left(${vs.map((w) => primeTex(w, 1, true)).join(sep)}\\right) = \\left(${vs.map((w) => calcTex(components[w], L)).join(sep)}\\right)`;
     });
@@ -246,21 +246,21 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
     const X = sym(v);
     const b = C.add([fa, C.mul([NM1, k, A])]);
     const line = niceForm(C.add([C.mul([k, X]), b]), v);
-    const tex = bt((L) => `y = ${calcTex(line, L)}`);
+    const tex = eachLanguage((L) => `y = ${calcTex(line, L)}`);
     const steps = [];
     if (opts.steps) {
         const at = (L) => calcTex(A, L);
         steps.push(step({
             title: msg('calculus.derivative.derivative.equation_of_tangent'),
-            tex: bt((L) => `y = f(${at(L)}) + f'(${at(L)})\\,${isZero(A) ? v : `(${v} ${negLeading(A) ? '+ ' + calcTex(simplify(neg(A)), L) : '- ' + at(L)})`}`),
+            tex: eachLanguage((L) => `y = f(${at(L)}) + f'(${at(L)})\\,${isZero(A) ? v : `(${v} ${negLeading(A) ? '+ ' + calcTex(simplify(neg(A)), L) : '- ' + at(L)})`}`),
             text: msg('calculus.derivative.derivative.tangent_passes_through_point_of_graph'),
             rule: 'tangent-formula',
         }));
-        steps.push(step({ title: msg('calculus.derivative.derivative.value_of_function'), tex: bt((L) => `f(${at(L)}) = ${calcTex(fa, L)}`), rule: 'value' }));
+        steps.push(step({ title: msg('calculus.derivative.derivative.value_of_function'), tex: eachLanguage((L) => `f(${at(L)}) = ${calcTex(fa, L)}`), rule: 'value' }));
         steps.push(step({ title: msg('calculus.derivative.derivative.derivative'), tex: d.tex, rule: 'derivative', sub: d.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer') }));
         steps.push(step({
             title: msg('calculus.derivative.derivative.slope'),
-            tex: bt((L) => `k = f'(${at(L)}) = ${calcTex(k, L)}`),
+            tex: eachLanguage((L) => `k = f'(${at(L)}) = ${calcTex(k, L)}`),
             text: msg('calculus.derivative.derivative.substitute_point_into_derivative_this_is'),
             rule: 'slope',
         }));

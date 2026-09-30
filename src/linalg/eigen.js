@@ -2,14 +2,14 @@
 
 import { Q } from '../core/rational.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
-import { E_, L, S, T, fail, qs, qt, qtp, shiftTex } from './common.js';
+import { E_, S, fail, qs, qt, qtp, shiftTex } from './common.js';
 import { M, Matrix, needSquare, vecTex } from './core.js';
 import { matDet } from './det.js';
 import { fmatSvd } from './float.js';
 import { intPrimitive, padd, pdeg, pdiv, pmul, psub, ptex, ptrim, quadFactor, quadRoots, rationalRootsQ, surdTex, toPoly } from './qpoly.js';
 import { nullspaceFrom, reduce } from './reduce.js';
 import { PARAMS, matInverse } from './systems.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- characteristic polynomial and eigenvalues
 
@@ -66,8 +66,8 @@ export function matCharPoly(A, opts = {}) {
     const st = [];
     const P = A.a.map((r, i) => r.map((v, j) => (i === j ? [v, Q.MINUS_ONE] : [v])));
     const shifted = `\\begin{vmatrix} ${P.map((r) => r.map(entryPolyTex).join(' & ')).join(' \\\\ ')} \\end{vmatrix}`;
-    st.push(S(msg('linalg.eigen.what_we_look_for'), T((l) => `\\det(A - \\lambda ${E_(l)}) = ${shifted}`),
-        T((l) => (msg('linalg.eigen.eigenvalue_is_number_with_v_v').in(l))),
+    st.push(S(msg('linalg.eigen.what_we_look_for'), eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${shifted}`),
+        eachLanguage((l) => (msg('linalg.eigen.eigenvalue_is_number_with_v_v').in(l))),
         { rule: 'charpoly-def' }));
     if (n === 2) {
         const [[a, b], [c, d]] = A.a;
@@ -98,11 +98,11 @@ export function matCharPoly(A, opts = {}) {
         msg('linalg.eigen.check_coefficient_of_is_trace_constant', { p: qs(A.trace()), p2: qs(coefs[0]) }),
         { rule: 'charpoly-3x3' }));
     } else {
-        st.push(S(msg('linalg.eigen.faddeev_leverrier_method'), T((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`),
+        st.push(S(msg('linalg.eigen.faddeev_leverrier_method'), eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`),
             msg('linalg.eigen.for_bigger_matrices_expanding_determinant_is'),
             { rule: 'faddeev-leverrier' }));
     }
-    st.push(S(msg('linalg.eigen.characteristic_polynomial'), T((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`), null, { rule: 'answer' }));
+    st.push(S(msg('linalg.eigen.characteristic_polynomial'), eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`), null, { rule: 'answer' }));
     return { value, coefs, tex, steps: st };
 }
 
@@ -141,7 +141,7 @@ export function matEigen(A, opts = {}) {
         if (opts.steps) {
             const general = vectors.length === 1 ? `\\mathbf v = t${vecTex(vectors[0])}` : `\\mathbf v = ${vectors.map((v, k) => `${PARAMS[k] ?? `t_{${k + 1}}`}${vecTex(v)}`).join(' + ')}`;
             vecSteps.push(S(msg('linalg.eigen.eigenvectors_for', { root: qs(root) }),
-                T((l) => `${root.isZero() ? 'A' : `(${shiftTex(root, l)})`}\\mathbf v = 0:\\quad ${B.toTex()} \\;\\Rightarrow\\; ${general}`),
+                eachLanguage((l) => `${root.isZero() ? 'A' : `(${shiftTex(root, l)})`}\\mathbf v = 0:\\quad ${B.toTex()} \\;\\Rightarrow\\; ${general}`),
                 msg('linalg.eigen.we_solve_homogeneous_system_i_v', { p: (lng) => vectors.length === 1 ? msg('linalg.eigen.one_free_unknown_eigenvectors_lie_on').in(lng) : msg('linalg.eigen.free_unknowns_eigenvectors_fill_space_of', { length: vectors.length }).in(lng), p2: (lng) => vectors.length < mult ? msg('linalg.eigen.root_has_multiplicity_but_there_are', { mult, length: vectors.length }).in(lng) : '' }),
                 { rule: 'eigenvectors', sub: red.steps }));
         }
@@ -191,7 +191,7 @@ export function matEigen(A, opts = {}) {
         }
         for (const v of approxVals) {
             const f = (x, l) => { let s = x.toFixed(6).replace(/0+$/, '').replace(/\.$/, ''); if (s === '-0') s = '0'; return l === 'ru' ? s.replace('.', '{,}') : s; };
-            v.tex = T((l) => `\\approx ${v.im === 0 ? f(v.re, l) : `${f(v.re, l)} ${v.im < 0 ? '-' : '+'} ${f(Math.abs(v.im), l)}\\,i`}`);
+            v.tex = eachLanguage((l) => `\\approx ${v.im === 0 ? f(v.re, l) : `${f(v.re, l)} ${v.im < 0 ? '-' : '+'} ${f(Math.abs(v.im), l)}\\,i`}`);
             if (v.im === 0 && v.multiplicity === 1) v.vectorsApprox = [realNullVector(Af, v.re)];
             values.push(v);
         }
@@ -202,7 +202,7 @@ export function matEigen(A, opts = {}) {
 
     const st = [];
     const cp = matCharPoly(A, { steps: true });
-    st.push(S(msg('linalg.eigen.characteristic_polynomial'), T((l) => `\\det(A - \\lambda ${E_(l)}) = ${cp.tex}`),
+    st.push(S(msg('linalg.eigen.characteristic_polynomial'), eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${cp.tex}`),
         msg('linalg.eigen.eigenvalues_are_roots_of_det_i'), { rule: 'charpoly', sub: cp.steps }));
     // factorised form
     const lead = ptrim(coefs)[ptrim(coefs).length - 1];
@@ -225,12 +225,12 @@ export function matEigen(A, opts = {}) {
             { rule: 'quadratic' }));
     }
     if (approxVals.length) {
-        st.push(S(msg('linalg.eigen.approximate_roots'), T((l) => approxVals.map((v) => `\\lambda ${pickTex(v.tex, l)}`).join(',\\quad ')),
+        st.push(S(msg('linalg.eigen.approximate_roots'), eachLanguage((l) => approxVals.map((v) => `\\lambda ${pickTex(v.tex, l)}`).join(',\\quad ')),
             msg('linalg.eigen.remaining_factor_of_degree_does_not', { R: pdeg(R) }),
             { rule: 'numeric-roots' }));
     }
     st.push(...vecSteps);
-    st.push(S(msg('linalg.eigen.answer'), T((l) => values.map((v, k) => `\\lambda_{${k + 1}} ${v.approx ? pickTex(v.tex, l) : `= ${v.tex}`}${v.multiplicity > 1 ? `\\ (\\times ${v.multiplicity})` : ''}`).join(',\\quad ')),
+    st.push(S(msg('linalg.eigen.answer'), eachLanguage((l) => values.map((v, k) => `\\lambda_{${k + 1}} ${v.approx ? pickTex(v.tex, l) : `= ${v.tex}`}${v.multiplicity > 1 ? `\\ (\\times ${v.multiplicity})` : ''}`).join(',\\quad ')),
         msg('linalg.eigen.eigenvalues_with_multiplicity_add_up_to', { p: qs(A.trace()), p2: qs(matDet(A)) }),
         { rule: 'answer' }));
     out.steps = st;

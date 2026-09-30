@@ -6,10 +6,10 @@ import { bigLcm, Q } from '../../core/rational.js';
 import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { Poly } from '../../core/poly.js';
-import { HALF, N0, N1, N2, T_, bt, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';
+import { HALF, N0, N1, N2, T_, iTex, lnAbs, q, simp, trySimp, tx } from './common.js';
 import { I } from './engine.js';
 import { canonicalRational } from './trig.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- rational functions
 
@@ -113,7 +113,7 @@ export function mRational(f, ctx) {
         if (!rp) return null;
         return { ...rp, step: step({
             title: msg('calculus.integral.rational.simplify_fraction'),
-            tex: bt((L) => `${tx(f, L)} = ${tx(P0, L)}`),
+            tex: eachLanguage((L) => `${tx(f, L)} = ${tx(P0, L)}`),
             text: msg('calculus.integral.rational.fraction_cancels_leaving_polynomial_under_integral'),
             rule: 'simplify',
             sub: [rp.step],
@@ -191,7 +191,7 @@ export function mRational(f, ctx) {
     if (!polyPart.isZero()) {
         steps.push(step({
             title: msg('calculus.integral.rational.divide_polynomials'),
-            tex: bt((L) => `${tx(fNode, L)} = ${tx(polyPart.toNode(v), L)}${rem.isZero() ? '' : (() => { const r = tx(fracPiece(rem, D.toNode(v), v), L); return r.startsWith('-') ? ' - ' + r.slice(1) : ' + ' + r; })()}`),
+            tex: eachLanguage((L) => `${tx(fNode, L)} = ${tx(polyPart.toNode(v), L)}${rem.isZero() ? '' : (() => { const r = tx(fracPiece(rem, D.toNode(v), v), L); return r.startsWith('-') ? ' - ' + r.slice(1) : ' + ' + r; })()}`),
             text: msg('calculus.integral.rational.numerator_has_at_least_degree_of'),
             rule: 'division',
         }));
@@ -201,13 +201,13 @@ export function mRational(f, ctx) {
     if (!rem.isZero() && !simpleDen) {
         steps.push(step({
             title: msg('calculus.integral.rational.factor_denominator'),
-            tex: bt((L) => `${tx(D.toNode(v), L)} = ${tx(factoredD, L)}`),
+            tex: eachLanguage((L) => `${tx(D.toNode(v), L)} = ${tx(factoredD, L)}`),
             text: msg('calculus.integral.rational.find_roots_of_denominator_and_split'),
             rule: 'factor',
         }));
         steps.push(step({
             title: msg('calculus.integral.rational.partial_fractions'),
-            tex: bt((L) => `${tx(fracPiece(rem, D.toNode(v), v), L)} = ${pieceNodes.map((n, i) => {
+            tex: eachLanguage((L) => `${tx(fracPiece(rem, D.toNode(v), v), L)} = ${pieceNodes.map((n, i) => {
                 const s = tx(n, L);
                 return i === 0 ? s : (s.startsWith('-') ? ' - ' + s.slice(1) : ' + ' + s);
             }).join('')}`),
@@ -221,7 +221,7 @@ export function mRational(f, ctx) {
     }
     steps.push(step({
         title: msg('calculus.integral.rational.integrate_each_fraction'),
-        tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
+        tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
         rule: 'sum',
         sub: subs,
     }));
@@ -230,7 +230,7 @@ export function mRational(f, ctx) {
         method: 'rational',
         step: step({
             title: msg('calculus.integral.rational.rational_function'),
-            tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
             text: msg('calculus.integral.rational.integrand_is_ratio_of_polynomials_such'),
             rule: 'rational',
             sub: steps,
@@ -299,7 +299,7 @@ export function mBiquadratic(f, ctx) {
         const inner = add([x2, ...(p.isZero() ? [] : [qn(p)]), div(qn(qq), x2)]);
         subs.push(step({
             title: sign > 0 ? msg('calculus.integral.rational.substitute', { tView: (lng) => tx(tView, lng) }) : msg('calculus.integral.rational.substitute', { tView: (lng) => tx(tView, lng) }),
-            tex: bt((L) => `\\int \\frac{${tx(numN, L)}}{${tx(denNode, L)}}\\,d${v} = \\int \\frac{${tx(one, L)}}{${tx(inner, L)}}\\,d${v} = \\int \\frac{dt}{${tx(simp(add(pow(T0, N2), m)), L)}} = ${tx(simp(Gt), L)} = ${tx(G, L)}`),
+            tex: eachLanguage((L) => `\\int \\frac{${tx(numN, L)}}{${tx(denNode, L)}}\\,d${v} = \\int \\frac{${tx(one, L)}}{${tx(inner, L)}}\\,d${v} = \\int \\frac{dt}{${tx(simp(add(pow(T0, N2), m)), L)}} = ${tx(simp(Gt), L)} = ${tx(G, L)}`),
             text: msg('calculus.integral.rational.divide_numerator_and_denominator_by_then', { v, one: (lng) => tx(one, lng), inner: (lng) => tx(inner, lng), p: mv >= 0 ? '+' : '-', p2: (lng) => tx(simp(sign > 0 || mv >= 0 ? m : neg(m)), lng) }),
             rule: 'substitution',
         }));
@@ -311,11 +311,11 @@ export function mBiquadratic(f, ctx) {
     const split = add([...(isZ(A) ? [] : [mul(A, div(add(x2, r), denNode))]), ...(isZ(B) ? [] : [mul(B, div(add(x2, neg(r)), denNode))])]);
     const fNorm = div(P.scale(a4.inv()).toNode(v), denNode);
     const steps = [];
-    if (!a4.isOne()) steps.push(step({ title: msg('calculus.integral.rational.take_out_leading_coefficient'), tex: bt((L) => `${tx(f, L)} = ${tx(qn(a4.inv()), L)}\\cdot ${tx(div(P.toNode(v), denNode), L)}`), rule: 'const' }));
+    if (!a4.isOne()) steps.push(step({ title: msg('calculus.integral.rational.take_out_leading_coefficient'), tex: eachLanguage((L) => `${tx(f, L)} = ${tx(qn(a4.inv()), L)}\\cdot ${tx(div(P.toNode(v), denNode), L)}`), rule: 'const' }));
     if (subs.length > 1 || !(isZ(B) ? P.coeff(0).isZero() : false)) {
         steps.push(step({
             title: msg('calculus.integral.rational.split_numerator_along', { v, r: (lng) => tx(r, lng) }),
-            tex: bt((L) => `${tx(fNorm, L)} = ${tx(split, L)}`),
+            tex: eachLanguage((L) => `${tx(fNorm, L)} = ${tx(split, L)}`),
             text: msg('calculus.integral.rational.denominator_does_not_factor_over_rationals', { denNode: (lng) => tx(denNode, lng), v, r: (lng) => tx(r, lng), p: (lng) => tx(qn(qq), lng), p2: (lng) => tx(simp(mul(N2, r)), lng) }),
             rule: 'split',
         }));
@@ -323,14 +323,14 @@ export function mBiquadratic(f, ctx) {
     steps.push(...subs);
     steps.push(step({
         title: msg('calculus.integral.rational.put_it_together'),
-        tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)} + C`),
+        tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)} + C`),
         text: msg('calculus.integral.rational.antiderivative_holds_on_each_of_and', { v }),
         rule: 'sum',
     }));
     return {
         F: mul(qn(a4.inv()), F),
         method: 'biquadratic',
-        step: step({ title: msg('calculus.integral.rational.fraction_over'), tex: bt((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)}`), rule: 'biquadratic', sub: steps }),
+        step: step({ title: msg('calculus.integral.rational.fraction_over'), tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(simp(mul(qn(a4.inv()), F)), L)}`), rule: 'biquadratic', sub: steps }),
     };
 }
 
@@ -380,7 +380,7 @@ function pieceStep(node, Fp, pc, v) {
     }
     return step({
         title: msg('calculus.integral.rational.partial_fraction'),
-        tex: bt((L) => `${iTex(node, v, L)} = ${middle ? middle(L) + ' = ' : ''}${tx(trySimp(Fp) ?? Fp, L)}`),
+        tex: eachLanguage((L) => `${iTex(node, v, L)} = ${middle ? middle(L) + ' = ' : ''}${tx(trySimp(Fp) ?? Fp, L)}`),
         text,
         rule: 'partial-fraction',
     });

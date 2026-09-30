@@ -6,7 +6,6 @@ import { msg } from '../../i18n/index.js';
 // ---------------------------------------------------------------- tiny internal helpers
 
 export const L = (ru, en) => ({ ru, en });
-export const T = (f) => ({ ru: f('ru'), en: f('en') });
 export const fail = (msg, code = null) => new MathError(msg, null, null, code);
 
 export function S(title, tex, text, extra) {

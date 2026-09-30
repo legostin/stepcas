@@ -1,7 +1,7 @@
 // linalg/det — determinants: small formulas, cofactor expansion, elimination.
 
 import { Q } from '../core/rational.js';
-import { L, R, S, fail, qs, qt, qtp, rowAccShort, sub } from './common.js';
+import { R, S, fail, qs, qt, qtp, rowAccShort, sub } from './common.js';
 import { M, Matrix, needSquare } from './core.js';
 import { arrowLabel, opText } from './reduce.js';
 import { msg } from '../i18n/index.js';

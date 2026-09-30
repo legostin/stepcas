@@ -1,8 +1,8 @@
 // theory/fractions — continued fractions, convergents, best approximations, Egyptian fractions.
 
 import { Q, bigIsqrt } from '../../core/rational.js';
-import { L, S, T, babs, big, dec, doubleExact, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
-import { msg } from '../../i18n/index.js';
+import { S, babs, big, dec, doubleExact, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- continued fractions
 
@@ -56,7 +56,7 @@ export function ntContinuedFraction(x, opts = {}) {
                 const xv = (sq + Number(r.m)) / Number(r.d);
                 const xt = r.d === 1n ? `\\sqrt{${tn(n)}} + ${tn(r.m)}` : `\\frac{\\sqrt{${tn(n)}} + ${tn(r.m)}}{${tn(r.d)}}`;
                 st.push(S(msg('numbers.theory.fractions.term', { p: subscript(i + 1) }),
-                    T((l) => `x_{${i + 1}} = ${xt} \\approx ${dec(xv, 3, l, true)} \\;\\Rightarrow\\; a_{${i + 1}} = ${tn(r.a)}`),
+                    eachLanguage((l) => `x_{${i + 1}} = ${xt} \\approx ${dec(xv, 3, l, true)} \\;\\Rightarrow\\; a_{${i + 1}} = ${tn(r.a)}`),
                     i === 0 ? msg('numbers.theory.fractions.flip_fractional_part_x_1_and', { n: sn(n), a0: sn(a0) }) : null,
                     { rule: 'cf-term' }));
             });

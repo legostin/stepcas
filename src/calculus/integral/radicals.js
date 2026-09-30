@@ -6,9 +6,9 @@ import { containsVar, mul, sym, pow, add, div, fn, num } from '../../core/ast.js
 import { Poly } from '../../core/poly.js';
 import { step } from '../../core/steps.js';
 import { calcTex } from '../derivative/index.js';
-import { HALF, N1, N2, T_, bt, iTex, isNum, lnAbs, q, trySimp, tx } from './common.js';
+import { HALF, N1, N2, iTex, isNum, lnAbs, q, trySimp, tx } from './common.js';
 import { qn, solveQ } from './rational.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- square roots of quadratics
 
@@ -86,7 +86,7 @@ export function mQuadRoot(f, ctx) {
         method: 'quadratic-root',
         step: step({
             title: msg('calculus.integral.radicals.quadratic_under_root'),
-            tex: bt((L) => `${complete ? complete(L) + ',\\quad ' : ''}${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `${complete ? complete(L) + ',\\quad ' : ''}${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text,
             rule: 'quadratic-root',
         }),
@@ -170,7 +170,7 @@ export function mRadicalPoly(f, ctx) {
         method: 'radical-polynomial',
         step: step({
             title: msg('calculus.integral.radicals.undetermined_coefficients'),
-            tex: bt((L) => `${iTex(f, v, L)} = \\left(${tx(R.toNode(v), L)}\\right)\\sqrt{${tx(rad.base, L)}}${lam.isZero() ? '' : ` ${lam.isNeg() ? '-' : '+'} ${lam.abs().isOne() ? '' : qn(lam.abs()).value.toTex(L)}\\int \\frac{d${v}}{\\sqrt{${tx(rad.base, L)}}}`} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left(${tx(R.toNode(v), L)}\\right)\\sqrt{${tx(rad.base, L)}}${lam.isZero() ? '' : ` ${lam.isNeg() ? '-' : '+'} ${lam.abs().isOne() ? '' : qn(lam.abs()).value.toTex(L)}\\int \\frac{d${v}}{\\sqrt{${tx(rad.base, L)}}}`} = ${tx(trySimp(F) ?? F, L)}`),
             text: msg('calculus.integral.radicals.polynomial_over_root_of_quadratic_p', { p: n - 1 }),
             rule: 'radical-polynomial',
         }),

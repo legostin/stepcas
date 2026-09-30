@@ -1,9 +1,9 @@
 // theory/gcd — gcd and lcm (Euclid with steps), the extended Euclid algorithm and linear Diophantine equations.
 
 import { Q } from '../../core/rational.js';
-import { G, L, Lc, S, T, babs, big, bmod, fail, gT, gcdCore, sn, tn, tp } from './common.js';
+import { G, Lc, S, babs, big, bmod, fail, gT, gcdCore, sn, tn, tp } from './common.js';
 import { factorMap, mapToList, ntFactorTex } from './primes.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- gcd / lcm
 
@@ -22,19 +22,19 @@ export function gcdSteps(A, B) {
     const st = [];
     let x = babs(A), y = babs(B);
     if (x === 0n && y === 0n) {
-        st.push(S(msg('numbers.theory.gcd.gcd_of_two_zeros'), T((l) => `${G(l, 0, 0)} = 0`),
+        st.push(S(msg('numbers.theory.gcd.gcd_of_two_zeros'), eachLanguage((l) => `${G(l, 0, 0)} = 0`),
             msg('numbers.theory.gcd.zero_is_divisible_by_every_number'),
             { rule: 'gcd-zero' }));
         return { st, rows: [], g: 0n };
     }
     if (A < 0n || B < 0n) {
-        st.push(S(msg('numbers.theory.gcd.signs_do_not_matter'), T((l) => `${G(l, A, B)} = ${G(l, x, y)}`),
+        st.push(S(msg('numbers.theory.gcd.signs_do_not_matter'), eachLanguage((l) => `${G(l, A, B)} = ${G(l, x, y)}`),
             msg('numbers.theory.gcd.number_and_its_negative_have_same'),
             { rule: 'gcd-abs' }));
     }
     if (x === 0n || y === 0n) {
         const n = x || y;
-        st.push(S(msg('numbers.theory.gcd.one_of_numbers_is_zero'), T((l) => `${G(l, x, y)} = ${tn(n)}`),
+        st.push(S(msg('numbers.theory.gcd.one_of_numbers_is_zero'), eachLanguage((l) => `${G(l, x, y)} = ${tn(n)}`),
             msg('numbers.theory.gcd.zero_is_divisible_by_anything_so', { n: sn(n) }),
             { rule: 'gcd-zero' }));
         return { st, rows: [], g: n };
@@ -44,7 +44,7 @@ export function gcdSteps(A, B) {
     const rows = euclidRows(x, y);
     const g = rows[rows.length - 1].b;
     st.push(S(msg('numbers.theory.gcd.euclid_s_algorithm'),
-        T((l) => `a = q \\cdot b + r \\;\\Rightarrow\\; ${msg('numbers.theory.gcd.b_b_r').in(l)}`),
+        eachLanguage((l) => `a = q \\cdot b + r \\;\\Rightarrow\\; ${msg('numbers.theory.gcd.b_b_r').in(l)}`),
         msg('numbers.theory.gcd.if_q_b_r_pairs_b', { p: (lng) => swapped ? msg('numbers.theory.gcd.we_start_with_larger_number', { x: sn(x) }).in(lng) : '' }),
         { rule: 'euclid' }));
     for (const { a, b, q, r } of rows) {
@@ -59,7 +59,7 @@ export function gcdSteps(A, B) {
 }
 
 function gcdAnswer(A, B, g) {
-    return S(msg('numbers.theory.gcd.answer'), T((l) => `${G(l, A, B)} = ${tn(g)}`),
+    return S(msg('numbers.theory.gcd.answer'), eachLanguage((l) => `${G(l, A, B)} = ${tn(g)}`),
         g === 1n
             ? msg('numbers.theory.gcd.last_non_zero_remainder_is_1')
             : msg('numbers.theory.gcd.gcd_is_last_non_zero_remainder', { g: sn(g) }),
@@ -83,18 +83,18 @@ export function ntLcm(a, b, opts = {}) {
     if (!opts.steps) return value;
     const st = [];
     if (value === 0n) {
-        st.push(S(msg('numbers.theory.gcd.one_of_numbers_is_zero'), T((l) => `${Lc(l, A, B)} = 0`),
+        st.push(S(msg('numbers.theory.gcd.one_of_numbers_is_zero'), eachLanguage((l) => `${Lc(l, A, B)} = 0`),
             msg('numbers.theory.gcd.only_multiple_of_zero_is_zero'), { rule: 'lcm-zero' }));
         return { value, steps: st };
     }
     const x = babs(A), y = babs(B);
     const gs = gcdSteps(x, y);
     st.push(S(msg('numbers.theory.gcd.first_gcd', { p: (lng) => gT(lng, x, y), g: sn(g) }),
-        T((l) => `${G(l, x, y)} = ${tn(g)}`),
+        eachLanguage((l) => `${G(l, x, y)} = ${tn(g)}`),
         msg('numbers.theory.gcd.we_find_it_by_euclid_s'),
         { rule: 'gcd', sub: [...gs.st, ...(gs.rows.length ? [gcdAnswer(x, y, g)] : [])] }));
     st.push(S(msg('numbers.theory.gcd.divide_product_by_gcd'),
-        T((l) => `${Lc(l, x, y)} = \\frac{${tn(x)} \\cdot ${tn(y)}}{${tn(g)}}${g === 1n ? '' : ` = ${tn(x / g)} \\cdot ${tn(y)}`} = ${tn(value)}`),
+        eachLanguage((l) => `${Lc(l, x, y)} = \\frac{${tn(x)} \\cdot ${tn(y)}}{${tn(g)}}${g === 1n ? '' : ` = ${tn(x / g)} \\cdot ${tn(y)}`} = ${tn(value)}`),
         msg('numbers.theory.gcd.product_b_contains_common_factors_twice'),
         { rule: 'lcm-formula' }));
     if (x <= 10n ** 15n && y <= 10n ** 15n && x > 1n && y > 1n) {
@@ -103,7 +103,7 @@ export function ntLcm(a, b, opts = {}) {
         for (const [p, e] of fy) all.set(p, Math.max(all.get(p) ?? 0, e));
         const sorted = [...all.entries()].sort((u, v) => (u[0] < v[0] ? -1 : 1)).map(([p, e]) => ({ p, e }));
         st.push(S(msg('numbers.theory.gcd.check_by_factorisation'),
-            T((l) => `${tn(x)} = ${ntFactorTex(mapToList(fx))},\\quad ${tn(y)} = ${ntFactorTex(mapToList(fy))},\\quad ${Lc(l, x, y)} = ${ntFactorTex(sorted)} = ${tn(value)}`),
+            eachLanguage((l) => `${tn(x)} = ${ntFactorTex(mapToList(fx))},\\quad ${tn(y)} = ${ntFactorTex(mapToList(fy))},\\quad ${Lc(l, x, y)} = ${ntFactorTex(sorted)} = ${tn(value)}`),
             msg('numbers.theory.gcd.another_way_factor_both_numbers_into'),
             { rule: 'lcm-factor' }));
     }
@@ -133,7 +133,7 @@ export function ntGcdMany(...args) {
         if (opts.steps) {
             const gs = gcdSteps(prev, xs[i]);
             st.push(S(msg('numbers.theory.gcd.add_gcd', { p: sn(xs[i]), prev: sn(prev), acc: sn(acc) }),
-                T((l) => `${G(l, prev, xs[i])} = ${tn(acc)}`),
+                eachLanguage((l) => `${G(l, prev, xs[i])} = ${tn(acc)}`),
                 i === 1 ? msg('numbers.theory.gcd.for_several_numbers_we_chain_gcd') : null,
                 { rule: 'gcd-chain', sub: [...gs.st, ...(gs.rows.length ? [gcdAnswer(prev, xs[i], acc)] : [])] }));
         }
@@ -154,7 +154,7 @@ export function ntLcmMany(...args) {
         if (opts.steps) {
             const r = ntLcm(prev, xs[i], { steps: true });
             st.push(S(msg('numbers.theory.gcd.add_lcm', { p: sn(xs[i]), prev: sn(prev), acc: sn(acc) }),
-                T((l) => `${Lc(l, prev, xs[i])} = ${tn(acc)}`),
+                eachLanguage((l) => `${Lc(l, prev, xs[i])} = ${tn(acc)}`),
                 i === 1 ? msg('numbers.theory.gcd.for_several_numbers_we_chain_lcm') : null,
                 { rule: 'lcm-chain', sub: r.steps }));
         }
@@ -214,7 +214,7 @@ export function ntEgcd(a, b, opts = {}) {
 
     const st = [];
     const gs = gcdSteps(A, B);
-    st.push(S(msg('numbers.theory.gcd.first_euclid_s_algorithm'), T((l) => `${G(l, A, B)} = ${tn(g)}`),
+    st.push(S(msg('numbers.theory.gcd.first_euclid_s_algorithm'), eachLanguage((l) => `${G(l, A, B)} = ${tn(g)}`),
         msg('numbers.theory.gcd.we_write_down_every_division_with'),
         { rule: 'euclid', sub: gs.st }));
     if (X === 0n) {
@@ -281,7 +281,7 @@ export function ntDiophantine(a, b, c, opts = {}) {
     if (C % g !== 0n) {
         const res = { solvable: false, g };
         if (opts.steps) {
-            st.push(S(msg('numbers.theory.gcd.gcd', { A: sn(A), B: sn(B), g: sn(g) }), T((l) => `${G(l, A, B)} = ${tn(g)}`), null, { rule: 'gcd', sub: e.steps[0].sub }));
+            st.push(S(msg('numbers.theory.gcd.gcd', { A: sn(A), B: sn(B), g: sn(g) }), eachLanguage((l) => `${G(l, A, B)} = ${tn(g)}`), null, { rule: 'gcd', sub: e.steps[0].sub }));
             st.push(S(msg('numbers.theory.gcd.no_solutions'), `${tn(g)} \\nmid ${tn(C)}`,
                 msg('numbers.theory.gcd.for_all_integers_x_and_y', { g: sn(g), C: sn(C) }), { rule: 'answer' }));
             res.steps = st;

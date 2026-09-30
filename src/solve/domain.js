@@ -4,13 +4,13 @@
 import { containsVar, nodeKey, numValue, add, num, neg, nodeChildren, fn, substitute, rel, mul } from '../core/ast.js';
 import { Q, MathError } from '../core/rational.js';
 import { parse } from '../core/parse.js';
-import { N0, S, T, approxC, approxNode, approxOf, approxShowComplex, approxShowNode, approxTex, byLang, close, exactZero, expd, simp, simpOr, termScale, tex } from './common.js';
+import { N0, S, approxC, approxNode, approxOf, approxShowComplex, approxShowNode, approxTex, close, exactZero, expd, simp, simpOr, termScale, tex } from './common.js';
 import { IntervalSet, intervalTex } from './intervals.js';
 import { complexApproxNode } from './polynomial.js';
 import { approxComplexTex } from './roots.js';
 import { signSet } from './signs.js';
 import { ZZ, basicTrig, mergeFamilies, mkFamily, periodN, plusTex } from './trig.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- ОДЗ (the domain of an equation)
 
@@ -260,7 +260,7 @@ export function checkRel(r, v, root, opts = {}) {
         if (ok && r.op === '=' && !containsVar(r.rhs, v) && left === right) return `${left}${mark}`;
         return `${left} \\,${op}\\, ${right}${mark}`;
     };
-    const texOut = byLang(texL);
+    const texOut = eachLanguage(texL);
     const valTex = (lang) => (root.approxOnly
         ? `${v} \\approx ${typeof root.approx === 'number' ? approxTex(root.approx, lang) : approxComplexTex(root.approx, lang)}`
         : `${v} = ${tex(val, lang)}`);
@@ -351,7 +351,7 @@ export function odzInfo(conds, v) {
         if (tail.length) t += ` \\;\\Rightarrow\\; ${tail.join(',\\ ')}${excl.length ? ZZ(l) : ''}`;
         return t;
     };
-    const tx = byLang(texOf);
+    const tx = eachLanguage(texOf);
     const text = msg('solve.domain.conditions', { p: (lng) => whys.map((w) => WHY[w][lng]).join('; ') });
     return {
         conds,

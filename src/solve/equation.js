@@ -9,7 +9,7 @@ import { Poly } from '../core/poly.js';
 import { numDen } from '../core/expand.js';
 import { parse } from '../core/parse.js';
 import { solveAbs } from './abs.js';
-import { N0, S, T, approxNode, approxOf, byLang, close, exactZero, pick, tex } from './common.js';
+import { N0, S, approxNode, approxOf, close, exactZero, pick, tex } from './common.js';
 import { checkRel, collectConds, condTex, filterFamilies, odzInfo } from './domain.js';
 import { solveExponential } from './exponential.js';
 import { IntervalSet, intervalTex } from './intervals.js';
@@ -19,7 +19,7 @@ import { hasRadical, solveRadical } from './radical.js';
 import { solveNodePoly, solveRational } from './rational.js';
 import { answerOf, hasI, rootsOnInterval, rootsTex, sameRoot, toIntervalOpt } from './roots.js';
 import { TRIG_FN, familiesToRoots, familyTex, mergeFamilies, trigCore } from './trig.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric fallback
 
@@ -35,7 +35,7 @@ function solveNumeric(E, ctx) {
     }
     const trig = nodeSome(E, (n) => n.type === 'fn' && TRIG_FN.includes(n.name) && containsVar(n, v));
     let range = trig ? [-2 * Math.PI, 2 * Math.PI] : [-10, 10];
-    let rangeT = trig ? byLang((l) => rangeTex('-2\\pi', '2\\pi', l)) : byLang((l) => rangeTex('-10', '10', l));
+    let rangeT = trig ? eachLanguage((l) => rangeTex('-2\\pi', '2\\pi', l)) : eachLanguage((l) => rangeTex('-10', '10', l));
     let rs;
     try {
         rs = numFindRoots(f, range[0], range[1], { samples: 4000 });
@@ -46,7 +46,7 @@ function solveNumeric(E, ctx) {
         try {
             rs = numFindRoots(f, -100, 100, { samples: 20000 });
             range = [-100, 100];
-            rangeT = byLang((l) => rangeTex('-100', '100', l));
+            rangeT = eachLanguage((l) => rangeTex('-100', '100', l));
         } catch {
             rs = [];
         }
@@ -64,7 +64,7 @@ function solveNumeric(E, ctx) {
     const roots = rs.filter((r) => Number.isFinite(r.x)).map((r) => ({ node: approxNode(r.x), approx: r.x, mult: r.multiplicity ?? 1, approxOnly: true }));
     const steps = [S(msg('solve.equation.no_exact_method_applies_here_so'), {
         text: msg('solve.equation.we_take_left_side_right_side', { v, rangeT: (lng) => pick(rangeT, lng), p: (lng) => trig ? msg('solve.equation.equation_is_periodic_so_there_may').in(lng) : '' }),
-        tex: roots.length ? byLang((l) => rootsTex(roots, v, l)) : undefined,
+        tex: roots.length ? eachLanguage((l) => rootsTex(roots, v, l)) : undefined,
     })];
     if (!roots.length) {
         return {
@@ -104,7 +104,7 @@ export function solveCore(lhs, rhs, ctx) {
                 roots: [],
                 type: 'identity',
                 steps: [S(msg('solve.equation.variable_cancels_and_true_equality_remains'), {
-                    tex: byLang((l) => `${tex(E, l)} = 0`),
+                    tex: eachLanguage((l) => `${tex(E, l)} = 0`),
                     text: msg('solve.equation.equality_holds_for_every_admissible_value'),
                 })],
             };
@@ -114,7 +114,7 @@ export function solveCore(lhs, rhs, ctx) {
             roots: [],
             type: 'identity',
             steps: [S(msg('solve.equation.variable_cancels_and_false_equality_remains'), {
-                tex: byLang((l) => `${tex(E, l)} = 0`),
+                tex: eachLanguage((l) => `${tex(E, l)} = 0`),
                 text: msg('solve.equation.there_are_no_roots'),
             })],
         };
@@ -178,9 +178,9 @@ function solveFractionZero(E, ctx) {
         return ok;
     });
     const steps = [S(msg('solve.equation.fraction_is_zero_when_its_numerator'), {
-        tex: byLang((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
+        tex: eachLanguage((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
     }), ...r.steps];
-    if (dropped.length) steps.push(S(msg('solve.equation.drop_roots_where_denominator_is_zero'), { tex: byLang((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')) }));
+    if (dropped.length) steps.push(S(msg('solve.equation.drop_roots_where_denominator_is_zero'), { tex: eachLanguage((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')) }));
     return { kind: roots.length ? 'roots' : 'none', roots, steps, type: r.type ?? 'fraction' };
 }
 
@@ -251,7 +251,7 @@ export function solveEquation(input, v = 'x', opts = {}) {
         res.check = f.checks.map((c) => ({ root: approxNode(c.x), approx: c.x, n: c.n, ok: c.ok }));
         if (f.dropped.length) {
             steps.push(S(msg('solve.equation.drop_series_outside_domain'), {
-                tex: byLang((l) => f.dropped.map((x) => familyTex(x, v, l)).join(';\\quad ')),
+                tex: eachLanguage((l) => f.dropped.map((x) => familyTex(x, v, l)).join(';\\quad ')),
                 text: msg('solve.equation.at_these_points_side_of_equation'),
             }));
         }
@@ -271,8 +271,8 @@ export function solveEquation(input, v = 'x', opts = {}) {
             const sel = rootsOnInterval(fams, iv);
             if (sel) {
                 res.inInterval = sel;
-                steps.push(S(byLang((l) => (msg('solve.equation.pick_roots_in', { iv: intervalTex(iv, l) }).in(l))), {
-                    tex: byLang((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(notation(l).listTex) : '\\varnothing')),
+                steps.push(S(eachLanguage((l) => (msg('solve.equation.pick_roots_in', { iv: intervalTex(iv, l) }).in(l))), {
+                    tex: eachLanguage((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(notation(l).listTex) : '\\varnothing')),
                     text: msg('solve.equation.we_go_through_integers_that_put'),
                 }));
             }
@@ -322,7 +322,7 @@ function finish(res, v, withSteps) {
     } else if (out.reason) {
         out.steps.push(S(msg('solve.equation.could_not_solve_exactly'), { text: out.reason, final: true }));
     }
-    if (out.odz) out.odz = { tex: out.odz.tex, text: out.odz.text, set: out.odz.set, conditions: out.odz.conds.map((c) => ({ kind: c.kind, expr: c.expr, tex: byLang((l) => condTex(c, l)) })) };
+    if (out.odz) out.odz = { tex: out.odz.tex, text: out.odz.text, set: out.odz.set, conditions: out.odz.conds.map((c) => ({ kind: c.kind, expr: c.expr, tex: eachLanguage((l) => condTex(c, l)) })) };
     if (!withSteps) out.steps = [];
     return out;
 }
@@ -354,7 +354,7 @@ function reductionStep(node) {
     walk(node);
     if (!pairs.length) return null;
     return S(msg('solve.equation.reduction_formulas'), {
-        tex: byLang((l) => pairs.map(([b, a]) => `${tex(b, l)} = ${tex(a, l)}`).join(',\\quad ')),
+        tex: eachLanguage((l) => pairs.map(([b, a]) => `${tex(b, l)} = ${tex(a, l)}`).join(',\\quad ')),
         text: msg('solve.equation.shift_of_argument_by_multiple_of'),
         rule: 'reduction',
     });

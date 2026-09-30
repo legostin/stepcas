@@ -1,11 +1,11 @@
 // solve/radical — irrational equations (roots of the unknown).
 
 import { containsVar, numValue, nodeSome, mul, nodeKey, div, neg, pow, num, substitute } from '../core/ast.js';
-import { N0, N1, S, T, approxOf, byLang, exactZero, expd, isolated, simpOr, tex } from './common.js';
+import { N0, N1, S, approxOf, exactZero, expd, isolated, simpOr, tex } from './common.js';
 import { reject, subSolve } from './equation.js';
 import { pushPart, sumNode } from './polynomial.js';
 import { termsOfSum } from './rational.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- radicals (irrational equations)
 
@@ -46,7 +46,7 @@ export function solveRadical(lhs, rhs, E, ctx) {
     if (p < 0n || q > 6n || p > 6n) return null;
     const f = R.base;
     const steps = [];
-    const eqRT = byLang((l) => `${tex(R, l)} = ${tex(g, l)}`);
+    const eqRT = eachLanguage((l) => `${tex(R, l)} = ${tex(g, l)}`);
     if (!isolated(lhs, rhs, R, g)) steps.push(S(msg('solve.radical.isolate_root'), { tex: eqRT }));
     const even = q % 2n === 0n;
     const gConst = !containsVar(g, v);
@@ -60,7 +60,7 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const gNonNeg = !gConst && hasRadical(g, v) && termsOfSum(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
     const powWord = qn2 === 2 ? msg('solve.radical.squared') : qn2 === 3 ? msg('solve.radical.cubed') : msg('solve.radical.to_power', { qn2 });
     steps.push(S(msg('solve.radical.raise_both_sides', { p: (lng) => powWord[lng] }), {
-        tex: byLang((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
+        tex: eachLanguage((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
         text: even
             ? (gConst || gNonNeg
                 ? msg('solve.radical.raising_to_even_power_may_add')
@@ -83,7 +83,7 @@ export function solveRadical(lhs, rhs, E, ctx) {
         if (bad.length) {
             reject(ctx, bad, 'sign');
             steps.push(S(msg('solve.radical.drop_roots_where', { g: (lng) => tex(g, lng) }), {
-                tex: byLang((l) => bad.map((r) => `${v} = ${tex(r.node, l)}:\\ ${tex(substitute(g, { [v]: r.node }), l)} = ${tex(simpOr(substitute(g, { [v]: r.node })), l)} < 0`).join(';\\ ')),
+                tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}:\\ ${tex(substitute(g, { [v]: r.node }), l)} = ${tex(simpOr(substitute(g, { [v]: r.node })), l)} < 0`).join(';\\ ')),
                 text: msg('solve.radical.these_are_extraneous_even_root_cannot'),
             }));
         }

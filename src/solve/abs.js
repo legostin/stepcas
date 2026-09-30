@@ -2,12 +2,12 @@
 
 import { containsVar, sym, div, neg, substitute, add, mul, mapNode } from '../core/ast.js';
 import { Poly } from '../core/poly.js';
-import { N0, N1, S, T, TMP, approxOf, byLang, exactZero, isolated, linearIn, orTex, outermost, replaceNode, simpOr, tex } from './common.js';
+import { N0, N1, S, TMP, approxOf, exactZero, isolated, linearIn, orTex, outermost, replaceNode, simpOr, tex } from './common.js';
 import { reject, subSolve } from './equation.js';
 import { IntervalSet } from './intervals.js';
 import { partStep, pushPart, solveAnyPoly } from './polynomial.js';
 import { mergeRoots, rootsTex } from './roots.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- absolute value
 
@@ -25,18 +25,18 @@ export function solveAbs(lhs, rhs, E, ctx) {
             const absT = (l) => tex(A[0], l);
             if (!containsVar(g, v)) {
                 const gv = approxOf(g);
-                if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: byLang((l) => `${absT(l)} = ${tex(g, l)}`) }));
+                if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: eachLanguage((l) => `${absT(l)} = ${tex(g, l)}`) }));
                 if (gv < 0 && exactZero(g) !== true) {
                     steps.push(S(msg('solve.abs.absolute_value_is_never_negative_no')));
                     return { kind: 'none', roots: [], steps, type: 'abs' };
                 }
                 if (exactZero(g) === true) {
                     const sub = subSolve(f, N0, ctx);
-                    steps.push(partStep(byLang((l) => `${tex(f, l)} = 0`), sub, v));
+                    steps.push(partStep(eachLanguage((l) => `${tex(f, l)} = 0`), sub, v));
                     return { ...sub, steps, type: 'abs' };
                 }
                 steps.push(S(msg('solve.abs.absolute_value_equals_positive_number_two'), {
-                    tex: byLang((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
+                    tex: eachLanguage((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
                     text: msg('solve.abs.number_at_distance_from_zero_is'),
                 }));
                 let roots = [];
@@ -50,9 +50,9 @@ export function solveAbs(lhs, rhs, E, ctx) {
                 return { kind: roots.length ? 'roots' : 'none', roots, steps, type: 'abs' };
             }
             // |f| = g(x)
-            if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: byLang((l) => `${absT(l)} = ${tex(g, l)}`) }));
+            if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: eachLanguage((l) => `${absT(l)} = ${tex(g, l)}`) }));
             steps.push(S(msg('solve.abs.open_absolute_value'), {
-                tex: byLang((l) => `${tex(g, l)} \\ge 0,\\qquad ${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
+                tex: eachLanguage((l) => `${tex(g, l)} \\ge 0,\\qquad ${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
                 text: msg('solve.abs.absolute_value_is_non_negative_so'),
             }));
             let cands = [];
@@ -74,7 +74,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
             if (bad.length) {
                 reject(ctx, bad, 'sign');
                 steps.push(S(msg('solve.abs.drop_roots_where', { g: (lng) => tex(g, lng) }), {
-                    tex: byLang((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
+                    tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
                     text: msg('solve.abs.absolute_value_cannot_equal_negative_number'),
                 }));
             }
@@ -88,7 +88,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
             const f = sp[0].abs.args[0];
             const g = sp[1].abs.args[0];
             steps.push(S(msg('solve.abs.equal_absolute_values_expressions_are_equal'), {
-                tex: byLang((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
+                tex: eachLanguage((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
             }));
             let roots = [];
             let ok = true;
@@ -133,7 +133,7 @@ function absIntervals(E, A, ctx) {
     pts = mergeRoots(pts);
     if (pts.length > 12) return null;
     const steps = [S(msg('solve.abs.mark_zeros_of_expressions_inside_absolute'), {
-        tex: byLang((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
+        tex: eachLanguage((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
         text: msg('solve.abs.between_these_points_every_expression_inside'),
     })];
     const bounds = [null, ...pts, null];
@@ -148,7 +148,7 @@ function absIntervals(E, A, ctx) {
             const s = approxOf(n.args[0], { [v]: t });
             return s >= 0 ? n.args[0] : neg(n.args[0]);
         }));
-        const where = byLang((l) => {
+        const where = eachLanguage((l) => {
             if (lo === null && hi === null) return msg('solve.abs.for_all').in(l);
             const a = lo && tex(lo.node, l);
             const b = hi && tex(hi.node, l);
@@ -171,7 +171,7 @@ function absIntervals(E, A, ctx) {
                 : ok.length ? msg('solve.abs.root_lies_in_interval') : msg('solve.abs.no_roots_on_this_interval');
         }
         steps.push(S(where, {
-            tex: byLang((l) => `${tex(Ei, l)} = 0 \\;\\Rightarrow\\; ${sub.kind === 'all' ? (msg('solve.abs.always_true').in(l)) : rootsTex(sub.roots, v, l)}`),
+            tex: eachLanguage((l) => `${tex(Ei, l)} = 0 \\;\\Rightarrow\\; ${sub.kind === 'all' ? (msg('solve.abs.always_true').in(l)) : rootsTex(sub.roots, v, l)}`),
             text: txt,
             sub: sub.steps,
         }));

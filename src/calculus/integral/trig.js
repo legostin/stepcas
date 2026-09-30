@@ -7,10 +7,10 @@ import { step } from '../../core/steps.js';
 import { expand } from '../../core/expand.js';
 import { Poly } from '../../core/poly.js';
 import { plainish } from './basic.js';
-import { HALF, N1, N2, NM1, T_, bt, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx } from './common.js';
+import { HALF, N1, N2, NM1, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx } from './common.js';
 import { I, sub } from './engine.js';
 import { qn } from './rational.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- trigonometric forms
 
@@ -79,7 +79,7 @@ export function substResult(f, ctx, { t, uNode, g, title, text, rule, dtTex }) {
         method: rule,
         step: step({
             title,
-            tex: bt((L) => `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text,
             rule,
             sub: [r.step],
@@ -157,7 +157,7 @@ export function mTrig(f, ctx) {
         return {
             F: r.F,
             method: 'trig-power',
-            step: step({ title: msg('calculus.integral.trig.lower_powers'), tex: bt((Lg) => `${iTex(f, v, Lg)} = ${iTex(X, v, Lg)}`), text, rule: 'trig-power', sub: [r.step] }),
+            step: step({ title: msg('calculus.integral.trig.lower_powers'), tex: eachLanguage((Lg) => `${iTex(f, v, Lg)} = ${iTex(X, v, Lg)}`), text, rule: 'trig-power', sub: [r.step] }),
         };
     }
     // product to sum: sin a·cos b, sin a·sin b, cos a·cos b with different linear arguments
@@ -170,7 +170,7 @@ export function mTrig(f, ctx) {
             method: 'trig-product',
             step: step({
                 title: msg('calculus.integral.trig.product_to_sum'),
-                tex: bt((Lg) => `${iTex(f, v, Lg)} = ${iTex(ps.X, v, Lg)}`),
+                tex: eachLanguage((Lg) => `${iTex(f, v, Lg)} = ${iTex(ps.X, v, Lg)}`),
                 text: msg('calculus.integral.trig.turn_product_of_sines_and_cosines'),
                 rule: 'trig-product',
                 sub: [r.step],
@@ -214,7 +214,7 @@ export function mTrigLower(f, ctx) {
         method: r.method,
         step: step({
             title: msg('calculus.integral.trig.lower_powers'),
-            tex: bt((L) => `${iTex(f, v, L)} = ${iTex(X, v, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${iTex(X, v, L)}`),
             text: msg('calculus.integral.trig.lower_power_of_sine_or_cosine'),
             rule: 'trig-power',
             sub: [r.step],
@@ -343,7 +343,7 @@ export function mTrigSub(f, ctx) {
         method: 'trig-root-substitution',
         step: step({
             title: kind === 'sin' ? msg('calculus.integral.trig.substitution_sin', { v, t }) : msg('calculus.integral.trig.substitution_tan', { v, t }),
-            tex: bt((L) => `${iTex(f, v, L)} = \\left[${v} = ${tx(simp(xOfT), L)},\\ d${v} = ${tx(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(back, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[${v} = ${tx(simp(xOfT), L)},\\ d${v} = ${tx(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(back, L)}`),
             text: kind === 'sin'
                 ? msg('calculus.integral.trig.under_root_substitution_sin_2_2', { v, t })
                 : msg('calculus.integral.trig.under_root_substitution_tan_2_2', { v, t }),
@@ -383,7 +383,7 @@ export function mCyclic(f, ctx) {
         method: 'parts-cyclic',
         step: step({
             title: msg('calculus.integral.trig.by_parts_twice_cyclic_integral'),
-            tex: bt((L) => `I = ${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `I = ${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text: msg('calculus.integral.trig.integrate_by_parts_twice_both_times', { J }),
             rule: 'parts-cyclic',
         }),

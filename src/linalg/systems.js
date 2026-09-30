@@ -1,11 +1,11 @@
 // linalg/systems — the inverse and linear systems (Gauss, Cramer), with steps.
 
 import { Q } from '../core/rational.js';
-import { E_, L, S, T, fail, qs, qt, qtp, sub } from './common.js';
+import { E_, S, fail, qs, qt, qtp, sub } from './common.js';
 import { M, Matrix, needSquare, toQ, vecTex } from './core.js';
 import { matDet } from './det.js';
 import { STRATEGY, nullspaceFrom, reduce } from './reduce.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- inverse and linear systems
 
@@ -20,9 +20,9 @@ export function matInverse(A, opts = {}) {
     const value = singular ? null : new Matrix(res.W.map((r) => r.slice(n)));
     if (!opts.steps) return value;
     const st = [];
-    st.push(S(T((l) => (msg('linalg.systems.append_identity_matrix').in(l))),
-        T((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
-        T((l) => (msg('linalg.systems.using_row_operations_we_turn_left', { p: (lng) => STRATEGY[lng] }).in(l))),
+    st.push(S(eachLanguage((l) => (msg('linalg.systems.append_identity_matrix').in(l))),
+        eachLanguage((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
+        eachLanguage((l) => (msg('linalg.systems.using_row_operations_we_turn_left', { p: (lng) => STRATEGY[lng] }).in(l))),
         { rule: 'inverse-plan' }));
     if (n === 2 && !singular) {
         const [[a, b], [c, d]] = A.a;
@@ -40,9 +40,9 @@ export function matInverse(A, opts = {}) {
         return { value: null, steps: st };
     }
     st.push(S(msg('linalg.systems.answer'), `A^{-1} = ${value.toTex()}`,
-        T((l) => (msg('linalg.systems.left_half_is_now_identity_so').in(l))),
+        eachLanguage((l) => (msg('linalg.systems.left_half_is_now_identity_so').in(l))),
         { rule: 'answer' }));
-    st.push(S(msg('linalg.systems.check'), T((l) => `A \\cdot A^{-1} = ${A.mul(value).toTex()} = ${E_(l)}`), null, { rule: 'check' }));
+    st.push(S(msg('linalg.systems.check'), eachLanguage((l) => `A \\cdot A^{-1} = ${A.mul(value).toTex()} = ${E_(l)}`), null, { rule: 'check' }));
     return { value, steps: st };
 }
 

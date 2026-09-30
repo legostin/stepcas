@@ -6,9 +6,9 @@ import { Poly } from '../../core/poly.js';
 import { niceForm, prettyForm } from '../derivative/index.js';
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
-import { NM1, T_, asNode, bt, checkAnti, iTex, isNum, isVar, simp, surelyPositive, trySimp, tx } from './common.js';
+import { NM1, asNode, checkAnti, iTex, isNum, isVar, simp, surelyPositive, trySimp, tx } from './common.js';
 import { I } from './engine.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- non-elementary integrals
 
@@ -99,7 +99,7 @@ export function integrate(node, v = 'x', opts = {}) {
     const ctx = { v, depth: 0, budget: { calls: 0, max: opts.budget ?? 600, memo: new Map() } };
     const start = step({
         title: msg('calculus.integral.integrate.what_we_integrate'),
-        tex: bt((L) => iTex(node, v, L)),
+        tex: eachLanguage((L) => iTex(node, v, L)),
         text: freeVars(node).filter((w) => w !== v).length
             ? msg('calculus.integral.integrate.we_integrate_with_respect_to_other', { v })
             : msg('calculus.integral.integrate.we_look_for_antiderivative_function_whose'),
@@ -130,7 +130,7 @@ export function integrate(node, v = 'x', opts = {}) {
     if (!verified && checkAnti(F, f, v) === false) {
         return fail(msg('calculus.integral.integrate.candidate_failed_check_by_differentiation_so'));
     }
-    const tex = bt((L) => `${iTex(node, v, L)} = ${tx(F, L)} + C`);
+    const tex = eachLanguage((L) => `${iTex(node, v, L)} = ${tx(F, L)} + C`);
     const steps = [];
     if (opts.steps) {
         steps.push(start);
@@ -148,14 +148,14 @@ export function integrate(node, v = 'x', opts = {}) {
             }
             steps.push(step({
                 title: msg('calculus.integral.integrate.simplify'),
-                tex: bt((L) => `${rawTex(L)} = ${tx(F, L)}${dropped ? ' + \\mathrm{const}' : ''}`),
+                tex: eachLanguage((L) => `${rawTex(L)} = ${tx(F, L)}${dropped ? ' + \\mathrm{const}' : ''}`),
                 text,
                 rule: 'simplify',
             }));
         }
         steps.push(step({
             title: msg('calculus.integral.integrate.check'),
-            tex: bt((L) => `\\left(${tx(F, L)}\\right)' = ${tx(f, L)}`),
+            tex: eachLanguage((L) => `\\left(${tx(F, L)}\\right)' = ${tx(f, L)}`),
             text: verified
                 ? msg('calculus.integral.integrate.differentiate_answer_and_compare_with_integrand')
                 : msg('calculus.integral.integrate.numeric_check_could_not_be_done'),

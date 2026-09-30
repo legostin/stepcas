@@ -50,11 +50,6 @@ export function trySimp(node) {
     }
 }
 
-export function bt(f) {
-    const ru = f('ru');
-    const en = f('en');
-    return ru === en ? ru : { ru, en };
-}
 
 const tall = (s) => /\\frac|\\sqrt|\\left|\\dfrac|\^\{/.test(s);
 export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);

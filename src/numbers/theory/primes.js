@@ -2,8 +2,8 @@
 
 import { bigIroot, bigIsqrt } from '../../core/rational.js';
 import { needBase } from './bases.js';
-import { L, S, SMALL, SMALL_BIG, T, TRIAL, babs, big, bmod, dec, fail, gcdCore, listText, powmod, sieveBytes, sn, tn } from './common.js';
-import { msg } from '../../i18n/index.js';
+import { L, S, SMALL, SMALL_BIG, TRIAL, babs, big, bmod, dec, fail, gcdCore, listText, powmod, sieveBytes, sn, tn } from './common.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- primality
 
@@ -275,7 +275,7 @@ export function ntFactor(n, opts = {}) {
         const times = (l) => (msg('numbers.theory.primes.times', { e: gr.e, p: gr.e % 10 >= 2 && gr.e % 10 <= 4 && (gr.e % 100 < 12 || gr.e % 100 > 14) ? 'раза' : 'раз' }).in(l));
         st.push(S(msg('numbers.theory.primes.divide_by', { p: sn(gr.p) }),
             `${tn(gr.before)} = ${pieces.join(' = ')}`,
-            T((l) => (msg('numbers.theory.primes.is_divisible_by_is_left', { l: skipTxt(l), p: sn(gr.before), p2: sn(gr.p), p3: ruleHint(Number(gr.p), gr.before, l), p4: (lng) => gr.e > 1 ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng) : msg('numbers.theory.primes.we_divide').in(lng), p5: sn(gr.after) }).in(l))),
+            eachLanguage((l) => (msg('numbers.theory.primes.is_divisible_by_is_left', { l: skipTxt(l), p: sn(gr.before), p2: sn(gr.p), p3: ruleHint(Number(gr.p), gr.before, l), p4: (lng) => gr.e > 1 ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng) : msg('numbers.theory.primes.we_divide').in(lng), p5: sn(gr.after) }).in(l))),
             { rule: 'divide', p: gr.p, e: gr.e }));
     }
     const out = new Map(groups.map((g) => [g.p, g.e]));
@@ -283,8 +283,8 @@ export function ntFactor(n, opts = {}) {
         const r = Math.sqrt(Number(m));
         const whole = groups.length === 0;
         st.push(S(whole ? msg('numbers.theory.primes.number_is_prime') : msg('numbers.theory.primes.what_is_left_is_prime'),
-            T((l) => `\\sqrt{${tn(m)}} \\approx ${dec(r, 1, l, true)}`),
-            T((l) => (msg('numbers.theory.primes.and_none_divides_it_so_is', { p: (lng) => whole ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng) : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng), m: sn(m) }).in(l))),
+            eachLanguage((l) => `\\sqrt{${tn(m)}} \\approx ${dec(r, 1, l, true)}`),
+            eachLanguage((l) => (msg('numbers.theory.primes.and_none_divides_it_so_is', { p: (lng) => whole ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng) : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng), m: sn(m) }).in(l))),
             { rule: 'sqrt-bound' }));
         out.set(m, (out.get(m) ?? 0) + 1);
         ladder.push({ n: m, p: m });

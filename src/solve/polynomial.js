@@ -4,12 +4,12 @@ import { Q, rootExtract, bigGcd, bigLcm } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { num, sym, mul, div, neg, add, pow, numValue, containsVar, nodeSome, nodeKey } from '../core/ast.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
-import { N0, N1, S, T, approxC, approxNode, approxOf, byLang, exactZero, expd, parQ, pick, simp, simpOr, sq, tex } from './common.js';
+import { N0, N1, S, approxC, approxNode, approxOf, exactZero, expd, parQ, pick, simp, simpOr, sq, tex } from './common.js';
 import { solveCore } from './equation.js';
 import { IntervalSet } from './intervals.js';
 import { approxComplexTex, cmpRoots, hasI, mergeRoots, mkRoot, mkRootC, qRoot, rootsTex, sameRoot } from './roots.js';
 import { familiesTex, familiesToRoots, mergeFamilies } from './trig.js';
-import { msg, notation } from '../i18n/index.js';
+import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- polynomials: helpers
 
@@ -94,7 +94,7 @@ function normStep(P, Pn, v) {
             : k.isInt()
                 ? msg('solve.polynomial.this_clears_fractions')
                 : msg('solve.polynomial.all_coefficients_share_this_factor_so');
-    return S(title, { tex: byLang((l) => `${polyTex(Pn, v, l)} = 0`), text });
+    return S(title, { tex: eachLanguage((l) => `${polyTex(Pn, v, l)} = 0`), text });
 }
 
 // ---------------------------------------------------------------- quadratic equations
@@ -117,24 +117,24 @@ export function quadSolve(P0, ctx) {
         const lin = new Poly([b, a]);
         const r = b.neg().div(a);
         steps.push(S(msg('solve.polynomial.incomplete_quadratic_take_out_of_brackets', { v }), {
-            tex: byLang((l) => `${v}\\left(${polyTex(lin, v, l)}\\right) = 0`),
+            tex: eachLanguage((l) => `${v}\\left(${polyTex(lin, v, l)}\\right) = 0`),
             text: msg('solve.polynomial.product_is_zero_when_one_of'),
         }));
         const rs = mergeRoots([qRoot(Q.ZERO), qRoot(r)]);
-        steps.push(S(msg('solve.polynomial.roots'), { tex: byLang((l) => `${v} = 0 \\quad ${msg('solve.polynomial.or').in(l)} \\quad ${polyTex(lin, v, l)} = 0 \\;\\Rightarrow\\; ${v} = ${tex(num(r), l)}`) }));
+        steps.push(S(msg('solve.polynomial.roots'), { tex: eachLanguage((l) => `${v} = 0 \\quad ${msg('solve.polynomial.or').in(l)} \\quad ${polyTex(lin, v, l)} = 0 \\;\\Rightarrow\\; ${v} = ${tex(num(r), l)}`) }));
         roots.push(...rs);
         return { roots, cplx, steps };
     }
     if (b.isZero()) {
         const r = c.neg().div(a);
         steps.push(S(msg('solve.polynomial.incomplete_quadratic_solve_for', { vv }), {
-            tex: byLang((l) => `${vv} = ${tex(num(r), l)}`),
+            tex: eachLanguage((l) => `${vv} = ${tex(num(r), l)}`),
         }));
         if (r.isPos()) {
             const s = simpOr(pow(num(r), num(Q.HALF)));
             const sq1 = numValue(s);
             steps.push(S(msg('solve.polynomial.take_square_root_two_roots_of'), {
-                tex: byLang((l) => `${v} = \\pm\\sqrt{${tex(num(r), l)}} = \\pm ${tex(s, l)}`),
+                tex: eachLanguage((l) => `${v} = \\pm\\sqrt{${tex(num(r), l)}} = \\pm ${tex(s, l)}`),
                 text: msg('solve.polynomial.both_and_squared_give', { s: tex(s), p: tex(simpOr(neg(s))), p2: tex(num(r)) }),
             }));
             const mp = sq1 ? null : P;
@@ -159,7 +159,7 @@ export function quadSolve(P0, ctx) {
     const b2 = B * B;
     const ac4 = 4n * A * C;
     steps.push(S(msg('solve.polynomial.quadratic_equation_read_off_coefficients'), {
-        tex: byLang((l) => `a = ${tex(num(a), l)},\\quad b = ${tex(num(b), l)},\\quad c = ${tex(num(c), l)}`),
+        tex: eachLanguage((l) => `a = ${tex(num(a), l)},\\quad b = ${tex(num(b), l)},\\quad c = ${tex(num(c), l)}`),
     }));
     steps.push(S(msg('solve.polynomial.compute_discriminant'), {
         tex: `D = b^2 - 4ac = ${parQ(b)}^{2} - 4 \\cdot ${parQ(a)} \\cdot ${parQ(c)} = ${b2} ${ac4 < 0n ? '+' : '-'} ${ac4 < 0n ? -ac4 : ac4} = ${D}`,
@@ -182,13 +182,13 @@ export function quadSolve(P0, ctx) {
             steps.push(S(msg('solve.polynomial.two_roots'), { tex: t }));
             const [r1, r2] = f.real;
             steps.push(S(msg('solve.polynomial.compute_each_root'), {
-                tex: byLang((l) => `${v}_1 = \\frac{${mb} - ${s}}{${a2}} = ${tex(r1.node, l)};\\quad ${v}_2 = \\frac{${mb} + ${s}}{${a2}} = ${tex(r2.node, l)}`),
+                tex: eachLanguage((l) => `${v}_1 = \\frac{${mb} - ${s}}{${a2}} = ${tex(r1.node, l)};\\quad ${v}_2 = \\frac{${mb} + ${s}}{${a2}} = ${tex(r2.node, l)}`),
             }));
             roots.push(...f.real);
             const qs = numValue(r1.node).add(numValue(r2.node));
             const qp = numValue(r1.node).mul(numValue(r2.node));
             steps.push(S(msg('solve.polynomial.check_with_vieta_s_formulas'), {
-                tex: byLang((l) => `${v}_1 + ${v}_2 = ${tex(num(qs), l)} = -\\frac{b}{a},\\quad ${v}_1 ${v}_2 = ${tex(num(qp), l)} = \\frac{c}{a}`),
+                tex: eachLanguage((l) => `${v}_1 + ${v}_2 = ${tex(num(qs), l)} = -\\frac{b}{a},\\quad ${v}_1 ${v}_2 = ${tex(num(qp), l)} = \\frac{c}{a}`),
                 text: msg('solve.polynomial.sum_of_roots_is_and_product'),
             }));
         } else {
@@ -201,7 +201,7 @@ export function quadSolve(P0, ctx) {
                 text: out > 1n ? msg('solve.polynomial.simplify_root', { D, out, inn: f.inn }) : undefined,
             }));
             steps.push(S(reduced ? msg('solve.polynomial.reduce_fraction') : msg('solve.polynomial.roots'), {
-                tex: byLang((l) => `${v}_1 = ${tex(r1.node, l)};\\quad ${v}_2 = ${tex(r2.node, l)}`),
+                tex: eachLanguage((l) => `${v}_1 = ${tex(r1.node, l)};\\quad ${v}_2 = ${tex(r2.node, l)}`),
             }));
             roots.push(...f.real);
         }
@@ -219,8 +219,8 @@ export function quadSolve(P0, ctx) {
 
 /** A nested "solve this part" step: the result in the title line, the details inside. */
 export function partStep(eqTex, res, v) {
-    return S(byLang((l) => (msg('solve.polynomial.solve', { eqTex: (lng) => pick(eqTex, lng) }).in(l))), {
-        tex: byLang((l) => (res.kind === 'all' ? `${v} \\in \\mathbb{R}` : rootsTex(res.roots, v, l))),
+    return S(eachLanguage((l) => (msg('solve.polynomial.solve', { eqTex: (lng) => pick(eqTex, lng) }).in(l))), {
+        tex: eachLanguage((l) => (res.kind === 'all' ? `${v} \\in \\mathbb{R}` : rootsTex(res.roots, v, l))),
         sub: res.steps,
         text: !res.roots.length && res.cplx?.length ? msg('solve.polynomial.no_real_roots_2') : undefined,
     });
@@ -229,7 +229,7 @@ export function partStep(eqTex, res, v) {
 /** Push "solve lhs = rhs" as a nested step, unless it is already the answer (x = c). */
 export function pushPart(steps, lhs, rhs, res, v) {
     if (lhs.type === 'sym' && lhs.name === v && !containsVar(rhs, v) && res.kind === 'roots' && res.roots.length === 1) return;
-    steps.push(partStep(byLang((l) => `${tex(lhs, l)} = ${tex(rhs, l)}`), res, v));
+    steps.push(partStep(eachLanguage((l) => `${tex(lhs, l)} = ${tex(rhs, l)}`), res, v));
 }
 
 /** Any polynomial over Q (degree ≥ 1) → {roots, cplx, steps, numeric}. */
@@ -244,7 +244,7 @@ export function solveAnyPoly(P0, ctx) {
         res = {
             roots: [qRoot(r)],
             cplx: [],
-            steps: [S(msg('solve.polynomial.solve_for', { v }), { tex: byLang((l) => `${v} = ${tex(num(r), l)}`) })],
+            steps: [S(msg('solve.polynomial.solve_for', { v }), { tex: eachLanguage((l) => `${v} = ${tex(num(r), l)}`) })],
         };
     } else if (P.degree === 2) res = quadSolve(P, ctx);
     else res = highSolve(P, ctx);
@@ -321,7 +321,7 @@ function highSolve(P, ctx) {
         cplx.push(...(res.cplx ?? []));
         if (res.numeric) numeric = true;
     };
-    const eqTex = (Q_) => byLang((l) => `${polyTex(Q_, v, l)} = 0`);
+    const eqTex = (Q_) => eachLanguage((l) => `${polyTex(Q_, v, l)} = 0`);
 
     // 1. common factor x^k
     if (nz[0] > 0) {
@@ -329,7 +329,7 @@ function highSolve(P, ctx) {
         const Qp = new Poly(P.c.slice(k));
         const xk = X_POW(v, k);
         steps.push(S(msg('solve.polynomial.take_out_of_brackets', { xk }), {
-            tex: byLang((l) => `${xk}\\left(${polyTex(Qp, v, l)}\\right) = 0`),
+            tex: eachLanguage((l) => `${xk}\\left(${polyTex(Qp, v, l)}\\right) = 0`),
             text: msg('solve.polynomial.product_is_zero_when_one_of_2', { v, Qp: (lng) => polyTex(Qp, v, lng) }),
         }));
         roots.push(qRoot(Q.ZERO, { mult: k }));
@@ -343,18 +343,18 @@ function highSolve(P, ctx) {
     if (nz.length === 2 && ctx.domain !== 'complex') {
         const r = P.coeff(0).neg().div(P.lead);
         const xn = X_POW(v, deg);
-        steps.push(S(msg('solve.polynomial.solve_for_2', { xn }), { tex: byLang((l) => `${xn} = ${tex(num(r), l)}`) }));
+        steps.push(S(msg('solve.polynomial.solve_for_2', { xn }), { tex: eachLanguage((l) => `${xn} = ${tex(num(r), l)}`) }));
         const exactR = r.exactRoot(deg);
         if (deg % 2 === 1) {
             const node = exactR ? num(exactR) : simpOr(pow(num(r), num(new Q(1n, BigInt(deg)))));
             steps.push(S(msg('solve.polynomial.odd_power_exactly_one_real_root'), {
-                tex: byLang((l) => `${v} = \\sqrt[${deg}]{${tex(num(r), l)}} = ${tex(node, l)}`),
+                tex: eachLanguage((l) => `${v} = \\sqrt[${deg}]{${tex(num(r), l)}} = ${tex(node, l)}`),
             }));
             roots.push(exactR ? qRoot(exactR) : { node, approx: Math.sign(r.toNumber()) * Math.abs(r.toNumber()) ** (1 / deg), mult: 1, minPoly: P });
         } else if (r.isPos()) {
             const node = exactR ? num(exactR) : simpOr(pow(num(r), num(new Q(1n, BigInt(deg)))));
             steps.push(S(msg('solve.polynomial.even_power_two_roots_of_opposite'), {
-                tex: byLang((l) => `${v} = \\pm\\sqrt[${deg}]{${tex(num(r), l)}} = \\pm ${tex(node, l)}`),
+                tex: eachLanguage((l) => `${v} = \\pm\\sqrt[${deg}]{${tex(num(r), l)}} = \\pm ${tex(node, l)}`),
             }));
             const a = r.toNumber() ** (1 / deg);
             roots.push(exactR ? qRoot(exactR.neg()) : { node: simpOr(neg(node)), approx: -a, mult: 1, minPoly: P });
@@ -365,7 +365,7 @@ function highSolve(P, ctx) {
         if (ctx.domain === 'complex') {
             const n = numericRoots(P, ctx);
             cplx.push(...n.cplx);
-            if (n.cplx.length) steps.push(S(msg('solve.polynomial.complex_roots'), { tex: byLang((l) => n.cplx.map((z) => approxComplexTex(z.approx, l)).join(';\\ ')), text: msg('solve.polynomial.found_numerically') }));
+            if (n.cplx.length) steps.push(S(msg('solve.polynomial.complex_roots'), { tex: eachLanguage((l) => n.cplx.map((z) => approxComplexTex(z.approx, l)).join(';\\ ')), text: msg('solve.polynomial.found_numerically') }));
             numeric = numeric || n.cplx.length > 0;
         }
         return { roots, cplx, steps, numeric };
@@ -378,13 +378,13 @@ function highSolve(P, ctx) {
         const xm = X_POW(v, m);
         const name = m === 2 ? msg('solve.polynomial.biquadratic') : msg('solve.polynomial.trinomial');
         steps.push(S(msg('solve.polynomial.this_is_equation_substitute', { p: (lng) => name[lng], xm }), {
-            tex: byLang((l) => `${polyTex(Tq, 't', l)} = 0`),
+            tex: eachLanguage((l) => `${polyTex(Tq, 't', l)} = 0`),
             text: m % 2 === 0
                 ? msg('solve.polynomial.since_only_will_do', { xm })
                 : msg('solve.polynomial.equation_is_now_quadratic_in'),
         }));
         const tr = solveAnyPoly(Tq, { v: 't', domain: 'real' });
-        steps.push(partStep(byLang((l) => `${polyTex(Tq, 't', l)} = 0`), tr, 't'));
+        steps.push(partStep(eachLanguage((l) => `${polyTex(Tq, 't', l)} = 0`), tr, 't'));
         const back = [];
         for (const t of tr.roots) {
             const tq = numValue(t.node);
@@ -392,7 +392,7 @@ function highSolve(P, ctx) {
             const mp = composeXm(tMin, m).primitive();
             const tt = (l) => tex(t.node, l);
             if (m % 2 === 0 && t.approx < -1e-12) {
-                back.push(S(byLang((l) => `$${xm} = ${tt(l)}$`), { text: msg('solve.polynomial.even_power_is_never_negative_no_2') }));
+                back.push(S(eachLanguage((l) => `$${xm} = ${tt(l)}$`), { text: msg('solve.polynomial.even_power_is_never_negative_no_2') }));
                 if (ctx.domain === 'complex' && m === 2) {
                     const z = simpOr(mul(sym('i'), pow(simpOr(neg(t.node)), num(Q.HALF))));
                     const im = Math.sqrt(-t.approx);
@@ -401,7 +401,7 @@ function highSolve(P, ctx) {
                 continue;
             }
             if (Math.abs(t.approx) <= 1e-12) {
-                back.push(S(byLang((l) => `$${xm} = 0$`), { tex: `${v} = 0` }));
+                back.push(S(eachLanguage((l) => `$${xm} = 0$`), { tex: `${v} = 0` }));
                 roots.push(qRoot(Q.ZERO));
                 continue;
             }
@@ -409,11 +409,11 @@ function highSolve(P, ctx) {
             const a = Math.sign(t.approx) * Math.abs(t.approx) ** (1 / m);
             const rq = numValue(rootNode);
             if (m % 2 === 0) {
-                back.push(S(byLang((l) => `$${xm} = ${tt(l)}$`), { tex: byLang((l) => `${v} = \\pm ${tex(rootNode, l)}`) }));
+                back.push(S(eachLanguage((l) => `$${xm} = ${tt(l)}$`), { tex: eachLanguage((l) => `${v} = \\pm ${tex(rootNode, l)}`) }));
                 roots.push(rq ? qRoot(rq.neg()) : { node: simpOr(neg(rootNode)), approx: -a, mult: 1, minPoly: mp });
                 roots.push(rq ? qRoot(rq) : { node: rootNode, approx: a, mult: 1, minPoly: mp });
             } else {
-                back.push(S(byLang((l) => `$${xm} = ${tt(l)}$`), { tex: byLang((l) => `${v} = ${tex(rootNode, l)}`) }));
+                back.push(S(eachLanguage((l) => `$${xm} = ${tt(l)}$`), { tex: eachLanguage((l) => `${v} = ${tex(rootNode, l)}`) }));
                 roots.push(rq ? qRoot(rq) : { node: rootNode, approx: a, mult: 1, minPoly: mp });
             }
         }
@@ -425,7 +425,7 @@ function highSolve(P, ctx) {
                 numeric = true;
             }
         }
-        steps.push(S(msg('solve.polynomial.substitute_back'), { sub: back, tex: byLang((l) => rootsTex(mergeRoots(roots), v, l)) }));
+        steps.push(S(msg('solve.polynomial.substitute_back'), { sub: back, tex: eachLanguage((l) => rootsTex(mergeRoots(roots), v, l)) }));
         return { roots, cplx, steps, numeric };
     }
 
@@ -436,14 +436,14 @@ function highSolve(P, ctx) {
         const c = P.coeff(2);
         const Tq = new Poly([c.sub(a.mul(2)), b, a]);
         steps.push(S(msg('solve.polynomial.symmetric_reciprocal_equation_divide_by', { v }), {
-            tex: byLang((l) => `${tex(num(a), l) === '1' ? '' : tex(num(a), l)}\\left(${v}^2 + \\frac{1}{${v}^2}\\right) ${b.isNeg() ? '-' : '+'} ${b.abs().isOne() ? '' : tex(num(b.abs()), l)}\\left(${v} + \\frac{1}{${v}}\\right) ${c.isNeg() ? '-' : '+'} ${tex(num(c.abs()), l)} = 0`),
+            tex: eachLanguage((l) => `${tex(num(a), l) === '1' ? '' : tex(num(a), l)}\\left(${v}^2 + \\frac{1}{${v}^2}\\right) ${b.isNeg() ? '-' : '+'} ${b.abs().isOne() ? '' : tex(num(b.abs()), l)}\\left(${v} + \\frac{1}{${v}}\\right) ${c.isNeg() ? '-' : '+'} ${tex(num(c.abs()), l)} = 0`),
             text: msg('solve.polynomial.coefficients_read_same_both_ways_is', { v }),
         }));
         steps.push(S(msg('solve.polynomial.substitute_then', { v }), {
-            tex: byLang((l) => `${polyTex(Tq, 't', l)} = 0`),
+            tex: eachLanguage((l) => `${polyTex(Tq, 't', l)} = 0`),
         }));
         const tr = solveAnyPoly(Tq, { v: 't', domain: 'real' });
-        steps.push(partStep(byLang((l) => `${polyTex(Tq, 't', l)} = 0`), tr, 't'));
+        steps.push(partStep(eachLanguage((l) => `${polyTex(Tq, 't', l)} = 0`), tr, 't'));
         const back = [];
         for (const t of tr.roots) {
             const tq = numValue(t.node);
@@ -452,15 +452,15 @@ function highSolve(P, ctx) {
                 const sub = solveAnyPoly(Qx, ctx);
                 roots.push(...sub.roots);
                 cplx.push(...(sub.cplx ?? []));
-                back.push(partStep(byLang((l) => `${v} + \\frac{1}{${v}} = ${tex(t.node, l)} \\;\\Leftrightarrow\\; ${polyTex(Qx, v, l)} = 0`), sub, v));
+                back.push(partStep(eachLanguage((l) => `${v} + \\frac{1}{${v}} = ${tex(t.node, l)} \\;\\Leftrightarrow\\; ${polyTex(Qx, v, l)} = 0`), sub, v));
             } else {
                 const res = nodeQuadRoots(N1, simpOr(neg(t.node)), N1, ctx);
                 roots.push(...res.roots.map((r) => ({ ...r, minPoly: P })));
                 cplx.push(...res.cplx.map((r) => ({ ...r, minPoly: P })));
-                back.push(S(byLang((l) => `$${v} + \\frac{1}{${v}} = ${tex(t.node, l)}$`), { tex: byLang((l) => rootsTex(res.roots, v, l)), sub: res.steps }));
+                back.push(S(eachLanguage((l) => `$${v} + \\frac{1}{${v}} = ${tex(t.node, l)}$`), { tex: eachLanguage((l) => rootsTex(res.roots, v, l)), sub: res.steps }));
             }
         }
-        steps.push(S(msg('solve.polynomial.substitute_back'), { sub: back, tex: byLang((l) => rootsTex(mergeRoots(roots), v, l)) }));
+        steps.push(S(msg('solve.polynomial.substitute_back'), { sub: back, tex: eachLanguage((l) => rootsTex(mergeRoots(roots), v, l)) }));
         return { roots, cplx, steps, numeric };
     }
 
@@ -474,7 +474,7 @@ function highSolve(P, ctx) {
         const X = sym(v);
         const grouped = add(mul(pow(X, num(2)), lin.toNode(v)), mul(num(m), lin.toNode(v)));
         steps.push(S(msg('solve.polynomial.group_terms'), {
-            tex: byLang((l) => `${tex(grouped, l)} = 0 \\;\\Rightarrow\\; \\left(${polyTex(lin, v, l)}\\right)\\left(${polyTex(sqr, v, l)}\\right) = 0`),
+            tex: eachLanguage((l) => `${tex(grouped, l)} = 0 \\;\\Rightarrow\\; \\left(${polyTex(lin, v, l)}\\right)\\left(${polyTex(sqr, v, l)}\\right) = 0`),
             text: msg('solve.polynomial.take_out_of_first_two_terms'),
         }));
         for (const F of [lin, sqr]) {
@@ -506,7 +506,7 @@ function highSolve(P, ctx) {
             const Qn = h.quotient;
             const triedTex = (l) => tried.slice(-6).map(([x, y]) => `P(${tex(num(x), l)}) = ${tex(num(y), l)} \\ne 0`).join(notation(l).listTex);
             steps.push(S(msg('solve.polynomial.horner_s_scheme_is_root', { v, p: (lng) => tex(num(c), lng) }), {
-                tex: byLang((l) => hornerTex(rest, c, l)),
+                tex: eachLanguage((l) => hornerTex(rest, c, l)),
                 text: msg('solve.polynomial.remainder_last_number_is_zero_so', { p: (lng) => tried.length ? msg('solve.polynomial.checked', { p: (lng) => triedTex(lng) }).in(lng) : '', p2: (lng) => tex(num(c), lng), p3: (lng) => tex(linFactorNode(v, c), lng), p4: (lng) => tex(mul(linFactorNode(v, c), Qn.toNode(v)), lng) }),
             }));
             roots.push(qRoot(c));
@@ -530,7 +530,7 @@ function highSolve(P, ctx) {
     if (pieces.length > 1 && pieces.every((f) => f.poly.degree <= 2)) {
         const prod = mul(pieces.map((f) => (f.mult > 1 ? pow(f.poly.toNode(v), num(f.mult)) : f.poly.toNode(v))));
         steps.push(S(msg('solve.polynomial.factor_remaining_polynomial'), {
-            tex: byLang((l) => `${polyTex(restP, v, l)} = ${tex(prod, l)}`),
+            tex: eachLanguage((l) => `${polyTex(restP, v, l)} = ${tex(prod, l)}`),
         }));
         for (const f of pieces) {
             const sub = solveAnyPoly(f.poly, ctx);
@@ -545,7 +545,7 @@ function highSolve(P, ctx) {
     numeric = true;
     steps.push(S(msg('solve.polynomial.has_no_more_rational_roots', { restP: (lng) => polyTex(restP, v, lng) }), {
         text: numericNote(restP.degree),
-        tex: byLang((l) => (n.roots.length ? rootsTex(n.roots, v, l) : msg('solve.polynomial.no_real_roots_3').in(l))),
+        tex: eachLanguage((l) => (n.roots.length ? rootsTex(n.roots, v, l) : msg('solve.polynomial.no_real_roots_3').in(l))),
     }));
     return { roots, cplx, steps, numeric };
 }
@@ -557,7 +557,7 @@ export function nodeQuadRoots(aN, bN, cN, ctx) {
     const co = cx ? { complex: true } : undefined;
     const D = simpOr(expd(add(pow(bN, num(2)), mul(num(-4), aN, cN)), co) ?? add(pow(bN, num(2)), mul(num(-4), aN, cN)), co);
     const d = approxOf(D);
-    const steps = [S(msg('solve.polynomial.discriminant'), { tex: byLang((l) => `D = b^2 - 4ac = ${tex(D, l)}`) })];
+    const steps = [S(msg('solve.polynomial.discriminant'), { tex: eachLanguage((l) => `D = b^2 - 4ac = ${tex(D, l)}`) })];
     const two = mul(num(2), aN);
     const roots = [];
     const cplx = [];
@@ -567,7 +567,7 @@ export function nodeQuadRoots(aN, bN, cN, ctx) {
         const s = simpOr(pow(D, num(Q.HALF)), co);
         const exactS = !(s.type === 'pow' || nodeSome(s, (x) => x.type === 'pow' && hasI(x.base)));
         steps.push(S(msg('solve.polynomial.square_root_of_complex_discriminant'), {
-            tex: byLang((l) => `\\sqrt{D} = ${exactS ? `\\pm\\left(${tex(s, l)}\\right)` : `\\pm\\sqrt{${tex(D, l)}}`}`),
+            tex: eachLanguage((l) => `\\sqrt{D} = ${exactS ? `\\pm\\left(${tex(s, l)}\\right)` : `\\pm\\sqrt{${tex(D, l)}}`}`),
             text: exactS
                 ? msg('solve.polynomial.look_for_with_check', { s: (lng) => tex(s, lng), D: (lng) => tex(D, lng) })
                 : undefined,
@@ -578,18 +578,18 @@ export function nodeQuadRoots(aN, bN, cN, ctx) {
             if (r.complex) cplx.push(r);
             else roots.push(r);
         }
-        steps.push(S(msg('solve.polynomial.roots'), { tex: byLang((l) => `${v}_{1,2} = \\frac{-b \\pm \\sqrt{D}}{2a}:\\quad ${[...roots, ...cplx].map((r) => tex(r.node, l)).join(notation(l).listTex)}`) }));
+        steps.push(S(msg('solve.polynomial.roots'), { tex: eachLanguage((l) => `${v}_{1,2} = \\frac{-b \\pm \\sqrt{D}}{2a}:\\quad ${[...roots, ...cplx].map((r) => tex(r.node, l)).join(notation(l).listTex)}`) }));
         return { roots, cplx, steps };
     }
     if (Math.abs(d) <= 1e-12 * Math.max(1, Math.abs(approxOf(bN)) ** 2) && exactZero(D) !== false) {
         const r = simpOr(div(neg(bN), two));
         roots.push(mkRoot(r, { mult: 2 }));
-        steps.push(S(msg('solve.polynomial.one_root'), { tex: byLang((l) => `${v} = ${tex(r, l)}`) }));
+        steps.push(S(msg('solve.polynomial.one_root'), { tex: eachLanguage((l) => `${v} = ${tex(r, l)}`) }));
     } else if (d > 0) {
         const s = simpOr(pow(D, num(Q.HALF)));
         for (const sg of [-1, 1]) roots.push(mkRoot(simpOr(div(add(neg(bN), sg < 0 ? neg(s) : s), two))));
         roots.sort(cmpRoots);
-        steps.push(S(msg('solve.polynomial.two_roots'), { tex: byLang((l) => rootsTex(roots, v, l)) }));
+        steps.push(S(msg('solve.polynomial.two_roots'), { tex: eachLanguage((l) => rootsTex(roots, v, l)) }));
     } else {
         const s = simpOr(pow(simpOr(neg(D)), num(Q.HALF)));
         for (const sg of [-1, 1]) {
@@ -615,7 +615,7 @@ export function solveLinearSchool(lhs, rhs, A, B, ctx) {
     for (const q of [...A.c, ...B.c]) den = bigLcm(den, q.d);
     let A1 = A;
     let B1 = B;
-    const eqT = (P1, P2) => byLang((l) => `${polyTex(P1, v, l)} = ${polyTex(P2, v, l)}`);
+    const eqT = (P1, P2) => eachLanguage((l) => `${polyTex(P1, v, l)} = ${polyTex(P2, v, l)}`);
     const expanded = nodeKey(simpOr(lhs)) !== nodeKey(A.toNode(v)) || nodeKey(simpOr(rhs)) !== nodeKey(B.toNode(v)) || nodeSome(lhs, (n) => n.type === 'mul' && n.args.some((a) => a.type === 'add')) || nodeSome(rhs, (n) => n.type === 'mul' && n.args.some((a) => a.type === 'add'));
     if (den > 1n) {
         A1 = A.scale(new Q(den));
@@ -642,12 +642,12 @@ export function solveLinearSchool(lhs, rhs, A, B, ctx) {
         if (!b0.isZero()) right.push(num(b0));
         if (!a0.isZero()) right.push(num(a0.neg()));
         steps.push(S(msg('solve.polynomial.move_terms_to_left_and_numbers', { v }), {
-            tex: byLang((l) => `${tex(sumNode(left), l)} = ${tex(sumNode(right), l)}`),
+            tex: eachLanguage((l) => `${tex(sumNode(left), l)} = ${tex(sumNode(right), l)}`),
             text: hi >= 2
                 ? msg('solve.polynomial.higher_powers_of_are_same_on', { v })
                 : msg('solve.polynomial.term_that_crosses_equals_sign_changes'),
         }));
-        if (left.length > 1 || right.length > 1) steps.push(S(msg('solve.polynomial.collect_like_terms'), { tex: byLang((l) => `${tex(monoNode(a, v), l)} = ${tex(num(b), l)}`) }));
+        if (left.length > 1 || right.length > 1) steps.push(S(msg('solve.polynomial.collect_like_terms'), { tex: eachLanguage((l) => `${tex(monoNode(a, v), l)} = ${tex(num(b), l)}`) }));
     }
     if (a.isZero()) {
         if (b.isZero()) {
@@ -664,7 +664,7 @@ export function solveLinearSchool(lhs, rhs, A, B, ctx) {
     const r = b.div(a);
     if (!a.isOne()) {
         steps.push(S(msg('solve.polynomial.divide_both_sides_by', { p: (lng) => tex(num(a), lng) }), {
-            tex: byLang((l) => {
+            tex: eachLanguage((l) => {
                 const fr = a.isInt() && b.isInt() ? `\\frac{${tex(num(b), l)}}{${tex(num(a), l)}}` : `${tex(num(b), l)} : ${parQ(a, l)}`;
                 const rt = tex(num(r), l);
                 return fr === rt ? `${v} = ${rt}` : `${v} = ${fr} = ${rt}`;
@@ -684,7 +684,7 @@ export function solvePolyEquation(lhs, rhs, P, ctx) {
     const same = rhsZero && nodeKey(simpOr(lhs)) === nodeKey(P.toNode(v));
     if (!same) {
         steps.push(S(rhsZero ? msg('solve.polynomial.expand_brackets_and_collect_like_terms') : msg('solve.polynomial.move_everything_to_left_and_collect'), {
-            tex: byLang((l) => `${polyTex(P, v, l)} = 0`),
+            tex: eachLanguage((l) => `${polyTex(P, v, l)} = 0`),
             text: rhsZero ? undefined : msg('solve.polynomial.terms_cross_equals_sign_with_opposite'),
         }));
     }
@@ -743,7 +743,7 @@ export function productSplit(lhs, rhs, ctx) {
     if (bases.some((b) => b.node.type === 'div')) return null;
     const steps = [S(msg('solve.polynomial.product_equals_zero'), {
         text: msg('solve.polynomial.product_is_zero_when_at_least'),
-        tex: byLang((l) => bases.map((b) => `${tex(b.node, l)} = 0`).join(` \\quad ${msg('solve.polynomial.or').in(l)} \\quad `)),
+        tex: eachLanguage((l) => bases.map((b) => `${tex(b.node, l)} = 0`).join(` \\quad ${msg('solve.polynomial.or').in(l)} \\quad `)),
     })];
     let roots = [];
     const families = [];
@@ -763,8 +763,8 @@ export function productSplit(lhs, rhs, ctx) {
         if (sub.families) families.push(...sub.families);
         if (sub.complexRoots) cplx.push(...sub.complexRoots);
         if (sub.numeric) numeric = true;
-        steps.push(partStep(byLang((l) => `${tex(b.node, l)} = 0`), { ...sub, roots: sub.families ? [] : sub.roots }, v));
-        if (sub.families) steps[steps.length - 1].tex = byLang((l) => familiesTex(sub.families, v, l));
+        steps.push(partStep(eachLanguage((l) => `${tex(b.node, l)} = 0`), { ...sub, roots: sub.families ? [] : sub.roots }, v));
+        if (sub.families) steps[steps.length - 1].tex = eachLanguage((l) => familiesTex(sub.families, v, l));
     }
     roots = mergeRoots(roots, true);
     if (kind === 'all') return { kind: 'all', roots: [], steps, type: 'product', set };

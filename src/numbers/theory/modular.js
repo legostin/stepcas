@@ -1,10 +1,10 @@
 // theory/modular — modular arithmetic: powers, inverses, congruences, the Chinese remainder theorem, orders,
 // primitive roots, RSA keys.
 
-import { G, L, S, T, big, bmod, coefX, fail, gcdCore, invCore, powmod, ruPl, sn, tn, tp } from './common.js';
+import { G, L, S, big, bmod, coefX, fail, gcdCore, invCore, powmod, ruPl, sn, tn, tp } from './common.js';
 import { gcdSteps, ntEgcd } from './gcd.js';
 import { factorMap, isPrimeBig, ntPhi } from './primes.js';
-import { msg } from '../../i18n/index.js';
+import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- modular arithmetic
 
@@ -126,7 +126,7 @@ export function ntModInv(a, m, opts = {}) {
         return { value, steps: st };
     }
     if (value === null) {
-        st.push(S(msg('numbers.theory.modular.no_inverse'), T((l) => `${G(l, A, M)} = ${tn(g)} \\ne 1`),
+        st.push(S(msg('numbers.theory.modular.no_inverse'), eachLanguage((l) => `${G(l, A, M)} = ${tn(g)} \\ne 1`),
             msg('numbers.theory.modular.x_y_is_divisible_by_for', { A: sn(A), M: sn(M), g: sn(g) }),
             { rule: 'answer', sub: gcdSteps(A, M).st }));
         return { value, steps: st };
@@ -161,7 +161,7 @@ export function ntSolveCongruence(a, b, m, opts = {}) {
         st.push(S(msg('numbers.theory.modular.what_congruence_means'), cong(A, B, M),
             msg('numbers.theory.modular.we_need_x_such_that_is', { p: A === 1n ? 'x' : `${sn(A)}·x`, B: sn(B), M: sn(M), p2: (lng) => a1 !== A || b1 !== B ? msg('numbers.theory.modular.first_replace_coefficients_by_their_remainders', { M: sn(M), a1: sn(a1), b1: sn(b1) }).in(lng) : '' }),
             { rule: 'congruence-def' }));
-        st.push(S(msg('numbers.theory.modular.gcd', { a1: sn(a1), M: sn(M), d: sn(d) }), T((l) => `d = ${G(l, a1, M)} = ${tn(d)}`),
+        st.push(S(msg('numbers.theory.modular.gcd', { a1: sn(a1), M: sn(M), d: sn(d) }), eachLanguage((l) => `d = ${G(l, a1, M)} = ${tn(d)}`),
             msg('numbers.theory.modular.gcd_of_coefficient_and_modulus_decides'),
             { rule: 'gcd', sub: gcdSteps(a1, M).st }));
     }
@@ -339,7 +339,7 @@ export function ntRsaKey(p, q, opts = {}) {
             msg('numbers.theory.modular.multiplying_two_primes_is_easy_factoring'), { rule: 'rsa-n' }),
         S(msg('numbers.theory.modular.euler_s_function'), `\\varphi(n) = (p - 1)(q - 1) = ${tn(P - 1n)} \\cdot ${tn(Qn - 1n)} = ${tn(phi)}`,
             msg('numbers.theory.modular.only_key_owner_knows_it_computing'), { rule: 'rsa-phi' }),
-        S(msg('numbers.theory.modular.public_exponent'), T((l) => `e = ${tn(e)},\\quad ${G(l, e, phi)} = 1`),
+        S(msg('numbers.theory.modular.public_exponent'), eachLanguage((l) => `e = ${tn(e)},\\quad ${G(l, e, phi)} = 1`),
             msg('numbers.theory.modular.e_must_be_coprime_to_n'), { rule: 'rsa-e' }),
         S(msg('numbers.theory.modular.private_exponent'), `d \\equiv e^{-1} \\pmod{\\varphi(n)}:\\quad d = ${tn(d)},\\quad ${tn(e)} \\cdot ${tn(d)} = ${tn(e * d)} \\equiv 1 \\pmod{${tn(phi)}}`,
             msg('numbers.theory.modular.then_m_e_d_m_mod'),

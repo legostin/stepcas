@@ -91,7 +91,6 @@ function fromRoots(roots, k = 1) {
 }
 const setText = (parts) => parts.join(' U ');
 const iv = (a, b, lc, hc) => `${lc ? '[' : '('}${a === null ? '-inf' : qs(a)}; ${b === null ? '+inf' : qs(b)}${hc ? ']' : ')'}`;
-const P = (ru, en) => ({ ru, en });
 const SOLVE = msg('generate.tasks.solve_equation');
 
 /* ------------------------------------------------------------------ generators */
