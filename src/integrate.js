@@ -2109,6 +2109,30 @@ const poleAt = (fc, x) => {
  * (an infinite limit means the integral diverges). The exact value is cross-checked numerically.
  * Otherwise a numeric value, marked ≈.
  */
+// F(b′) − F(a′) against the quadrature on finite pieces [a′; b′] inside an improper interval (ends pulled in from
+// infinity and away from poles): does the antiderivative really match f there?
+function truncatedAgrees(F, fc, v, lo, hi, interior) {
+    let Fc;
+    try { Fc = compile(F, [v]); } catch { return false; }
+    const ends = [lo, ...interior.filter((p) => p.pole), hi];
+    for (let i = 0; i + 1 < ends.length; i++) {
+        const a0 = ends[i].x, b0 = ends[i + 1].x;
+        const tries = [];
+        for (const far of [1e2, 1e4]) {
+            const a = Number.isFinite(a0) ? a0 + (poleAt(fc, a0) ? 1e-3 * Math.max(1, Math.abs(a0)) : 0) : (Number.isFinite(b0) ? b0 : 0) - far;
+            const b = Number.isFinite(b0) ? b0 - (poleAt(fc, b0) ? 1e-3 * Math.max(1, Math.abs(b0)) : 0) : (Number.isFinite(a0) ? a0 : 0) + far;
+            if (!(b > a)) continue;
+            let q;
+            try { q = numIntegrate(fc, a, b, { tol: 1e-12 }); } catch { q = NaN; }
+            const e = Fc(b) - Fc(a);
+            if (!Number.isFinite(q) || !Number.isFinite(e)) return false;
+            tries.push(Math.abs(q - e) <= 1e-7 * Math.max(1, Math.abs(e)));
+        }
+        if (!tries.length || !tries.every(Boolean)) return false;
+    }
+    return true;
+}
+
 export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     node = asNode(node);
     checkExpr(node);
@@ -2306,7 +2330,10 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     if (exactNode) {
         const ex = evaluate(exactNode);
         const tol = improper ? 1e-4 : 1e-6;
-        if (Number.isFinite(ex) && (!numOk || Math.abs(ex - numeric) <= tol * Math.max(1, Math.abs(ex)))) {
+        // A slowly decaying tail (1/(x ln²x) on [e; ∞)) fools the quadrature: then check the antiderivative on a long
+        // finite piece, where the numbers are reliable, instead of letting a bad number veto a verified answer.
+        const agrees = Number.isFinite(ex) && (!numOk || Math.abs(ex - numeric) <= tol * Math.max(1, Math.abs(ex)) || (improper && truncatedAgrees(anti.result, fc, v, lo, hi, interior)));
+        if (agrees) {
             const value = niceForm(exactNode);
             const tex = bt((L) => `${head(L)} = ${tx(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`);
             if (wantSteps) steps.push(answerStep(T_('Ответ', 'Answer'), tex));
