@@ -14,7 +14,11 @@ export const ptrim = (a) => {
     return b;
 };
 export const padd = (a, b) => ptrim(Array.from({ length: Math.max(a.length, b.length) }, (_, i) => (a[i] ?? Q.ZERO).add(b[i] ?? Q.ZERO)));
-export const psub = (a, b) => padd(a, b.map((c) => c.neg()));
+export const psub = (a, b) =>
+    padd(
+        a,
+        b.map((c) => c.neg()),
+    );
 export function pmul(a, b) {
     const out = new Array(a.length + b.length - 1).fill(Q.ZERO);
     for (let i = 0; i < a.length; i++) {
@@ -75,23 +79,32 @@ export function rationalRootsQ(a) {
     let rest = ptrim(a);
     const roots = [];
     let zero = 0;
-    while (pdeg(rest) > 0 && rest[0].isZero()) { rest = rest.slice(1); zero++; }
+    while (pdeg(rest) > 0 && rest[0].isZero()) {
+        rest = rest.slice(1);
+        zero++;
+    }
     if (zero) roots.push({ root: Q.ZERO, mult: zero });
     if (pdeg(rest) >= 1) {
         const ints = intPrimitive(rest);
-        const a0 = babs(ints[0]), an = babs(ints[ints.length - 1]);
+        const a0 = babs(ints[0]),
+            an = babs(ints[ints.length - 1]);
         const cands = [];
         if (a0 < 10n ** 15n && an < 10n ** 15n) {
-            const P = ntDivisors(a0), Qd = ntDivisors(an);
+            const P = ntDivisors(a0),
+                Qd = ntDivisors(an);
             if (P.length * Qd.length <= 50000) {
                 const seen = new Set();
-                for (const p of P) for (const q of Qd) {
-                    for (const s of [1n, -1n]) {
-                        const r = new Q(s * p, q);
-                        const key = r.toString();
-                        if (!seen.has(key)) { seen.add(key); cands.push(r); }
+                for (const p of P)
+                    for (const q of Qd) {
+                        for (const s of [1n, -1n]) {
+                            const r = new Q(s * p, q);
+                            const key = r.toString();
+                            if (!seen.has(key)) {
+                                seen.add(key);
+                                cands.push(r);
+                            }
+                        }
                     }
-                }
             }
         }
         if (!cands.length) {
@@ -120,23 +133,35 @@ export function quadFactor(rest) {
     const deg = ints.length - 1;
     if (deg < 4) return null;
     const ev = (x) => ints.reduceRight((acc, c) => acc * x + c, 0n);
-    const v0 = ev(0n), v1 = ev(1n), vm = ev(-1n), v2 = ev(2n);
+    const v0 = ev(0n),
+        v1 = ev(1n),
+        vm = ev(-1n),
+        v2 = ev(2n);
     if ([v0, v1, vm].some((v) => v === 0n || babs(v) > 10n ** 12n)) return null;
     const lead = babs(ints[deg]);
-    const signed = (v) => { const d = ntDivisors(babs(v)); return [...d, ...d.map((x) => -x)]; };
-    const D0 = signed(v0), D1 = signed(v1), Dm = signed(vm);
+    const signed = (v) => {
+        const d = ntDivisors(babs(v));
+        return [...d, ...d.map((x) => -x)];
+    };
+    const D0 = signed(v0),
+        D1 = signed(v1),
+        Dm = signed(vm);
     if (D0.length * D1.length * Dm.length > 400000) return null;
     for (const c of D0) {
         for (const u of D1) {
             for (const w of Dm) {
                 // Q(0) = c, Q(1) = u, Q(−1) = w  ⇒  a = (u + w)/2 − c, b = (u − w)/2
                 if ((u + w) % 2n !== 0n) continue;
-                const a = (u + w) / 2n - c, b = (u - w) / 2n;
+                const a = (u + w) / 2n - c,
+                    b = (u - w) / 2n;
                 if (a <= 0n || lead % a !== 0n) continue;
                 const q2 = 4n * a + 2n * b + c;
                 if (q2 === 0n || v2 % q2 !== 0n) continue;
                 const cand = [new Q(c), new Q(b), new Q(a)];
-                const dv = pdiv(ints.map((x) => new Q(x)), cand);
+                const dv = pdiv(
+                    ints.map((x) => new Q(x)),
+                    cand,
+                );
                 if (dv.r.every((x) => x.isZero())) return cand;
             }
         }
@@ -160,7 +185,8 @@ export function surdTex(p, q, s, sign) {
     const imag = s < 0n;
     const rad = babs(s);
     const den = (p.d / bigGcd(p.d, q.d)) * q.d;
-    const P = p.n * (den / p.d), Rr = q.n * (den / q.d);
+    const P = p.n * (den / p.d),
+        Rr = q.n * (den / q.d);
     const root = `${Rr === 1n ? '' : Rr.toString()}${rad === 1n ? '' : `\\sqrt{${rad}}`}${imag ? (rad === 1n ? 'i' : '\\,i') : ''}` || '1';
     const num = P === 0n ? `${sign < 0 ? '-' : ''}${root}` : `${P} ${sign < 0 ? '-' : '+'} ${root}`;
     if (den === 1n) return num;

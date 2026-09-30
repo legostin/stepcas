@@ -42,7 +42,11 @@ function tableOf(f, v) {
         const e = f.exp;
         if (isNum(e) && e.value.eq(-1)) return { F: lnAbs(X, v), law: T_(`∫d${v}/${v} = ln|${v}| + C`, `∫d${v}/${v} = ln|${v}| + C`) };
         const e1 = simp(add(e, N1));
-        return { F: div(pow(X, e1), e1), law: T_(`∫${v}ⁿ d${v} = ${v}ⁿ⁺¹/(n + 1) + C (n ≠ −1)`, `∫${v}ⁿ d${v} = ${v}ⁿ⁺¹/(n + 1) + C (n ≠ −1)`), note: !isNum(e) };
+        return {
+            F: div(pow(X, e1), e1),
+            law: T_(`∫${v}ⁿ d${v} = ${v}ⁿ⁺¹/(n + 1) + C (n ≠ −1)`, `∫${v}ⁿ d${v} = ${v}ⁿ⁺¹/(n + 1) + C (n ≠ −1)`),
+            note: !isNum(e),
+        };
     }
     if (f.type === 'pow' && !containsVar(f.base, v) && isVar(f.exp, v)) {
         if (isConst(f.base) && f.base.name === 'e') return { F: f, law: T_(`∫e^${v} d${v} = e^${v} + C`, `∫e^${v} d${v} = e^${v} + C`) };
@@ -75,7 +79,11 @@ function tableOf(f, v) {
         if (hit('sin', -2) || hit('csc', 2)) return { F: neg(fn('cot', X)), law: T_('∫dx/sin² x = −ctg x + C', '∫dx/sin² x = −cot x + C') };
         if (hit('cosh', -2)) return { F: fn('tanh', X), law: T_('∫dx/ch² x = th x + C', '∫dx/cosh² x = tanh x + C') };
         if (hit('sinh', -2)) return { F: neg(fn('coth', X)), law: T_('∫dx/sh² x = −cth x + C', '∫dx/sinh² x = −coth x + C') };
-        if (hit('cos', -1)) return { F: lnAbs(fn('tan', add(div(X, N2), div(PI, num(4)))), v), law: T_('∫dx/cos x = ln|tg(x/2 + π/4)| + C', '∫dx/cos x = ln|tan(x/2 + π/4)| + C') };
+        if (hit('cos', -1))
+            return {
+                F: lnAbs(fn('tan', add(div(X, N2), div(PI, num(4)))), v),
+                law: T_('∫dx/cos x = ln|tg(x/2 + π/4)| + C', '∫dx/cos x = ln|tan(x/2 + π/4)| + C'),
+            };
         if (hit('sin', -1)) return { F: lnAbs(fn('tan', div(X, N2)), v), law: T_('∫dx/sin x = ln|tg(x/2)| + C', '∫dx/sin x = ln|tan(x/2)| + C') };
         return null;
     }
@@ -84,8 +92,16 @@ function tableOf(f, v) {
         const e = f.exp.value;
         if (e.eq(-1) && quadIs(P, 1, 0, 1)) return { F: fn('atan', X), law: T_('∫dx/(1 + x²) = arctg x + C', '∫dx/(1 + x²) = arctan x + C') };
         if (e.eq(q(-1, 2)) && quadIs(P, 1, 0, -1)) return { F: fn('asin', X), law: T_('∫dx/√(1 − x²) = arcsin x + C', '∫dx/√(1 − x²) = arcsin x + C') };
-        if (e.eq(q(-1, 2)) && quadIs(P, 1, 0, 1)) return { F: fn('ln', add(X, fn('sqrt', add(pow(X, N2), N1)))), law: T_('∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C', '∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C') };
-        if (e.eq(q(-1, 2)) && quadIs(P, -1, 0, 1)) return { F: lnAbs(add(X, fn('sqrt', add(pow(X, N2), NM1))), v), law: T_('∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C', '∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C') };
+        if (e.eq(q(-1, 2)) && quadIs(P, 1, 0, 1))
+            return {
+                F: fn('ln', add(X, fn('sqrt', add(pow(X, N2), N1)))),
+                law: T_('∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C', '∫dx/√(x² + 1) = ln(x + √(x² + 1)) + C'),
+            };
+        if (e.eq(q(-1, 2)) && quadIs(P, -1, 0, 1))
+            return {
+                F: lnAbs(add(X, fn('sqrt', add(pow(X, N2), NM1))), v),
+                law: T_('∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C', '∫dx/√(x² − 1) = ln|x + √(x² − 1)| + C'),
+            };
     }
     return null;
 }
@@ -148,11 +164,16 @@ export function mLinearity(f, ctx) {
             method: methods.length === 1 ? methods[0] : 'linearity',
             step: step({
                 title: msg('calculus.integral.basic.integral_of_sum'),
-                tex: eachLanguage((L) => `${iTex(f, v, L)} = ${parts.map((p, i) => {
-                    if (negLeading(p.t)) return (i === 0 ? '-' : ' - ') + iTex(simp(neg(p.t)), v, L);
-                    const s = iTex(p.t, v, L);
-                    return i === 0 ? s : ' + ' + s;
-                }).join('')} = ${tx(simp(F), L)}`),
+                tex: eachLanguage(
+                    (L) =>
+                        `${iTex(f, v, L)} = ${parts
+                            .map((p, i) => {
+                                if (negLeading(p.t)) return (i === 0 ? '-' : ' - ') + iTex(simp(neg(p.t)), v, L);
+                                const s = iTex(p.t, v, L);
+                                return i === 0 ? s : ' + ' + s;
+                            })
+                            .join('')} = ${tx(simp(F), L)}`,
+                ),
                 text: msg('calculus.integral.basic.integral_of_sum_is_sum_of'),
                 rule: 'sum',
                 sub: parts.map((p) => p.r.step),
@@ -227,7 +248,10 @@ export function mLinearSub(f, ctx) {
             method: r.method === 'table' ? 'linear-substitution' : r.method,
             step: step({
                 title: msg('calculus.integral.basic.linear_substitution'),
-                tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[${t} = ${tx(Lx, L)},\\ d${t} = ${dTex(k, v, L)}\\right] = ${coefTex(simp(div(N1, k)), L)}${iTex(g, t, L)} = ${tx(simp(F), L)}`),
+                tex: eachLanguage(
+                    (L) =>
+                        `${iTex(f, v, L)} = \\left[${t} = ${tx(Lx, L)},\\ d${t} = ${dTex(k, v, L)}\\right] = ${coefTex(simp(div(N1, k)), L)}${iTex(g, t, L)} = ${tx(simp(F), L)}`,
+                ),
                 text: msg('calculus.integral.basic.function_is_applied_to_linear_expression', { Lx: (lng) => plainish(Lx, lng) }),
                 rule: 'linear-substitution',
                 sub: [r.step],
@@ -244,8 +268,16 @@ export function plainish(n, L) {
 function toTextSafe(n, L) {
     try {
         let s = calcTex(n, L);
-        s = s.replace(/\\left|\\right/g, '').replace(/\\operatorname\{(\w+)\}/g, '$1').replace(/\\cdot/g, '·').replace(/\\,/g, ' ');
-        s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)').replace(/\\sqrt\{([^{}]*)\}/g, '√($1)').replace(/\^\{(-?\d+)\}/g, (m, d) => supDigits(d)).replace(/\\([a-z]+)/g, '$1');
+        s = s
+            .replace(/\\left|\\right/g, '')
+            .replace(/\\operatorname\{(\w+)\}/g, '$1')
+            .replace(/\\cdot/g, '·')
+            .replace(/\\,/g, ' ');
+        s = s
+            .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)')
+            .replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
+            .replace(/\^\{(-?\d+)\}/g, (m, d) => supDigits(d))
+            .replace(/\\([a-z]+)/g, '$1');
         return s.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
     } catch {
         return '';
@@ -259,7 +291,10 @@ const supDigits = (d) => [...d].map((c) => SUP[c]).join('');
 
 function hasProductOfSums(f) {
     if (f.type === 'pow' && f.base.type === 'add' && isNum(f.exp) && f.exp.value.isInt() && f.exp.value.gt(1)) return true;
-    if (f.type === 'mul') return f.args.some((a) => a.type === 'add' || (a.type === 'pow' && a.base.type === 'add' && isNum(a.exp) && a.exp.value.isInt() && a.exp.value.isPos()));
+    if (f.type === 'mul')
+        return f.args.some(
+            (a) => a.type === 'add' || (a.type === 'pow' && a.base.type === 'add' && isNum(a.exp) && a.exp.value.isInt() && a.exp.value.isPos()),
+        );
     return false;
 }
 

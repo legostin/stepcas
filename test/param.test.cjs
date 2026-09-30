@@ -3,7 +3,9 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 let E;
-before(async () => { E = await import('../src/index.js'); });
+before(async () => {
+    E = await import('../src/index.js');
+});
 const P = (task, want) => E.solveWithParameter({ task, param: 'a', want });
 const same = (r, ref) => E.intervalEquals(r.set, E.parseIntervalSet(ref), 'en');
 

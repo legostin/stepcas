@@ -44,7 +44,8 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         }
         if (!val) {
             const L = limit(d, v, A);
-            if (!L.value || typeof L.value !== 'object') throw new MathError(msg('calculus.limit.taylor.derivative_of_order_is_undefined_at', { k }), null, null, 'undefined');
+            if (!L.value || typeof L.value !== 'object')
+                throw new MathError(msg('calculus.limit.taylor.derivative_of_order_is_undefined_at', { k }), null, null, 'undefined');
             val = L.value;
         }
         coeffs.push(simp(div(val, num(factorialQ(k)))));
@@ -57,7 +58,9 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         terms.push({ k, coeff: coeffs[k], term: k === 0 ? coeffs[k] : mul(coeffs[k], pw) });
     }
     const C = canonContext();
-    const poly = terms.length ? C.add(terms.map((t) => C.mul([t.coeff, t.k === 0 ? N1 : t.k === 1 ? C.simplify(shift) : C.pow(C.simplify(shift), num(t.k))]))) : N0;
+    const poly = terms.length
+        ? C.add(terms.map((t) => C.mul([t.coeff, t.k === 0 ? N1 : t.k === 1 ? C.simplify(shift) : C.pow(C.simplify(shift), num(t.k))])))
+        : N0;
     // ascending powers, as Taylor polynomials are written
     const termNode = (t) => {
         if (t.k === 0) return t.coeff;
@@ -69,18 +72,22 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
     const tex = eachLanguage((L) => `T_{${n}}(${v}) = ${tx(polyShown, L)}`);
     const steps = [];
     if (opts.steps) {
-        steps.push(step({
-            title: msg('calculus.limit.taylor.taylor_s_formula'),
-            tex: `T_{n}(${v}) = \\sum_{k=0}^{n} \\frac{f^{(k)}(a)}{k!}(${v} - a)^{k}`,
-            text: msg('calculus.limit.taylor.coefficients_are_derivatives_at_point_divided'),
-            rule: 'taylor',
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.limit.taylor.taylor_s_formula'),
+                tex: `T_{n}(${v}) = \\sum_{k=0}^{n} \\frac{f^{(k)}(a)}{k!}(${v} - a)^{k}`,
+                text: msg('calculus.limit.taylor.coefficients_are_derivatives_at_point_divided'),
+                rule: 'taylor',
+            }),
+        );
         for (let k = 0; k <= n; k++) {
-            steps.push(step({
-                title: msg('calculus.limit.taylor.coefficient_of_degree', { k }),
-                tex: eachLanguage((L) => `\\frac{f^{(${k})}(${tx(A, L)})}{${k}!} = ${tx(coeffs[k], L)}`),
-                rule: 'coefficient',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.limit.taylor.coefficient_of_degree', { k }),
+                    tex: eachLanguage((L) => `\\frac{f^{(${k})}(${tx(A, L)})}{${k}!} = ${tx(coeffs[k], L)}`),
+                    rule: 'coefficient',
+                }),
+            );
         }
         const s = step({ title: msg('calculus.limit.taylor.taylor_polynomial'), tex, rule: 'answer' });
         s.final = true;

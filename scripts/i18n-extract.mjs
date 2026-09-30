@@ -41,7 +41,10 @@ async function loadCatalogs() {
 }
 
 function slugOf(en) {
-    const s = en.replace(/%\{\w+(\|[^}]*)?\}/g, ' ').replace(/\$[^$]*\$/g, ' ').replace(/\\[a-zA-Z]+/g, ' ');
+    const s = en
+        .replace(/%\{\w+(\|[^}]*)?\}/g, ' ')
+        .replace(/\$[^$]*\$/g, ' ')
+        .replace(/\\[a-zA-Z]+/g, ' ');
     const words = (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter((w) => !['the', 'a', 'an'].includes(w)).slice(0, 6);
     return words.join('_') || 'formula';
 }
@@ -105,8 +108,18 @@ class Ctx {
         if (rs === es) return { src: rs, lang: false };
         if (isStr(r) && isStr(e) && r.value === 'ru' && e.value === 'en') return { src: LANG, lang: true };
         // two templates with the same words and TeX: only the code inside differs → one function of the language
-        if (r.type === 'TemplateLiteral' && e.type === 'TemplateLiteral' && r.quasis.length === e.quasis.length && r.quasis.every((q, i) => q.value.cooked === e.quasis[i].value.cooked) && !CYR.test(r.quasis.map((q) => q.value.cooked).join(''))) {
-            return combine0(this, r, r.expressions.map((x, i) => [x, this.unify(x, e.expressions[i])]));
+        if (
+            r.type === 'TemplateLiteral' &&
+            e.type === 'TemplateLiteral' &&
+            r.quasis.length === e.quasis.length &&
+            r.quasis.every((q, i) => q.value.cooked === e.quasis[i].value.cooked) &&
+            !CYR.test(r.quasis.map((q) => q.value.cooked).join(''))
+        ) {
+            return combine0(
+                this,
+                r,
+                r.expressions.map((x, i) => [x, this.unify(x, e.expressions[i])]),
+            );
         }
         // different phrases inside code: the phrase in the current language (a message would stringify as Russian)
         if (isText(r) && isText(e)) return { src: `${this.message(r, e)}.in(${LANG})`, lang: true };
@@ -152,19 +165,34 @@ class Ctx {
                 return combine(r, [[r.object, obj]]);
             }
             case 'ConditionalExpression':
-                return combine(r, [[r.test, this.unify(r.test, e.test)], [r.consequent, this.unify(r.consequent, e.consequent)], [r.alternate, this.unify(r.alternate, e.alternate)]]);
+                return combine(r, [
+                    [r.test, this.unify(r.test, e.test)],
+                    [r.consequent, this.unify(r.consequent, e.consequent)],
+                    [r.alternate, this.unify(r.alternate, e.alternate)],
+                ]);
             case 'BinaryExpression':
             case 'LogicalExpression':
                 if (r.operator !== e.operator) return null;
-                return combine(r, [[r.left, this.unify(r.left, e.left)], [r.right, this.unify(r.right, e.right)]]);
+                return combine(r, [
+                    [r.left, this.unify(r.left, e.left)],
+                    [r.right, this.unify(r.right, e.right)],
+                ]);
             case 'UnaryExpression':
                 if (r.operator !== e.operator) return null;
                 return combine(r, [[r.argument, this.unify(r.argument, e.argument)]]);
             case 'ArrayExpression':
                 if (r.elements.length !== e.elements.length) return null;
-                return combine(r, r.elements.map((x, i) => [x, pair(x, e.elements[i])]).filter(([x]) => x));
+                return combine(
+                    r,
+                    r.elements.map((x, i) => [x, pair(x, e.elements[i])]).filter(([x]) => x),
+                );
             case 'ArrowFunctionExpression':
-                if (r.params.map((x) => this.text(x)).join() !== e.params.map((x) => this.text(x)).join() || r.body.type === 'BlockStatement' || e.body.type === 'BlockStatement') return null;
+                if (
+                    r.params.map((x) => this.text(x)).join() !== e.params.map((x) => this.text(x)).join() ||
+                    r.body.type === 'BlockStatement' ||
+                    e.body.type === 'BlockStatement'
+                )
+                    return null;
                 return combine(r, [[r.body, this.unify(r.body, e.body)]]);
             case 'ChainExpression':
                 return combine(r, [[r.expression, this.unify(r.expression, e.expression)]]);
@@ -177,7 +205,8 @@ class Ctx {
         let name = null;
         if (node.type === 'Identifier') name = node.name;
         else if (node.type === 'CallExpression' && node.arguments[0]?.type === 'Identifier') name = node.arguments[0].name;
-        else if (node.type === 'MemberExpression' && !node.computed && node.property.type === 'Identifier' && !['ru', 'en'].includes(node.property.name)) name = node.property.name;
+        else if (node.type === 'MemberExpression' && !node.computed && node.property.type === 'Identifier' && !['ru', 'en'].includes(node.property.name))
+            name = node.property.name;
         if (!name || !/^[A-Za-z_]\w*$/.test(name) || name === LANG) name = 'p';
         let n = name;
         for (let i = 2; used.has(n); i++) n = `${name}${i}`;
@@ -270,8 +299,16 @@ function pass(file) {
     // outermost first: walk in source order, skip nodes inside an edit
     const targets = [];
     walk.fullAncestor(ast, (n) => {
-        if (n.type === 'CallExpression' && n.arguments.length >= 2 && isText(n.arguments[0]) && isText(n.arguments[1]) && CYR.test(ctx.text(n.arguments[0]))) targets.push({ kind: 'call', n });
-        else if (n.type === 'ObjectExpression' && n.properties.length === 2 && n.properties.every((p) => p.type === 'Property' && !p.computed && isText(p.value)) && new Set(n.properties.map((p) => p.key.name ?? p.key.value)).size === 2 && n.properties.every((p) => ['ru', 'en'].includes(p.key.name ?? p.key.value))) targets.push({ kind: 'obj', n });
+        if (n.type === 'CallExpression' && n.arguments.length >= 2 && isText(n.arguments[0]) && isText(n.arguments[1]) && CYR.test(ctx.text(n.arguments[0])))
+            targets.push({ kind: 'call', n });
+        else if (
+            n.type === 'ObjectExpression' &&
+            n.properties.length === 2 &&
+            n.properties.every((p) => p.type === 'Property' && !p.computed && isText(p.value)) &&
+            new Set(n.properties.map((p) => p.key.name ?? p.key.value)).size === 2 &&
+            n.properties.every((p) => ['ru', 'en'].includes(p.key.name ?? p.key.value))
+        )
+            targets.push({ kind: 'obj', n });
         else if (n.type === 'ConditionalExpression' && langTest(n.test) && isText(n.consequent) && isText(n.alternate)) targets.push({ kind: 'cond', n });
     });
     targets.sort((a, b) => a.n.start - b.n.start || b.n.end - a.n.end);
@@ -326,13 +363,18 @@ function writeCatalogs() {
         const emit = (o, ind) => {
             const pad = ' '.repeat(ind);
             return Object.entries(o)
-                .map(([k, v]) => (typeof v === 'object' ? `${pad}${quoteKey(k)}: {\n${emit(v, ind + 4)}\n${pad}},` : `${pad}${quoteKey(k)}: ${JSON.stringify(v)},`))
+                .map(([k, v]) =>
+                    typeof v === 'object' ? `${pad}${quoteKey(k)}: {\n${emit(v, ind + 4)}\n${pad}},` : `${pad}${quoteKey(k)}: ${JSON.stringify(v)},`,
+                )
                 .join('\n');
         };
         const LANG_NAME = { ru: 'Russian', en: 'English' };
         for (const [domain, o] of byDomain) {
             if (domain === 'i18n') continue;
-            fs.writeFileSync(path.join(dir, `${domain}.js`), `// ${LANG_NAME[lang]} messages of ${domain}/ (keys ${domain}.<module>.<message>).\nexport default {\n${emit(o, 4)}\n};\n`);
+            fs.writeFileSync(
+                path.join(dir, `${domain}.js`),
+                `// ${LANG_NAME[lang]} messages of ${domain}/ (keys ${domain}.<module>.<message>).\nexport default {\n${emit(o, 4)}\n};\n`,
+            );
         }
         const domains = [...byDomain.keys()].filter((d) => d !== 'i18n').sort();
         const idx = `// ${LANG_NAME[lang]}: every message of the engine, by domain.\n${domains.map((d) => `import ${d} from './${d}.js';`).join('\n')}\n\nexport default {\n    i18n: { value: '%{value}' },\n${domains.map((d) => `    ${d},`).join('\n')}\n};\n`;
@@ -342,12 +384,13 @@ function writeCatalogs() {
 
 await loadCatalogs();
 const files = [];
-const w = (d) => fs.readdirSync(d).forEach((f) => {
-    const p = path.join(d, f);
-    if (fs.statSync(p).isDirectory()) {
-        if (f !== 'i18n') w(p);
-    } else if (p.endsWith('.js')) files.push(p);
-});
+const w = (d) =>
+    fs.readdirSync(d).forEach((f) => {
+        const p = path.join(d, f);
+        if (fs.statSync(p).isDirectory()) {
+            if (f !== 'i18n') w(p);
+        } else if (p.endsWith('.js')) files.push(p);
+    });
 const only = argv.filter((a) => !a.startsWith('--')).map((a) => path.resolve(root, a));
 if (only.length) files.push(...only);
 else w(path.join(root, 'src'));

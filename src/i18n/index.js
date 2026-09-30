@@ -185,7 +185,7 @@ class PerLang {
         Object.freeze(this);
     }
 }
-const raw = (v, lang) => (v instanceof PerLang ? (lang in v ? v[lang] : v[bases.get(lang)] ?? v.en ?? v[DEFAULT_LANGUAGE]) : v);
+const raw = (v, lang) => (v instanceof PerLang ? (lang in v ? v[lang] : (v[bases.get(lang)] ?? v.en ?? v[DEFAULT_LANGUAGE])) : v);
 
 /** A message: a key and its parameters, rendered per language on demand. */
 export class Msg {

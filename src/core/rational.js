@@ -232,7 +232,10 @@ export class Q {
             return parseDecimal(String(x));
         }
         if (typeof x === 'string') {
-            const s = x.trim().replace(/[\s\u00a0\u202f]/g, '').replace(/[−–]/g, '-');
+            const s = x
+                .trim()
+                .replace(/[\s\u00a0\u202f]/g, '')
+                .replace(/[−–]/g, '-');
             const slash = s.indexOf('/');
             const bad = () => new MathError(msg('core.rational.not_number', { x }), null, null, 'nan');
             if (slash >= 0) {

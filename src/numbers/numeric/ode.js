@@ -7,8 +7,16 @@ import { msg } from '../../i18n/index.js';
 
 const vadd = (y, k, s) => (typeof y === 'number' ? y + s * k : y.map((v, i) => v + s * k[i]));
 function vcomb(y, h, ks, cs) {
-    if (typeof y === 'number') { let s = y; for (let i = 0; i < ks.length; i++) if (cs[i]) s += h * cs[i] * ks[i]; return s; }
-    return y.map((v, j) => { let s = v; for (let i = 0; i < ks.length; i++) if (cs[i]) s += h * cs[i] * ks[i][j]; return s; });
+    if (typeof y === 'number') {
+        let s = y;
+        for (let i = 0; i < ks.length; i++) if (cs[i]) s += h * cs[i] * ks[i];
+        return s;
+    }
+    return y.map((v, j) => {
+        let s = v;
+        for (let i = 0; i < ks.length; i++) if (cs[i]) s += h * cs[i] * ks[i][j];
+        return s;
+    });
 }
 const vcopy = (y) => (typeof y === 'number' ? y : y.slice());
 function checkY(y0) {
@@ -20,8 +28,10 @@ function checkY(y0) {
 export function numEuler(f, t0, y0, h, n) {
     needFn(f);
     checkY(y0);
-    const T = [t0], Y = [vcopy(y0)];
-    let t = t0, y = vcopy(y0);
+    const T = [t0],
+        Y = [vcopy(y0)];
+    let t = t0,
+        y = vcopy(y0);
     for (let i = 0; i < n; i++) {
         y = vadd(y, f(t, y), h);
         t = t0 + (i + 1) * h;
@@ -35,8 +45,10 @@ export function numEuler(f, t0, y0, h, n) {
 export function numRk4(f, t0, y0, h, n) {
     needFn(f);
     checkY(y0);
-    const T = [t0], Y = [vcopy(y0)];
-    let t = t0, y = vcopy(y0);
+    const T = [t0],
+        Y = [vcopy(y0)];
+    let t = t0,
+        y = vcopy(y0);
     for (let i = 0; i < n; i++) {
         const k1 = f(t, y);
         const k2 = f(t + h / 2, vadd(y, k1, h / 2));
@@ -71,27 +83,38 @@ const DP_E = [71 / 57600, 0, -71 / 16695, 71 / 1920, -17253 / 339200, 22 / 525, 
 export function numOdeAdaptive(f, t0, y0, t1, opts = {}) {
     needFn(f);
     checkY(y0);
-    const rtol = opts.rtol ?? 1e-6, atol = opts.atol ?? 1e-9;
+    const rtol = opts.rtol ?? 1e-6,
+        atol = opts.atol ?? 1e-9;
     const maxSteps = opts.maxSteps ?? 100000;
     const dir = t1 >= t0 ? 1 : -1;
     const span = Math.abs(t1 - t0);
     const hMax = opts.hMax ?? span;
     const scalar = typeof y0 === 'number';
     const arr = (v) => (scalar ? [v] : v);
-    let t = t0, y = vcopy(y0);
+    let t = t0,
+        y = vcopy(y0);
     let k1 = f(t, y);
     let h = opts.h ?? Math.min(hMax, span / 100 || 1e-3);
-    const T = [t], Y = [vcopy(y)], DY = [k1];
-    let steps = 0, rejected = 0, ok = true;
+    const T = [t],
+        Y = [vcopy(y)],
+        DY = [k1];
+    let steps = 0,
+        rejected = 0,
+        ok = true;
     while (dir * (t1 - t) > 1e-14 * Math.max(1, Math.abs(t1))) {
-        if (steps + rejected >= maxSteps) { ok = false; break; }
+        if (steps + rejected >= maxSteps) {
+            ok = false;
+            break;
+        }
         if (h > Math.abs(t1 - t)) h = Math.abs(t1 - t);
         const hs = dir * h;
         const ks = [k1];
         for (let s = 1; s < 7; s++) ks.push(f(t + DP_C[s] * hs, vcomb(y, hs, ks, DP_A[s])));
         const y5 = vcomb(y, hs, ks.slice(0, 6), DP_A[6]);
         const errV = vcomb(scalar ? 0 : y.map(() => 0), hs, ks, DP_E);
-        const ya = arr(y), yb = arr(y5), ev = arr(errV);
+        const ya = arr(y),
+            yb = arr(y5),
+            ev = arr(errV);
         let e2 = 0;
         for (let i = 0; i < ya.length; i++) {
             const sc = atol + rtol * Math.max(Math.abs(ya[i]), Math.abs(yb[i]));
@@ -101,19 +124,27 @@ export function numOdeAdaptive(f, t0, y0, t1, opts = {}) {
         if (!fin(err)) {
             h /= 4;
             rejected++;
-            if (h < 1e-14 * Math.max(1, Math.abs(t))) { ok = false; break; }
+            if (h < 1e-14 * Math.max(1, Math.abs(t))) {
+                ok = false;
+                break;
+            }
             continue;
         }
         if (err <= 1) {
             t = Math.abs(t1 - (t + hs)) < 1e-14 * Math.max(1, Math.abs(t1)) ? t1 : t + hs;
             y = y5;
             k1 = ks[6];
-            T.push(t); Y.push(vcopy(y)); DY.push(k1);
+            T.push(t);
+            Y.push(vcopy(y));
+            DY.push(k1);
             steps++;
         } else rejected++;
         const fac = err === 0 ? 5 : Math.min(5, Math.max(0.2, 0.9 * err ** -0.2));
         h = Math.min(hMax, h * (err <= 1 ? fac : Math.min(1, fac)));
-        if (h < 1e-14 * Math.max(1, Math.abs(t))) { ok = false; break; }
+        if (h < 1e-14 * Math.max(1, Math.abs(t))) {
+            ok = false;
+            break;
+        }
     }
     if (!opts.samples) return { t: T, y: Y, steps, rejected, ok };
     const N = Math.max(1, Math.floor(opts.samples));
@@ -122,12 +153,22 @@ export function numOdeAdaptive(f, t0, y0, t1, opts = {}) {
     let j = 0;
     for (const tt of ts) {
         while (j < T.length - 2 && dir * (T[j + 1] - tt) < 0) j++;
-        const ta = T[j], tb = T[Math.min(j + 1, T.length - 1)];
+        const ta = T[j],
+            tb = T[Math.min(j + 1, T.length - 1)];
         const hh = tb - ta;
-        if (hh === 0) { ys.push(vcopy(Y[j])); continue; }
+        if (hh === 0) {
+            ys.push(vcopy(Y[j]));
+            continue;
+        }
         const s = (tt - ta) / hh;
-        const h00 = 2 * s ** 3 - 3 * s ** 2 + 1, h10 = s ** 3 - 2 * s ** 2 + s, h01 = -2 * s ** 3 + 3 * s ** 2, h11 = s ** 3 - s ** 2;
-        const A = arr(Y[j]), B = arr(Y[j + 1] ?? Y[j]), dA = arr(DY[j]), dB = arr(DY[j + 1] ?? DY[j]);
+        const h00 = 2 * s ** 3 - 3 * s ** 2 + 1,
+            h10 = s ** 3 - 2 * s ** 2 + s,
+            h01 = -2 * s ** 3 + 3 * s ** 2,
+            h11 = s ** 3 - s ** 2;
+        const A = arr(Y[j]),
+            B = arr(Y[j + 1] ?? Y[j]),
+            dA = arr(DY[j]),
+            dB = arr(DY[j + 1] ?? DY[j]);
         const v = A.map((_, i) => h00 * A[i] + h10 * hh * dA[i] + h01 * B[i] + h11 * hh * dB[i]);
         ys.push(scalar ? v[0] : v);
     }

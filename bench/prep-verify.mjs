@@ -17,7 +17,9 @@ const walk = async (dir) => {
     }
 };
 await walk(path.join(here, 'tasks'));
-if (fs.existsSync(path.join(here, 'gen'))) for (const f of fs.readdirSync(path.join(here, 'gen')).filter((x) => x.endsWith('.json'))) tasks.push(...JSON.parse(fs.readFileSync(path.join(here, 'gen', f), 'utf8')));
+if (fs.existsSync(path.join(here, 'gen')))
+    for (const f of fs.readdirSync(path.join(here, 'gen')).filter((x) => x.endsWith('.json')))
+        tasks.push(...JSON.parse(fs.readFileSync(path.join(here, 'gen', f), 'utf8')));
 
 const sp = (s) => {
     const node = E.parse(String(s), { lang: 'en', vars: ['a'] });
@@ -36,9 +38,13 @@ for (const t of tasks) {
         if (['solve', 'ineq', 'value', 'simplify', 'factor', 'diff', 'integrate', 'integral', 'limit', 'extremum', 'param', 'argext'].includes(t.op)) {
             if (t.op === 'system') continue;
             const x = sp(t.task);
-            o.task = x.src; o.syms = x.syms;
+            o.task = x.src;
+            o.syms = x.syms;
         }
-        if (t.op === 'system') { o.task = t.task.split(';').map((s) => sp(s.trim()).src); o.vars = t.vars || ['x', 'y']; }
+        if (t.op === 'system') {
+            o.task = t.task.split(';').map((s) => sp(s.trim()).src);
+            o.vars = t.vars || ['x', 'y'];
+        }
         if (t.interval) o.interval = t.interval.map((s) => sp(s).src);
         if (t.segment) o.segment = t.segment.map((s) => sp(s).src);
         if (t.bounds) o.bounds = t.bounds.map((b) => (/inf/.test(String(b)) ? (String(b).startsWith('-') ? '-oo' : 'oo') : sp(b).src));
@@ -52,7 +58,8 @@ for (const t of tasks) {
         if (t.args) o.args = t.args;
         const a = t.answer || {};
         if (a.roots) o.answer.roots = a.roots.map((r) => sp(r).src);
-        if (a.value !== undefined) o.answer.value = typeof a.value === 'number' ? String(a.value) : /^(inf|-inf|dne)$/.test(String(a.value)) ? String(a.value) : sp(a.value).src;
+        if (a.value !== undefined)
+            o.answer.value = typeof a.value === 'number' ? String(a.value) : /^(inf|-inf|dne)$/.test(String(a.value)) ? String(a.value) : sp(a.value).src;
         if (a.expr) o.answer.expr = sp(a.expr).src;
         if (a.families) o.answer.families = a.families.map(([b, p]) => [sp(b).src, sp(p).src]);
         if (a.set) o.answer.set = a.set;

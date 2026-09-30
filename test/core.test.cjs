@@ -41,7 +41,10 @@ test('every exported name is unique across all engine modules', async () => {
         }
     }
     for (const m of index.matchAll(/export \{([^}]*)\} from '\.\/([\w/-]+\.js)'/g)) {
-        for (const name of m[1].split(',').map((x) => x.trim()).filter(Boolean)) {
+        for (const name of m[1]
+            .split(',')
+            .map((x) => x.trim())
+            .filter(Boolean)) {
             assert.ok(!seen.has(name), `${name} is exported twice (${seen.get(name)} and ${m[2]})`);
             seen.set(name, m[2]);
             assert.ok(name in E, `${name} is missing from index.js`);
@@ -49,12 +52,66 @@ test('every exported name is unique across all engine modules', async () => {
     }
 });
 
-
 test('the core API is exported', () => {
-    const names = ['MathError', 'Q', 'bigGcd', 'bigLcm', 'bigAbs', 'bigIsqrt', 'bigIroot', 'rootExtract', 'num', 'sym', 'add', 'mul', 'div',
-        'neg', 'pow', 'fn', 'rel', 'chain', 'list', 'isConst', 'nodeEquals', 'freeVars', 'containsVar', 'substitute', 'mapNode', 'nodeSize',
-        'isNumber', 'numValue', 'parse', 'tryParse', 'parseFunctionInput', 'toTex', 'toText', 'texNumber', 'simplify', 'expand', 'collectTerms', 'combineFractions',
-        'rationalize', 'Poly', 'linearForm', 'equivalent', 'sameValue', 'sameSet', 'evaluate', 'compile', 'Complex', 'rng', 'step', 'msg', 'Msg', 'LANGUAGES', 'registerLanguage', 'localize', 'notation', 'eachLanguage', 'pickLang'];
+    const names = [
+        'MathError',
+        'Q',
+        'bigGcd',
+        'bigLcm',
+        'bigAbs',
+        'bigIsqrt',
+        'bigIroot',
+        'rootExtract',
+        'num',
+        'sym',
+        'add',
+        'mul',
+        'div',
+        'neg',
+        'pow',
+        'fn',
+        'rel',
+        'chain',
+        'list',
+        'isConst',
+        'nodeEquals',
+        'freeVars',
+        'containsVar',
+        'substitute',
+        'mapNode',
+        'nodeSize',
+        'isNumber',
+        'numValue',
+        'parse',
+        'tryParse',
+        'parseFunctionInput',
+        'toTex',
+        'toText',
+        'texNumber',
+        'simplify',
+        'expand',
+        'collectTerms',
+        'combineFractions',
+        'rationalize',
+        'Poly',
+        'linearForm',
+        'equivalent',
+        'sameValue',
+        'sameSet',
+        'evaluate',
+        'compile',
+        'Complex',
+        'rng',
+        'step',
+        'msg',
+        'Msg',
+        'LANGUAGES',
+        'registerLanguage',
+        'localize',
+        'notation',
+        'eachLanguage',
+        'pickLang',
+    ];
     for (const n of names) assert.ok(n in E, n);
 });
 
@@ -64,15 +121,38 @@ test('Q normalises and reads numbers, decimals and strings', () => {
     assert.equal(new E.Q(6n, -4n).toString(), '-3/2');
     assert.equal(new E.Q(0n, 5n).toString(), '0');
     assert.equal(new E.Q(10, 4).toString(), '5/2');
-    table([
-        [0.1, '1/10'], [0.5, '1/2'], [-2.5, '-5/2'], [3, '3'], [1e21, '1000000000000000000000'], [2.5e-7, '1/4000000'],
-        [123n, '123'], ['3/4', '3/4'], ['-2.5', '-5/2'], ['2,5', '5/2'], ['1e-3', '1/1000'], ['0.(3)', '1/3'], ['0,1(6)', '1/6'],
-        ['  7 ', '7'], ['1.5/2', '3/4'], ['−3', '-3'], ['.5', '1/2'], ['+4', '4'], ['12 345', '12345'], ['1/-2', '-1/2'],
-    ], (x, s) => assert.equal(E.Q.of(x).toString(), s, String(x)));
+    table(
+        [
+            [0.1, '1/10'],
+            [0.5, '1/2'],
+            [-2.5, '-5/2'],
+            [3, '3'],
+            [1e21, '1000000000000000000000'],
+            [2.5e-7, '1/4000000'],
+            [123n, '123'],
+            ['3/4', '3/4'],
+            ['-2.5', '-5/2'],
+            ['2,5', '5/2'],
+            ['1e-3', '1/1000'],
+            ['0.(3)', '1/3'],
+            ['0,1(6)', '1/6'],
+            ['  7 ', '7'],
+            ['1.5/2', '3/4'],
+            ['−3', '-3'],
+            ['.5', '1/2'],
+            ['+4', '4'],
+            ['12 345', '12345'],
+            ['1/-2', '-1/2'],
+        ],
+        (x, s) => assert.equal(E.Q.of(x).toString(), s, String(x)),
+    );
     for (const bad of ['abc', '', '1/0x', '--1', NaN, Infinity, null]) {
         assert.throws(() => E.Q.of(bad), E.MathError, String(bad));
     }
-    assert.throws(() => new E.Q(1n, 0n), (e) => e instanceof E.MathError && e.code === 'div0');
+    assert.throws(
+        () => new E.Q(1n, 0n),
+        (e) => e instanceof E.MathError && e.code === 'div0',
+    );
 });
 
 test('Q arithmetic is exact', () => {
@@ -90,8 +170,14 @@ test('Q arithmetic is exact', () => {
     assert.equal(q(0).pow(0).toString(), '1');
     assert.equal(q(-1).pow(1000001).toString(), '-1');
     assert.throws(() => q(0).pow(-1), E.MathError);
-    assert.throws(() => q(2).pow(10 ** 7), (e) => e.code === 'too-big');
-    assert.throws(() => q(1).div(0), (e) => e.code === 'div0');
+    assert.throws(
+        () => q(2).pow(10 ** 7),
+        (e) => e.code === 'too-big',
+    );
+    assert.throws(
+        () => q(1).div(0),
+        (e) => e.code === 'div0',
+    );
     assert.throws(() => q(0).inv(), E.MathError);
     assert.equal(q('2/3').add('1/3').isOne(), true);
 });
@@ -103,28 +189,63 @@ test('Q comparisons, predicates and rounding', () => {
     assert.ok(q(0).isZero() && q(1).isOne() && q(4).isInt() && q(-1).isNeg() && q(1).isPos());
     assert.equal(q(-5).sign(), -1);
     assert.equal(q(-5).abs().toString(), '5');
-    table([
-        ['7/2', '3', '4', '3', '4'], ['-7/2', '-4', '-3', '-3', '-4'], ['5/2', '2', '3', '2', '3'], ['-5/2', '-3', '-2', '-2', '-3'],
-        ['2', '2', '2', '2', '2'], ['1/3', '0', '1', '0', '0'], ['-1/3', '-1', '0', '0', '0'], ['12/5', '2', '3', '2', '2'],
-    ], (x, f, c, t, r) => {
-        assert.equal(q(x).floor().toString(), f, `floor ${x}`);
-        assert.equal(q(x).ceil().toString(), c, `ceil ${x}`);
-        assert.equal(q(x).trunc().toString(), t, `trunc ${x}`);
-        assert.equal(q(x).round().toString(), r, `round ${x}`);
-    });
+    table(
+        [
+            ['7/2', '3', '4', '3', '4'],
+            ['-7/2', '-4', '-3', '-3', '-4'],
+            ['5/2', '2', '3', '2', '3'],
+            ['-5/2', '-3', '-2', '-2', '-3'],
+            ['2', '2', '2', '2', '2'],
+            ['1/3', '0', '1', '0', '0'],
+            ['-1/3', '-1', '0', '0', '0'],
+            ['12/5', '2', '3', '2', '2'],
+        ],
+        (x, f, c, t, r) => {
+            assert.equal(q(x).floor().toString(), f, `floor ${x}`);
+            assert.equal(q(x).ceil().toString(), c, `ceil ${x}`);
+            assert.equal(q(x).trunc().toString(), t, `trunc ${x}`);
+            assert.equal(q(x).round().toString(), r, `round ${x}`);
+        },
+    );
     assert.equal(E.Q.max(1, 2).toString(), '2');
     assert.equal(E.Q.min('1/2', '1/3').toString(), '1/3');
 });
 
 test('Q prints as fraction, decimal and periodic decimal', () => {
-    table([['3/4', '\\frac{3}{4}'], ['-1/2', '-\\frac{1}{2}'], ['2', '2'], ['-7', '-7']], (x, t) => assert.equal(q(x).toTex(), t));
-    table([
-        ['1/3', 4, 'en', '0.3333'], ['1/3', 4, 'ru', '0,3333'], ['-2/3', 3, 'en', '-0.667'], ['5/2', 10, 'en', '2.5'], ['-1/1000', 2, 'en', '0'],
-        ['1/8', 2, 'en', '0.13'], ['7', 3, 'ru', '7'], ['123456789/1000', 1, 'en', '123456.8'],
-    ], (x, d, lang, s) => assert.equal(q(x).toDecimalString(d, lang), s, x));
+    table(
+        [
+            ['3/4', '\\frac{3}{4}'],
+            ['-1/2', '-\\frac{1}{2}'],
+            ['2', '2'],
+            ['-7', '-7'],
+        ],
+        (x, t) => assert.equal(q(x).toTex(), t),
+    );
+    table(
+        [
+            ['1/3', 4, 'en', '0.3333'],
+            ['1/3', 4, 'ru', '0,3333'],
+            ['-2/3', 3, 'en', '-0.667'],
+            ['5/2', 10, 'en', '2.5'],
+            ['-1/1000', 2, 'en', '0'],
+            ['1/8', 2, 'en', '0.13'],
+            ['7', 3, 'ru', '7'],
+            ['123456789/1000', 1, 'en', '123456.8'],
+        ],
+        (x, d, lang, s) => assert.equal(q(x).toDecimalString(d, lang), s, x),
+    );
     assert.ok(q('3/8').isFiniteDecimal() && !q('1/3').isFiniteDecimal() && q('7/20').isFiniteDecimal());
-    table([['1/6', 'ru', '0,1(6)'], ['1/7', 'en', '0.(142857)'], ['3/4', 'en', '0.75'], ['-1/3', 'ru', '-0,(3)'], ['22/7', 'en', '3.(142857)'], ['5', 'en', '5']],
-        (x, lang, s) => assert.equal(q(x).toPeriodicString(lang), s));
+    table(
+        [
+            ['1/6', 'ru', '0,1(6)'],
+            ['1/7', 'en', '0.(142857)'],
+            ['3/4', 'en', '0.75'],
+            ['-1/3', 'ru', '-0,(3)'],
+            ['22/7', 'en', '3.(142857)'],
+            ['5', 'en', '5'],
+        ],
+        (x, lang, s) => assert.equal(q(x).toPeriodicString(lang), s),
+    );
     assert.equal(new E.Q(1n, 9973n).toPeriodicString('en', 50), null);
     assert.equal(q('1/3').toNumber(), 1 / 3);
     assert.ok(Math.abs(new E.Q(2n ** 2000n, 3n ** 1300n).toNumber() / 6.3439564416e-19 - 1) < 1e-9);
@@ -143,21 +264,43 @@ test('Q exact roots and BigInt helpers', () => {
     assert.equal(E.bigLcm(4n, 6n), 12n);
     assert.equal(E.bigLcm(0n, 6n), 0n);
     assert.equal(E.bigAbs(-5n), 5n);
-    table([[0n, 0n], [1n, 1n], [15n, 3n], [16n, 4n], [10n ** 40n, 10n ** 20n], [10n ** 40n - 1n, 10n ** 20n - 1n], [2n ** 101n, 2n ** 50n * 1414213562373095n / 10n ** 15n]],
+    table(
+        [
+            [0n, 0n],
+            [1n, 1n],
+            [15n, 3n],
+            [16n, 4n],
+            [10n ** 40n, 10n ** 20n],
+            [10n ** 40n - 1n, 10n ** 20n - 1n],
+            [2n ** 101n, (2n ** 50n * 1414213562373095n) / 10n ** 15n],
+        ],
         (n, r) => {
             const s = E.bigIsqrt(n);
             assert.ok(s * s <= n && (s + 1n) * (s + 1n) > n, `isqrt ${n}`);
             if (n < 2n ** 100n) assert.equal(s, r);
-        });
+        },
+    );
     assert.equal(E.bigIroot(27n, 3), 3n);
     assert.equal(E.bigIroot(26n, 3), 2n);
     assert.equal(E.bigIroot(-27n, 3), -3n);
     assert.equal(E.bigIroot(10n ** 300n + 5n, 3), 10n ** 100n);
     assert.equal(E.bigIroot(2n ** 64n, 64), 2n);
-    table([
-        [12n, 2, 2n, 3n], [72n, 2, 6n, 2n], [72n, 3, 2n, 9n], [8n, 3, 2n, 1n], [-8n, 3, -2n, 1n], [-12n, 2, 2n, -3n], [1n, 2, 1n, 1n],
-        [0n, 2, 0n, 1n], [2n ** 100n * 3n, 2, 2n ** 50n, 3n], [1000003n ** 2n * 7n, 2, 1000003n, 7n], [360n, 2, 6n, 10n],
-    ], (n, k, out, inn) => assert.deepEqual(E.rootExtract(n, k), { out, in: inn }, `${n}, ${k}`));
+    table(
+        [
+            [12n, 2, 2n, 3n],
+            [72n, 2, 6n, 2n],
+            [72n, 3, 2n, 9n],
+            [8n, 3, 2n, 1n],
+            [-8n, 3, -2n, 1n],
+            [-12n, 2, 2n, -3n],
+            [1n, 2, 1n, 1n],
+            [0n, 2, 0n, 1n],
+            [2n ** 100n * 3n, 2, 2n ** 50n, 3n],
+            [1000003n ** 2n * 7n, 2, 1000003n, 7n],
+            [360n, 2, 6n, 10n],
+        ],
+        (n, k, out, inn) => assert.deepEqual(E.rootExtract(n, k), { out, in: inn }, `${n}, ${k}`),
+    );
     assert.throws(() => E.bigIsqrt(-1n), E.MathError);
     assert.throws(() => E.bigIroot(-16n, 4), E.MathError);
 });
@@ -204,12 +347,25 @@ test('AST constructors and utilities', () => {
     assert.ok(E.nodeEquals(E.substitute(P('pi x'), { pi: 3 }), P('pi x')));
     const doubled = E.mapNode(P('x + 2'), (m) => (m.type === 'num' ? E.num(m.value.mul(2)) : undefined));
     assert.ok(E.nodeEquals(doubled, P('x + 4')));
-    table([['3', '3'], ['-2', '-2'], ['3/4', '3/4'], ['-(1/2)', '-1/2'], ['2^3', '8'], ['2*3+1', '7'], ['2,5', '5/2'], ['x', null], ['2^x', null], ['1/0', null]],
+    table(
+        [
+            ['3', '3'],
+            ['-2', '-2'],
+            ['3/4', '3/4'],
+            ['-(1/2)', '-1/2'],
+            ['2^3', '8'],
+            ['2*3+1', '7'],
+            ['2,5', '5/2'],
+            ['x', null],
+            ['2^x', null],
+            ['1/0', null],
+        ],
         (s, v) => {
             const r = E.numValue(P(s));
             assert.equal(r === null ? null : r.toString(), v, s);
             assert.equal(E.isNumber(P(s)), v !== null, s);
-        });
+        },
+    );
     assert.ok(E.nodeEquals(E.toNode('x'), x));
     assert.equal(E.toNode(2.5).value.toString(), '5/2');
     assert.equal(E.rel('≤', x, 1).op, '<=');
@@ -224,74 +380,263 @@ test('AST constructors and utilities', () => {
 // ---------------------------------------------------------------- parse
 
 test('parse: numbers, operators, precedence', () => {
-    table([
-        ['12', '#12'], ['3.5', '#7/2'], ['3,5', '#7/2'], ['.5', '#1/2'], ['0,(3)', '#1/3'], ['1 000 000', '#1000000'], ['10 000', '#10000'],
-        ['2+3', '+(#2,#3)'], ['2-3', '+(#2,-(#3))'], ['2*3', '*(#2,#3)'], ['6/2', '/(#6,#2)'], ['2^3', '^(#2,#3)'], ['2**3', '^(#2,#3)'],
-        ['2·3', '*(#2,#3)'], ['2×3', '*(#2,#3)'], ['6÷2', '/(#6,#2)'], ['6:2', '/(#6,#2)'], ['2−3', '+(#2,-(#3))'], ['2⋅3', '*(#2,#3)'],
-        ['-x^2', '-(^(x,#2))'], ['-2^2', '-(^(#2,#2))'], ['2^3^2', '^(#2,^(#3,#2))'], ['2^-1', '^(#2,-(#1))'], ['x^-2', '^(x,-(#2))'],
-        ['1/2x', '*(/(#1,#2),x)'], ['6/2(1+2)', '*(/(#6,#2),+(#1,#2))'], ['a/b/c', '/(/(a,b),c)'], ['2(x+1)^2', '*(#2,^(+(x,#1),#2))'],
-        ['-2x', '-(*(#2,x))'], ['2*-3', '*(#2,-(#3))'], ['2++3', '+(#2,#3)'], ['2+-3', '+(#2,-(#3))'], ['a - -b', '+(a,-(-(b)))'],
-        ['--x', '-(-(x))'], ['+5', '#5'], ['x^2y', '*(^(x,#2),y)'], ['e^2x', '*(^(e,#2),x)'], ['2e3', '*(#2,e,#3)'],
-        ['5!', 'fact(#5)'], ['(n+1)!', 'fact(+(n,#1))'], ['50%', '/(#50,#100)'], ['30°', '/(*(#30,pi),#180)'], ['x!=2', '!=(x,#2)'],
-    ], (s, k) => assert.equal(K(s), k, s));
+    table(
+        [
+            ['12', '#12'],
+            ['3.5', '#7/2'],
+            ['3,5', '#7/2'],
+            ['.5', '#1/2'],
+            ['0,(3)', '#1/3'],
+            ['1 000 000', '#1000000'],
+            ['10 000', '#10000'],
+            ['2+3', '+(#2,#3)'],
+            ['2-3', '+(#2,-(#3))'],
+            ['2*3', '*(#2,#3)'],
+            ['6/2', '/(#6,#2)'],
+            ['2^3', '^(#2,#3)'],
+            ['2**3', '^(#2,#3)'],
+            ['2·3', '*(#2,#3)'],
+            ['2×3', '*(#2,#3)'],
+            ['6÷2', '/(#6,#2)'],
+            ['6:2', '/(#6,#2)'],
+            ['2−3', '+(#2,-(#3))'],
+            ['2⋅3', '*(#2,#3)'],
+            ['-x^2', '-(^(x,#2))'],
+            ['-2^2', '-(^(#2,#2))'],
+            ['2^3^2', '^(#2,^(#3,#2))'],
+            ['2^-1', '^(#2,-(#1))'],
+            ['x^-2', '^(x,-(#2))'],
+            ['1/2x', '*(/(#1,#2),x)'],
+            ['6/2(1+2)', '*(/(#6,#2),+(#1,#2))'],
+            ['a/b/c', '/(/(a,b),c)'],
+            ['2(x+1)^2', '*(#2,^(+(x,#1),#2))'],
+            ['-2x', '-(*(#2,x))'],
+            ['2*-3', '*(#2,-(#3))'],
+            ['2++3', '+(#2,#3)'],
+            ['2+-3', '+(#2,-(#3))'],
+            ['a - -b', '+(a,-(-(b)))'],
+            ['--x', '-(-(x))'],
+            ['+5', '#5'],
+            ['x^2y', '*(^(x,#2),y)'],
+            ['e^2x', '*(^(e,#2),x)'],
+            ['2e3', '*(#2,e,#3)'],
+            ['5!', 'fact(#5)'],
+            ['(n+1)!', 'fact(+(n,#1))'],
+            ['50%', '/(#50,#100)'],
+            ['30°', '/(*(#30,pi),#180)'],
+            ['x!=2', '!=(x,#2)'],
+        ],
+        (s, k) => assert.equal(K(s), k, s),
+    );
 });
 
 test('parse: implicit multiplication and identifiers', () => {
-    table([
-        ['2x', '*(#2,x)'], ['2(x+1)', '*(#2,+(x,#1))'], ['(x+1)(x-1)', '*(+(x,#1),+(x,-(#1)))'], ['x(x+1)', '*(x,+(x,#1))'],
-        ['2sin x', '*(#2,sin(x))'], ['xy', '*(x,y)'], ['x y', '*(x,y)'], ['2π', '*(#2,pi)'], ['3√2', '*(#3,sqrt(#2))'], ['xyz', '*(x,y,z)'],
-        ['2pi r', '*(#2,pi,r)'], ['pix', '*(pi,x)'], ['ab(c+d)', '*(a,b,+(c,d))'], ['(x)(y)', '*(x,y)'], ['x2', '*(x,#2)'],
-        ['α+β', '+(alpha,beta)'], ['alpha*theta', '*(alpha,theta)'], ['x_1+x_2', '+(x_1,x_2)'], ['a_{12}', 'a_12'], ['x_n', 'x_n'],
-        ['x₁', 'x_1'], ['θ_0', 'theta_0'], ['2π r²', '*(#2,pi,^(r,#2))'], ['e^(iπ)', '^(e,*(i,pi))'], ['∞', 'inf'], ['-inf', '-(inf)'],
-        ['хуx', '*(x,y,x)'], ['Sin x', 'sin(x)'], ['LN(x)', 'ln(x)'], ['[x+1]', '+(x,#1)'], ['{x+1}', '+(x,#1)'], ['x²', '^(x,#2)'],
-        ['x⁻¹', '^(x,-(#1))'], ['x²−5x+6', '+(^(x,#2),-(*(#5,x)),#6)'], ['\\frac{1}{2}', '/(#1,#2)'], ['\\sqrt[3]{x}', 'root(x,#3)'],
-        ['\\sin\\left(x\\right)', 'sin(x)'], ['2\\cdot 3', '*(#2,#3)'], ['\\pi r^2', '*(pi,^(r,#2))'], ['\\alpha_1', 'alpha_1'],
-        ['x \\le 2', '<=(x,#2)'], ['\\operatorname{tg} x', 'tan(x)'],
-    ], (s, k) => assert.equal(K(s), k, s));
+    table(
+        [
+            ['2x', '*(#2,x)'],
+            ['2(x+1)', '*(#2,+(x,#1))'],
+            ['(x+1)(x-1)', '*(+(x,#1),+(x,-(#1)))'],
+            ['x(x+1)', '*(x,+(x,#1))'],
+            ['2sin x', '*(#2,sin(x))'],
+            ['xy', '*(x,y)'],
+            ['x y', '*(x,y)'],
+            ['2π', '*(#2,pi)'],
+            ['3√2', '*(#3,sqrt(#2))'],
+            ['xyz', '*(x,y,z)'],
+            ['2pi r', '*(#2,pi,r)'],
+            ['pix', '*(pi,x)'],
+            ['ab(c+d)', '*(a,b,+(c,d))'],
+            ['(x)(y)', '*(x,y)'],
+            ['x2', '*(x,#2)'],
+            ['α+β', '+(alpha,beta)'],
+            ['alpha*theta', '*(alpha,theta)'],
+            ['x_1+x_2', '+(x_1,x_2)'],
+            ['a_{12}', 'a_12'],
+            ['x_n', 'x_n'],
+            ['x₁', 'x_1'],
+            ['θ_0', 'theta_0'],
+            ['2π r²', '*(#2,pi,^(r,#2))'],
+            ['e^(iπ)', '^(e,*(i,pi))'],
+            ['∞', 'inf'],
+            ['-inf', '-(inf)'],
+            ['хуx', '*(x,y,x)'],
+            ['Sin x', 'sin(x)'],
+            ['LN(x)', 'ln(x)'],
+            ['[x+1]', '+(x,#1)'],
+            ['{x+1}', '+(x,#1)'],
+            ['x²', '^(x,#2)'],
+            ['x⁻¹', '^(x,-(#1))'],
+            ['x²−5x+6', '+(^(x,#2),-(*(#5,x)),#6)'],
+            ['\\frac{1}{2}', '/(#1,#2)'],
+            ['\\sqrt[3]{x}', 'root(x,#3)'],
+            ['\\sin\\left(x\\right)', 'sin(x)'],
+            ['2\\cdot 3', '*(#2,#3)'],
+            ['\\pi r^2', '*(pi,^(r,#2))'],
+            ['\\alpha_1', 'alpha_1'],
+            ['x \\le 2', '<=(x,#2)'],
+            ['\\operatorname{tg} x', 'tan(x)'],
+        ],
+        (s, k) => assert.equal(K(s), k, s),
+    );
 });
 
 test('parse: functions with and without brackets', () => {
-    table([
-        ['sin x', 'sin(x)'], ['sin 2x', 'sin(*(#2,x))'], ['sin x cos x', '*(sin(x),cos(x))'], ['sin x/2', '/(sin(x),#2)'],
-        ['sin x^2', 'sin(^(x,#2))'], ['sin(x)^2', '^(sin(x),#2)'], ['sin^2 x', '^(sin(x),#2)'], ['sin^2(x)', '^(sin(x),#2)'],
-        ['sin²x', '^(sin(x),#2)'], ['sin^-1 x', 'asin(x)'], ['sin^(-1)(x)', 'asin(x)'], ['sin⁻¹x', 'asin(x)'], ['arcsin x', 'asin(x)'],
-        ['asin(x)', 'asin(x)'], ['tg x', 'tan(x)'], ['tan x', 'tan(x)'], ['ctg x', 'cot(x)'], ['cot x', 'cot(x)'], ['arctg x', 'atan(x)'],
-        ['atan(x)', 'atan(x)'], ['arcctg x', 'acot(x)'], ['acot x', 'acot(x)'], ['sh x', 'sinh(x)'], ['ch x', 'cosh(x)'], ['th x', 'tanh(x)'],
-        ['sinh x', 'sinh(x)'], ['ln x', 'ln(x)'], ['lg x', 'lg(x)'], ['log x', 'log(#10,x)'], ['log(x)', 'log(#10,x)'], ['log_2 x', 'log(#2,x)'],
-        ['log_2(8)', 'log(#2,#8)'], ['log_{10}(x)', 'log(#10,x)'], ['log2(x)', 'log(#2,x)'], ['log10 x', 'log(#10,x)'], ['log_a x', 'log(a,x)'],
-        ['log_(a+1)(x)', 'log(+(a,#1),x)'], ['log(2, 8)', 'log(#2,#8)'], ['sqrt x', 'sqrt(x)'], ['sqrt(x+1)', 'sqrt(+(x,#1))'],
-        ['√x', 'sqrt(x)'], ['√(x+1)', 'sqrt(+(x,#1))'], ['√x^2', 'sqrt(^(x,#2))'], ['√2x', '*(sqrt(#2),x)'], ['∛x', 'root(x,#3)'],
-        ['∜16', 'root(#16,#4)'], ['cbrt(x)', 'root(x,#3)'], ['root(x, 3)', 'root(x,#3)'], ['root(x; 3)', 'root(x,#3)'], ['root(8,3)', 'root(#8,#3)'],
-        ['root(2,5; 3)', 'root(#5/2,#3)'], ['abs(x)', 'abs(x)'], ['|x|', 'abs(x)'], ['|x-1|+|x+1|', '+(abs(+(x,-(#1))),abs(+(x,#1)))'],
-        ['||x|-1|', 'abs(+(abs(x),-(#1)))'], ['2|x|', '*(#2,abs(x))'], ['|-x|', 'abs(-(x))'], ['ln|x|', 'ln(abs(x))'], ['exp(x)', 'exp(x)'],
-        ['exp x', 'exp(x)'], ['e^x', '^(e,x)'], ['floor(x)', 'floor(x)'], ['ceil x', 'ceil(x)'], ['sign x', 'sign(x)'], ['sgn(x)', 'sign(x)'],
-        ['sinx', 'sin(x)'], ['lnx', 'ln(x)'], ['sqrtx', 'sqrt(x)'], ['arctgx', 'atan(x)'], ['sin -x', 'sin(-(x))'], ['sin cos x', 'sin(cos(x))'],
-        ['2sin^2 x', '*(#2,^(sin(x),#2))'], ['sin(x)cos(x)', '*(sin(x),cos(x))'], ['e^sin x', '^(e,sin(x))'], ['sin 30°', 'sin(/(*(#30,pi),#180))'],
-        ['sin(0,5)', 'sin(#1/2)'], ['cosec x', 'csc(x)'], ['sec x', 'sec(x)'], ['arsh x', 'asinh(x)'],
-    ], (s, k) => assert.equal(K(s), k, s));
+    table(
+        [
+            ['sin x', 'sin(x)'],
+            ['sin 2x', 'sin(*(#2,x))'],
+            ['sin x cos x', '*(sin(x),cos(x))'],
+            ['sin x/2', '/(sin(x),#2)'],
+            ['sin x^2', 'sin(^(x,#2))'],
+            ['sin(x)^2', '^(sin(x),#2)'],
+            ['sin^2 x', '^(sin(x),#2)'],
+            ['sin^2(x)', '^(sin(x),#2)'],
+            ['sin²x', '^(sin(x),#2)'],
+            ['sin^-1 x', 'asin(x)'],
+            ['sin^(-1)(x)', 'asin(x)'],
+            ['sin⁻¹x', 'asin(x)'],
+            ['arcsin x', 'asin(x)'],
+            ['asin(x)', 'asin(x)'],
+            ['tg x', 'tan(x)'],
+            ['tan x', 'tan(x)'],
+            ['ctg x', 'cot(x)'],
+            ['cot x', 'cot(x)'],
+            ['arctg x', 'atan(x)'],
+            ['atan(x)', 'atan(x)'],
+            ['arcctg x', 'acot(x)'],
+            ['acot x', 'acot(x)'],
+            ['sh x', 'sinh(x)'],
+            ['ch x', 'cosh(x)'],
+            ['th x', 'tanh(x)'],
+            ['sinh x', 'sinh(x)'],
+            ['ln x', 'ln(x)'],
+            ['lg x', 'lg(x)'],
+            ['log x', 'log(#10,x)'],
+            ['log(x)', 'log(#10,x)'],
+            ['log_2 x', 'log(#2,x)'],
+            ['log_2(8)', 'log(#2,#8)'],
+            ['log_{10}(x)', 'log(#10,x)'],
+            ['log2(x)', 'log(#2,x)'],
+            ['log10 x', 'log(#10,x)'],
+            ['log_a x', 'log(a,x)'],
+            ['log_(a+1)(x)', 'log(+(a,#1),x)'],
+            ['log(2, 8)', 'log(#2,#8)'],
+            ['sqrt x', 'sqrt(x)'],
+            ['sqrt(x+1)', 'sqrt(+(x,#1))'],
+            ['√x', 'sqrt(x)'],
+            ['√(x+1)', 'sqrt(+(x,#1))'],
+            ['√x^2', 'sqrt(^(x,#2))'],
+            ['√2x', '*(sqrt(#2),x)'],
+            ['∛x', 'root(x,#3)'],
+            ['∜16', 'root(#16,#4)'],
+            ['cbrt(x)', 'root(x,#3)'],
+            ['root(x, 3)', 'root(x,#3)'],
+            ['root(x; 3)', 'root(x,#3)'],
+            ['root(8,3)', 'root(#8,#3)'],
+            ['root(2,5; 3)', 'root(#5/2,#3)'],
+            ['abs(x)', 'abs(x)'],
+            ['|x|', 'abs(x)'],
+            ['|x-1|+|x+1|', '+(abs(+(x,-(#1))),abs(+(x,#1)))'],
+            ['||x|-1|', 'abs(+(abs(x),-(#1)))'],
+            ['2|x|', '*(#2,abs(x))'],
+            ['|-x|', 'abs(-(x))'],
+            ['ln|x|', 'ln(abs(x))'],
+            ['exp(x)', 'exp(x)'],
+            ['exp x', 'exp(x)'],
+            ['e^x', '^(e,x)'],
+            ['floor(x)', 'floor(x)'],
+            ['ceil x', 'ceil(x)'],
+            ['sign x', 'sign(x)'],
+            ['sgn(x)', 'sign(x)'],
+            ['sinx', 'sin(x)'],
+            ['lnx', 'ln(x)'],
+            ['sqrtx', 'sqrt(x)'],
+            ['arctgx', 'atan(x)'],
+            ['sin -x', 'sin(-(x))'],
+            ['sin cos x', 'sin(cos(x))'],
+            ['2sin^2 x', '*(#2,^(sin(x),#2))'],
+            ['sin(x)cos(x)', '*(sin(x),cos(x))'],
+            ['e^sin x', '^(e,sin(x))'],
+            ['sin 30°', 'sin(/(*(#30,pi),#180))'],
+            ['sin(0,5)', 'sin(#1/2)'],
+            ['cosec x', 'csc(x)'],
+            ['sec x', 'sec(x)'],
+            ['arsh x', 'asinh(x)'],
+        ],
+        (s, k) => assert.equal(K(s), k, s),
+    );
 });
 
 test('parse: relations, chains and lists', () => {
-    table([
-        ['x^2-5x+6=0', '=(+(^(x,#2),-(*(#5,x)),#6),#0)'], ['2x+1 > 3', '>(+(*(#2,x),#1),#3)'], ['x ≤ 2', '<=(x,#2)'], ['x >= 2', '>=(x,#2)'],
-        ['x ≥ 2', '>=(x,#2)'], ['x ≠ 2', '!=(x,#2)'], ['x <> 2', '!=(x,#2)'], ['x == 2', '=(x,#2)'], ['x =< 2', '<=(x,#2)'],
-        ['-1 < x <= 2', 'chain(-(#1),x,#2;<,<=)'], ['0 < x < 1 < y', 'chain(#0,x,#1,y;<,<,<)'],
-        ['x+y=3; x-y=1', '[=(+(x,y),#3),=(+(x,-(y)),#1)]'], ['x+y=3\nx-y=1', '[=(+(x,y),#3),=(+(x,-(y)),#1)]'], ['1, 2, 3', '[#1,#2,#3]'],
-        ['1,2,3', '[#1,#2,#3]'], ['3, 5', '[#3,#5]'], ['3,5', '#7/2'], ['3,5x', '*(#7/2,x)'], ['1,5; 2,5', '[#3/2,#5/2]'], ['1,5, 2,5', '[#3/2,#5/2]'],
-        ['x=1;', '=(x,#1)'], ['x=1\n', '=(x,#1)'], ['\nx', 'x'], ['(1,5)', '#3/2'], ['{x+y=3; x-y=1}', '[=(+(x,y),#3),=(+(x,-(y)),#1)]'],
-    ], (s, k) => assert.equal(K(s), k, JSON.stringify(s)));
+    table(
+        [
+            ['x^2-5x+6=0', '=(+(^(x,#2),-(*(#5,x)),#6),#0)'],
+            ['2x+1 > 3', '>(+(*(#2,x),#1),#3)'],
+            ['x ≤ 2', '<=(x,#2)'],
+            ['x >= 2', '>=(x,#2)'],
+            ['x ≥ 2', '>=(x,#2)'],
+            ['x ≠ 2', '!=(x,#2)'],
+            ['x <> 2', '!=(x,#2)'],
+            ['x == 2', '=(x,#2)'],
+            ['x =< 2', '<=(x,#2)'],
+            ['-1 < x <= 2', 'chain(-(#1),x,#2;<,<=)'],
+            ['0 < x < 1 < y', 'chain(#0,x,#1,y;<,<,<)'],
+            ['x+y=3; x-y=1', '[=(+(x,y),#3),=(+(x,-(y)),#1)]'],
+            ['x+y=3\nx-y=1', '[=(+(x,y),#3),=(+(x,-(y)),#1)]'],
+            ['1, 2, 3', '[#1,#2,#3]'],
+            ['1,2,3', '[#1,#2,#3]'],
+            ['3, 5', '[#3,#5]'],
+            ['3,5', '#7/2'],
+            ['3,5x', '*(#7/2,x)'],
+            ['1,5; 2,5', '[#3/2,#5/2]'],
+            ['1,5, 2,5', '[#3/2,#5/2]'],
+            ['x=1;', '=(x,#1)'],
+            ['x=1\n', '=(x,#1)'],
+            ['\nx', 'x'],
+            ['(1,5)', '#3/2'],
+            ['{x+y=3; x-y=1}', '[=(+(x,y),#3),=(+(x,-(y)),#1)]'],
+        ],
+        (s, k) => assert.equal(K(s), k, JSON.stringify(s)),
+    );
 });
 
 test('parse: thousands, adjacent numbers, English commas', () => {
-    table([
-        ['x = 1 000', '=(x,#1000)'], ['1 000 000', '#1000000'], ['12 345,5', '#24691/2'], ['1 234 + 1', '+(#1234,#1)'], ['log_2 100', 'log(#2,#100)'],
-        ['x^2 3', '*(^(x,#2),#3)'], ['1,000,000', '#1000000'], ['1,000', '#1'], ['3,125', '#25/8'], ['1,5,2', '[#1,#5,#2]'], ['1 000,5', '#2001/2'],
-        ['sine(x)', 'sin(x)'], ['cosine x', 'cos(x)'], ['x_1 2', '*(x_1,#2)'], ['12\u00a0345', '#12345'],
-    ], (s, k) => assert.equal(K(s.replace('\\u00a0', '\u00a0')), k, s));
-    table([['1,000', '#1000'], ['2,5', '#5/2'], ['1,000.5', '#2001/2'], ['1,000,000.25', '#4000001/4'], ['3, 5', '[#3,#5]']],
-        (s, k) => assert.equal(K(s, { lang: 'en' }), k, s));
+    table(
+        [
+            ['x = 1 000', '=(x,#1000)'],
+            ['1 000 000', '#1000000'],
+            ['12 345,5', '#24691/2'],
+            ['1 234 + 1', '+(#1234,#1)'],
+            ['log_2 100', 'log(#2,#100)'],
+            ['x^2 3', '*(^(x,#2),#3)'],
+            ['1,000,000', '#1000000'],
+            ['1,000', '#1'],
+            ['3,125', '#25/8'],
+            ['1,5,2', '[#1,#5,#2]'],
+            ['1 000,5', '#2001/2'],
+            ['sine(x)', 'sin(x)'],
+            ['cosine x', 'cos(x)'],
+            ['x_1 2', '*(x_1,#2)'],
+            ['12\u00a0345', '#12345'],
+        ],
+        (s, k) => assert.equal(K(s.replace('\\u00a0', '\u00a0')), k, s),
+    );
+    table(
+        [
+            ['1,000', '#1000'],
+            ['2,5', '#5/2'],
+            ['1,000.5', '#2001/2'],
+            ['1,000,000.25', '#4000001/4'],
+            ['3, 5', '[#3,#5]'],
+        ],
+        (s, k) => assert.equal(K(s, { lang: 'en' }), k, s),
+    );
     for (const s of ['2 3', '0 500', '1 2 3', '(1 2)']) {
-        assert.throws(() => P(s), (e) => e instanceof E.MathError && e.code === 'syntax', s);
+        assert.throws(
+            () => P(s),
+            (e) => e instanceof E.MathError && e.code === 'syntax',
+            s,
+        );
     }
 });
 
@@ -307,26 +652,63 @@ test('parse: keeps what the user typed', () => {
 });
 
 test('parse: helpful bilingual errors with positions', () => {
-    table([
-        ['', 'empty', 0], ['   ', 'empty', 0], ['(()', 'brackets', 0], ['())', 'brackets', 2], ['(]', 'brackets', 0], ['sin', 'no-arg', 0],
-        ['sin + 1', 'no-arg', 0], ['2//3', 'syntax', 1], ['x^', 'syntax', 1], ['x=', 'syntax', 1], ['=5', 'syntax', 0], ['2+', 'syntax', 1],
-        ['()', 'syntax', 0], ['|x', 'syntax', 0], ['abc(x)', 'unknown-fn', 0], ['sqr(x)', 'unsupported', 0], ['max(1, 2)', 'unsupported', 0],
-        ['x ? 2', 'syntax', 2], ['2 ж', 'syntax', 2], ['1.2.3', 'syntax', 0], ['sin()', 'syntax', 3], ['root(8)', 'arity', 0], ['1,,2', 'syntax', 2],
-        ['x = = 2', 'syntax', 4], ['log_ x', 'no-arg', 0], ['2*', 'syntax', 1], ['*2', 'syntax', 0], ['sin(1, 2)', 'arity', 0], ["f'(x)", 'unsupported', 1],
-        ['\\foo x', 'unknown-fn', 0], ['x_', 'syntax', 1], ['√', 'syntax', 0], ['x < ', 'syntax', 2], ['1, ', 'syntax', 1],
-    ], (s, code, pos) => {
-        const r = E.tryParse(s);
-        assert.equal(r.ok, false, JSON.stringify(s));
-        assert.ok(r.error instanceof E.MathError);
-        assert.equal(r.error.code, code, `${JSON.stringify(s)}: ${r.error.msg.en}`);
-        assert.equal(r.error.pos, pos, `${JSON.stringify(s)}: ${r.error.msg.en}`);
-        assert.ok(r.error.msg.ru.length > 3 && r.error.msg.en.length > 3);
-        assert.ok(r.error.pos + (r.error.len ?? 0) <= Math.max(s.length, 1) + 1);
-    });
+    table(
+        [
+            ['', 'empty', 0],
+            ['   ', 'empty', 0],
+            ['(()', 'brackets', 0],
+            ['())', 'brackets', 2],
+            ['(]', 'brackets', 0],
+            ['sin', 'no-arg', 0],
+            ['sin + 1', 'no-arg', 0],
+            ['2//3', 'syntax', 1],
+            ['x^', 'syntax', 1],
+            ['x=', 'syntax', 1],
+            ['=5', 'syntax', 0],
+            ['2+', 'syntax', 1],
+            ['()', 'syntax', 0],
+            ['|x', 'syntax', 0],
+            ['abc(x)', 'unknown-fn', 0],
+            ['sqr(x)', 'unsupported', 0],
+            ['max(1, 2)', 'unsupported', 0],
+            ['x ? 2', 'syntax', 2],
+            ['2 ж', 'syntax', 2],
+            ['1.2.3', 'syntax', 0],
+            ['sin()', 'syntax', 3],
+            ['root(8)', 'arity', 0],
+            ['1,,2', 'syntax', 2],
+            ['x = = 2', 'syntax', 4],
+            ['log_ x', 'no-arg', 0],
+            ['2*', 'syntax', 1],
+            ['*2', 'syntax', 0],
+            ['sin(1, 2)', 'arity', 0],
+            ["f'(x)", 'unsupported', 1],
+            ['\\foo x', 'unknown-fn', 0],
+            ['x_', 'syntax', 1],
+            ['√', 'syntax', 0],
+            ['x < ', 'syntax', 2],
+            ['1, ', 'syntax', 1],
+        ],
+        (s, code, pos) => {
+            const r = E.tryParse(s);
+            assert.equal(r.ok, false, JSON.stringify(s));
+            assert.ok(r.error instanceof E.MathError);
+            assert.equal(r.error.code, code, `${JSON.stringify(s)}: ${r.error.msg.en}`);
+            assert.equal(r.error.pos, pos, `${JSON.stringify(s)}: ${r.error.msg.en}`);
+            assert.ok(r.error.msg.ru.length > 3 && r.error.msg.en.length > 3);
+            assert.ok(r.error.pos + (r.error.len ?? 0) <= Math.max(s.length, 1) + 1);
+        },
+    );
     assert.match(E.tryParse('abc(x)').error.msg.ru, /abs/);
     assert.match(E.tryParse('sine(x)').error?.msg.en ?? '', /sin|/);
-    assert.throws(() => P('x'.repeat(3000)), (e) => e.code === 'too-big');
-    assert.throws(() => P('('.repeat(500) + 'x' + ')'.repeat(500)), (e) => e instanceof E.MathError);
+    assert.throws(
+        () => P('x'.repeat(3000)),
+        (e) => e.code === 'too-big',
+    );
+    assert.throws(
+        () => P('('.repeat(500) + 'x' + ')'.repeat(500)),
+        (e) => e instanceof E.MathError,
+    );
     assert.equal(E.tryParse('x+1').ok, true);
     assert.equal(E.tryParse(null).ok, false);
 });
@@ -346,67 +728,213 @@ test('parse options: extra variables and case folding', () => {
 // ---------------------------------------------------------------- print
 
 test('toTex: parsed input in both languages', () => {
-    table([
-        ['2(x+1)^2', '2(x + 1)^{2}', '2(x + 1)^{2}'], ['-x^2', '-x^{2}', '-x^{2}'], ['1/2x', '\\frac{1}{2}x', '\\frac{1}{2}x'],
-        ['sin^2x+cos^2x', '\\sin^{2} x + \\cos^{2} x', '\\sin^{2} x + \\cos^{2} x'], ['|x-1|+|x+1|', '\\left|x - 1\\right| + \\left|x + 1\\right|', null],
-        ['3,5x', '3{,}5x', '3.5x'], ['3, 5', '3;\\ 5', '3,\\ 5'], ['x²−5x+6=0', 'x^{2} - 5x + 6 = 0', null], ['√(x+1)', '\\sqrt{x + 1}', null],
-        ['log_2(8)', '\\log_{2} 8', null], ['e^(iπ)', 'e^{i\\pi}', null], ['ln|x|', '\\ln\\left|x\\right|', null], ['x_1+x_2', 'x_{1} + x_{2}', null],
-        ['(x+1)/(x-1)', '\\frac{x + 1}{x - 1}', null], ['sin 2x', '\\sin(2x)', null], ['sin x cos x', '\\sin x\\cos x', null],
-        ['tg x', '\\operatorname{tg} x', '\\tan x'], ['ctg x', '\\operatorname{ctg} x', '\\cot x'], ['arctg x', '\\operatorname{arctg} x', '\\arctan x'],
-        ['arcctg x', '\\operatorname{arcctg} x', '\\operatorname{arccot} x'], ['sh x', '\\operatorname{sh} x', '\\sinh x'], ['ch x', '\\operatorname{ch} x', '\\cosh x'],
-        ['lg x', '\\lg x', '\\log_{10} x'], ['log x', '\\lg x', '\\log_{10} x'], ['arcsin x', '\\arcsin x', '\\arcsin x'],
-        ['-1 < x <= 2', '-1 < x \\le 2', null], ['x != 2', 'x \\ne 2', null], ['x >= 2', 'x \\ge 2', null], ['5!', '5!', null],
-        ['(n+1)!', '(n + 1)!', null], ['2π r', '2\\pi r', null], ['3√2', '3\\sqrt{2}', null], ['root(x, 3)', '\\sqrt[3]{x}', null],
-        ['a - -b', 'a - (-b)', null], ['2*(-3)', '2 \\cdot (-3)', null], ['2*3', '2 \\cdot 3', null], ['x*2', 'x \\cdot 2', null],
-        ['sin x * y', '\\sin x \\cdot y', null], ['x^(-1)', 'x^{-1}', null], ['sin(x)^2', '\\sin^{2} x', null], ['sin^2(2x)', '\\sin^{2}(2x)', null],
-        ['(x^2)^3', '(x^{2})^{3}', null], ['(2/3)^2', '\\left(\\frac{2}{3}\\right)^{2}', null], ['2,5^2', '(2{,}5)^{2}', '(2.5)^{2}'],
-        ['α_1+β', '\\alpha_{1} + \\beta', null], ['e^x', 'e^{x}', null], ['abs(x)^2', '\\left|x\\right|^{2}', null], ['pi r^2', '\\pi r^{2}', null],
-        ['log_a(x+1)', '\\log_{a}(x + 1)', null], ['-(x+1)', '-(x + 1)', null], ['arctg(x/2)', '\\operatorname{arctg}\\left(\\frac{x}{2}\\right)', '\\arctan\\left(\\frac{x}{2}\\right)'],
-        ['floor(x)', '\\left\\lfloor x\\right\\rfloor', null], ['sign(x)', '\\operatorname{sgn} x', null], ['0,(3)', '0{,}(3)', '0.(3)'],
-        ['x_{12}', 'x_{12}', null], ['epsilon + phi', '\\varepsilon + \\varphi', null], ['\\infty', '\\infty', null], ['x y', 'xy', null],
-        ['2x + 3y - 5', '2x + 3y - 5', null], ['sin(pi)', '\\sin \\pi', null], ['cos(-x)', '\\cos(-x)', null], ['x!y', 'x! \\cdot y', null],
-    ], (s, ru, en) => {
-        assert.equal(E.toTex(P(s)), ru, s);
-        assert.equal(E.toTex(P(s), { lang: 'en' }), en ?? ru, s + ' (en)');
-    });
+    table(
+        [
+            ['2(x+1)^2', '2(x + 1)^{2}', '2(x + 1)^{2}'],
+            ['-x^2', '-x^{2}', '-x^{2}'],
+            ['1/2x', '\\frac{1}{2}x', '\\frac{1}{2}x'],
+            ['sin^2x+cos^2x', '\\sin^{2} x + \\cos^{2} x', '\\sin^{2} x + \\cos^{2} x'],
+            ['|x-1|+|x+1|', '\\left|x - 1\\right| + \\left|x + 1\\right|', null],
+            ['3,5x', '3{,}5x', '3.5x'],
+            ['3, 5', '3;\\ 5', '3,\\ 5'],
+            ['x²−5x+6=0', 'x^{2} - 5x + 6 = 0', null],
+            ['√(x+1)', '\\sqrt{x + 1}', null],
+            ['log_2(8)', '\\log_{2} 8', null],
+            ['e^(iπ)', 'e^{i\\pi}', null],
+            ['ln|x|', '\\ln\\left|x\\right|', null],
+            ['x_1+x_2', 'x_{1} + x_{2}', null],
+            ['(x+1)/(x-1)', '\\frac{x + 1}{x - 1}', null],
+            ['sin 2x', '\\sin(2x)', null],
+            ['sin x cos x', '\\sin x\\cos x', null],
+            ['tg x', '\\operatorname{tg} x', '\\tan x'],
+            ['ctg x', '\\operatorname{ctg} x', '\\cot x'],
+            ['arctg x', '\\operatorname{arctg} x', '\\arctan x'],
+            ['arcctg x', '\\operatorname{arcctg} x', '\\operatorname{arccot} x'],
+            ['sh x', '\\operatorname{sh} x', '\\sinh x'],
+            ['ch x', '\\operatorname{ch} x', '\\cosh x'],
+            ['lg x', '\\lg x', '\\log_{10} x'],
+            ['log x', '\\lg x', '\\log_{10} x'],
+            ['arcsin x', '\\arcsin x', '\\arcsin x'],
+            ['-1 < x <= 2', '-1 < x \\le 2', null],
+            ['x != 2', 'x \\ne 2', null],
+            ['x >= 2', 'x \\ge 2', null],
+            ['5!', '5!', null],
+            ['(n+1)!', '(n + 1)!', null],
+            ['2π r', '2\\pi r', null],
+            ['3√2', '3\\sqrt{2}', null],
+            ['root(x, 3)', '\\sqrt[3]{x}', null],
+            ['a - -b', 'a - (-b)', null],
+            ['2*(-3)', '2 \\cdot (-3)', null],
+            ['2*3', '2 \\cdot 3', null],
+            ['x*2', 'x \\cdot 2', null],
+            ['sin x * y', '\\sin x \\cdot y', null],
+            ['x^(-1)', 'x^{-1}', null],
+            ['sin(x)^2', '\\sin^{2} x', null],
+            ['sin^2(2x)', '\\sin^{2}(2x)', null],
+            ['(x^2)^3', '(x^{2})^{3}', null],
+            ['(2/3)^2', '\\left(\\frac{2}{3}\\right)^{2}', null],
+            ['2,5^2', '(2{,}5)^{2}', '(2.5)^{2}'],
+            ['α_1+β', '\\alpha_{1} + \\beta', null],
+            ['e^x', 'e^{x}', null],
+            ['abs(x)^2', '\\left|x\\right|^{2}', null],
+            ['pi r^2', '\\pi r^{2}', null],
+            ['log_a(x+1)', '\\log_{a}(x + 1)', null],
+            ['-(x+1)', '-(x + 1)', null],
+            ['arctg(x/2)', '\\operatorname{arctg}\\left(\\frac{x}{2}\\right)', '\\arctan\\left(\\frac{x}{2}\\right)'],
+            ['floor(x)', '\\left\\lfloor x\\right\\rfloor', null],
+            ['sign(x)', '\\operatorname{sgn} x', null],
+            ['0,(3)', '0{,}(3)', '0.(3)'],
+            ['x_{12}', 'x_{12}', null],
+            ['epsilon + phi', '\\varepsilon + \\varphi', null],
+            ['\\infty', '\\infty', null],
+            ['x y', 'xy', null],
+            ['2x + 3y - 5', '2x + 3y - 5', null],
+            ['sin(pi)', '\\sin \\pi', null],
+            ['cos(-x)', '\\cos(-x)', null],
+            ['x!y', 'x! \\cdot y', null],
+        ],
+        (s, ru, en) => {
+            assert.equal(E.toTex(P(s)), ru, s);
+            assert.equal(E.toTex(P(s), { lang: 'en' }), en ?? ru, s + ' (en)');
+        },
+    );
     assert.equal(E.toTex(P('2x y'), { mulDot: true }), '2 \\cdot x \\cdot y');
 });
 
 test('toTex: canonical forms (fractions, radicals, signs)', () => {
-    table([
-        ['x^2 - 5x + 6', 'x^{2} - 5x + 6'], ['1/2 x', '\\frac{x}{2}'], ['3/4 x^2', '\\frac{3x^{2}}{4}'], ['-x/2', '-\\frac{x}{2}'],
-        ['1/sqrt 2', '\\frac{\\sqrt{2}}{2}'], ['3/(2x)', '\\frac{3}{2x}'], ['2/(3x^2 y)', '\\frac{2}{3x^{2}y}'], ['x^(-2)', '\\frac{1}{x^{2}}'],
-        ['sqrt(x)/x', '\\frac{1}{\\sqrt{x}}'], ['x^(1/3)', '\\sqrt[3]{x}'], ['x^(2/3)', 'x^{\\frac{2}{3}}'], ['sin(x)/2', '\\frac{1}{2}\\sin x'],
-        ['3/4 (x+1) y', '\\frac{3}{4}y(x + 1)'], ['(x^2-1)/(x-1)', '\\frac{x^{2} - 1}{x - 1}'], ['2^x * 3', '3 \\cdot 2^{x}'], ['x e^x', 'xe^{x}'],
-        ['-1 + sqrt 2', '\\sqrt{2} - 1'], ['1 - sqrt 2', '1 - \\sqrt{2}'], ['3 + 2i', '3 + 2i'], ['-i', '-i'], ['(x+1)^(-1)', '\\frac{1}{x + 1}'],
-        ['pi/2', '\\frac{\\pi}{2}'], ['2pi/3', '\\frac{2\\pi}{3}'], ['-3/4', '-\\frac{3}{4}'], ['x/(y z)', '\\frac{x}{yz}'], ['sqrt(12)', '2\\sqrt{3}'],
-        ['1/(2x+2)', '\\frac{1}{2(x + 1)}'], ['x sin x', 'x\\sin x'], ['sin x * x', 'x\\sin x'], ['cos x sin x', '\\sin x\\cos x'],
-    ], (s, t) => assert.equal(TS(s), t, s));
+    table(
+        [
+            ['x^2 - 5x + 6', 'x^{2} - 5x + 6'],
+            ['1/2 x', '\\frac{x}{2}'],
+            ['3/4 x^2', '\\frac{3x^{2}}{4}'],
+            ['-x/2', '-\\frac{x}{2}'],
+            ['1/sqrt 2', '\\frac{\\sqrt{2}}{2}'],
+            ['3/(2x)', '\\frac{3}{2x}'],
+            ['2/(3x^2 y)', '\\frac{2}{3x^{2}y}'],
+            ['x^(-2)', '\\frac{1}{x^{2}}'],
+            ['sqrt(x)/x', '\\frac{1}{\\sqrt{x}}'],
+            ['x^(1/3)', '\\sqrt[3]{x}'],
+            ['x^(2/3)', 'x^{\\frac{2}{3}}'],
+            ['sin(x)/2', '\\frac{1}{2}\\sin x'],
+            ['3/4 (x+1) y', '\\frac{3}{4}y(x + 1)'],
+            ['(x^2-1)/(x-1)', '\\frac{x^{2} - 1}{x - 1}'],
+            ['2^x * 3', '3 \\cdot 2^{x}'],
+            ['x e^x', 'xe^{x}'],
+            ['-1 + sqrt 2', '\\sqrt{2} - 1'],
+            ['1 - sqrt 2', '1 - \\sqrt{2}'],
+            ['3 + 2i', '3 + 2i'],
+            ['-i', '-i'],
+            ['(x+1)^(-1)', '\\frac{1}{x + 1}'],
+            ['pi/2', '\\frac{\\pi}{2}'],
+            ['2pi/3', '\\frac{2\\pi}{3}'],
+            ['-3/4', '-\\frac{3}{4}'],
+            ['x/(y z)', '\\frac{x}{yz}'],
+            ['sqrt(12)', '2\\sqrt{3}'],
+            ['1/(2x+2)', '\\frac{1}{2(x + 1)}'],
+            ['x sin x', 'x\\sin x'],
+            ['sin x * x', 'x\\sin x'],
+            ['cos x sin x', '\\sin x\\cos x'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
     assert.equal(E.toTex(E.num('5/2'), { decimals: true }), '2{,}5');
     assert.equal(E.toTex(E.num('5/2'), { decimals: true, lang: 'en' }), '2.5');
     assert.equal(E.toTex(E.num('1/3'), { decimals: true }), '\\frac{1}{3}');
 });
 
 test('toText: plain text in both languages', () => {
-    table([
-        ['x^2-5x+6', 'x^2 - 5x + 6', null], ['2,5x', '2,5*x', '2.5*x'], ['sqrt(x+1)', 'sqrt(x + 1)', null], ['log_2 x', 'log_2(x)', null],
-        ['tg x', 'tg(x)', 'tan(x)'], ['arctg x', 'arctg(x)', 'arctan(x)'], ['|x|', 'abs(x)', null], ['root(x, 3)', 'root(x; 3)', null],
-        ['1; 2', '1; 2', '1, 2'], ['x <= 2', 'x <= 2', null], ['2^3^2', '2^(3^2)', null], ['(x+1)/(x-1)', '(x + 1)/(x - 1)', null],
-        ['x/(2y)', 'x/(2y)', null], ['5!', '5!', null], ['x_1 + a_{12}', 'x_1 + a_12', null], ['α', 'alpha', null], ['π', 'pi', null],
-    ], (s, ru, en) => {
-        assert.equal(E.toText(P(s)), ru, s);
-        assert.equal(E.toText(P(s), { lang: 'en' }), en ?? ru, s + ' (en)');
-    });
-    table([['1/2 x', 'x/2'], ['3/4 x', '3x/4'], ['2/(3x)', '2/(3x)'], ['x^(-1)', '1/x'], ['x^(1/2)', 'sqrt(x)'], ['x^(-1/2)', '1/sqrt(x)'], ['-x', '-x'], ['x - 2y', 'x - 2y']],
-        (s, t) => assert.equal(E.toText(S(s)), t, s));
+    table(
+        [
+            ['x^2-5x+6', 'x^2 - 5x + 6', null],
+            ['2,5x', '2,5*x', '2.5*x'],
+            ['sqrt(x+1)', 'sqrt(x + 1)', null],
+            ['log_2 x', 'log_2(x)', null],
+            ['tg x', 'tg(x)', 'tan(x)'],
+            ['arctg x', 'arctg(x)', 'arctan(x)'],
+            ['|x|', 'abs(x)', null],
+            ['root(x, 3)', 'root(x; 3)', null],
+            ['1; 2', '1; 2', '1, 2'],
+            ['x <= 2', 'x <= 2', null],
+            ['2^3^2', '2^(3^2)', null],
+            ['(x+1)/(x-1)', '(x + 1)/(x - 1)', null],
+            ['x/(2y)', 'x/(2y)', null],
+            ['5!', '5!', null],
+            ['x_1 + a_{12}', 'x_1 + a_12', null],
+            ['α', 'alpha', null],
+            ['π', 'pi', null],
+        ],
+        (s, ru, en) => {
+            assert.equal(E.toText(P(s)), ru, s);
+            assert.equal(E.toText(P(s), { lang: 'en' }), en ?? ru, s + ' (en)');
+        },
+    );
+    table(
+        [
+            ['1/2 x', 'x/2'],
+            ['3/4 x', '3x/4'],
+            ['2/(3x)', '2/(3x)'],
+            ['x^(-1)', '1/x'],
+            ['x^(1/2)', 'sqrt(x)'],
+            ['x^(-1/2)', '1/sqrt(x)'],
+            ['-x', '-x'],
+            ['x - 2y', 'x - 2y'],
+        ],
+        (s, t) => assert.equal(E.toText(S(s)), t, s),
+    );
 });
 
 const CORPUS = [
-    '2(x+1)^2', '-x^2', '2^3^2', '-2^2', '1/2x', 'sin^2x+cos^2x', '|x-1|+|x+1|', '3,5x', '3, 5', 'x²−5x+6=0', '√(x+1)', 'log_2(8)', 'e^(iπ)',
-    'ln|x|', 'x_1+x_2', '(x+1)/(x-1)', 'a/b/c', 'a/(b/c)', '-(x+1)', '--x', 'x^(1/2)', '2*(-3)', '(-2)x', 'x*2', '2x^2 - 3x + 1',
-    'sin(2x+1)/cos x', 'e^(-x^2/2)', '(x-1)^3(x+2)', 'root(x^2+1, 3)', '5! + 3!', '-1 < x <= 2', 'x+y=3; x-y=1', 'log_(1/2)(x)',
-    'arcsin(x/2) + arctg x', 'sqrt(x)*sqrt(y)', '2^(x+1) - 3^x', 'x^2/(x^2+1)', '(1+2i)(3-i)', '|x|^3', 'pi r^2 h/3', 'a_1 + a_{12}',
-    'sh x + ch x', 'ctg^2 x - 1', 'x^-1 + x^-2', '2,5 + 0,(3)', 'floor(x) + ceil(x)', 'sign(x - 1)', 'exp(2x)', '30°', '50%', '-sin(-x)',
+    '2(x+1)^2',
+    '-x^2',
+    '2^3^2',
+    '-2^2',
+    '1/2x',
+    'sin^2x+cos^2x',
+    '|x-1|+|x+1|',
+    '3,5x',
+    '3, 5',
+    'x²−5x+6=0',
+    '√(x+1)',
+    'log_2(8)',
+    'e^(iπ)',
+    'ln|x|',
+    'x_1+x_2',
+    '(x+1)/(x-1)',
+    'a/b/c',
+    'a/(b/c)',
+    '-(x+1)',
+    '--x',
+    'x^(1/2)',
+    '2*(-3)',
+    '(-2)x',
+    'x*2',
+    '2x^2 - 3x + 1',
+    'sin(2x+1)/cos x',
+    'e^(-x^2/2)',
+    '(x-1)^3(x+2)',
+    'root(x^2+1, 3)',
+    '5! + 3!',
+    '-1 < x <= 2',
+    'x+y=3; x-y=1',
+    'log_(1/2)(x)',
+    'arcsin(x/2) + arctg x',
+    'sqrt(x)*sqrt(y)',
+    '2^(x+1) - 3^x',
+    'x^2/(x^2+1)',
+    '(1+2i)(3-i)',
+    '|x|^3',
+    'pi r^2 h/3',
+    'a_1 + a_{12}',
+    'sh x + ch x',
+    'ctg^2 x - 1',
+    'x^-1 + x^-2',
+    '2,5 + 0,(3)',
+    'floor(x) + ceil(x)',
+    'sign(x - 1)',
+    'exp(2x)',
+    '30°',
+    '50%',
+    '-sin(-x)',
 ];
 
 test('round trips: parse(toText(n)) = n for parsed input; simplify(parse(toText(s))) = s for canonical', () => {
@@ -431,80 +959,279 @@ test('round trips: parse(toText(n)) = n for parsed input; simplify(parse(toText(
 });
 
 test('texNumber formats numbers for widgets', () => {
-    table([
-        [2.5, 'ru', {}, '2{,}5'], [2.5, 'en', {}, '2.5'], [1 / 3, 'ru', { digits: 3 }, '0{,}333'], [-0.0000001, 'en', {}, '-1 \\cdot 10^{-7}'],
-        [1e20, 'en', {}, '1 \\cdot 10^{20}'], [12345.678, 'ru', { digits: 1, group: true }, '12\\,345{,}7'], [-0, 'en', {}, '0'], [3, 'ru', {}, '3'],
-        [NaN, 'en', {}, '\\text{—}'], [Infinity, 'en', {}, '\\infty'], [-Infinity, 'ru', {}, '-\\infty'], [q('3/4'), 'ru', {}, '\\frac{3}{4}'],
-        [q('3/4'), 'ru', { decimal: true }, '0{,}75'], [q(5), 'en', {}, '5'], [10n, 'en', {}, '10'], [0.1 + 0.2, 'en', {}, '0.3'],
-    ], (v, lang, o, t) => assert.equal(E.texNumber(v, lang, o), t, String(v)));
+    table(
+        [
+            [2.5, 'ru', {}, '2{,}5'],
+            [2.5, 'en', {}, '2.5'],
+            [1 / 3, 'ru', { digits: 3 }, '0{,}333'],
+            [-0.0000001, 'en', {}, '-1 \\cdot 10^{-7}'],
+            [1e20, 'en', {}, '1 \\cdot 10^{20}'],
+            [12345.678, 'ru', { digits: 1, group: true }, '12\\,345{,}7'],
+            [-0, 'en', {}, '0'],
+            [3, 'ru', {}, '3'],
+            [NaN, 'en', {}, '\\text{—}'],
+            [Infinity, 'en', {}, '\\infty'],
+            [-Infinity, 'ru', {}, '-\\infty'],
+            [q('3/4'), 'ru', {}, '\\frac{3}{4}'],
+            [q('3/4'), 'ru', { decimal: true }, '0{,}75'],
+            [q(5), 'en', {}, '5'],
+            [10n, 'en', {}, '10'],
+            [0.1 + 0.2, 'en', {}, '0.3'],
+        ],
+        (v, lang, o, t) => assert.equal(E.texNumber(v, lang, o), t, String(v)),
+    );
 });
 
 // ---------------------------------------------------------------- simplify
 
 test('simplify: exact folding and like terms', () => {
-    table([
-        ['2+3', '5'], ['1/2 + 1/3', '\\frac{5}{6}'], ['0,1 + 0,2', '\\frac{3}{10}'], ['3x + 2x', '5x'], ['x*x', 'x^{2}'], ['x^2*x^(-1)', 'x'],
-        ['x^0', '1'], ['x^1', 'x'], ['1^x', '1'], ['0^0', '1'], ['0*x', '0'], ['x - x', '0'], ['x/x', '1'], ['2^10', '1024'], ['2^3^2', '512'],
-        ['-2^2', '-4'], ['(-2)^2', '4'], ['(-2)^3', '-8'], ['2^(-2)', '\\frac{1}{4}'], ['(2/3)^(-2)', '\\frac{9}{4}'], ['x+1-(x+1)', '0'],
-        ['2(x+1) - 2x', '2'], ['x*2*y*3', '6xy'], ['(2x)^3', '8x^{3}'], ['(x^2)^3', 'x^{6}'], ['x^a x^b', 'x^{a + b}'], ['2^x 2^x', '2^{2x}'],
-        ['e e^x', 'e^{x + 1}'], ['y + x', 'x + y'], ['6 - 5x + x^2', 'x^{2} - 5x + 6'], ['b^2 + a^2 + 2ab', 'a^{2} + 2ab + b^{2}'],
-        ['x^2 + y^2 + 2xy', 'x^{2} + 2xy + y^{2}'], ['c + b x + a x^2', 'ax^{2} + bx + c'], ['q + x^2 + p x', 'x^{2} + px + q'],
-        ['x_2 + x_10 + x_1', 'x_{1} + x_{2} + x_{10}'], ['1 + x + x^3 + x^2', 'x^{3} + x^{2} + x + 1'], ['5!', '120'], ['0!', '1'],
-        ['(1/2)(4x)', '2x'], ['-(-x)', 'x'], ['(x+1)(x+1)', '(x + 1)^{2}'], ['(x+1)^2 (x+1)^(-1)', 'x + 1'], ['2(x+1)', '2x + 2'],
-        ['x(2x+2)', '2x(x + 1)'], ['(2x+2)^2', '4(x + 1)^{2}'], ['(-x-1)^2', '(x + 1)^{2}'], ['(x-1)/(1-x)', '-1'], ['3/(6x+3)', '\\frac{1}{2x + 1}'],
-    ], (s, t) => assert.equal(TS(s), t, s));
+    table(
+        [
+            ['2+3', '5'],
+            ['1/2 + 1/3', '\\frac{5}{6}'],
+            ['0,1 + 0,2', '\\frac{3}{10}'],
+            ['3x + 2x', '5x'],
+            ['x*x', 'x^{2}'],
+            ['x^2*x^(-1)', 'x'],
+            ['x^0', '1'],
+            ['x^1', 'x'],
+            ['1^x', '1'],
+            ['0^0', '1'],
+            ['0*x', '0'],
+            ['x - x', '0'],
+            ['x/x', '1'],
+            ['2^10', '1024'],
+            ['2^3^2', '512'],
+            ['-2^2', '-4'],
+            ['(-2)^2', '4'],
+            ['(-2)^3', '-8'],
+            ['2^(-2)', '\\frac{1}{4}'],
+            ['(2/3)^(-2)', '\\frac{9}{4}'],
+            ['x+1-(x+1)', '0'],
+            ['2(x+1) - 2x', '2'],
+            ['x*2*y*3', '6xy'],
+            ['(2x)^3', '8x^{3}'],
+            ['(x^2)^3', 'x^{6}'],
+            ['x^a x^b', 'x^{a + b}'],
+            ['2^x 2^x', '2^{2x}'],
+            ['e e^x', 'e^{x + 1}'],
+            ['y + x', 'x + y'],
+            ['6 - 5x + x^2', 'x^{2} - 5x + 6'],
+            ['b^2 + a^2 + 2ab', 'a^{2} + 2ab + b^{2}'],
+            ['x^2 + y^2 + 2xy', 'x^{2} + 2xy + y^{2}'],
+            ['c + b x + a x^2', 'ax^{2} + bx + c'],
+            ['q + x^2 + p x', 'x^{2} + px + q'],
+            ['x_2 + x_10 + x_1', 'x_{1} + x_{2} + x_{10}'],
+            ['1 + x + x^3 + x^2', 'x^{3} + x^{2} + x + 1'],
+            ['5!', '120'],
+            ['0!', '1'],
+            ['(1/2)(4x)', '2x'],
+            ['-(-x)', 'x'],
+            ['(x+1)(x+1)', '(x + 1)^{2}'],
+            ['(x+1)^2 (x+1)^(-1)', 'x + 1'],
+            ['2(x+1)', '2x + 2'],
+            ['x(2x+2)', '2x(x + 1)'],
+            ['(2x+2)^2', '4(x + 1)^{2}'],
+            ['(-x-1)^2', '(x + 1)^{2}'],
+            ['(x-1)/(1-x)', '-1'],
+            ['3/(6x+3)', '\\frac{1}{2x + 1}'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
 });
 
 test('simplify: radicals and exact powers', () => {
-    table([
-        ['(4/9)^(1/2)', '\\frac{2}{3}'], ['8^(1/3)', '2'], ['sqrt(12)', '2\\sqrt{3}'], ['sqrt(8)/2', '\\sqrt{2}'], ['(-8)^(1/3)', '-2'],
-        ['sqrt2*sqrt2', '2'], ['sqrt2*sqrt3', '\\sqrt{6}'], ['sqrt(50) - sqrt(8)', '3\\sqrt{2}'], ['sqrt(18)+sqrt(2)', '4\\sqrt{2}'],
-        ['2^(1/2)*2^(1/3)', '\\sqrt[6]{32}'], ['4^(1/4)', '\\sqrt{2}'], ['16^(3/4)', '8'], ['27^(-1/3)', '\\frac{1}{3}'], ['2^(3/2)', '2\\sqrt{2}'],
-        ['2^(2/3)', '\\sqrt[3]{4}'], ['sqrt(1/2)', '\\frac{\\sqrt{2}}{2}'], ['1/sqrt(3)', '\\frac{\\sqrt{3}}{3}'], ['sqrt(3/4)', '\\frac{\\sqrt{3}}{2}'],
-        ['root(81, 4)', '3'], ['∛(-27)', '-3'], ['sqrt(0)', '0'], ['sqrt(1)', '1'], ['sqrt(x^2)', '\\left|x\\right|'], ['(sqrt x)^2', 'x'],
-        ['sqrt(x)*sqrt(x)', 'x'], ['sqrt(x)*x', 'x^{\\frac{3}{2}}'], ['(x^3)^(1/3)', 'x'], ['(x^4)^(1/2)', 'x^{2}'], ['(x^6)^(1/3)', 'x^{2}'],
-        ['(4x)^(1/2)', '2\\sqrt{x}'], ['(-8x)^(1/3)', '-2\\sqrt[3]{x}'], ['sqrt(4x^2)', '2\\left|x\\right|'], ['(e^x)^(1/2)', 'e^{\\frac{x}{2}}'],
-        ['|x|^2', 'x^{2}'], ['sqrt(-4)', '\\sqrt{-4}'], ['sqrt(2)^4', '4'], ['(1+sqrt2)(1+sqrt2)', '(1 + \\sqrt{2})^{2}'],
-    ], (s, t) => assert.equal(TS(s), t, s));
-    assert.throws(() => S('1/0'), (e) => e instanceof E.MathError && e.code === 'div0');
-    assert.throws(() => S('x/(y-y)'), (e) => e.code === 'div0');
-    assert.throws(() => S('0^(-1)'), (e) => e.code === 'div0');
+    table(
+        [
+            ['(4/9)^(1/2)', '\\frac{2}{3}'],
+            ['8^(1/3)', '2'],
+            ['sqrt(12)', '2\\sqrt{3}'],
+            ['sqrt(8)/2', '\\sqrt{2}'],
+            ['(-8)^(1/3)', '-2'],
+            ['sqrt2*sqrt2', '2'],
+            ['sqrt2*sqrt3', '\\sqrt{6}'],
+            ['sqrt(50) - sqrt(8)', '3\\sqrt{2}'],
+            ['sqrt(18)+sqrt(2)', '4\\sqrt{2}'],
+            ['2^(1/2)*2^(1/3)', '\\sqrt[6]{32}'],
+            ['4^(1/4)', '\\sqrt{2}'],
+            ['16^(3/4)', '8'],
+            ['27^(-1/3)', '\\frac{1}{3}'],
+            ['2^(3/2)', '2\\sqrt{2}'],
+            ['2^(2/3)', '\\sqrt[3]{4}'],
+            ['sqrt(1/2)', '\\frac{\\sqrt{2}}{2}'],
+            ['1/sqrt(3)', '\\frac{\\sqrt{3}}{3}'],
+            ['sqrt(3/4)', '\\frac{\\sqrt{3}}{2}'],
+            ['root(81, 4)', '3'],
+            ['∛(-27)', '-3'],
+            ['sqrt(0)', '0'],
+            ['sqrt(1)', '1'],
+            ['sqrt(x^2)', '\\left|x\\right|'],
+            ['(sqrt x)^2', 'x'],
+            ['sqrt(x)*sqrt(x)', 'x'],
+            ['sqrt(x)*x', 'x^{\\frac{3}{2}}'],
+            ['(x^3)^(1/3)', 'x'],
+            ['(x^4)^(1/2)', 'x^{2}'],
+            ['(x^6)^(1/3)', 'x^{2}'],
+            ['(4x)^(1/2)', '2\\sqrt{x}'],
+            ['(-8x)^(1/3)', '-2\\sqrt[3]{x}'],
+            ['sqrt(4x^2)', '2\\left|x\\right|'],
+            ['(e^x)^(1/2)', 'e^{\\frac{x}{2}}'],
+            ['|x|^2', 'x^{2}'],
+            ['sqrt(-4)', '\\sqrt{-4}'],
+            ['sqrt(2)^4', '4'],
+            ['(1+sqrt2)(1+sqrt2)', '(1 + \\sqrt{2})^{2}'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
+    assert.throws(
+        () => S('1/0'),
+        (e) => e instanceof E.MathError && e.code === 'div0',
+    );
+    assert.throws(
+        () => S('x/(y-y)'),
+        (e) => e.code === 'div0',
+    );
+    assert.throws(
+        () => S('0^(-1)'),
+        (e) => e.code === 'div0',
+    );
     assert.equal(TS('2^100000'), '2^{100000}');
 });
 
 test('simplify: known values of functions', () => {
-    table([
-        ['sin(pi/6)', '\\frac{1}{2}'], ['cos(pi/3)', '\\frac{1}{2}'], ['tan(pi/4)', '1'], ['sin(pi/4)', '\\frac{\\sqrt{2}}{2}'], ['cos(pi/6)', '\\frac{\\sqrt{3}}{2}'],
-        ['sin(pi/2)', '1'], ['cos(pi)', '-1'], ['sin(pi)', '0'], ['sin 0', '0'], ['cos 0', '1'], ['sin(7pi/6)', '-\\frac{1}{2}'],
-        ['cos(5pi/4)', '-\\frac{\\sqrt{2}}{2}'], ['cot(pi/6)', '\\sqrt{3}'], ['tan(pi/6)', '\\frac{\\sqrt{3}}{3}'], ['tan(2pi/3)', '-\\sqrt{3}'],
-        ['sin(13pi/6)', '\\frac{1}{2}'], ['cos(-pi/3)', '\\frac{1}{2}'], ['sin(-pi/6)', '-\\frac{1}{2}'], ['sec(pi/3)', '2'], ['csc(pi/6)', '2'],
-        ['tan(pi/2)', '\\operatorname{tg}\\left(\\frac{\\pi}{2}\\right)'], ['cot(0)', '\\operatorname{ctg} 0'], ['sin(9pi/7)', '-\\sin\\left(\\frac{2\\pi}{7}\\right)'],
-        ['sin(-x)', '-\\sin x'], ['cos(-x)', '\\cos x'], ['tan(-2x)', '-\\operatorname{tg}(2x)'], ['sin(arcsin x)', 'x'], ['cos(-pi)', '-1'],
-        ['arcsin(1/2)', '\\frac{\\pi}{6}'], ['arcsin(-1)', '-\\frac{\\pi}{2}'], ['arccos(-1/2)', '\\frac{2\\pi}{3}'], ['arccos(0)', '\\frac{\\pi}{2}'],
-        ['arccos(1)', '0'], ['arccos(sqrt(3)/2)', '\\frac{\\pi}{6}'], ['arctg(sqrt3)', '\\frac{\\pi}{3}'], ['arctg(1)', '\\frac{\\pi}{4}'],
-        ['arctg(-1/sqrt3)', '-\\frac{\\pi}{6}'], ['arcctg(-1)', '\\frac{3\\pi}{4}'], ['arcctg(0)', '\\frac{\\pi}{2}'], ['arcsin(sqrt2/2)', '\\frac{\\pi}{4}'],
-        ['arcsin(2)', '\\arcsin 2'], ['arcsin(-x)', '-\\arcsin x'], ['arccos(-x)', '-\\arccos x + \\pi'],
-        ['ln 1', '0'], ['ln e', '1'], ['ln(e^x)', 'x'], ['e^(ln x)', 'x'], ['e^(2 ln x)', 'x^{2}'], ['ln(e^2)', '2'], ['ln(sqrt(e))', '\\frac{1}{2}'],
-        ['log_2 8', '3'], ['lg 100', '2'], ['lg 0,001', '-3'], ['log_4 8', '\\frac{3}{2}'], ['log_(1/2) 4', '-2'], ['log_9 (1/27)', '-\\frac{3}{2}'],
-        ['log_a a', '1'], ['log_a(a^3)', '3'], ['log_3 1', '0'], ['log_2 3', '\\log_{2} 3'], ['lg 2', '\\lg 2'], ['log x', '\\lg x'], ['log_e x', '\\ln x'],
-        ['2^(log_2 x)', 'x'], ['10^(lg x)', 'x'], ['lg(sqrt(10))', '\\frac{1}{2}'], ['exp(0)', '1'], ['exp(x)', 'e^{x}'], ['exp(ln 5)', '5'],
-        ['|-3|', '3'], ['|3|', '3'], ['|-x|', '\\left|x\\right|'], ['||x||', '\\left|x\\right|'], ['|2x|', '2\\left|x\\right|'], ['|x^2|', 'x^{2}'],
-        ['|pi|', '\\pi'], ['|1-sqrt 2|', '\\sqrt{2} - 1'], ['|e^x|', 'e^{x}'], ['abs(i)', '1'], ['|3+4i|', '5'],
-        ['sign(-3)', '-1'], ['sign(0)', '0'], ['sign(pi)', '1'], ['sign(1-sqrt2)', '-1'], ['floor(pi)', '3'], ['ceil(pi)', '4'], ['floor(-5/2)', '-3'],
-        ['ceil(7/2)', '4'], ['floor(sqrt(2))', '1'], ['5!', '120'], ['20!', '2432902008176640000'], ['(1/2)!', '\\left(\\frac{1}{2}\\right)!'],
-        ['sinh 0', '0'], ['cosh 0', '1'], ['sinh(-x)', '-\\operatorname{sh} x'], ['cosh(-x)', '\\operatorname{ch} x'], ['sqrt(x)', '\\sqrt{x}'],
-        ['root(x, 3)', '\\sqrt[3]{x}'], ['root(x, n)', 'x^{\\frac{1}{n}}'], ['sin^2x+cos^2x', '1'], ['3sin^2 x + 3cos^2 x', '3'],
-    ], (s, t) => assert.equal(TS(s), t, s));
+    table(
+        [
+            ['sin(pi/6)', '\\frac{1}{2}'],
+            ['cos(pi/3)', '\\frac{1}{2}'],
+            ['tan(pi/4)', '1'],
+            ['sin(pi/4)', '\\frac{\\sqrt{2}}{2}'],
+            ['cos(pi/6)', '\\frac{\\sqrt{3}}{2}'],
+            ['sin(pi/2)', '1'],
+            ['cos(pi)', '-1'],
+            ['sin(pi)', '0'],
+            ['sin 0', '0'],
+            ['cos 0', '1'],
+            ['sin(7pi/6)', '-\\frac{1}{2}'],
+            ['cos(5pi/4)', '-\\frac{\\sqrt{2}}{2}'],
+            ['cot(pi/6)', '\\sqrt{3}'],
+            ['tan(pi/6)', '\\frac{\\sqrt{3}}{3}'],
+            ['tan(2pi/3)', '-\\sqrt{3}'],
+            ['sin(13pi/6)', '\\frac{1}{2}'],
+            ['cos(-pi/3)', '\\frac{1}{2}'],
+            ['sin(-pi/6)', '-\\frac{1}{2}'],
+            ['sec(pi/3)', '2'],
+            ['csc(pi/6)', '2'],
+            ['tan(pi/2)', '\\operatorname{tg}\\left(\\frac{\\pi}{2}\\right)'],
+            ['cot(0)', '\\operatorname{ctg} 0'],
+            ['sin(9pi/7)', '-\\sin\\left(\\frac{2\\pi}{7}\\right)'],
+            ['sin(-x)', '-\\sin x'],
+            ['cos(-x)', '\\cos x'],
+            ['tan(-2x)', '-\\operatorname{tg}(2x)'],
+            ['sin(arcsin x)', 'x'],
+            ['cos(-pi)', '-1'],
+            ['arcsin(1/2)', '\\frac{\\pi}{6}'],
+            ['arcsin(-1)', '-\\frac{\\pi}{2}'],
+            ['arccos(-1/2)', '\\frac{2\\pi}{3}'],
+            ['arccos(0)', '\\frac{\\pi}{2}'],
+            ['arccos(1)', '0'],
+            ['arccos(sqrt(3)/2)', '\\frac{\\pi}{6}'],
+            ['arctg(sqrt3)', '\\frac{\\pi}{3}'],
+            ['arctg(1)', '\\frac{\\pi}{4}'],
+            ['arctg(-1/sqrt3)', '-\\frac{\\pi}{6}'],
+            ['arcctg(-1)', '\\frac{3\\pi}{4}'],
+            ['arcctg(0)', '\\frac{\\pi}{2}'],
+            ['arcsin(sqrt2/2)', '\\frac{\\pi}{4}'],
+            ['arcsin(2)', '\\arcsin 2'],
+            ['arcsin(-x)', '-\\arcsin x'],
+            ['arccos(-x)', '-\\arccos x + \\pi'],
+            ['ln 1', '0'],
+            ['ln e', '1'],
+            ['ln(e^x)', 'x'],
+            ['e^(ln x)', 'x'],
+            ['e^(2 ln x)', 'x^{2}'],
+            ['ln(e^2)', '2'],
+            ['ln(sqrt(e))', '\\frac{1}{2}'],
+            ['log_2 8', '3'],
+            ['lg 100', '2'],
+            ['lg 0,001', '-3'],
+            ['log_4 8', '\\frac{3}{2}'],
+            ['log_(1/2) 4', '-2'],
+            ['log_9 (1/27)', '-\\frac{3}{2}'],
+            ['log_a a', '1'],
+            ['log_a(a^3)', '3'],
+            ['log_3 1', '0'],
+            ['log_2 3', '\\log_{2} 3'],
+            ['lg 2', '\\lg 2'],
+            ['log x', '\\lg x'],
+            ['log_e x', '\\ln x'],
+            ['2^(log_2 x)', 'x'],
+            ['10^(lg x)', 'x'],
+            ['lg(sqrt(10))', '\\frac{1}{2}'],
+            ['exp(0)', '1'],
+            ['exp(x)', 'e^{x}'],
+            ['exp(ln 5)', '5'],
+            ['|-3|', '3'],
+            ['|3|', '3'],
+            ['|-x|', '\\left|x\\right|'],
+            ['||x||', '\\left|x\\right|'],
+            ['|2x|', '2\\left|x\\right|'],
+            ['|x^2|', 'x^{2}'],
+            ['|pi|', '\\pi'],
+            ['|1-sqrt 2|', '\\sqrt{2} - 1'],
+            ['|e^x|', 'e^{x}'],
+            ['abs(i)', '1'],
+            ['|3+4i|', '5'],
+            ['sign(-3)', '-1'],
+            ['sign(0)', '0'],
+            ['sign(pi)', '1'],
+            ['sign(1-sqrt2)', '-1'],
+            ['floor(pi)', '3'],
+            ['ceil(pi)', '4'],
+            ['floor(-5/2)', '-3'],
+            ['ceil(7/2)', '4'],
+            ['floor(sqrt(2))', '1'],
+            ['5!', '120'],
+            ['20!', '2432902008176640000'],
+            ['(1/2)!', '\\left(\\frac{1}{2}\\right)!'],
+            ['sinh 0', '0'],
+            ['cosh 0', '1'],
+            ['sinh(-x)', '-\\operatorname{sh} x'],
+            ['cosh(-x)', '\\operatorname{ch} x'],
+            ['sqrt(x)', '\\sqrt{x}'],
+            ['root(x, 3)', '\\sqrt[3]{x}'],
+            ['root(x, n)', 'x^{\\frac{1}{n}}'],
+            ['sin^2x+cos^2x', '1'],
+            ['3sin^2 x + 3cos^2 x', '3'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
 });
 
 test('simplify: the imaginary unit and complex mode', () => {
-    table([
-        ['i^2', '-1', {}], ['i^3', '-i', {}], ['i^4', '1', {}], ['i^101', 'i', {}], ['i*i*i', '-i', {}], ['3 + 2i - 1 + i', '2 + 3i', {}],
-        ['1/i', '-i', {}], ['(1+i)^2', '(1 + i)^{2}', {}], ['(1+2i)(3-i)', '5 + 5i', { complex: true }], ['1/(1+i)', '\\frac{1}{2} - \\frac{1}{2}i', { complex: true }],
-        ['(1+i)^2', '2i', { complex: true }], ['(2+i)/(1-i)', '\\frac{1}{2} + \\frac{3}{2}i', { complex: true }], ['sqrt(-4)', '2i', { complex: true }],
-        ['sqrt(-3)', '\\sqrt{3}i', { complex: true }], ['e^(i pi)', '-1', { complex: true }], ['e^(i pi/2)', 'i', { complex: true }],
-        ['(1+i)^8', '16', { complex: true }], ['(3+4i)(3-4i)', '25', { complex: true }], ['i(2+3i)', '-3 + 2i', { complex: true }],
-    ], (s, t, o) => assert.equal(TS(s, o), t, s));
+    table(
+        [
+            ['i^2', '-1', {}],
+            ['i^3', '-i', {}],
+            ['i^4', '1', {}],
+            ['i^101', 'i', {}],
+            ['i*i*i', '-i', {}],
+            ['3 + 2i - 1 + i', '2 + 3i', {}],
+            ['1/i', '-i', {}],
+            ['(1+i)^2', '(1 + i)^{2}', {}],
+            ['(1+2i)(3-i)', '5 + 5i', { complex: true }],
+            ['1/(1+i)', '\\frac{1}{2} - \\frac{1}{2}i', { complex: true }],
+            ['(1+i)^2', '2i', { complex: true }],
+            ['(2+i)/(1-i)', '\\frac{1}{2} + \\frac{3}{2}i', { complex: true }],
+            ['sqrt(-4)', '2i', { complex: true }],
+            ['sqrt(-3)', '\\sqrt{3}i', { complex: true }],
+            ['e^(i pi)', '-1', { complex: true }],
+            ['e^(i pi/2)', 'i', { complex: true }],
+            ['(1+i)^8', '16', { complex: true }],
+            ['(3+4i)(3-4i)', '25', { complex: true }],
+            ['i(2+3i)', '-3 + 2i', { complex: true }],
+        ],
+        (s, t, o) => assert.equal(TS(s, o), t, s),
+    );
 });
 
 test('simplify: relations, lists, options', () => {
@@ -543,21 +1270,47 @@ test('simplify is idempotent and canonical constructors agree with it', () => {
 // ---------------------------------------------------------------- expand
 
 test('expand multiplies out and collects', () => {
-    table([
-        ['(x+1)^2', 'x^{2} + 2x + 1'], ['(x+1)(x-1)', 'x^{2} - 1'], ['(a+b)^3', 'a^{3} + 3a^{2}b + 3ab^{2} + b^{3}'],
-        ['(x+y+z)^2', 'x^{2} + 2xy + 2xz + y^{2} + 2yz + z^{2}'], ['2(x+1)^2', '2x^{2} + 4x + 2'], ['(x-2)(x+3)(x+1)', 'x^{3} + 2x^{2} - 5x - 6'],
-        ['x(x+1)^2 - x^3', '2x^{2} + x'], ['(x+1)^2/x', 'x + \\frac{1}{x} + 2'], ['(sqrt x + 1)^2', 'x + 2\\sqrt{x} + 1'], ['(1+sqrt2)^2', '3 + 2\\sqrt{2}'],
-        ['(e^x+1)^2', 'e^{2x} + 2e^{x} + 1'], ['sin((x+1)^2)', '\\sin(x^{2} + 2x + 1)'], ['(x+1)^(-2)', '\\frac{1}{(x + 1)^{2}}'],
-        ['(2x-3)^5', '32x^{5} - 240x^{4} + 720x^{3} - 1080x^{2} + 810x - 243'], ['(1+i)^2', '2i'], ['(a-b)(a+b)', 'a^{2} - b^{2}'],
-        ['(x^2+x+1)(x-1)', 'x^{3} - 1'], ['(a+b)^2 - (a-b)^2', '4ab'], ['(x+1)^0', '1'], ['3', '3'], ['x', 'x'], ['(x+1/2)^2', 'x^{2} + x + \\frac{1}{4}'],
-        ['(2,5x - 1)^2', '\\frac{25x^{2}}{4} - 5x + 1'], ['x^2 - 5x + 6 = (x-2)(x-3)', 'x^{2} - 5x + 6 = x^{2} - 5x + 6'],
-    ], (s, t) => assert.equal(TX(s), t, s));
+    table(
+        [
+            ['(x+1)^2', 'x^{2} + 2x + 1'],
+            ['(x+1)(x-1)', 'x^{2} - 1'],
+            ['(a+b)^3', 'a^{3} + 3a^{2}b + 3ab^{2} + b^{3}'],
+            ['(x+y+z)^2', 'x^{2} + 2xy + 2xz + y^{2} + 2yz + z^{2}'],
+            ['2(x+1)^2', '2x^{2} + 4x + 2'],
+            ['(x-2)(x+3)(x+1)', 'x^{3} + 2x^{2} - 5x - 6'],
+            ['x(x+1)^2 - x^3', '2x^{2} + x'],
+            ['(x+1)^2/x', 'x + \\frac{1}{x} + 2'],
+            ['(sqrt x + 1)^2', 'x + 2\\sqrt{x} + 1'],
+            ['(1+sqrt2)^2', '3 + 2\\sqrt{2}'],
+            ['(e^x+1)^2', 'e^{2x} + 2e^{x} + 1'],
+            ['sin((x+1)^2)', '\\sin(x^{2} + 2x + 1)'],
+            ['(x+1)^(-2)', '\\frac{1}{(x + 1)^{2}}'],
+            ['(2x-3)^5', '32x^{5} - 240x^{4} + 720x^{3} - 1080x^{2} + 810x - 243'],
+            ['(1+i)^2', '2i'],
+            ['(a-b)(a+b)', 'a^{2} - b^{2}'],
+            ['(x^2+x+1)(x-1)', 'x^{3} - 1'],
+            ['(a+b)^2 - (a-b)^2', '4ab'],
+            ['(x+1)^0', '1'],
+            ['3', '3'],
+            ['x', 'x'],
+            ['(x+1/2)^2', 'x^{2} + x + \\frac{1}{4}'],
+            ['(2,5x - 1)^2', '\\frac{25x^{2}}{4} - 5x + 1'],
+            ['x^2 - 5x + 6 = (x-2)(x-3)', 'x^{2} - 5x + 6 = x^{2} - 5x + 6'],
+        ],
+        (s, t) => assert.equal(TX(s), t, s),
+    );
     const e200 = E.expand(P('(x+1)^200'));
     assert.equal(e200.args.length, 201);
     const mid = e200.args.find((t) => t.type === 'mul' && t.args[1].type === 'pow' && t.args[1].exp.value.eq(100));
     assert.equal(mid.args[0].value.n, 90548514656103281165404177077484163874504589675413336841320n);
-    assert.throws(() => E.expand(P('(x+y+z)^60')), (e) => e instanceof E.MathError && e.code === 'too-big');
-    assert.throws(() => E.expand(P('(x+1)^100000000')), (e) => e.code === 'too-big');
+    assert.throws(
+        () => E.expand(P('(x+y+z)^60')),
+        (e) => e instanceof E.MathError && e.code === 'too-big',
+    );
+    assert.throws(
+        () => E.expand(P('(x+1)^100000000')),
+        (e) => e.code === 'too-big',
+    );
     assert.equal(E.expand(P('(x+y+z)^20')).args.length, 231);
 });
 
@@ -567,15 +1320,27 @@ test('collectTerms, combineFractions, numDen', () => {
     assert.equal(E.toTex(c.get(1)), '2a - 2');
     assert.equal(E.toTex(c.get(0)), 'a^{2}');
     const d = E.collectTerms(P('3x^2 - x + 5 - x^2'), 'x');
-    assert.deepEqual([...d].map(([k, v]) => `${k}:${E.toText(v)}`), ['2:2', '1:-1', '0:5']);
+    assert.deepEqual(
+        [...d].map(([k, v]) => `${k}:${E.toText(v)}`),
+        ['2:2', '1:-1', '0:5'],
+    );
     assert.equal(E.collectTerms(P('sin x + x'), 'x'), null);
     assert.deepEqual([...E.collectTerms(P('x + 1/x'), 'x').keys()], [1, -1]);
-    table([
-        ['1/x + 1/(x+1)', '\\frac{2x + 1}{x(x + 1)}'], ['x/2 + 1/3', '\\frac{3x + 2}{6}'], ['(x^2-1)/(x-1)', 'x + 1'],
-        ['1/(x-1) - 1/(x+1)', '\\frac{2}{(x + 1)(x - 1)}'], ['1/x^2 + 1/x', '\\frac{x + 1}{x^{2}}'], ['x + 1', 'x + 1'],
-        ['a/b + c/d', '\\frac{ad + bc}{bd}'], ['(x^2 - 4)/(x^2 - 4x + 4)', '\\frac{x^{2} - 4}{x^{2} - 4x + 4}'], ['2/(2x+2)', '\\frac{1}{x + 1}'],
-        ['(x^2-4)/(x-2)^2', '\\frac{x + 2}{x - 2}'],
-    ], (s, t) => assert.equal(E.toTex(E.combineFractions(P(s))), t, s));
+    table(
+        [
+            ['1/x + 1/(x+1)', '\\frac{2x + 1}{x(x + 1)}'],
+            ['x/2 + 1/3', '\\frac{3x + 2}{6}'],
+            ['(x^2-1)/(x-1)', 'x + 1'],
+            ['1/(x-1) - 1/(x+1)', '\\frac{2}{(x + 1)(x - 1)}'],
+            ['1/x^2 + 1/x', '\\frac{x + 1}{x^{2}}'],
+            ['x + 1', 'x + 1'],
+            ['a/b + c/d', '\\frac{ad + bc}{bd}'],
+            ['(x^2 - 4)/(x^2 - 4x + 4)', '\\frac{x^{2} - 4}{x^{2} - 4x + 4}'],
+            ['2/(2x+2)', '\\frac{1}{x + 1}'],
+            ['(x^2-4)/(x-2)^2', '\\frac{x + 2}{x - 2}'],
+        ],
+        (s, t) => assert.equal(E.toTex(E.combineFractions(P(s))), t, s),
+    );
     assert.equal(E.toTex(E.rationalize(P('1/2 + 1/x'))), '\\frac{x + 2}{2x}');
     assert.equal(E.toTex(E.combineFractions(P('1/x = 1/(x+1)'))), '\\frac{1}{x} = \\frac{1}{x + 1}');
     const nd = E.numDen(P('3x/(4y)'));
@@ -625,11 +1390,24 @@ test('Poly: construction and arithmetic', () => {
 });
 
 test('Poly.fromNode reads polynomials and rejects the rest', () => {
-    table([
-        ['x^2 - 5x + 6', 'x^2 - 5x + 6'], ['(x+1)^3', 'x^3 + 3x^2 + 3x + 1'], ['2(x-1)(x+1)', '2x^2 - 2'], ['x/2 + 1/3', '(1/2)x + 1/3'],
-        ['(x^2+1)/2', '(1/2)x^2 + 1/2'], ['3', '3'], ['0', '0'], ['x^2 = 4', 'x^2 - 4'], ['x^2 - 5x + 6 = 0', 'x^2 - 5x + 6'], ['2,5x', '(5/2)x'],
-        ['sqrt(4)x', '2x'], ['(x^2-1)/1', 'x^2 - 1'], ['x x x', 'x^3'],
-    ], (s, t) => assert.equal(E.Poly.fromNode(P(s)).toString(), t, s));
+    table(
+        [
+            ['x^2 - 5x + 6', 'x^2 - 5x + 6'],
+            ['(x+1)^3', 'x^3 + 3x^2 + 3x + 1'],
+            ['2(x-1)(x+1)', '2x^2 - 2'],
+            ['x/2 + 1/3', '(1/2)x + 1/3'],
+            ['(x^2+1)/2', '(1/2)x^2 + 1/2'],
+            ['3', '3'],
+            ['0', '0'],
+            ['x^2 = 4', 'x^2 - 4'],
+            ['x^2 - 5x + 6 = 0', 'x^2 - 5x + 6'],
+            ['2,5x', '(5/2)x'],
+            ['sqrt(4)x', '2x'],
+            ['(x^2-1)/1', 'x^2 - 1'],
+            ['x x x', 'x^3'],
+        ],
+        (s, t) => assert.equal(E.Poly.fromNode(P(s)).toString(), t, s),
+    );
     for (const s of ['1/x', 'sqrt(x)', 'sin x', 'x + y', 'pi x', 'sqrt(2) x', 'x^(1/2)', '2^x', '(x^2-1)/(x-1)', 'x < 2', '1; 2', 'e x', 'i x']) {
         assert.equal(E.Poly.fromNode(P(s)), null, s);
     }
@@ -648,14 +1426,26 @@ test('Poly: division, long division, Horner', () => {
     const d3 = E.Poly.fromDescending([1, 0, 1]).divmod(E.Poly.fromDescending([2, 1]));
     assert.equal(d3.q.toString(), '(1/2)x - 1/4');
     assert.equal(d3.r.toString(), '5/4');
-    assert.throws(() => p.divmod(new E.Poly([])), (e) => e.code === 'div0');
+    assert.throws(
+        () => p.divmod(new E.Poly([])),
+        (e) => e.code === 'div0',
+    );
     const ld = E.Poly.fromDescending([2, 3, -1, 5]).longDivision(E.Poly.fromDescending([1, 2]));
     assert.equal(ld.quotient.toString(), '2x^2 - x + 1');
     assert.equal(ld.remainder.toString(), '3');
     assert.equal(ld.steps.length, 3);
-    assert.deepEqual(ld.steps.map((s) => s.term.toString()), ['2x^2', '-x', '1']);
-    assert.deepEqual(ld.steps.map((s) => s.product.toString()), ['2x^3 + 4x^2', '-x^2 - 2x', 'x + 2']);
-    assert.deepEqual(ld.steps.map((s) => s.remainder.toString()), ['-x^2 - x + 5', 'x + 5', '3']);
+    assert.deepEqual(
+        ld.steps.map((s) => s.term.toString()),
+        ['2x^2', '-x', '1'],
+    );
+    assert.deepEqual(
+        ld.steps.map((s) => s.product.toString()),
+        ['2x^3 + 4x^2', '-x^2 - 2x', 'x + 2'],
+    );
+    assert.deepEqual(
+        ld.steps.map((s) => s.remainder.toString()),
+        ['-x^2 - x + 5', 'x + 5', '3'],
+    );
     assert.equal(ld.steps[0].dividend.toString(), '2x^3 + 3x^2 - x + 5');
     const h = p.horner(2);
     assert.deepEqual(h.top.map(String), ['1', '-6', '11', '-6']);
@@ -675,11 +1465,31 @@ test('Poly: gcd, content, roots, factorisation', () => {
     assert.equal(P2('x^2/2 + x/3').content().toString(), '1/6');
     assert.equal(P2('-2x + 4').content().toString(), '-2');
     assert.equal(P2('x^2/2 + x/3').primitive().toString(), '3x^2 + 2x');
-    table([
-        ['x^2 - 5x + 6', ['2^1', '3^1']], ['2x^3 - 3x^2 - 11x + 6', ['-2^1', '1/2^1', '3^1']], ['x^3', ['0^3']], ['(x-1)^2(x+2)', ['-2^1', '1^2']],
-        ['x^2 + 1', []], ['x^4 - 1', ['-1^1', '1^1']], ['6x^2 - x - 1', ['-1/3^1', '1/2^1']], ['x^3 - 2x', ['0^1']], ['x - 7', ['7^1']],
-        ['x^2 - 2', []], ['4x^2 - 9', ['-3/2^1', '3/2^1']], ['x^5 - x', ['-1^1', '0^1', '1^1']], ['(x^2/2 - 1/8)', ['-1/2^1', '1/2^1']],
-    ], (s, roots) => assert.deepEqual(P2(s).rationalRoots().map((r) => `${r.root}^${r.mult}`), roots, s));
+    table(
+        [
+            ['x^2 - 5x + 6', ['2^1', '3^1']],
+            ['2x^3 - 3x^2 - 11x + 6', ['-2^1', '1/2^1', '3^1']],
+            ['x^3', ['0^3']],
+            ['(x-1)^2(x+2)', ['-2^1', '1^2']],
+            ['x^2 + 1', []],
+            ['x^4 - 1', ['-1^1', '1^1']],
+            ['6x^2 - x - 1', ['-1/3^1', '1/2^1']],
+            ['x^3 - 2x', ['0^1']],
+            ['x - 7', ['7^1']],
+            ['x^2 - 2', []],
+            ['4x^2 - 9', ['-3/2^1', '3/2^1']],
+            ['x^5 - x', ['-1^1', '0^1', '1^1']],
+            ['(x^2/2 - 1/8)', ['-1/2^1', '1/2^1']],
+        ],
+        (s, roots) =>
+            assert.deepEqual(
+                P2(s)
+                    .rationalRoots()
+                    .map((r) => `${r.root}^${r.mult}`),
+                roots,
+                s,
+            ),
+    );
     const rr = P2('2x^2 - 3x - 2').rationalRoots();
     assert.deepEqual(rr.candidates.map(String), ['-2', '-1', '-1/2', '1/2', '1', '2']);
     assert.deepEqual(P2('2x^2 - 3x - 2').rootCandidates().map(String), ['-2', '-1', '-1/2', '1/2', '1', '2']);
@@ -687,13 +1497,25 @@ test('Poly: gcd, content, roots, factorisation', () => {
         const r = P2(s).factor();
         return `${r.constant}|` + r.factors.map((x) => `(${x.poly})^${x.mult}`).join('');
     };
-    table([
-        ['x^2 - 5x + 6', '1|(x - 3)^1(x - 2)^1'], ['2x^3 - 3x^2 - 11x + 6', '1|(x - 3)^1(x + 2)^1(2x - 1)^1'], ['x^4 + 4', '1|(x^2 - 2x + 2)^1(x^2 + 2x + 2)^1'],
-        ['(x-1)^3(x+2)^2(x^2+1)', '1|(x - 1)^3(x + 2)^2(x^2 + 1)^1'], ['2x^2 - 2', '2|(x - 1)^1(x + 1)^1'], ['x^2 + 1', '1|(x^2 + 1)^1'],
-        ['-x^2 + 1', '-1|(x - 1)^1(x + 1)^1'], ['x^2/2 - 1/2', '1/2|(x - 1)^1(x + 1)^1'], ['x^4 - 5x^2 + 6', '1|(x^2 - 3)^1(x^2 - 2)^1'],
-        ['x^3', '1|(x)^3'], ['7', '7|'], ['x^4 + x^2 + 1', '1|(x^2 - x + 1)^1(x^2 + x + 1)^1'], ['(x^2+1)^2', '1|(x^2 + 1)^2'],
-        ['x^3 - 1', '1|(x - 1)^1(x^2 + x + 1)^1'],
-    ], (s, t) => assert.equal(f(s), t, s));
+    table(
+        [
+            ['x^2 - 5x + 6', '1|(x - 3)^1(x - 2)^1'],
+            ['2x^3 - 3x^2 - 11x + 6', '1|(x - 3)^1(x + 2)^1(2x - 1)^1'],
+            ['x^4 + 4', '1|(x^2 - 2x + 2)^1(x^2 + 2x + 2)^1'],
+            ['(x-1)^3(x+2)^2(x^2+1)', '1|(x - 1)^3(x + 2)^2(x^2 + 1)^1'],
+            ['2x^2 - 2', '2|(x - 1)^1(x + 1)^1'],
+            ['x^2 + 1', '1|(x^2 + 1)^1'],
+            ['-x^2 + 1', '-1|(x - 1)^1(x + 1)^1'],
+            ['x^2/2 - 1/2', '1/2|(x - 1)^1(x + 1)^1'],
+            ['x^4 - 5x^2 + 6', '1|(x^2 - 3)^1(x^2 - 2)^1'],
+            ['x^3', '1|(x)^3'],
+            ['7', '7|'],
+            ['x^4 + x^2 + 1', '1|(x^2 - x + 1)^1(x^2 + x + 1)^1'],
+            ['(x^2+1)^2', '1|(x^2 + 1)^2'],
+            ['x^3 - 1', '1|(x - 1)^1(x^2 + x + 1)^1'],
+        ],
+        (s, t) => assert.equal(f(s), t, s),
+    );
     // the factorisation multiplies back
     for (const s of ['2x^3 - 3x^2 - 11x + 6', 'x^4 + 4', '(x-1)^3(x+2)^2(x^2+1)', '-3x^2 + 3', 'x^5 - x', '6x^4 + 5x^3 - 38x^2 + 5x + 6']) {
         const p = P2(s);
@@ -702,7 +1524,12 @@ test('Poly: gcd, content, roots, factorisation', () => {
         for (const { poly, mult } of factors) back = back.mul(poly.pow(mult));
         assert.ok(back.equals(p), s);
     }
-    assert.deepEqual(P2('(x-1)^3(x+2)^2(x^2+1)').squareFree().map((x) => `${x.poly}^${x.mult}`), ['x^2 + 1^1', 'x + 2^2', 'x - 1^3']);
+    assert.deepEqual(
+        P2('(x-1)^3(x+2)^2(x^2+1)')
+            .squareFree()
+            .map((x) => `${x.poly}^${x.mult}`),
+        ['x^2 + 1^1', 'x + 2^2', 'x - 1^3'],
+    );
     assert.equal(P2('x^2 - 5x + 6').discriminant().toString(), '1');
     assert.equal(P2('x^2 + x + 1').discriminant().toString(), '-3');
     assert.equal(P2('x^3 - 3x + 2').discriminant().toString(), '0');
@@ -729,43 +1556,114 @@ test('linearForm for systems', () => {
 // ---------------------------------------------------------------- equivalence
 
 test('equivalent: expressions', () => {
-    table([
-        ['sqrt(x^2)', 'x', false], ['sqrt(x^2)', '|x|', true], ['(x^2-1)/(x-1)', 'x+1', true], ['ln(x^2)', '2ln x', false], ['ln(x^2)', '2ln|x|', true],
-        ['sin^2 x + cos^2 x', '1', true], ['(x+1)^2', 'x^2+2x+1', true], ['(x+1)^2', 'x^2+2x+2', false], ['tan x', 'sin x / cos x', true],
-        ['2sin x cos x', 'sin 2x', true], ['x^2', '|x|^2', true], ['1/(1/x)', 'x', true], ['x^200/x^199', 'x', true], ['sin(x+2pi)', 'sin x', true],
-        ['e^(i pi)', '-1', true], ['arcsin(sin x)', 'x', false], ['cbrt(x^3)', 'x', true], ['sqrt(x-100)', 'sqrt(x-100)', true], ['x', 'y', false],
-        ['sqrt(-x-100)', 'i sqrt(x+100)', true], ['(a+b)^2', 'a^2 + 2ab + b^2', true], ['(a+b)^2', 'a^2 + b^2', false], ['x/2', '0,5x', true],
-        ['1/2', '0.5', true], ['cos(2x)', '1 - 2sin^2 x', true], ['cos(2x)', '2cos^2 x - 1', true], ['e^(x+y)', 'e^x e^y', true], ['ln(xy)', 'ln x + ln y', false],
-        ['log_2 x', 'ln x / ln 2', true], ['sqrt(x)sqrt(x)', 'x', true], ['x^(1/2)', 'sqrt(x)', true], ['|x - 1|', '|1 - x|', true], ['x', 'x + 0,000001', false],
-        ['1/(x^2+1)', '1/(x^2+1)', true], ['(x^3 - 1)/(x - 1)', 'x^2 + x + 1', true], ['x^3 - 1', '(x-1)(x^2+x+1)', true], ['x^3 - 1', '(x-1)(x^2+x-1)', false],
-        ['sin x', 'cos(pi/2 - x)', true], ['tg x ctg x', '1', true], ['2^x 3^x', '6^x', true], ['sqrt(8)', '2sqrt(2)', true], ['pi', '3.14159', false],
-    ], (a, b, r) => assert.equal(E.equivalent(a, b), r, `${a} ≡ ${b}`));
+    table(
+        [
+            ['sqrt(x^2)', 'x', false],
+            ['sqrt(x^2)', '|x|', true],
+            ['(x^2-1)/(x-1)', 'x+1', true],
+            ['ln(x^2)', '2ln x', false],
+            ['ln(x^2)', '2ln|x|', true],
+            ['sin^2 x + cos^2 x', '1', true],
+            ['(x+1)^2', 'x^2+2x+1', true],
+            ['(x+1)^2', 'x^2+2x+2', false],
+            ['tan x', 'sin x / cos x', true],
+            ['2sin x cos x', 'sin 2x', true],
+            ['x^2', '|x|^2', true],
+            ['1/(1/x)', 'x', true],
+            ['x^200/x^199', 'x', true],
+            ['sin(x+2pi)', 'sin x', true],
+            ['e^(i pi)', '-1', true],
+            ['arcsin(sin x)', 'x', false],
+            ['cbrt(x^3)', 'x', true],
+            ['sqrt(x-100)', 'sqrt(x-100)', true],
+            ['x', 'y', false],
+            ['sqrt(-x-100)', 'i sqrt(x+100)', true],
+            ['(a+b)^2', 'a^2 + 2ab + b^2', true],
+            ['(a+b)^2', 'a^2 + b^2', false],
+            ['x/2', '0,5x', true],
+            ['1/2', '0.5', true],
+            ['cos(2x)', '1 - 2sin^2 x', true],
+            ['cos(2x)', '2cos^2 x - 1', true],
+            ['e^(x+y)', 'e^x e^y', true],
+            ['ln(xy)', 'ln x + ln y', false],
+            ['log_2 x', 'ln x / ln 2', true],
+            ['sqrt(x)sqrt(x)', 'x', true],
+            ['x^(1/2)', 'sqrt(x)', true],
+            ['|x - 1|', '|1 - x|', true],
+            ['x', 'x + 0,000001', false],
+            ['1/(x^2+1)', '1/(x^2+1)', true],
+            ['(x^3 - 1)/(x - 1)', 'x^2 + x + 1', true],
+            ['x^3 - 1', '(x-1)(x^2+x+1)', true],
+            ['x^3 - 1', '(x-1)(x^2+x-1)', false],
+            ['sin x', 'cos(pi/2 - x)', true],
+            ['tg x ctg x', '1', true],
+            ['2^x 3^x', '6^x', true],
+            ['sqrt(8)', '2sqrt(2)', true],
+            ['pi', '3.14159', false],
+        ],
+        (a, b, r) => assert.equal(E.equivalent(a, b), r, `${a} ≡ ${b}`),
+    );
     assert.equal(E.equivalent(P('x + 1'), P('1 + x')), true);
     assert.equal(E.equivalent('t^2', 't*t'), true);
     assert.equal(E.equivalent('x^2 + a', 'x^2 + b'), false);
 });
 
 test('equivalent: equations, inequalities, lists', () => {
-    table([
-        ['x+y=3', '2x+2y=6', true], ['x+y=3', 'x+y=4', false], ['x > 2', '2 < x', true], ['x>2', '-x < -2', true], ['x > 2', 'x < 2', false],
-        ['x = 2', '2 = x', true], ['x^2 = 4', 'x^2 - 4 = 0', true], ['x >= 1', 'x > 1', false], ['2x < 4', 'x < 2', true], ['x = 1', 'x < 1', false],
-        ['1; 2', '1; 2', true], ['1; 2', '2; 1', false], ['x+1; 2x', '1+x; x+x', true], ['x', 'x = 1', false], ['0 < x < 1', '0 < x < 1', true],
-    ], (a, b, r) => assert.equal(E.equivalent(a, b), r, `${a} ≡ ${b}`));
+    table(
+        [
+            ['x+y=3', '2x+2y=6', true],
+            ['x+y=3', 'x+y=4', false],
+            ['x > 2', '2 < x', true],
+            ['x>2', '-x < -2', true],
+            ['x > 2', 'x < 2', false],
+            ['x = 2', '2 = x', true],
+            ['x^2 = 4', 'x^2 - 4 = 0', true],
+            ['x >= 1', 'x > 1', false],
+            ['2x < 4', 'x < 2', true],
+            ['x = 1', 'x < 1', false],
+            ['1; 2', '1; 2', true],
+            ['1; 2', '2; 1', false],
+            ['x+1; 2x', '1+x; x+x', true],
+            ['x', 'x = 1', false],
+            ['0 < x < 1', '0 < x < 1', true],
+        ],
+        (a, b, r) => assert.equal(E.equivalent(a, b), r, `${a} ≡ ${b}`),
+    );
 });
 
 test('sameValue and sameSet', () => {
-    table([
-        ['sqrt(8)', '2sqrt2', true], ['0.5', '1/2', true], ['0,5', '1/2', true], ['pi', '3.14159', false], ['1/3', '0.333333', false], ['2^10', '1024', true],
-        ['sin(pi/6)', '1/2', true], ['e^(i pi)', '-1', true], ['1+i', '1-i', false], ['sqrt(2)', '1.4142135623730951', true], ['ln 1', '0', true],
-    ], (a, b, r) => assert.equal(E.sameValue(a, b), r, `${a} = ${b}`));
+    table(
+        [
+            ['sqrt(8)', '2sqrt2', true],
+            ['0.5', '1/2', true],
+            ['0,5', '1/2', true],
+            ['pi', '3.14159', false],
+            ['1/3', '0.333333', false],
+            ['2^10', '1024', true],
+            ['sin(pi/6)', '1/2', true],
+            ['e^(i pi)', '-1', true],
+            ['1+i', '1-i', false],
+            ['sqrt(2)', '1.4142135623730951', true],
+            ['ln 1', '0', true],
+        ],
+        (a, b, r) => assert.equal(E.sameValue(a, b), r, `${a} = ${b}`),
+    );
     assert.equal(E.sameValue('pi', '3.14159', { tol: 1e-5 }), true);
     assert.equal(E.sameValue(2, E.Q.of('2')), true);
     assert.equal(E.sameValue(P('1/0'), 1), false);
-    table([
-        ['2; 3', '3; 2', {}, true], ['2; 2; 3', '3; 2', {}, true], ['2; 2; 3', '3; 2', { multiset: true }, false], ['2; 3', '2; 4', {}, false],
-        ['1/2; -1', '-1; 0,5', {}, true], ['sqrt2; -sqrt2', '-1.4142135623730951; 1.4142135623730951', {}, true], ['1', '1; 1', {}, true],
-        ['x; 2x', '2x; x', {}, true],
-    ], (a, b, o, r) => assert.equal(E.sameSet(a, b, o), r, `${a} ~ ${b}`));
+    table(
+        [
+            ['2; 3', '3; 2', {}, true],
+            ['2; 2; 3', '3; 2', {}, true],
+            ['2; 2; 3', '3; 2', { multiset: true }, false],
+            ['2; 3', '2; 4', {}, false],
+            ['1/2; -1', '-1; 0,5', {}, true],
+            ['sqrt2; -sqrt2', '-1.4142135623730951; 1.4142135623730951', {}, true],
+            ['1', '1; 1', {}, true],
+            ['x; 2x', '2x; x', {}, true],
+        ],
+        (a, b, o, r) => assert.equal(E.sameSet(a, b, o), r, `${a} ~ ${b}`),
+    );
     assert.equal(E.sameSet([1, 2], ['2', '1']), true);
     assert.equal(E.sameSet([1, 2], ['1', '3']), false);
     assert.equal(E.sameSet([], []), true);
@@ -775,14 +1673,39 @@ test('sameValue and sameSet', () => {
 
 test('evaluate: real values and undefined points', () => {
     const ev = (s, env = {}) => E.evaluate(P(s), env);
-    table([
-        ['2+3*4', 14], ['2^10', 1024], ['sqrt(16)', 4], ['(-8)^(1/3)', -2], ['root(-8, 3)', -2], ['∛(-27)', -3], ['sin(pi/2)', 1], ['ln e', 1], ['lg 1000', 3],
-        ['log_2 8', 3], ['5!', 120], ['|−3|', 3], ['floor(2,7)', 2], ['ceil(-2,5)', -2], ['sign(-4)', -1], ['arcctg(-1)', 3 * Math.PI / 4], ['arcctg 0', Math.PI / 2],
-        ['e^0', 1], ['exp(1)', Math.E], ['2π', 2 * Math.PI], ['1/2x', 1.5], ['x^2 - 5x + 6', 0], ['50%', 0.5], ['30°', Math.PI / 6], ['cosh 0', 1],
-    ], (s, v) => {
-        const r = ev(s, { x: 3 });
-        assert.ok(Math.abs(r - v) < 1e-12, `${s} = ${r}`);
-    });
+    table(
+        [
+            ['2+3*4', 14],
+            ['2^10', 1024],
+            ['sqrt(16)', 4],
+            ['(-8)^(1/3)', -2],
+            ['root(-8, 3)', -2],
+            ['∛(-27)', -3],
+            ['sin(pi/2)', 1],
+            ['ln e', 1],
+            ['lg 1000', 3],
+            ['log_2 8', 3],
+            ['5!', 120],
+            ['|−3|', 3],
+            ['floor(2,7)', 2],
+            ['ceil(-2,5)', -2],
+            ['sign(-4)', -1],
+            ['arcctg(-1)', (3 * Math.PI) / 4],
+            ['arcctg 0', Math.PI / 2],
+            ['e^0', 1],
+            ['exp(1)', Math.E],
+            ['2π', 2 * Math.PI],
+            ['1/2x', 1.5],
+            ['x^2 - 5x + 6', 0],
+            ['50%', 0.5],
+            ['30°', Math.PI / 6],
+            ['cosh 0', 1],
+        ],
+        (s, v) => {
+            const r = ev(s, { x: 3 });
+            assert.ok(Math.abs(r - v) < 1e-12, `${s} = ${r}`);
+        },
+    );
     for (const s of ['sqrt(-1)', 'ln 0', 'ln(-1)', '1/0', 'x/0', 'log_1 5', '0^(-1)', 'arcsin 2', '(-8)^(1/2)', 'i', 'ctg 0', '(-2)^x', '(-1)!']) {
         assert.ok(Number.isNaN(ev(s, { x: 0.5 })), s);
     }
@@ -795,7 +1718,10 @@ test('evaluate: real values and undefined points', () => {
     assert.equal(ev('x < 2', { x: 1 }), true);
     assert.equal(ev('0 < x <= 1', { x: 1 }), true);
     assert.deepEqual(ev('1; 2; 3'), [1, 2, 3]);
-    assert.throws(() => ev('x + 1'), (e) => e instanceof E.MathError && e.code === 'unbound');
+    assert.throws(
+        () => ev('x + 1'),
+        (e) => e instanceof E.MathError && e.code === 'unbound',
+    );
 });
 
 test('evaluate: complex mode and the Complex class', () => {
@@ -827,10 +1753,19 @@ test('evaluate: complex mode and the Complex class', () => {
     assert.ok(new E.Complex(1.3, 0.2).cosh().acosh().equals(new E.Complex(1.3, 0.2), 1e-12));
     assert.ok(new E.Complex(0.3, 0.2).tanh().atanh().equals(new E.Complex(0.3, 0.2), 1e-12));
     assert.ok(Object.is(new E.Complex(-1, -0).im, 0));
-    table([
-        [new E.Complex(3, 2), 'en', '3 + 2i'], [new E.Complex(3, -2), 'en', '3 - 2i'], [new E.Complex(0, 1), 'en', 'i'], [new E.Complex(0, -1), 'en', '-i'],
-        [new E.Complex(2.5, -1.5), 'ru', '2,5 - 1,5i'], [new E.Complex(4, 0), 'en', '4'], [new E.Complex(0, 0), 'en', '0'], [new E.Complex(1 / 3, 0), 'en', '0.333333'],
-    ], (z1, lang, s) => assert.equal(z1.toString(lang), s));
+    table(
+        [
+            [new E.Complex(3, 2), 'en', '3 + 2i'],
+            [new E.Complex(3, -2), 'en', '3 - 2i'],
+            [new E.Complex(0, 1), 'en', 'i'],
+            [new E.Complex(0, -1), 'en', '-i'],
+            [new E.Complex(2.5, -1.5), 'ru', '2,5 - 1,5i'],
+            [new E.Complex(4, 0), 'en', '4'],
+            [new E.Complex(0, 0), 'en', '0'],
+            [new E.Complex(1 / 3, 0), 'en', '0.333333'],
+        ],
+        (z1, lang, s) => assert.equal(z1.toString(lang), s),
+    );
     assert.equal(new E.Complex(2.5, 1).toTex('ru'), '2{,}5 + i');
     assert.equal(new E.Complex(1 / 3, 0).toString('en', 2), '0.33');
     assert.ok(E.Complex.of(E.Q.of('1/2')).equals(0.5));
@@ -858,7 +1793,10 @@ test('compile: fast closures with real semantics', () => {
     assert.equal(E.compile(P('log_2 x'))(8), 3);
     assert.equal(E.compile(P('|x| + floor(x)'))(-1.5), -0.5);
     assert.equal(E.compile(P('root(x, 3)'))(27), 3);
-    assert.throws(() => E.compile(P('x + y')), (e) => e.code === 'unbound');
+    assert.throws(
+        () => E.compile(P('x + y')),
+        (e) => e.code === 'unbound',
+    );
     assert.throws(() => E.compile(P('x = 1')), E.MathError);
     const pts = [];
     for (let x = -3; x <= 3; x += 0.25) pts.push(E.compile(P('x^3 - x'))(x));
@@ -951,7 +1889,6 @@ test('steps: language-neutral step objects read per language', () => {
     assert.equal(E.pickLang(s.title, 'en'), 'Discriminant');
 });
 
-
 // ---------------------------------------------------------------- robustness and speed
 
 test('fuzz: arbitrary input never crashes, printing round-trips, simplify is idempotent and keeps values', () => {
@@ -961,20 +1898,77 @@ test('fuzz: arbitrary input never crashes, printing round-trips, simplify is ide
     const gen = (d) => {
         if (d <= 0 || r.chance(0.3)) return r.pick(atoms);
         switch (r.int(0, 9)) {
-            case 0: return `${gen(d - 1)} + ${gen(d - 1)}`;
-            case 1: return `${gen(d - 1)} - ${gen(d - 1)}`;
-            case 2: return `${gen(d - 1)}*${gen(d - 1)}`;
-            case 3: return `(${gen(d - 1)})/(${gen(d - 1)})`;
-            case 4: return `(${gen(d - 1)})^${r.pick(['2', '3', '-1', '(1/2)', '(1/3)', 'x', '0'])}`;
-            case 5: return `${r.pick(fns)}(${gen(d - 1)})`;
-            case 6: return `-(${gen(d - 1)})`;
-            case 7: return `|${gen(d - 1)}|`;
-            case 8: return `${r.pick(['2', '3', 'x'])}(${gen(d - 1)})`;
-            default: return `(${gen(d - 1)})(${gen(d - 1)})`;
+            case 0:
+                return `${gen(d - 1)} + ${gen(d - 1)}`;
+            case 1:
+                return `${gen(d - 1)} - ${gen(d - 1)}`;
+            case 2:
+                return `${gen(d - 1)}*${gen(d - 1)}`;
+            case 3:
+                return `(${gen(d - 1)})/(${gen(d - 1)})`;
+            case 4:
+                return `(${gen(d - 1)})^${r.pick(['2', '3', '-1', '(1/2)', '(1/3)', 'x', '0'])}`;
+            case 5:
+                return `${r.pick(fns)}(${gen(d - 1)})`;
+            case 6:
+                return `-(${gen(d - 1)})`;
+            case 7:
+                return `|${gen(d - 1)}|`;
+            case 8:
+                return `${r.pick(['2', '3', 'x'])}(${gen(d - 1)})`;
+            default:
+                return `(${gen(d - 1)})(${gen(d - 1)})`;
         }
     };
-    const soup = ['x', 'y', '1', '2', '+', '-', '*', '/', '^', '(', ')', '|', ' ', ',', ';', '=', '<', 'sin', 'ln', '√', '²', '.', '!', '%', 'π', 'e', 'i',
-        '_', '{', '}', '[', ']', 'log', '\\frac', '·', '−', 'arctg', '∞', 'α', '°', '\n', 'sqrt', '\\', '#', 'ж', 'ⁿ', '₂'];
+    const soup = [
+        'x',
+        'y',
+        '1',
+        '2',
+        '+',
+        '-',
+        '*',
+        '/',
+        '^',
+        '(',
+        ')',
+        '|',
+        ' ',
+        ',',
+        ';',
+        '=',
+        '<',
+        'sin',
+        'ln',
+        '√',
+        '²',
+        '.',
+        '!',
+        '%',
+        'π',
+        'e',
+        'i',
+        '_',
+        '{',
+        '}',
+        '[',
+        ']',
+        'log',
+        '\\frac',
+        '·',
+        '−',
+        'arctg',
+        '∞',
+        'α',
+        '°',
+        '\n',
+        'sqrt',
+        '\\',
+        '#',
+        'ж',
+        'ⁿ',
+        '₂',
+    ];
     let parsed = 0;
     for (let k = 0; k < 1500; k++) {
         const s = k % 2 ? gen(4) : Array.from({ length: r.int(1, 12) }, () => r.pick(soup)).join('');
@@ -1013,8 +2007,20 @@ test('fuzz: arbitrary input never crashes, printing round-trips, simplify is ide
 });
 
 test('speed: typical inputs parse and simplify in well under 5 ms', () => {
-    const inputs = ['x^2 - 5x + 6 = 0', '2(x+1)^2 - 3x', 'sin^2 x + cos^2 x', '(x^2-1)/(x-1)', '|x-1| + |x+1| = 4', 'log_2(8) + lg 100',
-        '√(x+1) - √x', 'e^(iπ)', '3,5x - 2,25 = 0,75x', 'x_1 + x_2 = -b/a', 'arcsin(1/2) + arctg(√3)', '(2x-3)^5'];
+    const inputs = [
+        'x^2 - 5x + 6 = 0',
+        '2(x+1)^2 - 3x',
+        'sin^2 x + cos^2 x',
+        '(x^2-1)/(x-1)',
+        '|x-1| + |x+1| = 4',
+        'log_2(8) + lg 100',
+        '√(x+1) - √x',
+        'e^(iπ)',
+        '3,5x - 2,25 = 0,75x',
+        'x_1 + x_2 = -b/a',
+        'arcsin(1/2) + arctg(√3)',
+        '(2x-3)^5',
+    ];
     const t0 = performance.now();
     let n = 0;
     for (let k = 0; k < 20; k++) {
@@ -1033,30 +2039,69 @@ test('speed: typical inputs parse and simplify in well under 5 ms', () => {
 // ---------------------------------------------------------------- polish pass (regressions)
 
 test('simplify is idempotent when a merged power changes its base (|x|⁻² → x⁻² meets x)', () => {
-    table([
-        ['(1/abs(x))*(x/abs(x))', '\\frac{1}{x}'], ['x*|x|^(-2)', '\\frac{1}{x}'], ['x/|x|^2', '\\frac{1}{x}'], ['sqrt(x^2)*x*x^(-2)*sqrt(x^2)', 'x'],
-        ['|3(x+1)/(x+1)|', '3'], ['sqrt(2)*2^(1/4)', '\\sqrt[4]{8}'], ['sqrt(2)*sqrt(3)*6^(1/4)', '\\sqrt[4]{216}'],
-    ], (s, t) => {
-        const a = S(s);
-        assert.equal(E.toTex(a), t, s);
-        assert.ok(E.nodeEquals(E.simplify(a), a), `idempotent: ${s}`);
-    });
+    table(
+        [
+            ['(1/abs(x))*(x/abs(x))', '\\frac{1}{x}'],
+            ['x*|x|^(-2)', '\\frac{1}{x}'],
+            ['x/|x|^2', '\\frac{1}{x}'],
+            ['sqrt(x^2)*x*x^(-2)*sqrt(x^2)', 'x'],
+            ['|3(x+1)/(x+1)|', '3'],
+            ['sqrt(2)*2^(1/4)', '\\sqrt[4]{8}'],
+            ['sqrt(2)*sqrt(3)*6^(1/4)', '\\sqrt[4]{216}'],
+        ],
+        (s, t) => {
+            const a = S(s);
+            assert.equal(E.toTex(a), t, s);
+            assert.ok(E.nodeEquals(E.simplify(a), a), `idempotent: ${s}`);
+        },
+    );
 });
 
 test('fuzz: products and quotients of moduli, powers and radicals simplify idempotently and keep values', () => {
     const r = E.rng(4242);
-    const atoms = ['x', 'y', '2', '3', '1/2', 'pi', 'e', 'sqrt(2)', 'sqrt(3)', 'sqrt(pi)', '|x|', '|y|', '|x - 1|', 'x^2', 'sqrt(x)', 'root(x, 3)',
-        '(x+1)', 'sin(x)', 'sqrt(x^2)', 'e^x', '|x|^3', 'x^(1/3)', 'sqrt(2pi)', 'sqrt(e)'];
+    const atoms = [
+        'x',
+        'y',
+        '2',
+        '3',
+        '1/2',
+        'pi',
+        'e',
+        'sqrt(2)',
+        'sqrt(3)',
+        'sqrt(pi)',
+        '|x|',
+        '|y|',
+        '|x - 1|',
+        'x^2',
+        'sqrt(x)',
+        'root(x, 3)',
+        '(x+1)',
+        'sin(x)',
+        'sqrt(x^2)',
+        'e^x',
+        '|x|^3',
+        'x^(1/3)',
+        'sqrt(2pi)',
+        'sqrt(e)',
+    ];
     const gen = (d) => {
         if (d <= 0 || r.chance(0.25)) return r.pick(atoms);
         switch (r.int(0, 6)) {
-            case 0: return `(${gen(d - 1)})*(${gen(d - 1)})`;
-            case 1: return `(${gen(d - 1)})/(${gen(d - 1)})`;
-            case 2: return `(${gen(d - 1)})^${r.pick(['2', '3', '-1', '-2', '(1/2)', '(1/3)', '(3/2)', '(-1/2)'])}`;
-            case 3: return `|${gen(d - 1)}|`;
-            case 4: return `sqrt(${gen(d - 1)})`;
-            case 5: return `${gen(d - 1)} * ${gen(d - 1)} / ${gen(d - 1)}`;
-            default: return `(${gen(d - 1)})(${gen(d - 1)})/(${gen(d - 1)})`;
+            case 0:
+                return `(${gen(d - 1)})*(${gen(d - 1)})`;
+            case 1:
+                return `(${gen(d - 1)})/(${gen(d - 1)})`;
+            case 2:
+                return `(${gen(d - 1)})^${r.pick(['2', '3', '-1', '-2', '(1/2)', '(1/3)', '(3/2)', '(-1/2)'])}`;
+            case 3:
+                return `|${gen(d - 1)}|`;
+            case 4:
+                return `sqrt(${gen(d - 1)})`;
+            case 5:
+                return `${gen(d - 1)} * ${gen(d - 1)} / ${gen(d - 1)}`;
+            default:
+                return `(${gen(d - 1)})(${gen(d - 1)})/(${gen(d - 1)})`;
         }
     };
     let done = 0;
@@ -1093,11 +2138,16 @@ test('fuzz: trigonometric arguments shifted by multiples of π stay idempotent',
     const gen = (d) => {
         if (d <= 0 || r.chance(0.3)) return r.pick(atoms);
         switch (r.int(0, 5)) {
-            case 0: return `${gen(d - 1)} + ${gen(d - 1)}`;
-            case 1: return `${gen(d - 1)} - ${gen(d - 1)}`;
-            case 2: return `${gen(d - 1)}*${gen(d - 1)}`;
-            case 3: return `(${gen(d - 1)})/(${gen(d - 1)})`;
-            default: return `${r.pick(['sin', 'cos', 'tg', 'ctg', 'sec', 'cosec'])}(${gen(d - 1)} ${r.pick(['+', '-'])} ${r.pick(['pi', 'pi/2', '3pi/2', '2pi', '7pi/3', '5pi/6', '-pi/2', '4pi'])})`;
+            case 0:
+                return `${gen(d - 1)} + ${gen(d - 1)}`;
+            case 1:
+                return `${gen(d - 1)} - ${gen(d - 1)}`;
+            case 2:
+                return `${gen(d - 1)}*${gen(d - 1)}`;
+            case 3:
+                return `(${gen(d - 1)})/(${gen(d - 1)})`;
+            default:
+                return `${r.pick(['sin', 'cos', 'tg', 'ctg', 'sec', 'cosec'])}(${gen(d - 1)} ${r.pick(['+', '-'])} ${r.pick(['pi', 'pi/2', '3pi/2', '2pi', '7pi/3', '5pi/6', '-pi/2', '4pi'])})`;
         }
     };
     for (let k = 0; k < 800; k++) {
@@ -1117,13 +2167,29 @@ test('fuzz: trigonometric arguments shifted by multiples of π stay idempotent',
 });
 
 test('simplify: reduction formulas for arguments shifted by multiples of π/2', () => {
-    table([
-        ['sin(x + 2pi)', '\\sin x'], ['cos(pi/2 - x)', '\\sin x'], ['sin(pi - x)', '\\sin x'], ['tg(x + pi)', '\\operatorname{tg} x'],
-        ['cos(x + pi/2)', '-\\sin x'], ['sin(x + 3pi/2)', '-\\cos x'], ['cos(x - pi/2)', '\\sin x'], ['ctg(pi/2 - x)', '\\operatorname{tg} x'],
-        ['tg(pi/2 + x)', '-\\operatorname{ctg} x'], ['sec(x + pi)', '-\\sec x'], ['cosec(pi - x)', '\\operatorname{cosec} x'], ['sin(2x - pi)', '-\\sin(2x)'],
-        ['cos(pi + 1)', '-\\cos 1'], ['sin(x + 7pi/3)', '\\sin\\left(x + \\frac{\\pi}{3}\\right)'], ['tg(x + 4pi/3)', '\\operatorname{tg}\\left(x + \\frac{\\pi}{3}\\right)'],
-        ['sin(x - pi/3)', '\\sin\\left(x - \\frac{\\pi}{3}\\right)'], ['cos(-x - pi)', '-\\cos x'], ['sin(x+pi) + sin(x)', '0'],
-    ], (s, t) => assert.equal(TS(s), t, s));
+    table(
+        [
+            ['sin(x + 2pi)', '\\sin x'],
+            ['cos(pi/2 - x)', '\\sin x'],
+            ['sin(pi - x)', '\\sin x'],
+            ['tg(x + pi)', '\\operatorname{tg} x'],
+            ['cos(x + pi/2)', '-\\sin x'],
+            ['sin(x + 3pi/2)', '-\\cos x'],
+            ['cos(x - pi/2)', '\\sin x'],
+            ['ctg(pi/2 - x)', '\\operatorname{tg} x'],
+            ['tg(pi/2 + x)', '-\\operatorname{ctg} x'],
+            ['sec(x + pi)', '-\\sec x'],
+            ['cosec(pi - x)', '\\operatorname{cosec} x'],
+            ['sin(2x - pi)', '-\\sin(2x)'],
+            ['cos(pi + 1)', '-\\cos 1'],
+            ['sin(x + 7pi/3)', '\\sin\\left(x + \\frac{\\pi}{3}\\right)'],
+            ['tg(x + 4pi/3)', '\\operatorname{tg}\\left(x + \\frac{\\pi}{3}\\right)'],
+            ['sin(x - pi/3)', '\\sin\\left(x - \\frac{\\pi}{3}\\right)'],
+            ['cos(-x - pi)', '-\\cos x'],
+            ['sin(x+pi) + sin(x)', '0'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
     // values agree at a few points
     for (const s of ['sin(x + 3pi/2)', 'ctg(pi/2 - x)', 'sec(x + pi/2)', 'cosec(x + 3pi/2)', 'tg(x - pi/2)']) {
         const f = E.compile(P(s));
@@ -1133,30 +2199,65 @@ test('simplify: reduction formulas for arguments shifted by multiples of π/2', 
 });
 
 test('simplify: radicals of positive constants merge (√2·√π = √(2π))', () => {
-    table([
-        ['sqrt2*sqrt(pi)', '\\sqrt{2\\pi}'], ['sqrt(2pi)', '\\sqrt{2\\pi}'], ['1/sqrt(2pi)', '\\frac{1}{\\sqrt{2\\pi}}'], ['sqrt(8pi)', '2\\sqrt{2\\pi}'],
-        ['sqrt(e)*sqrt(pi)', '\\sqrt{\\pi e}'], ['sqrt(2pi)*sqrt(2)', '2\\sqrt{\\pi}'], ['sqrt(2pi)^2', '2\\pi'], ['sqrt(2pi) - 1', '\\sqrt{2\\pi} - 1'],
-        ['1 - sqrt(2pi)', '1 - \\sqrt{2\\pi}'], ['root(2pi, 3)', '\\sqrt[3]{2\\pi}'], ['sqrt(3pi)/pi', '\\frac{\\sqrt{3}}{\\sqrt{\\pi}}'],
-        ['1/sqrt(2pi)*e^(-x^2/2)', '\\frac{e^{-\\frac{x^{2}}{2}}}{\\sqrt{2\\pi}}'], ['sqrt(pi)*sqrt(pi)', '\\pi'], ['sqrt(2)*sqrt(3)', '\\sqrt{6}'],
-        ['ln 3 - ln 2', '\\ln 3 - \\ln 2'],
-    ], (s, t) => assert.equal(TS(s), t, s));
+    table(
+        [
+            ['sqrt2*sqrt(pi)', '\\sqrt{2\\pi}'],
+            ['sqrt(2pi)', '\\sqrt{2\\pi}'],
+            ['1/sqrt(2pi)', '\\frac{1}{\\sqrt{2\\pi}}'],
+            ['sqrt(8pi)', '2\\sqrt{2\\pi}'],
+            ['sqrt(e)*sqrt(pi)', '\\sqrt{\\pi e}'],
+            ['sqrt(2pi)*sqrt(2)', '2\\sqrt{\\pi}'],
+            ['sqrt(2pi)^2', '2\\pi'],
+            ['sqrt(2pi) - 1', '\\sqrt{2\\pi} - 1'],
+            ['1 - sqrt(2pi)', '1 - \\sqrt{2\\pi}'],
+            ['root(2pi, 3)', '\\sqrt[3]{2\\pi}'],
+            ['sqrt(3pi)/pi', '\\frac{\\sqrt{3}}{\\sqrt{\\pi}}'],
+            ['1/sqrt(2pi)*e^(-x^2/2)', '\\frac{e^{-\\frac{x^{2}}{2}}}{\\sqrt{2\\pi}}'],
+            ['sqrt(pi)*sqrt(pi)', '\\pi'],
+            ['sqrt(2)*sqrt(3)', '\\sqrt{6}'],
+            ['ln 3 - ln 2', '\\ln 3 - \\ln 2'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
     assert.ok(Math.abs(E.evaluate(S('1/sqrt(2pi)')) - 1 / Math.sqrt(2 * Math.PI)) < 1e-15);
 });
 
 test('print: a rational coefficient takes the leading constants into its fraction; {roots: true}', () => {
-    table([
-        ['sqrt(3)/3*arctg(x/sqrt(3))', '\\frac{\\sqrt{3}}{3}\\operatorname{arctg}\\left(\\frac{\\sqrt{3}x}{3}\\right)'],
-        ['2sqrt(3)/3 * sin x', '\\frac{2\\sqrt{3}}{3}\\sin x'], ['-2sqrt(3)/3 * sin x', '-\\frac{2\\sqrt{3}}{3}\\sin x'], ['pi/4*sin x', '\\frac{\\pi}{4}\\sin x'],
-        ['sqrt(3)/3*(x+1)', '\\frac{\\sqrt{3}}{3}(x + 1)'], ['sqrt(2)/2*x*sin x', '\\frac{\\sqrt{2}}{2}x\\sin x'], ['sqrt(2)/4*ln|x+1|', '\\frac{\\sqrt{2}}{4}\\ln\\left|x + 1\\right|'],
-        ['3/4*x*sin x', '\\frac{3}{4}x\\sin x'], ['1/2 * sin x', '\\frac{1}{2}\\sin x'], ['i/2', '\\frac{1}{2}i'], ['sqrt(3)/3', '\\frac{\\sqrt{3}}{3}'],
-        ['x^(3/2)', 'x^{\\frac{3}{2}}'],
-    ], (s, t) => assert.equal(TS(s), t, s));
+    table(
+        [
+            ['sqrt(3)/3*arctg(x/sqrt(3))', '\\frac{\\sqrt{3}}{3}\\operatorname{arctg}\\left(\\frac{\\sqrt{3}x}{3}\\right)'],
+            ['2sqrt(3)/3 * sin x', '\\frac{2\\sqrt{3}}{3}\\sin x'],
+            ['-2sqrt(3)/3 * sin x', '-\\frac{2\\sqrt{3}}{3}\\sin x'],
+            ['pi/4*sin x', '\\frac{\\pi}{4}\\sin x'],
+            ['sqrt(3)/3*(x+1)', '\\frac{\\sqrt{3}}{3}(x + 1)'],
+            ['sqrt(2)/2*x*sin x', '\\frac{\\sqrt{2}}{2}x\\sin x'],
+            ['sqrt(2)/4*ln|x+1|', '\\frac{\\sqrt{2}}{4}\\ln\\left|x + 1\\right|'],
+            ['3/4*x*sin x', '\\frac{3}{4}x\\sin x'],
+            ['1/2 * sin x', '\\frac{1}{2}\\sin x'],
+            ['i/2', '\\frac{1}{2}i'],
+            ['sqrt(3)/3', '\\frac{\\sqrt{3}}{3}'],
+            ['x^(3/2)', 'x^{\\frac{3}{2}}'],
+        ],
+        (s, t) => assert.equal(TS(s), t, s),
+    );
     const R = (s) => E.toTex(S(s), { roots: true });
-    table([
-        ['x^(3/2)', 'x\\sqrt{x}'], ['x^(2/3)', '\\sqrt[3]{x^{2}}'], ['x^(-3/2)', '\\frac{1}{x\\sqrt{x}}'], ['(x+1)^(3/2)', '\\sqrt{(x + 1)^{3}}'],
-        ['x^(5/2)', 'x^{2}\\sqrt{x}'], ['x^(7/3)', 'x^{2}\\sqrt[3]{x}'], ['x^(5/3)', 'x\\sqrt[3]{x^{2}}'], ['3x^(3/2)', '3x\\sqrt{x}'],
-        ['x^(3/2)/4', '\\frac{x\\sqrt{x}}{4}'], ['sin(x^(3/2))', '\\sin(x\\sqrt{x})'], ['(sin x)^(3/2)', '\\sqrt{\\sin^{3} x}'], ['sqrt x', '\\sqrt{x}'],
-    ], (s, t) => assert.equal(R(s), t, s));
+    table(
+        [
+            ['x^(3/2)', 'x\\sqrt{x}'],
+            ['x^(2/3)', '\\sqrt[3]{x^{2}}'],
+            ['x^(-3/2)', '\\frac{1}{x\\sqrt{x}}'],
+            ['(x+1)^(3/2)', '\\sqrt{(x + 1)^{3}}'],
+            ['x^(5/2)', 'x^{2}\\sqrt{x}'],
+            ['x^(7/3)', 'x^{2}\\sqrt[3]{x}'],
+            ['x^(5/3)', 'x\\sqrt[3]{x^{2}}'],
+            ['3x^(3/2)', '3x\\sqrt{x}'],
+            ['x^(3/2)/4', '\\frac{x\\sqrt{x}}{4}'],
+            ['sin(x^(3/2))', '\\sin(x\\sqrt{x})'],
+            ['(sin x)^(3/2)', '\\sqrt{\\sin^{3} x}'],
+            ['sqrt x', '\\sqrt{x}'],
+        ],
+        (s, t) => assert.equal(R(s), t, s),
+    );
     // the calculus printer uses the same shapes
     assert.equal(E.calcTex(S('x^(3/2)')), 'x\\sqrt{x}');
     assert.equal(E.calcTex(S('2sqrt(3)/3*arctg(x)')), '\\frac{2\\sqrt{3}}{3}\\operatorname{arctg} x');
@@ -1165,11 +2266,24 @@ test('print: a rational coefficient takes the leading constants into its fractio
 
 test('parse: ± gives two items, the sign read in place', () => {
     const T = (s) => E.toText(P(s));
-    table([
-        ['±2', '2; -2'], ['1 ± 2', '1 + 2; 1 - 2'], ['x = 1 ± √2', 'x = 1 + sqrt(2); x = 1 - sqrt(2)'], ['(1 ± √5)/2', '(1 + sqrt(5))/2; (1 - sqrt(5))/2'],
-        ['2 ∓ 3', '2 - 3; 2 + 3'], ['±2; 5', '2; -2; 5'], ['1 \\pm 2', '1 + 2; 1 - 2'], ['3 +/- 1', '3 + 1; 3 - 1'], ['2 +- 3', '2 - 3'],
-        ['1 ± 2 + 3', '1 + 2 + 3; 1 - 2 + 3'], ['±x + 1', 'x + 1; -x + 1'], ['{1 ± 1; 7}', '1 + 1; 1 - 1; 7'], ['sin(±x)', 'sin(x); sin(-x)'],
-    ], (s, t) => assert.equal(T(s), t, s));
+    table(
+        [
+            ['±2', '2; -2'],
+            ['1 ± 2', '1 + 2; 1 - 2'],
+            ['x = 1 ± √2', 'x = 1 + sqrt(2); x = 1 - sqrt(2)'],
+            ['(1 ± √5)/2', '(1 + sqrt(5))/2; (1 - sqrt(5))/2'],
+            ['2 ∓ 3', '2 - 3; 2 + 3'],
+            ['±2; 5', '2; -2; 5'],
+            ['1 \\pm 2', '1 + 2; 1 - 2'],
+            ['3 +/- 1', '3 + 1; 3 - 1'],
+            ['2 +- 3', '2 - 3'],
+            ['1 ± 2 + 3', '1 + 2 + 3; 1 - 2 + 3'],
+            ['±x + 1', 'x + 1; -x + 1'],
+            ['{1 ± 1; 7}', '1 + 1; 1 - 1; 7'],
+            ['sin(±x)', 'sin(x); sin(-x)'],
+        ],
+        (s, t) => assert.equal(T(s), t, s),
+    );
     const bad = E.tryParse('±1 ± 2');
     assert.equal(bad.ok, false);
     assert.equal(bad.error.code, 'unsupported');
@@ -1198,9 +2312,19 @@ test('parseFunctionInput: f(x) = …, y = …, g(t) = …, bare expressions', ()
     assert.deepEqual(F('у = х^2'), [null, 'x', 'x^2', 'x', 'y', '']);
     assert.deepEqual(F('3', { v: 't' }), [null, 't', '3', 't', null, '']);
     for (const s of ['x = 3', 'x^2 + y^2 = 1', 'y = x + y', 'sin(x) = 0', 'y ≥ x', '1; 2']) {
-        assert.throws(() => E.parseFunctionInput(s), (e) => e instanceof E.MathError && e.code === 'not-expr', s);
+        assert.throws(
+            () => E.parseFunctionInput(s),
+            (e) => e instanceof E.MathError && e.code === 'not-expr',
+            s,
+        );
     }
     // parse errors point into the whole text
-    assert.throws(() => E.parseFunctionInput('f(x) = 2+*3'), (e) => e.pos === 8 && e.len === 2);
-    assert.throws(() => E.parseFunctionInput('f(x) = '), (e) => e.code === 'empty');
+    assert.throws(
+        () => E.parseFunctionInput('f(x) = 2+*3'),
+        (e) => e.pos === 8 && e.len === 2,
+    );
+    assert.throws(
+        () => E.parseFunctionInput('f(x) = '),
+        (e) => e.code === 'empty',
+    );
 });

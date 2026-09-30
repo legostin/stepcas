@@ -22,15 +22,62 @@ import { msg, notation, resolveLanguage, lookalikes } from '../i18n/index.js';
 // ---------------------------------------------------------------- vocabulary
 
 const FN_ALIASES = {
-    sin: 'sin', cos: 'cos', tan: 'tan', tg: 'tan', cot: 'cot', ctg: 'cot', cotg: 'cot', sec: 'sec', csc: 'csc', cosec: 'csc',
-    asin: 'asin', arcsin: 'asin', acos: 'acos', arccos: 'acos', atan: 'atan', arctan: 'atan', arctg: 'atan',
-    acot: 'acot', arccot: 'acot', arcctg: 'acot',
-    sinh: 'sinh', sh: 'sinh', cosh: 'cosh', ch: 'cosh', tanh: 'tanh', th: 'tanh', coth: 'coth', cth: 'coth',
-    asinh: 'asinh', arsinh: 'asinh', arcsinh: 'asinh', arsh: 'asinh', acosh: 'acosh', arcosh: 'acosh', arccosh: 'acosh', arch: 'acosh',
-    atanh: 'atanh', artanh: 'atanh', arctanh: 'atanh', arth: 'atanh',
-    ln: 'ln', lg: 'lg', log: 'log', exp: 'exp', sqrt: 'sqrt', cbrt: 'cbrt', root: 'root',
-    abs: 'abs', sign: 'sign', sgn: 'sign', floor: 'floor', ceil: 'ceil',
-    sine: 'sin', cosine: 'cos', tangent: 'tan', cotangent: 'cot',
+    sin: 'sin',
+    cos: 'cos',
+    tan: 'tan',
+    tg: 'tan',
+    cot: 'cot',
+    ctg: 'cot',
+    cotg: 'cot',
+    sec: 'sec',
+    csc: 'csc',
+    cosec: 'csc',
+    asin: 'asin',
+    arcsin: 'asin',
+    acos: 'acos',
+    arccos: 'acos',
+    atan: 'atan',
+    arctan: 'atan',
+    arctg: 'atan',
+    acot: 'acot',
+    arccot: 'acot',
+    arcctg: 'acot',
+    sinh: 'sinh',
+    sh: 'sinh',
+    cosh: 'cosh',
+    ch: 'cosh',
+    tanh: 'tanh',
+    th: 'tanh',
+    coth: 'coth',
+    cth: 'coth',
+    asinh: 'asinh',
+    arsinh: 'asinh',
+    arcsinh: 'asinh',
+    arsh: 'asinh',
+    acosh: 'acosh',
+    arcosh: 'acosh',
+    arccosh: 'acosh',
+    arch: 'acosh',
+    atanh: 'atanh',
+    artanh: 'atanh',
+    arctanh: 'atanh',
+    arth: 'atanh',
+    ln: 'ln',
+    lg: 'lg',
+    log: 'log',
+    exp: 'exp',
+    sqrt: 'sqrt',
+    cbrt: 'cbrt',
+    root: 'root',
+    abs: 'abs',
+    sign: 'sign',
+    sgn: 'sign',
+    floor: 'floor',
+    ceil: 'ceil',
+    sine: 'sin',
+    cosine: 'cos',
+    tangent: 'tan',
+    cotangent: 'cot',
 };
 
 const INVERSE = { sin: 'asin', cos: 'acos', tan: 'atan', cot: 'acot', sinh: 'asinh', cosh: 'acosh', tanh: 'atanh' };
@@ -39,26 +86,118 @@ const CONST_WORDS = { pi: 'pi', inf: 'inf', infty: 'inf', infinity: 'inf' };
 
 // Greek names recognised inside letter runs (short risky ones — eta, nu, xi, chi — only as \eta or unicode).
 const GREEK_WORDS = [
-    'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'varepsilon', 'zeta', 'theta', 'vartheta', 'iota', 'kappa', 'lambda', 'mu',
-    'rho', 'sigma', 'tau', 'upsilon', 'phi', 'varphi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda', 'Sigma', 'Phi', 'Psi', 'Omega',
+    'alpha',
+    'beta',
+    'gamma',
+    'delta',
+    'epsilon',
+    'varepsilon',
+    'zeta',
+    'theta',
+    'vartheta',
+    'iota',
+    'kappa',
+    'lambda',
+    'mu',
+    'rho',
+    'sigma',
+    'tau',
+    'upsilon',
+    'phi',
+    'varphi',
+    'psi',
+    'omega',
+    'Gamma',
+    'Delta',
+    'Theta',
+    'Lambda',
+    'Sigma',
+    'Phi',
+    'Psi',
+    'Omega',
 ];
 const GREEK_ALL = [...GREEK_WORDS, 'eta', 'nu', 'xi', 'chi', 'Xi', 'Pi'];
 const GREEK_NORMAL = { varepsilon: 'epsilon', varphi: 'phi', vartheta: 'theta' };
 
 const GREEK_CHARS = {
-    α: 'alpha', β: 'beta', γ: 'gamma', δ: 'delta', ε: 'epsilon', ϵ: 'epsilon', ζ: 'zeta', η: 'eta', θ: 'theta', ϑ: 'theta',
-    ι: 'iota', κ: 'kappa', λ: 'lambda', μ: 'mu', ν: 'nu', ξ: 'xi', ρ: 'rho', σ: 'sigma', τ: 'tau', υ: 'upsilon',
-    φ: 'phi', ϕ: 'phi', χ: 'chi', ψ: 'psi', ω: 'omega', Γ: 'Gamma', Δ: 'Delta', Θ: 'Theta', Λ: 'Lambda', Σ: 'Sigma',
-    Φ: 'Phi', Ψ: 'Psi', Ω: 'Omega',
+    α: 'alpha',
+    β: 'beta',
+    γ: 'gamma',
+    δ: 'delta',
+    ε: 'epsilon',
+    ϵ: 'epsilon',
+    ζ: 'zeta',
+    η: 'eta',
+    θ: 'theta',
+    ϑ: 'theta',
+    ι: 'iota',
+    κ: 'kappa',
+    λ: 'lambda',
+    μ: 'mu',
+    ν: 'nu',
+    ξ: 'xi',
+    ρ: 'rho',
+    σ: 'sigma',
+    τ: 'tau',
+    υ: 'upsilon',
+    φ: 'phi',
+    ϕ: 'phi',
+    χ: 'chi',
+    ψ: 'psi',
+    ω: 'omega',
+    Γ: 'Gamma',
+    Δ: 'Delta',
+    Θ: 'Theta',
+    Λ: 'Lambda',
+    Σ: 'Sigma',
+    Φ: 'Phi',
+    Ψ: 'Psi',
+    Ω: 'Omega',
 };
 
 // letters of other layouts that look like Latin ones (a Russian keyboard left on): the language packs list them
 const lookalike = (c) => lookalikes()[c];
 
-const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
-    '⁺': '+', '⁻': '-', '⁽': '(', '⁾': ')', 'ⁿ': 'n', 'ˣ': 'x', 'ⁱ': 'i', 'ᵏ': 'k', 'ᵐ': 'm', '˙': '' };
-const SUB = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
-    'ₙ': 'n', 'ₖ': 'k', 'ᵢ': 'i', 'ⱼ': 'j', 'ₓ': 'x', 'ₘ': 'm' };
+const SUP = {
+    '⁰': '0',
+    '¹': '1',
+    '²': '2',
+    '³': '3',
+    '⁴': '4',
+    '⁵': '5',
+    '⁶': '6',
+    '⁷': '7',
+    '⁸': '8',
+    '⁹': '9',
+    '⁺': '+',
+    '⁻': '-',
+    '⁽': '(',
+    '⁾': ')',
+    ⁿ: 'n',
+    ˣ: 'x',
+    ⁱ: 'i',
+    ᵏ: 'k',
+    ᵐ: 'm',
+    '˙': '',
+};
+const SUB = {
+    '₀': '0',
+    '₁': '1',
+    '₂': '2',
+    '₃': '3',
+    '₄': '4',
+    '₅': '5',
+    '₆': '6',
+    '₇': '7',
+    '₈': '8',
+    '₉': '9',
+    ₙ: 'n',
+    ₖ: 'k',
+    ᵢ: 'i',
+    ⱼ: 'j',
+    ₓ: 'x',
+    ₘ: 'm',
+};
 
 const MINUS = new Set(['-', '−', '–', '—', '‐', '‑', '‒', '﹣', '－']);
 const TIMES = new Set(['*', '·', '×', '⋅', '∙', '∗', '•', '✕']);
@@ -68,8 +207,33 @@ const OPEN = { '(': ')', '[': ']', '{': '}' };
 const CLOSE = { ')': '(', ']': '[', '}': '{' };
 
 // Words that look like functions people might try, but that the engine does not read.
-const UNSUPPORTED = new Set(['max', 'min', 'gcd', 'lcm', 'mod', 'lim', 'sum', 'int', 'det', 'deg', 'rad', 'arg', 'diff', 'sqr',
-    'rank', 'dim', 'arcsec', 'arccsc', 'arccosec', 'binom', 'nod', 'nok', 'prod', 'integral', 'derivative']);
+const UNSUPPORTED = new Set([
+    'max',
+    'min',
+    'gcd',
+    'lcm',
+    'mod',
+    'lim',
+    'sum',
+    'int',
+    'det',
+    'deg',
+    'rad',
+    'arg',
+    'diff',
+    'sqr',
+    'rank',
+    'dim',
+    'arcsec',
+    'arccsc',
+    'arccosec',
+    'binom',
+    'nod',
+    'nok',
+    'prod',
+    'integral',
+    'derivative',
+]);
 
 const WORDS = new Map();
 for (const [k, v] of Object.entries(FN_ALIASES)) WORDS.set(k, { kind: 'fn', name: v });
@@ -77,9 +241,47 @@ for (const [k, v] of Object.entries(CONST_WORDS)) WORDS.set(k, { kind: 'sym', na
 for (const g of GREEK_WORDS) WORDS.set(g, { kind: 'sym', name: GREEK_NORMAL[g] ?? g });
 const MAX_WORD = Math.max(...[...WORDS.keys()].map((w) => w.length));
 
-const TEX_OPS = { cdot: '*', times: '*', ast: '*', div: '/', le: '<=', leq: '<=', leqslant: '<=', ge: '>=', geq: '>=', geqslant: '>=',
-    ne: '!=', neq: '!=', lt: '<', gt: '>', vert: '|', lvert: '|', rvert: '|', mid: '|', lbrace: '{', rbrace: '}', pm: '±', mp: '∓' };
-const TEX_SKIP = new Set(['left', 'right', 'big', 'Big', 'bigg', 'Bigg', 'bigl', 'bigr', 'Bigl', 'Bigr', 'biggl', 'biggr', 'displaystyle', 'textstyle', 'limits']);
+const TEX_OPS = {
+    cdot: '*',
+    times: '*',
+    ast: '*',
+    div: '/',
+    le: '<=',
+    leq: '<=',
+    leqslant: '<=',
+    ge: '>=',
+    geq: '>=',
+    geqslant: '>=',
+    ne: '!=',
+    neq: '!=',
+    lt: '<',
+    gt: '>',
+    vert: '|',
+    lvert: '|',
+    rvert: '|',
+    mid: '|',
+    lbrace: '{',
+    rbrace: '}',
+    pm: '±',
+    mp: '∓',
+};
+const TEX_SKIP = new Set([
+    'left',
+    'right',
+    'big',
+    'Big',
+    'bigg',
+    'Bigg',
+    'bigl',
+    'bigr',
+    'Bigl',
+    'Bigr',
+    'biggl',
+    'biggr',
+    'displaystyle',
+    'textstyle',
+    'limits',
+]);
 const TEX_WORD = new Set(['operatorname', 'mathrm', 'text', 'mathit', 'textrm']);
 
 const isDigit = (c) => c >= '0' && c <= '9';
@@ -147,7 +349,8 @@ function tokenize(src, opts, offset = 0, spanLen = null) {
         if (!commas.length) continue;
         const groups = commas.map((c, idx) => s.slice(c + 1, commas[idx + 1] ?? j));
         const lead = s.slice(k, commas[0]);
-        const thousands = lead.length <= 3 && lead[0] !== '0' && groups.every((g) => g.length === 3) && (commas.length >= 2 || notation(opts.lang).thousandsComma);
+        const thousands =
+            lead.length <= 3 && lead[0] !== '0' && groups.every((g) => g.length === 3) && (commas.length >= 2 || notation(opts.lang).thousandsComma);
         if (thousands) for (const c of commas) thousandCommas.add(c);
         else if (commas.length >= 2) for (const c of commas) listCommas.add(c);
     }
@@ -639,7 +842,16 @@ class Parser {
     }
 
     canImplicit(t) {
-        return t.t === 'num' || t.t === 'sym' || t.t === 'fn' || t.t === 'open' || t.t === 'root' || t.t === 'frac' || t.t === 'texsqrt' || (t.t === 'bar' && this.abs === 0);
+        return (
+            t.t === 'num' ||
+            t.t === 'sym' ||
+            t.t === 'fn' ||
+            t.t === 'open' ||
+            t.t === 'root' ||
+            t.t === 'frac' ||
+            t.t === 'texsqrt' ||
+            (t.t === 'bar' && this.abs === 0)
+        );
     }
 
     parseTop() {
@@ -1019,7 +1231,8 @@ class Parser {
                 throw err(msg('core.parse.empty_input'), 0, 0, 'empty');
             case 'close':
                 if (prev && prev.t === 'open') throw err(msg('core.parse.empty_brackets'), prev.pos, t.pos + 1 - prev.pos);
-                if (prev && (prev.t === 'op' || prev.t === 'rel' || prev.t === 'sep')) throw err(msg('core.parse.number_or_expression_is_expected_after', { pv }), prev.pos, prev.len);
+                if (prev && (prev.t === 'op' || prev.t === 'rel' || prev.t === 'sep'))
+                    throw err(msg('core.parse.number_or_expression_is_expected_after', { pv }), prev.pos, prev.len);
                 throw err(msg('core.parse.unexpected', { v: t.v }), t.pos, 1, 'brackets');
             case 'op':
                 if (prev && prev.t === 'op') throw err(msg('core.parse.two_operators_in_row', { pv, v: t.v }), prev.pos, t.pos + t.len - prev.pos);
@@ -1177,7 +1390,8 @@ function nameOf(src, opts) {
     for (const o of tries) {
         if (!o) continue;
         const r = tryParse(s, o);
-        if (r.ok && r.node.type === 'sym' && (r.node.var || !['pi', 'e', 'i', 'inf'].includes(r.node.name))) return { name: r.node.name, word: word ? s : null };
+        if (r.ok && r.node.type === 'sym' && (r.node.var || !['pi', 'e', 'i', 'inf'].includes(r.node.name)))
+            return { name: r.node.name, word: word ? s : null };
     }
     return null;
 }

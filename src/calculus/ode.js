@@ -39,7 +39,10 @@ function tidy(n) {
     return b && toText(b).length < toText(a).length ? b : a;
 }
 // ln|u| → ln u: after exponentiating, the sign goes into the constant (y = C·x rather than C·|x|)
-const dropAbsInLn = (n) => mapNode(n, (m) => (m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' ? fn('ln', dropAbsInLn(m.args[0].args[0])) : undefined));
+const dropAbsInLn = (n) =>
+    mapNode(n, (m) =>
+        m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' ? fn('ln', dropAbsInLn(m.args[0].args[0])) : undefined,
+    );
 const E_ = sym('e');
 
 /** TeX with the primes shown as primes. */
@@ -51,7 +54,10 @@ function tex(n, lang = DEFAULT_LANGUAGE) {
 
 // "y' + y = x; y(0) = 1" → {eq: node (primes as yp, ypp), conds: [{order, at, value}], y, x}
 function readInput(input) {
-    const parts = String(input).split(/[;\n]/).map((s) => s.trim()).filter(Boolean);
+    const parts = String(input)
+        .split(/[;\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
     let eq = null;
     const conds = [];
     for (const p of parts) {
@@ -144,7 +150,17 @@ function invert(G, y, H, pick) {
                 const chosen = pick ? pick((c) => invert(a.args[0], y, c, pick), [ex, neg(ex)]) : ex;
                 return chosen;
             }
-            const INV = { ln: (t) => pow(E_, t), exp: (t) => fn('ln', t), sqrt: (t) => pow(t, N2), atan: (t) => fn('tan', t), tan: (t) => fn('atan', t), sin: (t) => fn('asin', t), cos: (t) => fn('acos', t), asin: (t) => fn('sin', t), cbrt: (t) => pow(t, num(3)) };
+            const INV = {
+                ln: (t) => pow(E_, t),
+                exp: (t) => fn('ln', t),
+                sqrt: (t) => pow(t, N2),
+                atan: (t) => fn('tan', t),
+                tan: (t) => fn('atan', t),
+                sin: (t) => fn('asin', t),
+                cos: (t) => fn('acos', t),
+                asin: (t) => fn('sin', t),
+                cbrt: (t) => pow(t, num(3)),
+            };
             if (!INV[g.name] || g.args.length !== 1) return null;
             h = INV[g.name](h);
             g = a;
@@ -265,7 +281,9 @@ function solveFirst(E, x, y, cond, explicitAlready) {
         const I = integrate(R, x, { steps: true });
         if (!I.result) return null;
         const F = I.result;
-        steps.push(step({ title: msg('calculus.ode.integrate'), tex: eachLanguage((l) => `${y} = \\int ${tex(R, l)}\\,d${x} = ${tex(F, l)} + C`), sub: I.steps }));
+        steps.push(
+            step({ title: msg('calculus.ode.integrate'), tex: eachLanguage((l) => `${y} = \\int ${tex(R, l)}\\,d${x} = ${tex(F, l)} + C`), sub: I.steps }),
+        );
         return finish({ general: add(F, C), steps, type: 'integrate', x, y, cond, solveC: (c0) => trySimplify(add(F, c0)) });
     }
     // linear with a right-hand side: the integrating factor
@@ -278,12 +296,20 @@ function solveFirst(E, x, y, cond, explicitAlready) {
         if (!Iy.result || !Ix.result) return null;
         const G = Iy.result;
         const F = Ix.result;
-        steps.push(step({
-            title: msg('calculus.ode.separate_variables'),
-            tex: eachLanguage((l) => `${sepLeft(sp.g, y, l)} = ${numValue(sp.f)?.isOne() ? `d${x}` : `${tex(sp.f, l)}\\,d${x}`}`),
-            text: msg('calculus.ode.derivative_is_multiply_by_and_divide', { y, x, p: (lng) => tex(sp.g, lng) }),
-        }));
-        steps.push(step({ title: msg('calculus.ode.integrate_both_sides'), tex: eachLanguage((l) => `${tex(G, l)} = ${tex(F, l)} + C`), sub: [...(Iy.steps ?? []).slice(-1), ...(Ix.steps ?? []).slice(-1)] }));
+        steps.push(
+            step({
+                title: msg('calculus.ode.separate_variables'),
+                tex: eachLanguage((l) => `${sepLeft(sp.g, y, l)} = ${numValue(sp.f)?.isOne() ? `d${x}` : `${tex(sp.f, l)}\\,d${x}`}`),
+                text: msg('calculus.ode.derivative_is_multiply_by_and_divide', { y, x, p: (lng) => tex(sp.g, lng) }),
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.ode.integrate_both_sides'),
+                tex: eachLanguage((l) => `${tex(G, l)} = ${tex(F, l)} + C`),
+                sub: [...(Iy.steps ?? []).slice(-1), ...(Ix.steps ?? []).slice(-1)],
+            }),
+        );
         const lnForm = G.type === 'fn' && G.name === 'ln' && G.args[0].type === 'fn' && G.args[0].name === 'abs' && G.args[0].args[0].type === 'sym';
         const Fe = lnForm ? dropAbsInLn(F) : F;
         const general = lnForm ? trySimplify(mul(C, pow(E_, Fe))) : invert(G, y, add(F, C), null);
@@ -291,7 +317,14 @@ function solveFirst(E, x, y, cond, explicitAlready) {
             if (lnForm) return trySimplify(mul(c0, pow(E_, Fe)));
             return invert(G, y, add(F, c0), pick);
         };
-        if (lnForm) steps.push(step({ title: msg('calculus.ode.express', { y }), tex: eachLanguage((l) => `|${y}| = e^{${tex(F, l)} + C} \\;\\Rightarrow\\; ${y} = ${tex(general, l)}`), text: msg('calculus.ode.constant_is_renamed_again_gives_solution') }));
+        if (lnForm)
+            steps.push(
+                step({
+                    title: msg('calculus.ode.express', { y }),
+                    tex: eachLanguage((l) => `|${y}| = e^{${tex(F, l)} + C} \\;\\Rightarrow\\; ${y} = ${tex(general, l)}`),
+                    text: msg('calculus.ode.constant_is_renamed_again_gives_solution'),
+                }),
+            );
         else if (general) steps.push(step({ title: msg('calculus.ode.express', { y }), tex: eachLanguage((l) => `${y} = ${tex(general, l)}`) }));
         return finish({ general: general ?? rel('=', G, add(F, C)), implicit: !general, steps, type: 'separable', x, y, cond, solveC, lnForm, G, F: Fe });
     }
@@ -305,17 +338,27 @@ function linearFirst(p, q, x, y, cond, steps) {
     const Iq = integrate(trySimplify(mul(mu, q)), x, { steps: true });
     if (!Iq.result) return null;
     const C = sym('C');
-    steps.push(step({
-        title: msg('calculus.ode.first_order_linear_equation'),
-        tex: eachLanguage((l) => {
-            const negP = tex(p).startsWith('-');
-            const py = trySimplify(mul(negP ? trySimplify(neg(p)) : p, sym(y)));
-            return tex(rel('=', add(sym(`${y}'`), negP ? neg(py) : py), q), l);
+    steps.push(
+        step({
+            title: msg('calculus.ode.first_order_linear_equation'),
+            tex: eachLanguage((l) => {
+                const negP = tex(p).startsWith('-');
+                const py = trySimplify(mul(negP ? trySimplify(neg(p)) : p, sym(y)));
+                return tex(rel('=', add(sym(`${y}'`), negP ? neg(py) : py), q), l);
+            }),
+            text: msg('calculus.ode.form_multiply_by_integrating_factor_left'),
         }),
-        text: msg('calculus.ode.form_multiply_by_integrating_factor_left'),
-    }));
+    );
     steps.push(step({ title: msg('calculus.ode.integrating_factor'), tex: eachLanguage((l) => `\\mu = e^{\\int ${tex(p, l)}\\,d${x}} = ${tex(mu, l)}`) }));
-    steps.push(step({ title: msg('calculus.ode.integrate'), tex: eachLanguage((l) => `(${tex(mu, l)}\\,${y})' = ${tex(trySimplify(mul(mu, q)), l)} \\;\\Rightarrow\\; ${tex(mu, l)}\\,${y} = ${tex(Iq.result, l)} + C`), sub: (Iq.steps ?? []).slice(-1) }));
+    steps.push(
+        step({
+            title: msg('calculus.ode.integrate'),
+            tex: eachLanguage(
+                (l) => `(${tex(mu, l)}\\,${y})' = ${tex(trySimplify(mul(mu, q)), l)} \\;\\Rightarrow\\; ${tex(mu, l)}\\,${y} = ${tex(Iq.result, l)} + C`,
+            ),
+            sub: (Iq.steps ?? []).slice(-1),
+        }),
+    );
     const general = tidy(div(add(Iq.result, C), mu));
     steps.push(step({ title: msg('calculus.ode.express', { y }), tex: eachLanguage((l) => `${y} = ${tex(general, l)}`) }));
     return finish({ general, steps, type: 'linear', x, y, cond, solveC: (c0) => tidy(div(add(Iq.result, c0), mu)) });
@@ -323,7 +366,11 @@ function linearFirst(p, q, x, y, cond, steps) {
 
 // y' = φ(y/x): check φ(tx, ty) = φ(x, y), then y = ux
 function homogeneous(R, x, y, cond, steps) {
-    for (const [a, b, t] of [[0.7, 1.3, 2.1], [1.9, -0.6, 0.45], [-1.1, 0.8, 3.3]]) {
+    for (const [a, b, t] of [
+        [0.7, 1.3, 2.1],
+        [1.9, -0.6, 0.45],
+        [-1.1, 0.8, 3.3],
+    ]) {
         const r1 = approx(R, { [x]: a, [y]: b });
         const r2 = approx(R, { [x]: a * t, [y]: b * t });
         if (!Number.isFinite(r1) || !Number.isFinite(r2) || Math.abs(r1 - r2) > 1e-9 * Math.max(1, Math.abs(r1))) return null;
@@ -339,8 +386,19 @@ function homogeneous(R, x, y, cond, steps) {
     const G = Iu.result;
     const F = fn('ln', fn('abs', X));
     const C = sym('C');
-    steps.push(step({ title: msg('calculus.ode.homogeneous_equation'), tex: eachLanguage((l) => `u + x u' = ${tex(phi, l)}`), text: msg('calculus.ode.right_side_depends_on_only_then') }));
-    steps.push(step({ title: msg('calculus.ode.separate_variables'), tex: eachLanguage((l) => `${sepLeft(den, 'u', l)} = \\frac{d${x}}{${x}} \\;\\Rightarrow\\; ${tex(G, l)} = \\ln|${x}| + C`) }));
+    steps.push(
+        step({
+            title: msg('calculus.ode.homogeneous_equation'),
+            tex: eachLanguage((l) => `u + x u' = ${tex(phi, l)}`),
+            text: msg('calculus.ode.right_side_depends_on_only_then'),
+        }),
+    );
+    steps.push(
+        step({
+            title: msg('calculus.ode.separate_variables'),
+            tex: eachLanguage((l) => `${sepLeft(den, 'u', l)} = \\frac{d${x}}{${x}} \\;\\Rightarrow\\; ${tex(G, l)} = \\ln|${x}| + C`),
+        }),
+    );
     const pickU = cond ? picker(x, cond, div(cond.value, cond.at)) : null;
     const Uinv = (c, pk = null) => invert(G, 'u', add(F, c), pk);
     const general = Uinv(C);
@@ -419,7 +477,8 @@ function rhsGroups(f, x) {
                 if (!k || !beta.isZero()) return null;
                 beta = k.abs();
             } else if (g.type === 'sym' && g.name === x) deg += 1;
-            else if (g.type === 'pow' && g.base.type === 'sym' && g.base.name === x && numValue(g.exp)?.isInt() && numValue(g.exp).isPos()) deg += Number(numValue(g.exp).n);
+            else if (g.type === 'pow' && g.base.type === 'sym' && g.base.name === x && numValue(g.exp)?.isInt() && numValue(g.exp).isPos())
+                deg += Number(numValue(g.exp).n);
             else return null;
         }
         const key = `${alpha}|${beta}`;
@@ -450,7 +509,7 @@ function undetermined(a, b, c, f, x) {
             if (Math.abs(av * al * al + bv * al + cv) < 1e-12) s = Math.abs(2 * av * al + bv) < 1e-12 ? 2 : 1;
         } else {
             const disc = bv * bv - 4 * av * cv;
-            if (disc < 0 && Math.abs(al + bv / (2 * av)) < 1e-12 && Math.abs(be * be - (-disc) / (4 * av * av)) < 1e-12) s = 1;
+            if (disc < 0 && Math.abs(al + bv / (2 * av)) < 1e-12 && Math.abs(be * be - -disc / (4 * av * av)) < 1e-12) s = 1;
         }
         const ex = g.alpha.isZero() ? null : pow(E_, trySimplify(mul(num(g.alpha), X)));
         const parts = be === 0 ? [null] : [fn('cos', trySimplify(mul(num(g.beta), X))), fn('sin', trySimplify(mul(num(g.beta), X)))];
@@ -509,11 +568,13 @@ function solveSecond(E, x, y, conds) {
     const K = sym('k');
     const charEq = rel('=', add(mul(a, pow(K, N2)), mul(b, K), c), N0);
     const steps = [];
-    steps.push(step({
-        title: msg('calculus.ode.linear_homogeneous_equation_with_constant_coefficients'),
-        text: msg('calculus.ode.look_for_solutions_substituting_gives_characteristic'),
-        tex: eachLanguage((l) => tex(trySimplify(charEq.lhs), l) + ' = 0'),
-    }));
+    steps.push(
+        step({
+            title: msg('calculus.ode.linear_homogeneous_equation_with_constant_coefficients'),
+            text: msg('calculus.ode.look_for_solutions_substituting_gives_characteristic'),
+            tex: eachLanguage((l) => tex(trySimplify(charEq.lhs), l) + ' = 0'),
+        }),
+    );
     const av = approx(a, {});
     const bv = approx(b, {});
     const cv = approx(c, {});
@@ -536,7 +597,13 @@ function solveSecond(E, x, y, conds) {
         const [k1, k2] = r.roots.map((z) => z.node);
         y1 = pow(E_, mul(k1, X));
         y2 = pow(E_, mul(k2, X));
-        steps.push(step({ title: msg('calculus.ode.two_real_roots'), tex: eachLanguage((l) => `k_1 = ${tex(k1, l)},\\quad k_2 = ${tex(k2, l)}`), sub: r.steps.slice(0, -1) }));
+        steps.push(
+            step({
+                title: msg('calculus.ode.two_real_roots'),
+                tex: eachLanguage((l) => `k_1 = ${tex(k1, l)},\\quad k_2 = ${tex(k2, l)}`),
+                sub: r.steps.slice(0, -1),
+            }),
+        );
         text = msg('calculus.ode.distinct_roots_give_solutions_and');
     } else {
         const al = trySimplify(div(neg(b), mul(N2, a)));
@@ -546,14 +613,25 @@ function solveSecond(E, x, y, conds) {
         const sinN = fn('sin', mul(be, X));
         y1 = ex ? mul(ex, cosN) : cosN;
         y2 = ex ? mul(ex, sinN) : sinN;
-        steps.push(step({ title: msg('calculus.ode.complex_roots'), tex: eachLanguage((l) => `D = ${tex(Dn, l)} < 0,\\quad k = ${tex(al, l)} \\pm ${tex(be, l)}\\,i`) }));
+        steps.push(
+            step({
+                title: msg('calculus.ode.complex_roots'),
+                tex: eachLanguage((l) => `D = ${tex(Dn, l)} < 0,\\quad k = ${tex(al, l)} \\pm ${tex(be, l)}\\,i`),
+            }),
+        );
         text = msg('calculus.ode.roots_give_and');
     }
     y1 = trySimplify(y1);
     y2 = trySimplify(y2);
     const cm = (c, f) => (numValue(f)?.isOne() ? c : f.type === 'mul' ? mul(c, ...f.args) : mul(c, f));
     const general0 = add(cm(C1, y1), cm(C2, y2));
-    steps.push(step({ title: homog ? msg('calculus.ode.general_solution') : msg('calculus.ode.general_solution_of_homogeneous_equation'), tex: eachLanguage((l) => `${homog ? y : `${y}_{0}`} = ${tex(general0, l)}`), text }));
+    steps.push(
+        step({
+            title: homog ? msg('calculus.ode.general_solution') : msg('calculus.ode.general_solution_of_homogeneous_equation'),
+            tex: eachLanguage((l) => `${homog ? y : `${y}_{0}`} = ${tex(general0, l)}`),
+            text,
+        }),
+    );
     // a right-hand side: variation of parameters, y_p = −y₁∫y₂f/(aW) + y₂∫y₁f/(aW), W = y₁y₂' − y₁'y₂
     let yp = null;
     const uc = homog ? null : undetermined(a, b, c, f, x);
@@ -561,17 +639,28 @@ function solveSecond(E, x, y, conds) {
         yp = uc.yp;
         const trialNode = add(uc.trials.map((t) => t.node));
         const sNote = uc.trials.filter((t) => t.s > 0);
-        steps.push(step({
-            title: msg('calculus.ode.particular_solution_from_form_of_right'),
-            tex: eachLanguage((l) => `${y}_{${msg('calculus.ode.particular_index').in(l)}} = ${tex(trialNode, l)}`),
-            text: sNote.length
-                ? msg('calculus.ode.right_hand_side_is_polynomial_times', { p: (lng) => tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), lng), s: sNote[0].s, p2: sNote[0].s > 1 ? '^' + sNote[0].s : '' })
-                : msg('calculus.ode.right_hand_side_is_polynomial_times_2'),
-        }));
-        steps.push(step({
-            title: msg('calculus.ode.substitute_and_match_coefficients'),
-            tex: eachLanguage((l) => `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${msg('calculus.ode.particular_index').in(l)}} = ${tex(yp, l)}`),
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.ode.particular_solution_from_form_of_right'),
+                tex: eachLanguage((l) => `${y}_{${msg('calculus.ode.particular_index').in(l)}} = ${tex(trialNode, l)}`),
+                text: sNote.length
+                    ? msg('calculus.ode.right_hand_side_is_polynomial_times', {
+                          p: (lng) => tex(trySimplify(add(num(sNote[0].g.alpha), mul(num(sNote[0].g.beta), sym('i')))), lng),
+                          s: sNote[0].s,
+                          p2: sNote[0].s > 1 ? '^' + sNote[0].s : '',
+                      })
+                    : msg('calculus.ode.right_hand_side_is_polynomial_times_2'),
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.ode.substitute_and_match_coefficients'),
+                tex: eachLanguage(
+                    (l) =>
+                        `${uc.names.map((nm, i) => `${nm} = ${uc.values[i].toTex(l)}`).join(',\\ ')} \\;\\Rightarrow\\; ${y}_{${msg('calculus.ode.particular_index').in(l)}} = ${tex(yp, l)}`,
+                ),
+            }),
+        );
     } else if (!homog) {
         const W = tidy(add(mul(y1, derivativeOf(y2, x)), neg(mul(derivativeOf(y1, x), y2))));
         if (isZ(W)) return null;
@@ -580,14 +669,26 @@ function solveSecond(E, x, y, conds) {
         const i2 = integrate(tidy(div(mul(y1, g), W)), x, { steps: true });
         if (!i1.result || !i2.result) return null;
         yp = tidy(add(neg(mul(y1, i1.result)), mul(y2, i2.result)));
-        steps.push(step({
-            title: msg('calculus.ode.particular_solution_variation_of_parameters'),
-            tex: eachLanguage((l) => `W = ${tex(W, l)},\\quad ${y}_{${msg('calculus.ode.particular_index').in(l)}} = -${tex(y1, l)}\\int \\frac{${tex(y2, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} + ${tex(y2, l)}\\int \\frac{${tex(y1, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} = ${tex(yp, l)}`),
-            text: msg('calculus.ode.look_for_condition_and_equation_give'),
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.ode.particular_solution_variation_of_parameters'),
+                tex: eachLanguage(
+                    (l) =>
+                        `W = ${tex(W, l)},\\quad ${y}_{${msg('calculus.ode.particular_index').in(l)}} = -${tex(y1, l)}\\int \\frac{${tex(y2, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} + ${tex(y2, l)}\\int \\frac{${tex(y1, l)} \\cdot ${tex(g, l)}}{W}\\,d${x} = ${tex(yp, l)}`,
+                ),
+                text: msg('calculus.ode.look_for_condition_and_equation_give'),
+            }),
+        );
     }
     const general = yp ? add([...general0.args, ...(yp.type === 'add' ? yp.args : [yp])]) : general0;
-    if (yp) steps.push(step({ title: msg('calculus.ode.general_solution'), tex: eachLanguage((l) => `${y} = ${tex(general, l)}`), text: msg('calculus.ode.general_solution_general_solution_of_homogeneous') }));
+    if (yp)
+        steps.push(
+            step({
+                title: msg('calculus.ode.general_solution'),
+                tex: eachLanguage((l) => `${y} = ${tex(general, l)}`),
+                text: msg('calculus.ode.general_solution_general_solution_of_homogeneous'),
+            }),
+        );
     const res = { general, steps, type: uc ? 'undetermined-coefficients' : yp ? 'variation-of-parameters' : 'constant-coefficients' };
     const c0 = conds.find((z) => z.order === 0);
     const c1 = conds.find((z) => z.order === 1);
@@ -606,11 +707,16 @@ function solveSecond(E, x, y, conds) {
     const k1 = trySimplify(div(add(mul(r0, m22), neg(mul(m12, r1))), det));
     const k2 = trySimplify(div(add(mul(m11, r1), neg(mul(r0, m21))), det));
     const Y = tidy(add([mul(k1, y1), mul(k2, y2), ...(yp ? [yp] : [])]));
-    steps.push(step({
-        title: msg('calculus.ode.initial_conditions'),
-        tex: eachLanguage((l) => `\\begin{cases} ${tex(add(mul(C1, m11), mul(C2, m12)), l)} = ${tex(r0, l)} \\\\ ${tex(add(mul(C1, m21), mul(C2, m22)), l)} = ${tex(r1, l)} \\end{cases} \\;\\Rightarrow\\; C_1 = ${tex(k1, l)},\\ C_2 = ${tex(k2, l)}`),
-        text: msg('calculus.ode.substitute_into_solution_and_its_derivative', { p: (lng) => tex(c0.at, lng) }),
-    }));
+    steps.push(
+        step({
+            title: msg('calculus.ode.initial_conditions'),
+            tex: eachLanguage(
+                (l) =>
+                    `\\begin{cases} ${tex(add(mul(C1, m11), mul(C2, m12)), l)} = ${tex(r0, l)} \\\\ ${tex(add(mul(C1, m21), mul(C2, m22)), l)} = ${tex(r1, l)} \\end{cases} \\;\\Rightarrow\\; C_1 = ${tex(k1, l)},\\ C_2 = ${tex(k2, l)}`,
+            ),
+            text: msg('calculus.ode.substitute_into_solution_and_its_derivative', { p: (lng) => tex(c0.at, lng) }),
+        }),
+    );
     return { ...res, expr: Y };
 }
 
@@ -644,7 +750,12 @@ function finish(o) {
     if (!c0) return res;
     const Y = o.solveC(c0);
     if (!Y) return res;
-    steps.push(step({ title: msg('calculus.ode.initial_condition'), tex: eachLanguage((l) => `${y}(${tex(x0, l)}) = ${tex(y0, l)} \\;\\Rightarrow\\; C = ${tex(c0, l)}`) }));
+    steps.push(
+        step({
+            title: msg('calculus.ode.initial_condition'),
+            tex: eachLanguage((l) => `${y}(${tex(x0, l)}) = ${tex(y0, l)} \\;\\Rightarrow\\; C = ${tex(c0, l)}`),
+        }),
+    );
     return { ...res, expr: tidy(Y) };
 }
 
@@ -665,7 +776,8 @@ export function solveOde(input, opts = {}) {
     const order = containsVar(E, YPP) ? 2 : 1;
     let r;
     try {
-        if (order === 1) r = solveFirst(E, x, y, conds.find((c) => c.order === 0) ?? null, eq.lhs.type === 'sym' && eq.lhs.name === YP && !containsVar(eq.rhs, YP));
+        if (order === 1)
+            r = solveFirst(E, x, y, conds.find((c) => c.order === 0) ?? null, eq.lhs.type === 'sym' && eq.lhs.name === YP && !containsVar(eq.rhs, YP));
         else r = solveSecond(E, x, y, conds);
     } catch (e) {
         if (!(e instanceof MathError)) throw e;
@@ -675,11 +787,13 @@ export function solveOde(input, opts = {}) {
     const eqDisp = substitute(eq, { [YP]: sym(`${y}'`), [YPP]: sym(`${y}''`) });
     const steps = [step({ title: msg('calculus.ode.equation'), tex: eachLanguage((l) => tex(eqDisp, l)) }), ...r.steps];
     // the check: substitute back
-    if (r.expr && !satisfies({ lhs: E, rhs: N0 }, r.expr, x, y)) return { kind: 'unsupported', reason: msg('calculus.ode.could_not_verify_solution'), steps: [] };
+    if (r.expr && !satisfies({ lhs: E, rhs: N0 }, r.expr, x, y))
+        return { kind: 'unsupported', reason: msg('calculus.ode.could_not_verify_solution'), steps: [] };
     if (r.expr) {
         for (const c of conds) {
             const Yc = c.order === 0 ? r.expr : c.order === 1 ? derivativeOf(r.expr, x) : derivativeOf(derivativeOf(r.expr, x), x);
-            if (Math.abs(approx(Yc, { [x]: approx(c.at, {}) }) - approx(c.value, {})) > 1e-8) return { kind: 'unsupported', reason: msg('calculus.ode.solution_does_not_meet_initial_condition'), steps: [] };
+            if (Math.abs(approx(Yc, { [x]: approx(c.at, {}) }) - approx(c.value, {})) > 1e-8)
+                return { kind: 'unsupported', reason: msg('calculus.ode.solution_does_not_meet_initial_condition'), steps: [] };
         }
     }
     const answer = r.expr ?? r.general;

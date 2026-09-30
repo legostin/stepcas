@@ -50,7 +50,6 @@ export function trySimp(node) {
     }
 }
 
-
 const tall = (s) => /\\frac|\\sqrt|\\left|\\dfrac|\^\{/.test(s);
 export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);
 
@@ -161,7 +160,18 @@ export function lnAbs(u, v) {
 
 // ---------------------------------------------------------------- the check: F′ = f on the domain
 
-const RANGES = [[0.2, 1.8], [-1.8, -0.2], [2, 6], [-6, -2], [0.05, 0.95], [-0.95, -0.05], [6, 20], [-20, -6], [20, 200], [-200, -20]];
+const RANGES = [
+    [0.2, 1.8],
+    [-1.8, -0.2],
+    [2, 6],
+    [-6, -2],
+    [0.05, 0.95],
+    [-0.95, -0.05],
+    [6, 20],
+    [-20, -6],
+    [20, 200],
+    [-200, -20],
+];
 
 /**
  * Is F an antiderivative of f? true / false / null (too few usable points). Points where f is finite but F

@@ -61,7 +61,7 @@ function numD(F, x) {
 
 function lcg(seed) {
     let s = seed >>> 0;
-    return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296);
+    return () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
 }
 
 const tex = (n, lang = 'ru') => E.calcTex(n, lang);
@@ -71,23 +71,183 @@ const pick = (t, lang = 'ru') => (typeof t === 'string' ? t : t[lang]);
 
 const DERIVS = [
     // the table
-    '5', 'x', '3x', 'x^2', 'x^3', 'x^10', '-x^4', '2x^5-3x^2+x-7', 'x^(1/2)', 'sqrt(x)', 'cbrt(x)', 'root(x,4)', 'x^(-1)', '1/x', '1/x^2', '1/x^3', '2/sqrt(x)', 'x^(3/2)', 'x^(-2/3)', 'x^pi',
-    'e^x', 'exp(x)', '2^x', '10^x', '(1/2)^x', 'ln(x)', 'log_2(x)', 'lg(x)', 'log_3(x)', 'sin(x)', 'cos(x)', 'tg(x)', 'ctg(x)', 'arcsin(x)', 'arccos(x)', 'arctg(x)', 'arcctg(x)',
-    'sh(x)', 'ch(x)', 'th(x)', 'cth(x)', 'arsh(x)', 'abs(x)', 'sec(x)', 'cosec(x)',
+    '5',
+    'x',
+    '3x',
+    'x^2',
+    'x^3',
+    'x^10',
+    '-x^4',
+    '2x^5-3x^2+x-7',
+    'x^(1/2)',
+    'sqrt(x)',
+    'cbrt(x)',
+    'root(x,4)',
+    'x^(-1)',
+    '1/x',
+    '1/x^2',
+    '1/x^3',
+    '2/sqrt(x)',
+    'x^(3/2)',
+    'x^(-2/3)',
+    'x^pi',
+    'e^x',
+    'exp(x)',
+    '2^x',
+    '10^x',
+    '(1/2)^x',
+    'ln(x)',
+    'log_2(x)',
+    'lg(x)',
+    'log_3(x)',
+    'sin(x)',
+    'cos(x)',
+    'tg(x)',
+    'ctg(x)',
+    'arcsin(x)',
+    'arccos(x)',
+    'arctg(x)',
+    'arcctg(x)',
+    'sh(x)',
+    'ch(x)',
+    'th(x)',
+    'cth(x)',
+    'arsh(x)',
+    'abs(x)',
+    'sec(x)',
+    'cosec(x)',
     // sums, products, quotients
-    'x^2+sin(x)', 'x*sin(x)', 'x^2*cos(x)', 'x*e^x', 'x^2*e^x', 'e^x*sin(x)', 'e^x*cos(x)', 'x*ln(x)', 'x^2*ln(x)', 'sqrt(x)*ln(x)', 'x*sin(x)*cos(x)', 'x*e^x*sin(x)',
-    'sin(x)/x', 'x/sin(x)', 'e^x/x', 'ln(x)/x', 'x/ln(x)', '(x+1)/(x-1)', '(x^2+1)/(x^2-1)', 'x/(x^2+1)', '(1-x)/(1+x)', '1/(x^2+1)', 'sin(x)/(1+cos(x))', '(e^x-1)/(e^x+1)', 'x^2/(1-x)', '(2x+3)/(x^2-4)',
+    'x^2+sin(x)',
+    'x*sin(x)',
+    'x^2*cos(x)',
+    'x*e^x',
+    'x^2*e^x',
+    'e^x*sin(x)',
+    'e^x*cos(x)',
+    'x*ln(x)',
+    'x^2*ln(x)',
+    'sqrt(x)*ln(x)',
+    'x*sin(x)*cos(x)',
+    'x*e^x*sin(x)',
+    'sin(x)/x',
+    'x/sin(x)',
+    'e^x/x',
+    'ln(x)/x',
+    'x/ln(x)',
+    '(x+1)/(x-1)',
+    '(x^2+1)/(x^2-1)',
+    'x/(x^2+1)',
+    '(1-x)/(1+x)',
+    '1/(x^2+1)',
+    'sin(x)/(1+cos(x))',
+    '(e^x-1)/(e^x+1)',
+    'x^2/(1-x)',
+    '(2x+3)/(x^2-4)',
     // the chain rule
-    'sin(2x)', 'cos(3x+1)', 'e^(2x)', 'e^(-x)', 'e^(x^2)', 'e^(-x^2/2)', 'sin(x^2)', 'cos(x)^2', 'sin(x)^3', 'sqrt(x^2+1)', 'sqrt(1-x^2)', '(x^2+1)^5', '(2x-1)^10', '1/(x^2+1)^2', 'ln(x^2+1)', 'ln(sin(x))', 'ln(cos(x))',
-    'ln(ln(x))', 'tg(x^2)', 'arctg(2x)', 'arcsin(x/2)', 'arctg(1/x)', 'arcsin(sqrt(x))', 'sqrt(x+sqrt(x))', 'e^(sin(x))', 'sin(e^x)', 'cos(ln(x))', 'ln(x+sqrt(x^2+1))', 'ln(tg(x/2))', '(1+x^2)^(1/3)', '2^(x^2)', '3^(sin(x))', 'lg(x^2+1)', 'log_2(3x+1)',
-    'sin(cos(x))', 'cos(sin(x^2))', 'e^(e^x)', 'ln(abs(x))', 'abs(x^2-1)', 'sh(2x)', 'ch(x^2)', 'arcctg(x^2)', 'arccos(2x-1)', 'sqrt(tg(x))', 'tg(x)^3', 'ctg(2x)^2', '1/sin(x)^2', 'sin(x)^2*cos(x)^3',
+    'sin(2x)',
+    'cos(3x+1)',
+    'e^(2x)',
+    'e^(-x)',
+    'e^(x^2)',
+    'e^(-x^2/2)',
+    'sin(x^2)',
+    'cos(x)^2',
+    'sin(x)^3',
+    'sqrt(x^2+1)',
+    'sqrt(1-x^2)',
+    '(x^2+1)^5',
+    '(2x-1)^10',
+    '1/(x^2+1)^2',
+    'ln(x^2+1)',
+    'ln(sin(x))',
+    'ln(cos(x))',
+    'ln(ln(x))',
+    'tg(x^2)',
+    'arctg(2x)',
+    'arcsin(x/2)',
+    'arctg(1/x)',
+    'arcsin(sqrt(x))',
+    'sqrt(x+sqrt(x))',
+    'e^(sin(x))',
+    'sin(e^x)',
+    'cos(ln(x))',
+    'ln(x+sqrt(x^2+1))',
+    'ln(tg(x/2))',
+    '(1+x^2)^(1/3)',
+    '2^(x^2)',
+    '3^(sin(x))',
+    'lg(x^2+1)',
+    'log_2(3x+1)',
+    'sin(cos(x))',
+    'cos(sin(x^2))',
+    'e^(e^x)',
+    'ln(abs(x))',
+    'abs(x^2-1)',
+    'sh(2x)',
+    'ch(x^2)',
+    'arcctg(x^2)',
+    'arccos(2x-1)',
+    'sqrt(tg(x))',
+    'tg(x)^3',
+    'ctg(2x)^2',
+    '1/sin(x)^2',
+    'sin(x)^2*cos(x)^3',
     // logarithmic differentiation
-    'x^x', 'x^sin(x)', 'sin(x)^x', '(1+1/x)^x', 'x^(1/x)', 'x^(x^2)', 'ln(x)^x', 'x^ln(x)',
+    'x^x',
+    'x^sin(x)',
+    'sin(x)^x',
+    '(1+1/x)^x',
+    'x^(1/x)',
+    'x^(x^2)',
+    'ln(x)^x',
+    'x^ln(x)',
     // nasty compositions
-    'sin(x)^2+cos(x)^2', 'e^(-x)*sin(2x)', 'x^3*e^(-2x)*cos(x)', 'ln((1+x)/(1-x))', 'sqrt((1+x)/(1-x))', 'arctg((1+x)/(1-x))', 'x*arcsin(x)+sqrt(1-x^2)', 'x/sqrt(1+x^2)', '(x^2-1)^3/(x+2)^2', 'e^x/(1+e^x)^2',
-    'ln(e^x+e^(-x))', 'sqrt(x^2+x+1)', '1/sqrt(4-x^2)', 'x^2*sqrt(1-x)', 'cbrt(x^2-1)', '(sin(x)+cos(x))/(sin(x)-cos(x))', 'arcsin(2x*sqrt(1-x^2))', 'ln(sqrt(x^2+1)-x)', 'e^(x)*ln(x)*sin(x)', 'x^2*arctg(x)',
-    'sin(x)*sh(x)', 'th(x)^2', 'ln(ch(x))', 'arsh(x^2)', '(x+1)^2*(x-2)^3', 'x*(x+1)*(x+2)*(x+3)', '1/(x*(x+1))', '(3x^2-2x+1)/x^3', 'sqrt(x)/(1+sqrt(x))', 'sin(3x)*cos(5x)', 'tg(x)-x', 'ctg(x)+x',
-    'e^(2x)*(x^2-x+1)', 'log_x(2)', 'x^2*2^x', 'sin(x)^(1/2)', 'sqrt(sin(x)^2+1)', '1/(1+sqrt(x))^2', 'x^4-4x^3+6x^2-4x+1', 'a*x^2+b*x+c', 'sin(a*x)', 'e^(k*x)', 'x/a+a/x', 'ln(a*x)', 'sign(x)*x^2', 'x*abs(x)',
+    'sin(x)^2+cos(x)^2',
+    'e^(-x)*sin(2x)',
+    'x^3*e^(-2x)*cos(x)',
+    'ln((1+x)/(1-x))',
+    'sqrt((1+x)/(1-x))',
+    'arctg((1+x)/(1-x))',
+    'x*arcsin(x)+sqrt(1-x^2)',
+    'x/sqrt(1+x^2)',
+    '(x^2-1)^3/(x+2)^2',
+    'e^x/(1+e^x)^2',
+    'ln(e^x+e^(-x))',
+    'sqrt(x^2+x+1)',
+    '1/sqrt(4-x^2)',
+    'x^2*sqrt(1-x)',
+    'cbrt(x^2-1)',
+    '(sin(x)+cos(x))/(sin(x)-cos(x))',
+    'arcsin(2x*sqrt(1-x^2))',
+    'ln(sqrt(x^2+1)-x)',
+    'e^(x)*ln(x)*sin(x)',
+    'x^2*arctg(x)',
+    'sin(x)*sh(x)',
+    'th(x)^2',
+    'ln(ch(x))',
+    'arsh(x^2)',
+    '(x+1)^2*(x-2)^3',
+    'x*(x+1)*(x+2)*(x+3)',
+    '1/(x*(x+1))',
+    '(3x^2-2x+1)/x^3',
+    'sqrt(x)/(1+sqrt(x))',
+    'sin(3x)*cos(5x)',
+    'tg(x)-x',
+    'ctg(x)+x',
+    'e^(2x)*(x^2-x+1)',
+    'log_x(2)',
+    'x^2*2^x',
+    'sin(x)^(1/2)',
+    'sqrt(sin(x)^2+1)',
+    '1/(1+sqrt(x))^2',
+    'x^4-4x^3+6x^2-4x+1',
+    'a*x^2+b*x+c',
+    'sin(a*x)',
+    'e^(k*x)',
+    'x/a+a/x',
+    'ln(a*x)',
+    'sign(x)*x^2',
+    'x*abs(x)',
 ];
 
 test(`derivatives: ${DERIVS.length} functions agree with central differences`, () => {
@@ -194,7 +354,10 @@ test('derivative steps: a tree that mirrors the expression', () => {
     const p = E.derivative('x^2*e^x', 'x', { steps: true }).steps[1];
     assert.equal(p.rule, 'product');
     assert.match(p.text.ru, /По правилу произведения/);
-    assert.equal(p.tex, "\\left(x^{2}e^{x}\\right)' = \\left(x^{2}\\right)' \\cdot e^{x} + x^{2} \\cdot \\left(e^{x}\\right)' = 2x \\cdot e^{x} + x^{2} \\cdot e^{x} = xe^{x}(x + 2)");
+    assert.equal(
+        p.tex,
+        "\\left(x^{2}e^{x}\\right)' = \\left(x^{2}\\right)' \\cdot e^{x} + x^{2} \\cdot \\left(e^{x}\\right)' = 2x \\cdot e^{x} + x^{2} \\cdot e^{x} = xe^{x}(x + 2)",
+    );
     // logarithmic differentiation, rewriting as a power, partial derivatives, EN/RU notation
     const ld = E.derivative('x^x', 'x', { steps: true });
     checkSteps(ld.steps, 'x^x');
@@ -220,7 +383,10 @@ test('derivative options: unsimplified result, partial, n-th, gradient, tangent'
     assert.equal(p.tex, '\\frac{\\partial f}{\\partial y} = x^{2} + x\\cos(xy)');
     const d3 = E.derivativeN('x^5', 'x', 3);
     assert.equal(tex(d3.result), '60x^{2}');
-    assert.deepEqual(d3.list.map((n) => tex(n)), ['5x^{4}', '20x^{3}', '60x^{2}']);
+    assert.deepEqual(
+        d3.list.map((n) => tex(n)),
+        ['5x^{4}', '20x^{3}', '60x^{2}'],
+    );
     assert.equal(d3.tex, "f'''(x) = 60x^{2}");
     const d4 = E.derivativeN('sin(x)', 'x', 4, { steps: true });
     assert.equal(tex(d4.result), '\\sin x');
@@ -231,7 +397,10 @@ test('derivative options: unsimplified result, partial, n-th, gradient, tangent'
     const g = E.gradientOf('x^2*y + y^3', ['x', 'y'], { steps: true });
     assert.equal(tex(g.components.x), '2xy');
     assert.equal(tex(g.components.y), 'x^{2} + 3y^{2}');
-    assert.equal(g.tex.ru, '\\nabla f = \\left(\\frac{\\partial f}{\\partial x};\\ \\frac{\\partial f}{\\partial y}\\right) = \\left(2xy;\\ x^{2} + 3y^{2}\\right)');
+    assert.equal(
+        g.tex.ru,
+        '\\nabla f = \\left(\\frac{\\partial f}{\\partial x};\\ \\frac{\\partial f}{\\partial y}\\right) = \\left(2xy;\\ x^{2} + 3y^{2}\\right)',
+    );
     checkSteps(g.steps, 'grad');
     const t = E.tangentLine('x^2', 'x', 1, { steps: true });
     assert.equal(tex(t.k), '2');
@@ -267,33 +436,233 @@ test('derivative: refusals and helpers', () => {
 
 const INTEGRALS = [
     // table and linearity
-    '7', 'x', 'x^2', 'x^5', 'x^(-3)', 'sqrt(x)', 'cbrt(x)', '1/sqrt(x)', 'x^(2/3)', 'x^pi', '1/x', 'e^x', '3^x', '(1/2)^x', 'sin(x)', 'cos(x)', 'tg(x)', 'ctg(x)', '1/cos(x)^2', '1/sin(x)^2', '1/(1+x^2)', '1/sqrt(1-x^2)',
-    'sh(x)', 'ch(x)', 'th(x)', '1/ch(x)^2', 'abs(x)', '1/cos(x)', '1/sin(x)', '1/sqrt(x^2+1)', '1/sqrt(x^2-1)',
-    '3x^2-2x+1', 'x^4-3x^3+x', '2sqrt(x)-3/x', '5e^x+2cos(x)', '(x^2+1)/x', '(1+x)^2/x', '(x+1)/sqrt(x)', 'x*(x-1)*(x+2)', '(2x-1)^2', '(x^2+1)^3', '(1+sqrt(x))^2', '(e^x+1)^2', 'a*x^2+b', 'x/a',
+    '7',
+    'x',
+    'x^2',
+    'x^5',
+    'x^(-3)',
+    'sqrt(x)',
+    'cbrt(x)',
+    '1/sqrt(x)',
+    'x^(2/3)',
+    'x^pi',
+    '1/x',
+    'e^x',
+    '3^x',
+    '(1/2)^x',
+    'sin(x)',
+    'cos(x)',
+    'tg(x)',
+    'ctg(x)',
+    '1/cos(x)^2',
+    '1/sin(x)^2',
+    '1/(1+x^2)',
+    '1/sqrt(1-x^2)',
+    'sh(x)',
+    'ch(x)',
+    'th(x)',
+    '1/ch(x)^2',
+    'abs(x)',
+    '1/cos(x)',
+    '1/sin(x)',
+    '1/sqrt(x^2+1)',
+    '1/sqrt(x^2-1)',
+    '3x^2-2x+1',
+    'x^4-3x^3+x',
+    '2sqrt(x)-3/x',
+    '5e^x+2cos(x)',
+    '(x^2+1)/x',
+    '(1+x)^2/x',
+    '(x+1)/sqrt(x)',
+    'x*(x-1)*(x+2)',
+    '(2x-1)^2',
+    '(x^2+1)^3',
+    '(1+sqrt(x))^2',
+    '(e^x+1)^2',
+    'a*x^2+b',
+    'x/a',
     // linear substitution
-    'sin(3x)', 'cos(2x+1)', 'e^(5x)', 'e^(-x)', 'e^(1-2x)', '(3x+2)^4', '1/(2x+1)', '1/(1-x)', 'sqrt(4x+1)', '1/sqrt(1-2x)', '1/cos(3x)^2', '1/(1+(2x)^2)', '2^(3x)', 'sin(x/2)', 'cos(pi*x)', '1/(3x-1)^2', 'ch(2x)',
+    'sin(3x)',
+    'cos(2x+1)',
+    'e^(5x)',
+    'e^(-x)',
+    'e^(1-2x)',
+    '(3x+2)^4',
+    '1/(2x+1)',
+    '1/(1-x)',
+    'sqrt(4x+1)',
+    '1/sqrt(1-2x)',
+    '1/cos(3x)^2',
+    '1/(1+(2x)^2)',
+    '2^(3x)',
+    'sin(x/2)',
+    'cos(pi*x)',
+    '1/(3x-1)^2',
+    'ch(2x)',
     // u-substitution
-    'x*e^(x^2)', 'x^2*e^(x^3)', 'x*sin(x^2)', 'x/(x^2+1)', 'x/(x^2+1)^2', 'x/sqrt(x^2+1)', 'x*sqrt(1-x^2)', 'x^2/(x^3+1)', 'sin(x)*cos(x)', 'sin(x)^4*cos(x)', 'cos(x)^3*sin(x)', 'ln(x)/x', 'ln(x)^2/x', '1/(x*ln(x))', '1/(x*ln(x)^2)',
-    'e^x/(1+e^x)', 'e^x/(1+e^(2x))', 'e^x*sin(e^x)', 'cos(x)/(1+sin(x))', 'sin(x)/cos(x)^3', 'tg(x)/cos(x)^2', 'arctg(x)/(1+x^2)', 'arcsin(x)/sqrt(1-x^2)', 'e^(sqrt(x))/sqrt(x)', 'sin(sqrt(x))/sqrt(x)', 'cos(ln(x))/x', 'x^3*sqrt(x^2+1)', '(2x+3)/(x^2+3x+5)', 'e^(tg(x))/cos(x)^2', '1/(1+e^x)', 'x*(x^2+1)^5', 'e^x*(e^x+1)^3', 'sh(x)*ch(x)',
+    'x*e^(x^2)',
+    'x^2*e^(x^3)',
+    'x*sin(x^2)',
+    'x/(x^2+1)',
+    'x/(x^2+1)^2',
+    'x/sqrt(x^2+1)',
+    'x*sqrt(1-x^2)',
+    'x^2/(x^3+1)',
+    'sin(x)*cos(x)',
+    'sin(x)^4*cos(x)',
+    'cos(x)^3*sin(x)',
+    'ln(x)/x',
+    'ln(x)^2/x',
+    '1/(x*ln(x))',
+    '1/(x*ln(x)^2)',
+    'e^x/(1+e^x)',
+    'e^x/(1+e^(2x))',
+    'e^x*sin(e^x)',
+    'cos(x)/(1+sin(x))',
+    'sin(x)/cos(x)^3',
+    'tg(x)/cos(x)^2',
+    'arctg(x)/(1+x^2)',
+    'arcsin(x)/sqrt(1-x^2)',
+    'e^(sqrt(x))/sqrt(x)',
+    'sin(sqrt(x))/sqrt(x)',
+    'cos(ln(x))/x',
+    'x^3*sqrt(x^2+1)',
+    '(2x+3)/(x^2+3x+5)',
+    'e^(tg(x))/cos(x)^2',
+    '1/(1+e^x)',
+    'x*(x^2+1)^5',
+    'e^x*(e^x+1)^3',
+    'sh(x)*ch(x)',
     // by parts
-    'x*e^x', 'x*e^(-x)', 'x^2*e^x', 'x^3*e^x', 'x*e^(2x)', 'x*sin(x)', 'x*cos(x)', 'x^2*sin(x)', 'x^2*cos(3x)', 'x*sin(2x+1)', 'ln(x)', 'x*ln(x)', 'x^2*ln(x)', 'sqrt(x)*ln(x)', 'ln(x)/x^2', 'ln(x)^2', 'ln(x+1)', 'ln(x^2+1)',
-    'arctg(x)', 'x*arctg(x)', 'arcsin(x)', 'arccos(x)', 'x/cos(x)^2', 'x*2^x', 'x*sh(x)', '(x+1)*e^x', 'lg(x)', 'log_2(x)',
+    'x*e^x',
+    'x*e^(-x)',
+    'x^2*e^x',
+    'x^3*e^x',
+    'x*e^(2x)',
+    'x*sin(x)',
+    'x*cos(x)',
+    'x^2*sin(x)',
+    'x^2*cos(3x)',
+    'x*sin(2x+1)',
+    'ln(x)',
+    'x*ln(x)',
+    'x^2*ln(x)',
+    'sqrt(x)*ln(x)',
+    'ln(x)/x^2',
+    'ln(x)^2',
+    'ln(x+1)',
+    'ln(x^2+1)',
+    'arctg(x)',
+    'x*arctg(x)',
+    'arcsin(x)',
+    'arccos(x)',
+    'x/cos(x)^2',
+    'x*2^x',
+    'x*sh(x)',
+    '(x+1)*e^x',
+    'lg(x)',
+    'log_2(x)',
     // cyclic
-    'e^x*sin(x)', 'e^x*cos(x)', 'e^(2x)*sin(3x)', 'e^(-x)*cos(2x)', '2^x*sin(x)',
+    'e^x*sin(x)',
+    'e^x*cos(x)',
+    'e^(2x)*sin(3x)',
+    'e^(-x)*cos(2x)',
+    '2^x*sin(x)',
     // rational functions
-    '1/(x^2-1)', '1/(x^2-4)', '1/(x*(x+1))', '(x+1)/(x^2-5x+6)', '(2x+1)/(x^2+x-2)', '1/(x^2+2x+5)', '1/(x^2+4)', '1/(4x^2+9)', '(x+3)/(x^2+2x+2)', 'x^2/(x^2+1)', 'x^3/(x^2+1)', '(x^3+1)/(x^2-1)', '1/(x*(x+1)^2)',
-    '1/(x^2*(x-1))', '1/(x^3+1)', '1/(x^3-1)', '1/(x^4-1)', 'x/(x^4-1)', '1/(x^2+1)^2', 'x/(x^2+1)^3', '(x^2+2)/(x*(x^2+1))', '1/(x^2-2)', '(3x-1)/(x^2-x-6)', '1/((x-1)^2*(x+1))', '(x^4+1)/(x^3+x)', '1/(x^2+x+1)', '1/(2x^2-3x+1)',
+    '1/(x^2-1)',
+    '1/(x^2-4)',
+    '1/(x*(x+1))',
+    '(x+1)/(x^2-5x+6)',
+    '(2x+1)/(x^2+x-2)',
+    '1/(x^2+2x+5)',
+    '1/(x^2+4)',
+    '1/(4x^2+9)',
+    '(x+3)/(x^2+2x+2)',
+    'x^2/(x^2+1)',
+    'x^3/(x^2+1)',
+    '(x^3+1)/(x^2-1)',
+    '1/(x*(x+1)^2)',
+    '1/(x^2*(x-1))',
+    '1/(x^3+1)',
+    '1/(x^3-1)',
+    '1/(x^4-1)',
+    'x/(x^4-1)',
+    '1/(x^2+1)^2',
+    'x/(x^2+1)^3',
+    '(x^2+2)/(x*(x^2+1))',
+    '1/(x^2-2)',
+    '(3x-1)/(x^2-x-6)',
+    '1/((x-1)^2*(x+1))',
+    '(x^4+1)/(x^3+x)',
+    '1/(x^2+x+1)',
+    '1/(2x^2-3x+1)',
     // trigonometric
-    'sin(x)^2', 'cos(x)^2', 'sin(2x)^2', 'sin(x)^3', 'cos(x)^3', 'sin(x)^5', 'cos(x)^4', 'sin(x)^2*cos(x)^2', 'sin(x)^3*cos(x)^2', 'sin(x)^2*cos(x)^3', 'tg(x)^2', 'ctg(x)^2', 'tg(x)^3', 'tg(x)^4', '1/cos(x)^4',
-    '1/sin(x)^3', 'sin(x)^4/cos(x)^2', 'cos(x)^3/sin(x)^2', 'sin(2x)*cos(3x)', 'sin(x)*sin(3x)', 'cos(x)*cos(2x)', '1/(sin(x)^2*cos(x)^2)', 'sin(x)*cos(x)^2', 'sin(3x)^3',
+    'sin(x)^2',
+    'cos(x)^2',
+    'sin(2x)^2',
+    'sin(x)^3',
+    'cos(x)^3',
+    'sin(x)^5',
+    'cos(x)^4',
+    'sin(x)^2*cos(x)^2',
+    'sin(x)^3*cos(x)^2',
+    'sin(x)^2*cos(x)^3',
+    'tg(x)^2',
+    'ctg(x)^2',
+    'tg(x)^3',
+    'tg(x)^4',
+    '1/cos(x)^4',
+    '1/sin(x)^3',
+    'sin(x)^4/cos(x)^2',
+    'cos(x)^3/sin(x)^2',
+    'sin(2x)*cos(3x)',
+    'sin(x)*sin(3x)',
+    'cos(x)*cos(2x)',
+    '1/(sin(x)^2*cos(x)^2)',
+    'sin(x)*cos(x)^2',
+    'sin(3x)^3',
     // roots
-    '1/sqrt(4-x^2)', '1/sqrt(9-x^2)', '1/sqrt(x^2+9)', '1/sqrt(x^2-4)', 'sqrt(1-x^2)', 'sqrt(4-x^2)', 'sqrt(x^2+1)', 'sqrt(x^2-1)', '1/sqrt(x^2+2x+5)', '1/sqrt(3-2x-x^2)', '(x+2)/sqrt(x^2+1)', '(2x+1)/sqrt(1-x^2)', 'x*sqrt(x^2+4)', 'sqrt(2x-x^2)',
-    '1/(1+sqrt(x))', 'x*sqrt(x+1)', 'sqrt(x)/(1+x)', '1/(sqrt(x)+cbrt(x))', 'x/sqrt(x+1)', '1/(x*sqrt(x+1))', 'sqrt(x+1)/x',
+    '1/sqrt(4-x^2)',
+    '1/sqrt(9-x^2)',
+    '1/sqrt(x^2+9)',
+    '1/sqrt(x^2-4)',
+    'sqrt(1-x^2)',
+    'sqrt(4-x^2)',
+    'sqrt(x^2+1)',
+    'sqrt(x^2-1)',
+    '1/sqrt(x^2+2x+5)',
+    '1/sqrt(3-2x-x^2)',
+    '(x+2)/sqrt(x^2+1)',
+    '(2x+1)/sqrt(1-x^2)',
+    'x*sqrt(x^2+4)',
+    'sqrt(2x-x^2)',
+    '1/(1+sqrt(x))',
+    'x*sqrt(x+1)',
+    'sqrt(x)/(1+x)',
+    '1/(sqrt(x)+cbrt(x))',
+    'x/sqrt(x+1)',
+    '1/(x*sqrt(x+1))',
+    'sqrt(x+1)/x',
     // the universal substitution
-    '1/(2+cos(x))', '1/(1+sin(x))', '1/(3+5*cos(x))', '1/(1+sin(x)+cos(x))', '1/(5-3*cos(x))',
+    '1/(2+cos(x))',
+    '1/(1+sin(x))',
+    '1/(3+5*cos(x))',
+    '1/(1+sin(x)+cos(x))',
+    '1/(5-3*cos(x))',
     // polynomial over a root (undetermined coefficients), trigonometric substitutions, high degrees by parts
-    'x^2*sqrt(4-x^2)', 'x^2/sqrt(1-x^2)', 'x^2/sqrt(x^2+1)', 'x^3/sqrt(x^2+2x+5)', 'x^2*sqrt(x^2+1)', '1/(x^2*sqrt(1-x^2))', 'sqrt(1-x^2)/x^2', '1/(x^2+1)^(3/2)',
-    'x*arcsin(x)', 'x^8*e^x', 'x^5*sin(x)', 'x^4*cos(2x)', 'x^3*2^x',
+    'x^2*sqrt(4-x^2)',
+    'x^2/sqrt(1-x^2)',
+    'x^2/sqrt(x^2+1)',
+    'x^3/sqrt(x^2+2x+5)',
+    'x^2*sqrt(x^2+1)',
+    '1/(x^2*sqrt(1-x^2))',
+    'sqrt(1-x^2)/x^2',
+    '1/(x^2+1)^(3/2)',
+    'x*arcsin(x)',
+    'x^8*e^x',
+    'x^5*sin(x)',
+    'x^4*cos(2x)',
+    'x^3*2^x',
 ];
 
 test(`integrals: ${INTEGRALS.length} antiderivatives, each differentiated back numerically`, () => {
@@ -322,7 +691,24 @@ test(`integrals: ${INTEGRALS.length} antiderivatives, each differentiated back n
         assert.ok(ok >= 3, `${s}: too few sample points`);
         assert.ok(typeof r.tex === 'string' ? r.tex.endsWith(' + C') : r.tex.ru.endsWith(' + C'), `${s}: + C`);
     }
-    for (const m of ['table', 'linearity', 'linear-substitution', 'substitution', 'parts', 'parts-cyclic', 'rational', 'trig-power', 'trig-substitution', 'trig-product', 'quadratic-root', 'radical-polynomial', 'trig-root-substitution', 'rationalizing', 'universal-substitution', 'constant']) {
+    for (const m of [
+        'table',
+        'linearity',
+        'linear-substitution',
+        'substitution',
+        'parts',
+        'parts-cyclic',
+        'rational',
+        'trig-power',
+        'trig-substitution',
+        'trig-product',
+        'quadratic-root',
+        'radical-polynomial',
+        'trig-root-substitution',
+        'rationalizing',
+        'universal-substitution',
+        'constant',
+    ]) {
         assert.ok(methods.has(m), `method ${m} is never used`);
     }
 });
@@ -363,7 +749,11 @@ const INT_FORMS = [
     ['cos(x)^3', '\\sin x - \\frac{1}{3}\\sin^{3} x', 'trig-substitution'],
     ['tg(x)^2', '\\operatorname{tg} x - x', 'trig-substitution'],
     ['1/sqrt(4-x^2)', '\\arcsin\\left(\\frac{x}{2}\\right)', 'quadratic-root'],
-    ['1/(2+cos(x))', '\\frac{2\\sqrt{3}}{3}\\operatorname{arctg}\\left(\\frac{\\operatorname{tg}\\left(\\frac{x}{2}\\right)}{\\sqrt{3}}\\right)', 'universal-substitution'],
+    [
+        '1/(2+cos(x))',
+        '\\frac{2\\sqrt{3}}{3}\\operatorname{arctg}\\left(\\frac{\\operatorname{tg}\\left(\\frac{x}{2}\\right)}{\\sqrt{3}}\\right)',
+        'universal-substitution',
+    ],
     ['x^2/sqrt(1-x^2)', '\\frac{1}{2}\\arcsin x - \\frac{1}{2}x\\sqrt{1 - x^{2}}', 'radical-polynomial'],
     ['1/(x^2*sqrt(1-x^2))', '-\\frac{\\sqrt{1 - x^{2}}}{x}', 'trig-root-substitution'],
     ['x^8*e^x', 'e^{x}(x^{8} - 8x^{7} + 56x^{6} - 336x^{5} + 1680x^{4} - 6720x^{3} + 20160x^{2} - 40320x + 40320)', 'parts'],
@@ -384,7 +774,10 @@ test('integral steps: every method explains itself', () => {
         checkSteps(r.steps, s);
         assert.equal(r.steps[0].rule, 'start', s);
         assert.equal(r.steps.at(-1).rule, 'answer', s);
-        assert.ok(r.steps.some((x) => x.rule === 'check'), `${s}: check step`);
+        assert.ok(
+            r.steps.some((x) => x.rule === 'check'),
+            `${s}: check step`,
+        );
     }
     const p = E.integrate('x^2*e^x', 'x', { steps: true });
     assert.equal(p.steps[1].rule, 'parts');
@@ -403,8 +796,20 @@ test('integral steps: every method explains itself', () => {
 });
 
 const REFUSE = [
-    ['e^(-x^2)', /erf/], ['e^(x^2)', /erf/], ['sin(x)/x', /Si x/], ['cos(x)/x', /Ci x/], ['e^x/x', /Ei x/], ['1/ln(x)', /li x/], ['sin(x^2)', /Френеля/], ['cos(x^2)', /Френеля/], ['x^x', /xˣ/],
-    ['sqrt(1+x^3)', /не берёт/], ['e^(e^x)', /не берёт/], ['sqrt(sin(x))', /не берёт/], ['x*tg(x)', /не берёт/], ['sin(x)/(x+1)', /не берёт/],
+    ['e^(-x^2)', /erf/],
+    ['e^(x^2)', /erf/],
+    ['sin(x)/x', /Si x/],
+    ['cos(x)/x', /Ci x/],
+    ['e^x/x', /Ei x/],
+    ['1/ln(x)', /li x/],
+    ['sin(x^2)', /Френеля/],
+    ['cos(x^2)', /Френеля/],
+    ['x^x', /xˣ/],
+    ['sqrt(1+x^3)', /не берёт/],
+    ['e^(e^x)', /не берёт/],
+    ['sqrt(sin(x))', /не берёт/],
+    ['x*tg(x)', /не берёт/],
+    ['sin(x)/(x+1)', /не берёт/],
 ];
 
 test('integrals: honest refusals with a reason (and a hint for known non-elementary integrals)', () => {
@@ -492,7 +897,10 @@ test(`definite integrals: ${DEFINITE.length} cases — exact, improper, divergen
 test('area between curves', () => {
     const r = E.areaBetween('x', 'x^2', 'x', null, null, { steps: true });
     assert.equal(tex(r.value), '\\frac{1}{6}');
-    assert.deepEqual(r.points.map((p) => tex(p)), ['0', '1']);
+    assert.deepEqual(
+        r.points.map((p) => tex(p)),
+        ['0', '1'],
+    );
     checkSteps(r.steps, 'area');
     const s = E.areaBetween('sin(x)', '0', 'x', 0, '2pi');
     assert.equal(tex(s.value), '4');
@@ -508,31 +916,159 @@ test('area between curves', () => {
 
 const LIMITS = [
     // [f, a, expected, side?] — expected: an exact value, 'inf', '-inf' or 'dne'
-    ['x^2+3x-1', '2', '9'], ['(x+1)/(x-3)', '1', '-1'], ['sqrt(x+5)', '4', '3'], ['e^x+ln(x)', '1', 'e'], ['sin(x)+cos(x)', 'pi', '-1'], ['arctg(x)', '1', 'pi/4'], ['2^x', '3', '8'], ['abs(x-2)', '0', '2'],
-    ['(x^2-1)/(x-1)', '1', '2'], ['(x^2-4)/(x-2)', '2', '4'], ['(x^2-5x+6)/(x^2-4)', '2', '-1/4'], ['(x^3-1)/(x-1)', '1', '3'], ['(x^3-8)/(x^2-4)', '2', '3'], ['(x^2+x-2)/(x^2-1)', '1', '3/2'],
-    ['(x^4-1)/(x^3-1)', '1', '4/3'], ['(2x^2-x-1)/(x^2-1)', '1', '3/2'], ['(x^2-3x+2)/(x^2-4x+3)', '1', '1/2'], ['((1+x)^5-1)/x', '0', '5'], ['(x^3-x^2-x+1)/(x^3-3x+2)', '1', '2/3'], ['(x^2-9)/(x+3)', '-3', '-6'],
-    ['(3x^2+1)/(2x^2-x)', 'inf', '3/2'], ['(x^3+1)/(x^2+5)', 'inf', 'inf'], ['(x+1)/(x^3+2)', 'inf', '0'], ['(5x^3-2x)/(1-x^3)', 'inf', '-5'], ['(x^2+1)/(x-1)', '-inf', '-inf'],
-    ['(2x-3)^3/(x^3+1)', 'inf', '8'], ['x^3-100x^2', 'inf', 'inf'], ['x^3-x', '-inf', '-inf'], ['(1-x)^4/(x^4+x)', '-inf', '1'], ['1/x', 'inf', '0'], ['(x^2+3)/(2x^2)', '-inf', '1/2'],
-    ['(2x+1)/sqrt(x^2+1)', 'inf', '2'], ['(2x+1)/sqrt(x^2+1)', '-inf', '-2'], ['sqrt(x^2+1)/x', '-inf', '-1'], ['(sqrt(x)+1)/(sqrt(x)-1)', 'inf', '1'], ['sqrt(4x^2+x)/(x+1)', 'inf', '2'], ['cbrt(x^3+1)/x', 'inf', '1'],
-    ['(sqrt(x+4)-2)/x', '0', '1/4'], ['(sqrt(1+x)-sqrt(1-x))/x', '0', '1'], ['sqrt(x^2+x)-x', 'inf', '1/2'], ['sqrt(x^2+2x)-sqrt(x^2-2x)', 'inf', '2'], ['x-sqrt(x^2-1)', 'inf', '0'], ['(x-4)/(sqrt(x)-2)', '4', '4'],
-    ['(sqrt(x+1)-1)/(sqrt(x+4)-2)', '0', '2'], ['sqrt(x+1)-sqrt(x)', 'inf', '0'], ['(3-sqrt(x+5))/(x-4)', '4', '-1/6'], ['cbrt(x+1)-cbrt(x)', 'inf', '0'],
-    ['sin(x)/x', '0', '1'], ['sin(3x)/x', '0', '3'], ['sin(5x)/sin(2x)', '0', '5/2'], ['tg(3x)/sin(5x)', '0', '3/5'], ['(1-cos(x))/x^2', '0', '1/2'], ['(1-cos(4x))/(x*sin(x))', '0', '8'], ['(e^x-1)/x', '0', '1'],
-    ['(e^(3x)-1)/sin(2x)', '0', '3/2'], ['ln(1+x)/x', '0', '1'], ['ln(1+3x)/tg(2x)', '0', '3/2'], ['(2^x-1)/x', '0', 'ln(2)'], ['arcsin(2x)/x', '0', '2'], ['arctg(x)/(3x)', '0', '1/3'], ['((1+x)^(1/3)-1)/x', '0', '1/3'],
-    ['(sqrt(1+x)-1)/x', '0', '1/2'], ['ln(cos(x))/x^2', '0', '-1/2'], ['x*sin(1/x)', 'inf', '1'], ['x*ln(1+1/x)', 'inf', '1'], ['x*(e^(1/x)-1)', 'inf', '1'], ['sin(x^2)/(1-cos(x))', '0', '2'], ['(e^(2x)-1)/ln(1+x)', '0', '2'],
-    ['sh(x)/x', '0', '1'], ['(1-cos(x))/sin(x)^2', '0', '1/2'], ['tg(x)^2/(x*sin(x))', '0', '1'], ['(3^x-2^x)/x', '0', 'ln(3/2)'],
-    ['(1+1/x)^x', 'inf', 'e'], ['(1+x)^(1/x)', '0', 'e'], ['(1+2/x)^(3x)', 'inf', 'e^6'], ['(1-1/x)^x', 'inf', '1/e'], ['(cos x)^(1/x^2)', '0', 'e^(-1/2)'], ['((x+1)/(x-1))^x', 'inf', 'e^2'], ['(1+sin(x))^(1/x)', '0', 'e'],
-    ['(1+3x)^(2/x)', '0', 'e^6'], ['((x^2+1)/(x^2-1))^(x^2)', 'inf', 'e^2'], ['(1+tg(x))^(1/sin(x))', '0', 'e'], ['sin(x)^tg(x)', 'pi/2', '1', 'left'], ['(e^x+x)^(1/x)', '0', 'e^2'],
-    ['(x-sin(x))/x^3', '0', '1/6'], ['ln(x)/x', 'inf', '0'], ['x^2/e^x', 'inf', '0'], ['e^x/x^3', 'inf', 'inf'], ['ln(x)/sqrt(x)', 'inf', '0'], ['(e^x-1-x)/x^2', '0', '1/2'], ['(tg(x)-x)/x^3', '0', '1/3'],
-    ['(x-arctg(x))/x^3', '0', '1/3'], ['ln(x)/(x-1)', '1', '1'], ['(e^x-e^(-x))/sin(x)', '0', '2'], ['x^3*e^(-x)', 'inf', '0'], ['1/x - 1/sin(x)', '0', '0'], ['1/x-1/(e^x-1)', '0', '1/2'], ['1/ln(1+x)-1/x', '0', '1/2'],
-    ['ln(x)^2/x', 'inf', '0'], ['(tan(x)-sin(x))/x^3', '0', '1/2'], ['(x+sin(x))/x', 'inf', '1'], ['x/(x+sin(x))', 'inf', '1'], ['(x^2+sin(x))/(x^2+cos(x))', 'inf', '1'],
-    ['x*ln(x)', '0', '0', 'right'], ['x^x', '0', '1', 'right'], ['x^(1/x)', 'inf', '1'], ['x^2*ln(x)', '0', '0', 'right'], ['sqrt(x)*ln(x)', '0', '0', 'right'], ['x*e^(-x)', 'inf', '0'], ['(1/x)^(tg(x))', '0', '1', 'right'],
-    ['x^(sin(x))', '0', '1', 'right'], ['ln(sin(x))/ln(x)', '0', '1', 'right'],
-    ['1/x^2', '0', 'inf'], ['-1/x^2', '0', '-inf'], ['arctg(x)', 'inf', 'pi/2'], ['arctg(x)', '-inf', '-pi/2'], ['e^(-x)', 'inf', '0'], ['e^x', '-inf', '0'], ['ln(x)', '0', '-inf', 'right'], ['sin(x)/x', 'inf', '0'],
-    ['x-ln(x)', 'inf', 'inf'], ['1/(x-1)', '1', 'inf', 'right'], ['1/(x-1)', '1', '-inf', 'left'], ['e^(1/x)', '0', '0', 'left'], ['e^(1/x)', '0', 'inf', 'right'], ['arctg(1/x)', '0', 'pi/2', 'right'],
-    ['arctg(1/x)', '0', '-pi/2', 'left'], ['tg(x)', 'pi/2', 'inf', 'left'], ['2^(1/x)', '0', '0', 'left'], ['x*sin(x)', '0', '0'], ['sqrt(x)', '0', '0', 'right'], ['x^2*sin(1/x)', '0', '0'], ['x*cos(1/x)', '0', '0'],
-    ['1/x', '0', 'dne'], ['abs(x)/x', '0', 'dne'], ['sin(x)', 'inf', 'dne'], ['e^(1/x)', '0', 'dne'], ['floor(x)', '1', 'dne'], ['sign(x)', '0', 'dne'], ['tg(x)', 'pi/2', 'dne'], ['(x^2+x-2)/(x-1)^2', '1', 'dne'], ['arctg(1/x)', '0', 'dne'],
-    ['cos(x)', 'inf', 'dne'], ['cos(1/x)', '0', 'dne'], ['(2+x)^(1/x)', '0', 'dne'], ['(x^3+x^2-x-1)/(x^3-3x+2)', '1', 'dne'], ['x/(1-cos(x))', '0', 'dne'],
-    ['abs(x)/x', '0', '1', 'right'], ['abs(x)/x', '0', '-1', 'left'], ['(x^2-1)/abs(x-1)', '1', '2', 'right'], ['(x^2-1)/abs(x-1)', '1', '-2', 'left'], ['floor(x)', '2', '1', 'left'], ['floor(x)', '2', '2', 'right'],
+    ['x^2+3x-1', '2', '9'],
+    ['(x+1)/(x-3)', '1', '-1'],
+    ['sqrt(x+5)', '4', '3'],
+    ['e^x+ln(x)', '1', 'e'],
+    ['sin(x)+cos(x)', 'pi', '-1'],
+    ['arctg(x)', '1', 'pi/4'],
+    ['2^x', '3', '8'],
+    ['abs(x-2)', '0', '2'],
+    ['(x^2-1)/(x-1)', '1', '2'],
+    ['(x^2-4)/(x-2)', '2', '4'],
+    ['(x^2-5x+6)/(x^2-4)', '2', '-1/4'],
+    ['(x^3-1)/(x-1)', '1', '3'],
+    ['(x^3-8)/(x^2-4)', '2', '3'],
+    ['(x^2+x-2)/(x^2-1)', '1', '3/2'],
+    ['(x^4-1)/(x^3-1)', '1', '4/3'],
+    ['(2x^2-x-1)/(x^2-1)', '1', '3/2'],
+    ['(x^2-3x+2)/(x^2-4x+3)', '1', '1/2'],
+    ['((1+x)^5-1)/x', '0', '5'],
+    ['(x^3-x^2-x+1)/(x^3-3x+2)', '1', '2/3'],
+    ['(x^2-9)/(x+3)', '-3', '-6'],
+    ['(3x^2+1)/(2x^2-x)', 'inf', '3/2'],
+    ['(x^3+1)/(x^2+5)', 'inf', 'inf'],
+    ['(x+1)/(x^3+2)', 'inf', '0'],
+    ['(5x^3-2x)/(1-x^3)', 'inf', '-5'],
+    ['(x^2+1)/(x-1)', '-inf', '-inf'],
+    ['(2x-3)^3/(x^3+1)', 'inf', '8'],
+    ['x^3-100x^2', 'inf', 'inf'],
+    ['x^3-x', '-inf', '-inf'],
+    ['(1-x)^4/(x^4+x)', '-inf', '1'],
+    ['1/x', 'inf', '0'],
+    ['(x^2+3)/(2x^2)', '-inf', '1/2'],
+    ['(2x+1)/sqrt(x^2+1)', 'inf', '2'],
+    ['(2x+1)/sqrt(x^2+1)', '-inf', '-2'],
+    ['sqrt(x^2+1)/x', '-inf', '-1'],
+    ['(sqrt(x)+1)/(sqrt(x)-1)', 'inf', '1'],
+    ['sqrt(4x^2+x)/(x+1)', 'inf', '2'],
+    ['cbrt(x^3+1)/x', 'inf', '1'],
+    ['(sqrt(x+4)-2)/x', '0', '1/4'],
+    ['(sqrt(1+x)-sqrt(1-x))/x', '0', '1'],
+    ['sqrt(x^2+x)-x', 'inf', '1/2'],
+    ['sqrt(x^2+2x)-sqrt(x^2-2x)', 'inf', '2'],
+    ['x-sqrt(x^2-1)', 'inf', '0'],
+    ['(x-4)/(sqrt(x)-2)', '4', '4'],
+    ['(sqrt(x+1)-1)/(sqrt(x+4)-2)', '0', '2'],
+    ['sqrt(x+1)-sqrt(x)', 'inf', '0'],
+    ['(3-sqrt(x+5))/(x-4)', '4', '-1/6'],
+    ['cbrt(x+1)-cbrt(x)', 'inf', '0'],
+    ['sin(x)/x', '0', '1'],
+    ['sin(3x)/x', '0', '3'],
+    ['sin(5x)/sin(2x)', '0', '5/2'],
+    ['tg(3x)/sin(5x)', '0', '3/5'],
+    ['(1-cos(x))/x^2', '0', '1/2'],
+    ['(1-cos(4x))/(x*sin(x))', '0', '8'],
+    ['(e^x-1)/x', '0', '1'],
+    ['(e^(3x)-1)/sin(2x)', '0', '3/2'],
+    ['ln(1+x)/x', '0', '1'],
+    ['ln(1+3x)/tg(2x)', '0', '3/2'],
+    ['(2^x-1)/x', '0', 'ln(2)'],
+    ['arcsin(2x)/x', '0', '2'],
+    ['arctg(x)/(3x)', '0', '1/3'],
+    ['((1+x)^(1/3)-1)/x', '0', '1/3'],
+    ['(sqrt(1+x)-1)/x', '0', '1/2'],
+    ['ln(cos(x))/x^2', '0', '-1/2'],
+    ['x*sin(1/x)', 'inf', '1'],
+    ['x*ln(1+1/x)', 'inf', '1'],
+    ['x*(e^(1/x)-1)', 'inf', '1'],
+    ['sin(x^2)/(1-cos(x))', '0', '2'],
+    ['(e^(2x)-1)/ln(1+x)', '0', '2'],
+    ['sh(x)/x', '0', '1'],
+    ['(1-cos(x))/sin(x)^2', '0', '1/2'],
+    ['tg(x)^2/(x*sin(x))', '0', '1'],
+    ['(3^x-2^x)/x', '0', 'ln(3/2)'],
+    ['(1+1/x)^x', 'inf', 'e'],
+    ['(1+x)^(1/x)', '0', 'e'],
+    ['(1+2/x)^(3x)', 'inf', 'e^6'],
+    ['(1-1/x)^x', 'inf', '1/e'],
+    ['(cos x)^(1/x^2)', '0', 'e^(-1/2)'],
+    ['((x+1)/(x-1))^x', 'inf', 'e^2'],
+    ['(1+sin(x))^(1/x)', '0', 'e'],
+    ['(1+3x)^(2/x)', '0', 'e^6'],
+    ['((x^2+1)/(x^2-1))^(x^2)', 'inf', 'e^2'],
+    ['(1+tg(x))^(1/sin(x))', '0', 'e'],
+    ['sin(x)^tg(x)', 'pi/2', '1', 'left'],
+    ['(e^x+x)^(1/x)', '0', 'e^2'],
+    ['(x-sin(x))/x^3', '0', '1/6'],
+    ['ln(x)/x', 'inf', '0'],
+    ['x^2/e^x', 'inf', '0'],
+    ['e^x/x^3', 'inf', 'inf'],
+    ['ln(x)/sqrt(x)', 'inf', '0'],
+    ['(e^x-1-x)/x^2', '0', '1/2'],
+    ['(tg(x)-x)/x^3', '0', '1/3'],
+    ['(x-arctg(x))/x^3', '0', '1/3'],
+    ['ln(x)/(x-1)', '1', '1'],
+    ['(e^x-e^(-x))/sin(x)', '0', '2'],
+    ['x^3*e^(-x)', 'inf', '0'],
+    ['1/x - 1/sin(x)', '0', '0'],
+    ['1/x-1/(e^x-1)', '0', '1/2'],
+    ['1/ln(1+x)-1/x', '0', '1/2'],
+    ['ln(x)^2/x', 'inf', '0'],
+    ['(tan(x)-sin(x))/x^3', '0', '1/2'],
+    ['(x+sin(x))/x', 'inf', '1'],
+    ['x/(x+sin(x))', 'inf', '1'],
+    ['(x^2+sin(x))/(x^2+cos(x))', 'inf', '1'],
+    ['x*ln(x)', '0', '0', 'right'],
+    ['x^x', '0', '1', 'right'],
+    ['x^(1/x)', 'inf', '1'],
+    ['x^2*ln(x)', '0', '0', 'right'],
+    ['sqrt(x)*ln(x)', '0', '0', 'right'],
+    ['x*e^(-x)', 'inf', '0'],
+    ['(1/x)^(tg(x))', '0', '1', 'right'],
+    ['x^(sin(x))', '0', '1', 'right'],
+    ['ln(sin(x))/ln(x)', '0', '1', 'right'],
+    ['1/x^2', '0', 'inf'],
+    ['-1/x^2', '0', '-inf'],
+    ['arctg(x)', 'inf', 'pi/2'],
+    ['arctg(x)', '-inf', '-pi/2'],
+    ['e^(-x)', 'inf', '0'],
+    ['e^x', '-inf', '0'],
+    ['ln(x)', '0', '-inf', 'right'],
+    ['sin(x)/x', 'inf', '0'],
+    ['x-ln(x)', 'inf', 'inf'],
+    ['1/(x-1)', '1', 'inf', 'right'],
+    ['1/(x-1)', '1', '-inf', 'left'],
+    ['e^(1/x)', '0', '0', 'left'],
+    ['e^(1/x)', '0', 'inf', 'right'],
+    ['arctg(1/x)', '0', 'pi/2', 'right'],
+    ['arctg(1/x)', '0', '-pi/2', 'left'],
+    ['tg(x)', 'pi/2', 'inf', 'left'],
+    ['2^(1/x)', '0', '0', 'left'],
+    ['x*sin(x)', '0', '0'],
+    ['sqrt(x)', '0', '0', 'right'],
+    ['x^2*sin(1/x)', '0', '0'],
+    ['x*cos(1/x)', '0', '0'],
+    ['1/x', '0', 'dne'],
+    ['abs(x)/x', '0', 'dne'],
+    ['sin(x)', 'inf', 'dne'],
+    ['e^(1/x)', '0', 'dne'],
+    ['floor(x)', '1', 'dne'],
+    ['sign(x)', '0', 'dne'],
+    ['tg(x)', 'pi/2', 'dne'],
+    ['(x^2+x-2)/(x-1)^2', '1', 'dne'],
+    ['arctg(1/x)', '0', 'dne'],
+    ['cos(x)', 'inf', 'dne'],
+    ['cos(1/x)', '0', 'dne'],
+    ['(2+x)^(1/x)', '0', 'dne'],
+    ['(x^3+x^2-x-1)/(x^3-3x+2)', '1', 'dne'],
+    ['x/(1-cos(x))', '0', 'dne'],
+    ['abs(x)/x', '0', '1', 'right'],
+    ['abs(x)/x', '0', '-1', 'left'],
+    ['(x^2-1)/abs(x-1)', '1', '2', 'right'],
+    ['(x^2-1)/abs(x-1)', '1', '-2', 'left'],
+    ['floor(x)', '2', '1', 'left'],
+    ['floor(x)', '2', '2', 'right'],
 ];
 
 test(`limits: ${LIMITS.length} classic problems, each checked against the numbers near the point`, () => {
@@ -602,7 +1138,7 @@ test('limit steps: the method is named, the form is identified, the table is att
     assert.equal(E.limit('1/x', 'x', 0, { side: 'right' }).tex, '\\lim_{x \\to {0}^{+}} \\frac{1}{x} = +\\infty');
 });
 
-test('limits: parameters, other variables, L\'Hôpital only when it applies, numeric fallback marked ≈', () => {
+test("limits: parameters, other variables, L'Hôpital only when it applies, numeric fallback marked ≈", () => {
     assert.equal(tex(E.limit('((x+h)^2-x^2)/h', 'h', 0).value), '2x');
     assert.equal(tex(E.limit('(sin(x+h)-sin(x))/h', 'h', 0).value), '\\cos x');
     assert.equal(tex(E.limit('(1+a/x)^x', 'x', 'inf').value), 'e^{a}');
@@ -630,24 +1166,48 @@ test('limits: parameters, other variables, L\'Hôpital only when it applies, num
 
 test('Taylor polynomials with exact coefficients', () => {
     const e = E.taylorPolynomial('e^x', 'x', 0, 4, { steps: true });
-    assert.deepEqual(e.coeffs.map((c) => tex(c)), ['1', '1', '\\frac{1}{2}', '\\frac{1}{6}', '\\frac{1}{24}']);
+    assert.deepEqual(
+        e.coeffs.map((c) => tex(c)),
+        ['1', '1', '\\frac{1}{2}', '\\frac{1}{6}', '\\frac{1}{24}'],
+    );
     checkSteps(e.steps, 'taylor e^x');
     const s = E.taylorPolynomial('sin(x)', 'x', 0, 7);
-    assert.deepEqual(s.coeffs.map((c) => tex(c)), ['0', '1', '0', '-\\frac{1}{6}', '0', '\\frac{1}{120}', '0', '-\\frac{1}{5040}']);
+    assert.deepEqual(
+        s.coeffs.map((c) => tex(c)),
+        ['0', '1', '0', '-\\frac{1}{6}', '0', '\\frac{1}{120}', '0', '-\\frac{1}{5040}'],
+    );
     assert.equal(s.tex, 'T_{7}(x) = x - \\frac{x^{3}}{6} + \\frac{x^{5}}{120} - \\frac{x^{7}}{5040}');
     const l = E.taylorPolynomial('ln(1+x)', 'x', 0, 4);
-    assert.deepEqual(l.coeffs.map((c) => tex(c)), ['0', '1', '-\\frac{1}{2}', '\\frac{1}{3}', '-\\frac{1}{4}']);
+    assert.deepEqual(
+        l.coeffs.map((c) => tex(c)),
+        ['0', '1', '-\\frac{1}{2}', '\\frac{1}{3}', '-\\frac{1}{4}'],
+    );
     const g = E.taylorPolynomial('1/(1-x)', 'x', 0, 5);
     assert.ok(g.coeffs.every((c) => tex(c) === '1'));
     const c = E.taylorPolynomial('cos(x)', 'x', 'pi/2', 3);
-    assert.deepEqual(c.coeffs.map((k) => tex(k)), ['0', '-1', '0', '\\frac{1}{6}']);
+    assert.deepEqual(
+        c.coeffs.map((k) => tex(k)),
+        ['0', '-1', '0', '\\frac{1}{6}'],
+    );
     const r = E.taylorPolynomial('sqrt(x)', 'x', 1, 2);
-    assert.deepEqual(r.coeffs.map((k) => tex(k)), ['1', '\\frac{1}{2}', '-\\frac{1}{8}']);
+    assert.deepEqual(
+        r.coeffs.map((k) => tex(k)),
+        ['1', '\\frac{1}{2}', '-\\frac{1}{8}'],
+    );
     // sin x / x at 0: the removable singularity is filled in by limits
     const sx = E.taylorPolynomial('sin(x)/x', 'x', 0, 4);
-    assert.deepEqual(sx.coeffs.map((k) => tex(k)), ['1', '0', '-\\frac{1}{6}', '0', '\\frac{1}{120}']);
+    assert.deepEqual(
+        sx.coeffs.map((k) => tex(k)),
+        ['1', '0', '-\\frac{1}{6}', '0', '\\frac{1}{120}'],
+    );
     // the polynomial approximates the function near the point
-    for (const [f, a, n] of [['e^x', 0, 8], ['cos(x)', 0, 8], ['atan(x)', 0, 9], ['ln(x)', 1, 8], ['tan(x)', 0, 7]]) {
+    for (const [f, a, n] of [
+        ['e^x', 0, 8],
+        ['cos(x)', 0, 8],
+        ['atan(x)', 0, 9],
+        ['ln(x)', 1, 8],
+        ['tan(x)', 0, 7],
+    ]) {
         const T = E.taylorPolynomial(f, 'x', a, n);
         const x = a + 0.1;
         assert.ok(Math.abs(E.evaluate(T.poly, { x }) - E.evaluate(E.parse(f), { x })) < 1e-7, `${f}: Taylor error`);
@@ -694,11 +1254,18 @@ test('integrateDefinite: oscillating tails', () => {
 });
 
 test('limit: a function that lives on one side of the point', () => {
-    for (const [f, a, want, side] of [['x*ln(x)', 0, '0', 'right'], ['x^x', 0, '1', 'right'], ['sqrt(1-x)', 1, '0', 'left']]) {
+    for (const [f, a, want, side] of [
+        ['x*ln(x)', 0, '0', 'right'],
+        ['x^x', 0, '1', 'right'],
+        ['sqrt(1-x)', 1, '0', 'left'],
+    ]) {
         const r = E.limit(E.parse(f), 'x', a, { steps: true });
         assert.equal(E.toText(r.value), want, f);
         assert.equal(r.domainSide, side, f);
-        assert.ok(r.steps.some((s) => s.rule === 'domain-side'), f);
+        assert.ok(
+            r.steps.some((s) => s.rule === 'domain-side'),
+            f,
+        );
     }
     assert.equal(E.limit(E.parse('ln(x)'), 'x', 0).value, '-inf');
     // defined on both sides: nothing changes

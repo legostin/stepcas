@@ -62,10 +62,16 @@ function solveNumeric(E, ctx) {
         return UNSUP(msg('solve.equation.equality_seems_to_hold_on_whole'));
     }
     const roots = rs.filter((r) => Number.isFinite(r.x)).map((r) => ({ node: approxNode(r.x), approx: r.x, mult: r.multiplicity ?? 1, approxOnly: true }));
-    const steps = [S(msg('solve.equation.no_exact_method_applies_here_so'), {
-        text: msg('solve.equation.we_take_left_side_right_side', { v, rangeT: (lng) => pick(rangeT, lng), p: (lng) => trig ? msg('solve.equation.equation_is_periodic_so_there_may').in(lng) : '' }),
-        tex: roots.length ? eachLanguage((l) => rootsTex(roots, v, l)) : undefined,
-    })];
+    const steps = [
+        S(msg('solve.equation.no_exact_method_applies_here_so'), {
+            text: msg('solve.equation.we_take_left_side_right_side', {
+                v,
+                rangeT: (lng) => pick(rangeT, lng),
+                p: (lng) => (trig ? msg('solve.equation.equation_is_periodic_so_there_may').in(lng) : ''),
+            }),
+            tex: roots.length ? eachLanguage((l) => rootsTex(roots, v, l)) : undefined,
+        }),
+    ];
     if (!roots.length) {
         return {
             kind: 'unsupported',
@@ -103,20 +109,24 @@ export function solveCore(lhs, rhs, ctx) {
                 kind: 'all',
                 roots: [],
                 type: 'identity',
-                steps: [S(msg('solve.equation.variable_cancels_and_true_equality_remains'), {
-                    tex: eachLanguage((l) => `${tex(E, l)} = 0`),
-                    text: msg('solve.equation.equality_holds_for_every_admissible_value'),
-                })],
+                steps: [
+                    S(msg('solve.equation.variable_cancels_and_true_equality_remains'), {
+                        tex: eachLanguage((l) => `${tex(E, l)} = 0`),
+                        text: msg('solve.equation.equality_holds_for_every_admissible_value'),
+                    }),
+                ],
             };
         }
         return {
             kind: 'none',
             roots: [],
             type: 'identity',
-            steps: [S(msg('solve.equation.variable_cancels_and_false_equality_remains'), {
-                tex: eachLanguage((l) => `${tex(E, l)} = 0`),
-                text: msg('solve.equation.there_are_no_roots'),
-            })],
+            steps: [
+                S(msg('solve.equation.variable_cancels_and_false_equality_remains'), {
+                    tex: eachLanguage((l) => `${tex(E, l)} = 0`),
+                    text: msg('solve.equation.there_are_no_roots'),
+                }),
+            ],
         };
     }
     try {
@@ -177,10 +187,18 @@ function solveFractionZero(E, ctx) {
         if (!ok) dropped.push(x);
         return ok;
     });
-    const steps = [S(msg('solve.equation.fraction_is_zero_when_its_numerator'), {
-        tex: eachLanguage((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
-    }), ...r.steps];
-    if (dropped.length) steps.push(S(msg('solve.equation.drop_roots_where_denominator_is_zero'), { tex: eachLanguage((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')) }));
+    const steps = [
+        S(msg('solve.equation.fraction_is_zero_when_its_numerator'), {
+            tex: eachLanguage((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
+        }),
+        ...r.steps,
+    ];
+    if (dropped.length)
+        steps.push(
+            S(msg('solve.equation.drop_roots_where_denominator_is_zero'), {
+                tex: eachLanguage((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')),
+            }),
+        );
     return { kind: roots.length ? 'roots' : 'none', roots, steps, type: r.type ?? 'fraction' };
 }
 
@@ -250,31 +268,40 @@ export function solveEquation(input, v = 'x', opts = {}) {
         const f = filterFamilies(core.families, node, v, conds);
         res.check = f.checks.map((c) => ({ root: approxNode(c.x), approx: c.x, n: c.n, ok: c.ok }));
         if (f.dropped.length) {
-            steps.push(S(msg('solve.equation.drop_series_outside_domain'), {
-                tex: eachLanguage((l) => f.dropped.map((x) => familyTex(x, v, l)).join(';\\quad ')),
-                text: msg('solve.equation.at_these_points_side_of_equation'),
-            }));
+            steps.push(
+                S(msg('solve.equation.drop_series_outside_domain'), {
+                    tex: eachLanguage((l) => f.dropped.map((x) => familyTex(x, v, l)).join(';\\quad ')),
+                    text: msg('solve.equation.at_these_points_side_of_equation'),
+                }),
+            );
         }
         const fams = mergeFamilies(f.kept);
         res.families = fams;
         res.roots = familiesToRoots(fams);
         if (!fams.length) res.kind = 'none';
         else {
-            steps.push(S(msg('solve.equation.check'), {
-                text: f.checks.every((c) => c.ok || f.dropped.includes(c.family))
-                    ? msg('solve.equation.we_substituted_several_values_from_each')
-                    : msg('solve.equation.some_values_did_not_fit_and'),
-            }));
+            steps.push(
+                S(msg('solve.equation.check'), {
+                    text: f.checks.every((c) => c.ok || f.dropped.includes(c.family))
+                        ? msg('solve.equation.we_substituted_several_values_from_each')
+                        : msg('solve.equation.some_values_did_not_fit_and'),
+                }),
+            );
         }
         const iv = toIntervalOpt(opts.interval, opts.lang);
         if (iv && fams.length) {
             const sel = rootsOnInterval(fams, iv);
             if (sel) {
                 res.inInterval = sel;
-                steps.push(S(eachLanguage((l) => (msg('solve.equation.pick_roots_in', { iv: intervalTex(iv, l) }).in(l))), {
-                    tex: eachLanguage((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(notation(l).listTex) : '\\varnothing')),
-                    text: msg('solve.equation.we_go_through_integers_that_put'),
-                }));
+                steps.push(
+                    S(
+                        eachLanguage((l) => msg('solve.equation.pick_roots_in', { iv: intervalTex(iv, l) }).in(l)),
+                        {
+                            tex: eachLanguage((l) => (sel.length ? sel.map((r) => tex(r.node, l)).join(notation(l).listTex) : '\\varnothing')),
+                            text: msg('solve.equation.we_go_through_integers_that_put'),
+                        },
+                    ),
+                );
             }
         }
     } else if (core.kind === 'roots') {
@@ -291,12 +318,22 @@ export function solveEquation(input, v = 'x', opts = {}) {
         }
         const needCheck = !['linear', 'quadratic', 'polynomial'].includes(core.type) || bad.length || conds.length;
         if (sub.length) {
-            steps.push(S(msg('solve.equation.check_by_substitution'), {
-                sub,
-                text: bad.length
-                    ? msg('solve.equation.extraneous_roots', { p: (lng) => bad.map(({ r }) => tex(r.node, lng)).join(notation(lng).listTex), p2: (lng) => bad.some((b) => b.ch.reason === 'odz' || b.ch.reason === 'undefined') ? msg('solve.equation.outside_domain_or_not_satisfying_equation').in(lng) : msg('solve.equation.they_do_not_satisfy_original_equation').in(lng) })
-                    : needCheck ? msg('solve.equation.all_roots_found_fit') : msg('solve.equation.roots_fit'),
-            }));
+            steps.push(
+                S(msg('solve.equation.check_by_substitution'), {
+                    sub,
+                    text: bad.length
+                        ? msg('solve.equation.extraneous_roots', {
+                              p: (lng) => bad.map(({ r }) => tex(r.node, lng)).join(notation(lng).listTex),
+                              p2: (lng) =>
+                                  bad.some((b) => b.ch.reason === 'odz' || b.ch.reason === 'undefined')
+                                      ? msg('solve.equation.outside_domain_or_not_satisfying_equation').in(lng)
+                                      : msg('solve.equation.they_do_not_satisfy_original_equation').in(lng),
+                          })
+                        : needCheck
+                          ? msg('solve.equation.all_roots_found_fit')
+                          : msg('solve.equation.roots_fit'),
+                }),
+            );
         }
         res.roots = kept;
         res.extraneous = [...ctx.rejected, ...bad.map(({ r, ch }) => ({ node: r.node, approx: r.approx, reason: ch.reason }))]
@@ -322,7 +359,13 @@ function finish(res, v, withSteps) {
     } else if (out.reason) {
         out.steps.push(S(msg('solve.equation.could_not_solve_exactly'), { text: out.reason, final: true }));
     }
-    if (out.odz) out.odz = { tex: out.odz.tex, text: out.odz.text, set: out.odz.set, conditions: out.odz.conds.map((c) => ({ kind: c.kind, expr: c.expr, tex: eachLanguage((l) => condTex(c, l)) })) };
+    if (out.odz)
+        out.odz = {
+            tex: out.odz.tex,
+            text: out.odz.text,
+            set: out.odz.set,
+            conditions: out.odz.conds.map((c) => ({ kind: c.kind, expr: c.expr, tex: eachLanguage((l) => condTex(c, l)) })),
+        };
     if (!withSteps) out.steps = [];
     return out;
 }
@@ -335,7 +378,18 @@ function reductionStep(node) {
         if (n.type === 'fn' && ['sin', 'cos', 'tan', 'cot', 'sec', 'csc'].includes(n.name)) {
             try {
                 const a = simplify(n.args[0]);
-                const shifted = a.type === 'add' && a.args.some((t) => (t.type === 'sym' && t.name === 'pi' && !t.var) || (t.type === 'mul' && t.args.length === 2 && t.args[0].type === 'num' && t.args[1].type === 'sym' && t.args[1].name === 'pi' && !t.args[1].var));
+                const shifted =
+                    a.type === 'add' &&
+                    a.args.some(
+                        (t) =>
+                            (t.type === 'sym' && t.name === 'pi' && !t.var) ||
+                            (t.type === 'mul' &&
+                                t.args.length === 2 &&
+                                t.args[0].type === 'num' &&
+                                t.args[1].type === 'sym' &&
+                                t.args[1].name === 'pi' &&
+                                !t.args[1].var),
+                    );
                 if (shifted) {
                     const canon = fn(n.name, a);
                     const after = simplify(canon);

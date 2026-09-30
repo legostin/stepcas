@@ -107,10 +107,12 @@ export class IntervalSet {
     }
 
     static points(list) {
-        return new IntervalSet(list.map((a) => {
-            const e = endOf(a);
-            return { lo: e, hi: e, loC: true, hiC: true };
-        }));
+        return new IntervalSet(
+            list.map((a) => {
+                const e = endOf(a);
+                return { lo: e, hi: e, loC: true, hiC: true };
+            }),
+        );
     }
 
     /** x < a (closed: x ≤ a). */
@@ -243,12 +245,28 @@ function setPieces(set, endTex, inf, sep, empty, cup, braces) {
 
 /** TeX of a set: (-\infty;\,2] \cup (3;\,+\infty) in RU, (-\infty, 2] \cup (3, +\infty) in EN; \varnothing. */
 export function intervalTex(set, lang = DEFAULT_LANGUAGE) {
-    return setPieces(set, (e) => tex(e.node, lang, e.approx ? { decimals: true } : {}), INF_TEX, notation(lang).intervalTex, '\\varnothing', ' \\cup ', (s) => `\\{${s}\\}`);
+    return setPieces(
+        set,
+        (e) => tex(e.node, lang, e.approx ? { decimals: true } : {}),
+        INF_TEX,
+        notation(lang).intervalTex,
+        '\\varnothing',
+        ' \\cup ',
+        (s) => `\\{${s}\\}`,
+    );
 }
 
 /** Plain text of a set: (-∞; 2] ∪ (3; +∞) in RU, (-∞, 2] ∪ (3, +∞) in EN; ∅. */
 export function intervalText(set, lang = DEFAULT_LANGUAGE) {
-    return setPieces(set, (e) => (e.approx ? String(Number(e.x.toFixed(5))).replace('.', notation(lang).decimalText) : toText(e.node, { lang })), { lo: '-∞', hi: '+∞' }, notation(lang).listText, '∅', ' ∪ ', (s) => `{${s}}`);
+    return setPieces(
+        set,
+        (e) => (e.approx ? String(Number(e.x.toFixed(5))).replace('.', notation(lang).decimalText) : toText(e.node, { lang })),
+        { lo: '-∞', hi: '+∞' },
+        notation(lang).listText,
+        '∅',
+        ' ∪ ',
+        (s) => `{${s}}`,
+    );
 }
 
 // ---------------------------------------------------------------- reading sets typed by people
@@ -312,7 +330,8 @@ const FLIP = { '<': '>', '>': '<', '<=': '>=', '>=': '<=', '=': '=', '!=': '!=' 
 function sideEnd(node) {
     const s = simp(node) ?? node;
     if (s.type === 'sym' && s.name === 'inf' && !s.var) return '+inf';
-    if (s.type === 'mul' && s.args.length === 2 && s.args[0].type === 'num' && s.args[0].value.isNeg() && s.args[1].type === 'sym' && s.args[1].name === 'inf') return '-inf';
+    if (s.type === 'mul' && s.args.length === 2 && s.args[0].type === 'num' && s.args[0].value.isNeg() && s.args[1].type === 'sym' && s.args[1].name === 'inf')
+        return '-inf';
     if (!isConstNode(node) || nodeSome(s, (n) => n.type === 'sym' && n.name === 'inf')) return null;
     const e = endOf(node);
     return Number.isFinite(e.x) ? e : null;
@@ -362,11 +381,15 @@ function readPiece(piece, lang, v) {
     if (br) {
         const inner = br[1];
         const items = inner.includes(';') ? inner.split(';') : !commaIsDecimal(lang) || /,\s/.test(inner) ? inner.split(/,\s*/) : [inner];
-        return IntervalSet.points(items.filter((x) => x.trim()).map((x) => {
-            const e = readEnd(x, v);
-            if (typeof e === 'string') throw SET_ERR(piece);
-            return e;
-        }));
+        return IntervalSet.points(
+            items
+                .filter((x) => x.trim())
+                .map((x) => {
+                    const e = readEnd(x, v);
+                    if (typeof e === 'string') throw SET_ERR(piece);
+                    return e;
+                }),
+        );
     }
     // (a; b], [a, b) …
     const iv = /^([([])(.*)([)\]])$/.exec(s);
@@ -381,7 +404,14 @@ function readPiece(piece, lang, v) {
     // inequalities: x < 2, -1 < x <= 3, 2 > x, x != 1, x = 3
     let node;
     try {
-        node = parse(s.replace(/\\leq?(?![a-z])/g, '<=').replace(/\\geq?(?![a-z])/g, '>=').replace(/\\neq?(?![a-z])/g, '!=').replace(/∞/g, 'inf'), { vars: [v] });
+        node = parse(
+            s
+                .replace(/\\leq?(?![a-z])/g, '<=')
+                .replace(/\\geq?(?![a-z])/g, '>=')
+                .replace(/\\neq?(?![a-z])/g, '!=')
+                .replace(/∞/g, 'inf'),
+            { vars: [v] },
+        );
     } catch {
         throw SET_ERR(piece);
     }
@@ -395,14 +425,17 @@ function readPiece(piece, lang, v) {
 export function parseIntervalSet(text, lang = DEFAULT_LANGUAGE, v = 'x') {
     if (text instanceof IntervalSet) return text;
     if (typeof text !== 'string' || !text.trim()) throw SET_ERR(text ?? '');
-    let s = text.trim()
+    let s = text
+        .trim()
         .replace(/\$/g, '')
         .replace(/\\left|\\right|\\!/g, '')
         .replace(/\\[,;: ]/g, ' ')
         .replace(/[−–—]/g, '-')
         .replace(/\\infty|∞/g, '∞')
         .replace(/\\cup/g, '∪')
-        .replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=')
+        .replace(/≤/g, '<=')
+        .replace(/≥/g, '>=')
+        .replace(/≠/g, '!=')
         .replace(/\\mathbb\s*\{?R\}?/g, 'ℝ');
     // union words and a Latin U between brackets
     s = s.replace(new RegExp(`\\s+(?:${wordsPattern('or')})\\s+`, 'gi'), ' ∪ ').replace(/([)\]}])\s*[Uu]\s*(?=[([{\\])/g, '$1 ∪ ');

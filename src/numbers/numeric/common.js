@@ -9,7 +9,11 @@ export const fin = Number.isFinite;
 
 export function evalSafe(f, x) {
     let y;
-    try { y = f(x); } catch { return NaN; }
+    try {
+        y = f(x);
+    } catch {
+        return NaN;
+    }
     return typeof y === 'number' ? y : Number(y);
 }
 export function needFn(f) {

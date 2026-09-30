@@ -17,7 +17,12 @@ function ruleFor(s, d) {
         return {
             divides: ok,
             tex: s.length > 1 ? `\\ldots${last}` : last,
-            text: msg('numbers.theory.divisibility.last_digit_is_number_is_divisible', { last, d, p: need, p2: (lng) => ok ? msg('numbers.theory.divisibility.it_is_divisible').in(lng) : msg('numbers.theory.divisibility.it_is_not_divisible').in(lng) }),
+            text: msg('numbers.theory.divisibility.last_digit_is_number_is_divisible', {
+                last,
+                d,
+                p: need,
+                p2: (lng) => (ok ? msg('numbers.theory.divisibility.it_is_divisible').in(lng) : msg('numbers.theory.divisibility.it_is_not_divisible').in(lng)),
+            }),
             why: msg('numbers.theory.divisibility.number_number_of_tens_10_last', { d }),
         };
     }
@@ -30,8 +35,24 @@ function ruleFor(s, d) {
         return {
             divides: ok,
             tex: ok ? `${tn(t)} = ${d} \\cdot ${tn(t / D)}` : `${tn(t)} = ${d} \\cdot ${tn(t / D)} + ${tn(t % D)}`,
-            text: msg('numbers.theory.divisibility.look_at', { p: (lng) => s.length > k ? msg('numbers.theory.divisibility.last_digits', { p: (lng) => k === 2 ? msg('numbers.theory.divisibility.two').in(lng) : msg('numbers.theory.divisibility.three').in(lng) }).in(lng) : msg('numbers.theory.divisibility.number_itself').in(lng), t: sn(t), p2: (lng) => ok ? msg('numbers.theory.divisibility.is_divisible_by_so_whole_number', { t: sn(t), d }).in(lng) : msg('numbers.theory.divisibility.is_not_divisible_by_remainder_so', { t: sn(t), d, p: sn(t % D) }).in(lng) }),
-            why: msg('numbers.theory.divisibility.is_divisible_by_so_places_from', { pw, d, p: (lng) => pw === '100' ? msg('numbers.theory.divisibility.hundreds').in(lng) : msg('numbers.theory.divisibility.thousands').in(lng) }),
+            text: msg('numbers.theory.divisibility.look_at', {
+                p: (lng) =>
+                    s.length > k
+                        ? msg('numbers.theory.divisibility.last_digits', {
+                              p: (lng) => (k === 2 ? msg('numbers.theory.divisibility.two').in(lng) : msg('numbers.theory.divisibility.three').in(lng)),
+                          }).in(lng)
+                        : msg('numbers.theory.divisibility.number_itself').in(lng),
+                t: sn(t),
+                p2: (lng) =>
+                    ok
+                        ? msg('numbers.theory.divisibility.is_divisible_by_so_whole_number', { t: sn(t), d }).in(lng)
+                        : msg('numbers.theory.divisibility.is_not_divisible_by_remainder_so', { t: sn(t), d, p: sn(t % D) }).in(lng),
+            }),
+            why: msg('numbers.theory.divisibility.is_divisible_by_so_places_from', {
+                pw,
+                d,
+                p: (lng) => (pw === '100' ? msg('numbers.theory.divisibility.hundreds').in(lng) : msg('numbers.theory.divisibility.thousands').in(lng)),
+            }),
         };
     }
     if (d === 3 || d === 9) {
@@ -48,21 +69,41 @@ function ruleFor(s, d) {
         return {
             divides: ok,
             tex: chain.map((c) => (c.digits.length <= 24 ? `${c.digits.split('').join(' + ')} = ${tn(c.sum)}` : `\\ldots = ${tn(c.sum)}`)).join(',\\quad '),
-            text: msg('numbers.theory.divisibility.digit_sum_is', { sum: sn(sum), p: (lng) => chain.length > 1 ? msg('numbers.theory.divisibility.we_added_digits_more_than_once').in(lng) : '', p2: (lng) => ok ? msg('numbers.theory.divisibility.is_divisible_by_so_number_is', { sum: sn(sum), d }).in(lng) : msg('numbers.theory.divisibility.is_not_divisible_by_remainder_so_2', { sum: sn(sum), d, p: sn(sum % D) }).in(lng) }),
+            text: msg('numbers.theory.divisibility.digit_sum_is', {
+                sum: sn(sum),
+                p: (lng) => (chain.length > 1 ? msg('numbers.theory.divisibility.we_added_digits_more_than_once').in(lng) : ''),
+                p2: (lng) =>
+                    ok
+                        ? msg('numbers.theory.divisibility.is_divisible_by_so_number_is', { sum: sn(sum), d }).in(lng)
+                        : msg('numbers.theory.divisibility.is_not_divisible_by_remainder_so_2', { sum: sn(sum), d, p: sn(sum % D) }).in(lng),
+            }),
             why: msg('numbers.theory.divisibility.10_100_1000_all_leave_remainder', { d }),
         };
     }
     // d === 11
     const ds = s.split('').reverse().map(Number);
-    let odd = 0, even = 0;
-    ds.forEach((v, i) => { if (i % 2 === 0) odd += v; else even += v; });
+    let odd = 0,
+        even = 0;
+    ds.forEach((v, i) => {
+        if (i % 2 === 0) odd += v;
+        else even += v;
+    });
     const diff = odd - even;
     const ok = diff % 11 === 0;
-    const oddDigits = ds.filter((_, i) => i % 2 === 0), evenDigits = ds.filter((_, i) => i % 2 === 1);
+    const oddDigits = ds.filter((_, i) => i % 2 === 0),
+        evenDigits = ds.filter((_, i) => i % 2 === 1);
     return {
         divides: ok,
         tex: `(${oddDigits.join(' + ') || '0'}) - (${evenDigits.join(' + ') || '0'}) = ${odd} - ${even} = ${diff}`,
-        text: msg('numbers.theory.divisibility.add_every_other_digit_starting_from', { odd, even, diff: sn(diff), p: (lng) => ok ? msg('numbers.theory.divisibility.is_divisible_by_11_so_number').in(lng) : msg('numbers.theory.divisibility.is_not_divisible_by_11_so').in(lng) }),
+        text: msg('numbers.theory.divisibility.add_every_other_digit_starting_from', {
+            odd,
+            even,
+            diff: sn(diff),
+            p: (lng) =>
+                ok
+                    ? msg('numbers.theory.divisibility.is_divisible_by_11_so_number').in(lng)
+                    : msg('numbers.theory.divisibility.is_not_divisible_by_11_so').in(lng),
+        }),
         why: msg('numbers.theory.divisibility.10_11_1_so_10_1'),
     };
 }
@@ -79,7 +120,8 @@ export function ntDivisibilityRule(n, d) {
     if (RULE_BASES.includes(D)) {
         const r = ruleFor(s, D);
         return {
-            divides: r.divides, remainder,
+            divides: r.divides,
+            remainder,
             steps: [
                 S(msg('numbers.theory.divisibility.test_for', { D }), r.tex, r.text, { rule: `div-${D}` }),
                 S(msg('numbers.theory.divisibility.why_it_works'), null, r.why, { rule: 'why' }),
@@ -88,17 +130,35 @@ export function ntDivisibilityRule(n, d) {
     }
     if (RULE_COMBOS[D]) {
         const [p, q] = RULE_COMBOS[D];
-        const a = ruleFor(s, p), b = ruleFor(s, q);
+        const a = ruleFor(s, p),
+            b = ruleFor(s, q);
         const ok = a.divides && b.divides;
         return {
-            divides: ok, remainder,
+            divides: ok,
+            remainder,
             steps: [
-                S(msg('numbers.theory.divisibility.divisible_by_means_divisible_by_and', { D, p, q }), `${D} = ${p} \\cdot ${q}`,
-                    msg('numbers.theory.divisibility.and_are_coprime_so_number_is', { p, q, D }), { rule: 'combo' }),
-                S(msg('numbers.theory.divisibility.test_for_2', { p }), a.tex, a.text, { rule: `div-${p}`, sub: [S(msg('numbers.theory.divisibility.why_it_works'), null, a.why)] }),
-                S(msg('numbers.theory.divisibility.test_for_3', { q }), b.tex, b.text, { rule: `div-${q}`, sub: [S(msg('numbers.theory.divisibility.why_it_works'), null, b.why)] }),
-                S(msg('numbers.theory.divisibility.conclusion'), null, ok ? msg('numbers.theory.divisibility.both_tests_pass_is_divisible_by', { N: sn(N), D })
-                    : msg('numbers.theory.divisibility.at_least_one_test_fails_is', { N: sn(N), D }), { rule: 'answer' }),
+                S(
+                    msg('numbers.theory.divisibility.divisible_by_means_divisible_by_and', { D, p, q }),
+                    `${D} = ${p} \\cdot ${q}`,
+                    msg('numbers.theory.divisibility.and_are_coprime_so_number_is', { p, q, D }),
+                    { rule: 'combo' },
+                ),
+                S(msg('numbers.theory.divisibility.test_for_2', { p }), a.tex, a.text, {
+                    rule: `div-${p}`,
+                    sub: [S(msg('numbers.theory.divisibility.why_it_works'), null, a.why)],
+                }),
+                S(msg('numbers.theory.divisibility.test_for_3', { q }), b.tex, b.text, {
+                    rule: `div-${q}`,
+                    sub: [S(msg('numbers.theory.divisibility.why_it_works'), null, b.why)],
+                }),
+                S(
+                    msg('numbers.theory.divisibility.conclusion'),
+                    null,
+                    ok
+                        ? msg('numbers.theory.divisibility.both_tests_pass_is_divisible_by', { N: sn(N), D })
+                        : msg('numbers.theory.divisibility.at_least_one_test_fails_is', { N: sn(N), D }),
+                    { rule: 'answer' },
+                ),
             ],
         };
     }

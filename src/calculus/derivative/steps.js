@@ -140,9 +140,53 @@ function texPowRaw(base, e, L) {
 // ---------------------------------------------------------------- names and table formulas for the texts
 
 // the names of the functions and their table derivatives are messages: calculus.derivative.steps.fn.<name>, .table.<name>
-const FN_NAMED = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'asin', 'acos', 'atan', 'acot', 'sinh', 'cosh', 'tanh', 'coth', 'asinh', 'acosh', 'atanh', 'ln', 'lg', 'log', 'sqrt', 'abs']);
+const FN_NAMED = new Set([
+    'sin',
+    'cos',
+    'tan',
+    'cot',
+    'sec',
+    'csc',
+    'asin',
+    'acos',
+    'atan',
+    'acot',
+    'sinh',
+    'cosh',
+    'tanh',
+    'coth',
+    'asinh',
+    'acosh',
+    'atanh',
+    'ln',
+    'lg',
+    'log',
+    'sqrt',
+    'abs',
+]);
 
-const FORMULA = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'asin', 'acos', 'atan', 'acot', 'sinh', 'cosh', 'tanh', 'coth', 'asinh', 'acosh', 'atanh', 'ln', 'lg', 'sqrt']);
+const FORMULA = new Set([
+    'sin',
+    'cos',
+    'tan',
+    'cot',
+    'sec',
+    'csc',
+    'asin',
+    'acos',
+    'atan',
+    'acot',
+    'sinh',
+    'cosh',
+    'tanh',
+    'coth',
+    'asinh',
+    'acosh',
+    'atanh',
+    'ln',
+    'lg',
+    'sqrt',
+]);
 
 function formula(name, u) {
     return FORMULA.has(name) ? msg(`calculus.derivative.steps.table.${name}`, { u }) : null;
@@ -243,7 +287,12 @@ export function dS(n, ctx) {
     }
     switch (n.type) {
         case 'sym':
-            return { raw: N1, res: N1, trivial: true, step: step({ title: msg('calculus.derivative.steps.derivative_of_variable'), tex: `(${calcTex(n)})' = 1`, rule: 'var' }) };
+            return {
+                raw: N1,
+                res: N1,
+                trivial: true,
+                step: step({ title: msg('calculus.derivative.steps.derivative_of_variable'), tex: `(${calcTex(n)})' = 1`, rule: 'var' }),
+            };
         case 'add':
             return dSum(n, ctx);
         case 'neg':
@@ -278,7 +327,10 @@ function dSum(n, ctx) {
         text: msg('calculus.derivative.steps.derivative_of_sum_is_sum_of'),
         rule: 'sum',
         ruleLine: pSum(terms.map((t) => ({ p: pPrime(t.abs), minus: t.minus }))),
-        assembled: pSum(terms.map((t, i) => ({ p: pNode(kids[i].res), minus: t.minus })), { dropZeros: true }),
+        assembled: pSum(
+            terms.map((t, i) => ({ p: pNode(kids[i].res), minus: t.minus })),
+            { dropZeros: true },
+        ),
         asm: tAdd(terms.map((t, i) => (t.minus ? tNeg(kids[i].res) : kids[i].res))),
         raw: tAdd(terms.map((t, i) => (t.minus ? tNeg(kids[i].raw) : kids[i].raw))),
         kids,
@@ -328,7 +380,15 @@ function dMul(n, ctx) {
             : msg('calculus.derivative.steps.product_rule_for_several_factors_differentiate'),
         rule: 'product',
         ruleLine: pSum(vars.map((_, i) => ({ p: pProd(vars.map((g, j) => (i === j ? pPrime(g) : pNode(g)))) }))),
-        assembled: pSum(vars.map((_, i) => ({ p: pProd(vars.map((g, j) => pNode(i === j ? kids[i].res : g)), { dropOnes: true }) })), { dropZeros: true }),
+        assembled: pSum(
+            vars.map((_, i) => ({
+                p: pProd(
+                    vars.map((g, j) => pNode(i === j ? kids[i].res : g)),
+                    { dropOnes: true },
+                ),
+            })),
+            { dropZeros: true },
+        ),
         asm: tAdd(vars.map((_, i) => termOf(i, kids[i].res))),
         raw: tAdd(vars.map((_, i) => termOf(i, kids[i].raw))),
         kids,
@@ -407,7 +467,9 @@ function dDiv(n, ctx) {
         rule: 'quotient',
         ruleLine: pFrac(pSum([{ p: pProd([pPrime(u), pNode(w)]) }, { p: pProd([pNode(u), pPrime(w)]), minus: true }]), pNode(w2)),
         assembled: pFrac(
-            pSum([{ p: pProd([pNode(ku.res), pNode(w)], { dropOnes: true }) }, { p: pProd([pNode(u), pNode(kw.res)], { dropOnes: true }), minus: true }], { dropZeros: true }),
+            pSum([{ p: pProd([pNode(ku.res), pNode(w)], { dropOnes: true }) }, { p: pProd([pNode(u), pNode(kw.res)], { dropOnes: true }), minus: true }], {
+                dropZeros: true,
+            }),
             pNode(w2),
         ),
         asm: div(tAdd([tMul([ku.res, w]), tNeg(tMul([u, kw.res]))]), w2),
@@ -555,17 +617,25 @@ function dFn(n, ctx) {
         return { raw: inner.raw, res: inner.res, step: st };
     }
     if (name === 'sign' || name === 'floor' || name === 'ceil') {
-        const text = name === 'sign'
-            ? msg('calculus.derivative.steps.sgn_is_constant_on_each_side')
-            : msg('calculus.derivative.steps.function_is_constant_between_consecutive_whole');
-        return { raw: N0, res: N0, step: step({ title: msg('calculus.derivative.steps.step_function'), tex: eachLanguage((L) => `${paren(calcTex(n, L))}' = 0`), text, rule: 'step-fn' }) };
+        const text =
+            name === 'sign'
+                ? msg('calculus.derivative.steps.sgn_is_constant_on_each_side')
+                : msg('calculus.derivative.steps.function_is_constant_between_consecutive_whole');
+        return {
+            raw: N0,
+            res: N0,
+            step: step({
+                title: msg('calculus.derivative.steps.step_function'),
+                tex: eachLanguage((L) => `${paren(calcTex(n, L))}' = 0`),
+                text,
+                rule: 'step-fn',
+            }),
+        };
     }
     const u = name === 'log' ? n.args[1] : n.args[0];
     const outer = outerReadable(name, u, n.args);
     if (!outer) throw new MathError(msg('calculus.derivative.steps.cannot_differentiate', { name }), null, null, 'unsupported');
-    const absNote = name === 'abs'
-        ? msg('calculus.derivative.steps.this_holds_for_u_0_absolute')
-        : '';
+    const absNote = name === 'abs' ? msg('calculus.derivative.steps.this_holds_for_u_0_absolute') : '';
     if (u.type === 'sym' && u.name === v && !isConst(u)) {
         const res = niceForm(outer, v);
         const f = formula(name, v);
@@ -576,7 +646,12 @@ function dFn(n, ctx) {
         return {
             raw: outer,
             res,
-            step: step({ title: msg('calculus.derivative.steps.table_derivative_2'), tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, pNode(outer), pNode(res)]), text, rule: 'table' }),
+            step: step({
+                title: msg('calculus.derivative.steps.table_derivative_2'),
+                tex: chainTex([(L) => `${paren(calcTex(n, L))}'`, pNode(outer), pNode(res)]),
+                text,
+                rule: 'table',
+            }),
         };
     }
     const k = dS(u, ctx);

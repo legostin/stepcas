@@ -25,20 +25,29 @@ export function solveAbs(lhs, rhs, E, ctx) {
             const absT = (l) => tex(A[0], l);
             if (!containsVar(g, v)) {
                 const gv = approxOf(g);
-                if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: eachLanguage((l) => `${absT(l)} = ${tex(g, l)}`) }));
+                if (!isolated(lhs, rhs, A[0], g))
+                    steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: eachLanguage((l) => `${absT(l)} = ${tex(g, l)}`) }));
                 if (gv < 0 && exactZero(g) !== true) {
                     steps.push(S(msg('solve.abs.absolute_value_is_never_negative_no')));
                     return { kind: 'none', roots: [], steps, type: 'abs' };
                 }
                 if (exactZero(g) === true) {
                     const sub = subSolve(f, N0, ctx);
-                    steps.push(partStep(eachLanguage((l) => `${tex(f, l)} = 0`), sub, v));
+                    steps.push(
+                        partStep(
+                            eachLanguage((l) => `${tex(f, l)} = 0`),
+                            sub,
+                            v,
+                        ),
+                    );
                     return { ...sub, steps, type: 'abs' };
                 }
-                steps.push(S(msg('solve.abs.absolute_value_equals_positive_number_two'), {
-                    tex: eachLanguage((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
-                    text: msg('solve.abs.number_at_distance_from_zero_is'),
-                }));
+                steps.push(
+                    S(msg('solve.abs.absolute_value_equals_positive_number_two'), {
+                        tex: eachLanguage((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
+                        text: msg('solve.abs.number_at_distance_from_zero_is'),
+                    }),
+                );
                 let roots = [];
                 for (const rhs2 of [g, simpOr(neg(g))]) {
                     const sub = subSolve(f, rhs2, ctx);
@@ -51,10 +60,12 @@ export function solveAbs(lhs, rhs, E, ctx) {
             }
             // |f| = g(x)
             if (!isolated(lhs, rhs, A[0], g)) steps.push(S(msg('solve.abs.isolate_absolute_value'), { tex: eachLanguage((l) => `${absT(l)} = ${tex(g, l)}`) }));
-            steps.push(S(msg('solve.abs.open_absolute_value'), {
-                tex: eachLanguage((l) => `${tex(g, l)} \\ge 0,\\qquad ${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
-                text: msg('solve.abs.absolute_value_is_non_negative_so'),
-            }));
+            steps.push(
+                S(msg('solve.abs.open_absolute_value'), {
+                    tex: eachLanguage((l) => `${tex(g, l)} \\ge 0,\\qquad ${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
+                    text: msg('solve.abs.absolute_value_is_non_negative_so'),
+                }),
+            );
             let cands = [];
             for (const rhs2 of [g, simpOr(neg(g))]) {
                 const sub = subSolve(f, rhs2, ctx);
@@ -73,10 +84,12 @@ export function solveAbs(lhs, rhs, E, ctx) {
             }
             if (bad.length) {
                 reject(ctx, bad, 'sign');
-                steps.push(S(msg('solve.abs.drop_roots_where', { g: (lng) => tex(g, lng) }), {
-                    tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
-                    text: msg('solve.abs.absolute_value_cannot_equal_negative_number'),
-                }));
+                steps.push(
+                    S(msg('solve.abs.drop_roots_where', { g: (lng) => tex(g, lng) }), {
+                        tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
+                        text: msg('solve.abs.absolute_value_cannot_equal_negative_number'),
+                    }),
+                );
             }
             return { kind: good.length ? 'roots' : 'none', roots: good, steps, type: 'abs' };
         }
@@ -87,9 +100,11 @@ export function solveAbs(lhs, rhs, E, ctx) {
         if (sp.every(Boolean) && exactZero(add(sp[0].coef, sp[1].coef)) === true) {
             const f = sp[0].abs.args[0];
             const g = sp[1].abs.args[0];
-            steps.push(S(msg('solve.abs.equal_absolute_values_expressions_are_equal'), {
-                tex: eachLanguage((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
-            }));
+            steps.push(
+                S(msg('solve.abs.equal_absolute_values_expressions_are_equal'), {
+                    tex: eachLanguage((l) => `${tex(f, l)} = ${tex(g, l)} ${orTex(l)} ${tex(f, l)} = ${tex(simpOr(neg(g)), l)}`),
+                }),
+            );
             let roots = [];
             let ok = true;
             for (const rhs2 of [g, simpOr(neg(g))]) {
@@ -132,10 +147,12 @@ function absIntervals(E, A, ctx) {
     }
     pts = mergeRoots(pts);
     if (pts.length > 12) return null;
-    const steps = [S(msg('solve.abs.mark_zeros_of_expressions_inside_absolute'), {
-        tex: eachLanguage((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
-        text: msg('solve.abs.between_these_points_every_expression_inside'),
-    })];
+    const steps = [
+        S(msg('solve.abs.mark_zeros_of_expressions_inside_absolute'), {
+            tex: eachLanguage((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
+            text: msg('solve.abs.between_these_points_every_expression_inside'),
+        }),
+    ];
     const bounds = [null, ...pts, null];
     let roots = [];
     let set = IntervalSet.empty();
@@ -143,17 +160,19 @@ function absIntervals(E, A, ctx) {
         const lo = bounds[k];
         const hi = bounds[k + 1];
         const t = lo === null && hi === null ? 0 : lo === null ? hi.approx - 1 : hi === null ? lo.approx + 1 : (lo.approx + hi.approx) / 2;
-        const Ei = simpOr(mapNode(E, (n) => {
-            if (n.type !== 'fn' || n.name !== 'abs' || !containsVar(n, v)) return undefined;
-            const s = approxOf(n.args[0], { [v]: t });
-            return s >= 0 ? n.args[0] : neg(n.args[0]);
-        }));
+        const Ei = simpOr(
+            mapNode(E, (n) => {
+                if (n.type !== 'fn' || n.name !== 'abs' || !containsVar(n, v)) return undefined;
+                const s = approxOf(n.args[0], { [v]: t });
+                return s >= 0 ? n.args[0] : neg(n.args[0]);
+            }),
+        );
         const where = eachLanguage((l) => {
             if (lo === null && hi === null) return msg('solve.abs.for_all').in(l);
             const a = lo && tex(lo.node, l);
             const b = hi && tex(hi.node, l);
             const w = lo === null ? `${v} < ${b}` : hi === null ? `${v} \\ge ${a}` : `${a} \\le ${v} < ${b}`;
-            return (msg('solve.abs.for').in(l)) + `$${w}$`;
+            return msg('solve.abs.for').in(l) + `$${w}$`;
         });
         const sub = subSolve(Ei, N0, ctx);
         if (sub.kind === 'unsupported') return null;
@@ -168,13 +187,19 @@ function absIntervals(E, A, ctx) {
             roots.push(...ok);
             txt = no.length
                 ? msg('solve.abs.outside_interval', { p: (lng) => no.map((r) => tex(r.node, lng)).join(notation(lng).listTex) })
-                : ok.length ? msg('solve.abs.root_lies_in_interval') : msg('solve.abs.no_roots_on_this_interval');
+                : ok.length
+                  ? msg('solve.abs.root_lies_in_interval')
+                  : msg('solve.abs.no_roots_on_this_interval');
         }
-        steps.push(S(where, {
-            tex: eachLanguage((l) => `${tex(Ei, l)} = 0 \\;\\Rightarrow\\; ${sub.kind === 'all' ? (msg('solve.abs.always_true').in(l)) : rootsTex(sub.roots, v, l)}`),
-            text: txt,
-            sub: sub.steps,
-        }));
+        steps.push(
+            S(where, {
+                tex: eachLanguage(
+                    (l) => `${tex(Ei, l)} = 0 \\;\\Rightarrow\\; ${sub.kind === 'all' ? msg('solve.abs.always_true').in(l) : rootsTex(sub.roots, v, l)}`,
+                ),
+                text: txt,
+                sub: sub.steps,
+            }),
+        );
     }
     roots = mergeRoots(roots);
     if (!set.isEmpty()) {

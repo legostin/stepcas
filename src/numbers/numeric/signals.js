@@ -7,16 +7,24 @@ import { evalSafe, fin, needFn } from './common.js';
 /** Direct DFT (O(N²), exact length): X_k = Σ x_j·e^(∓2πijk/N). {inverse} divides by N. → {re, im}. */
 export function numDft(re, im = null, opts = {}) {
     const N = re.length;
-    const R = new Float64Array(N), I = new Float64Array(N);
-    const cs = new Float64Array(N), sn = new Float64Array(N);
-    for (let k = 0; k < N; k++) { cs[k] = Math.cos((2 * Math.PI * k) / N); sn[k] = Math.sin((2 * Math.PI * k) / N); }
+    const R = new Float64Array(N),
+        I = new Float64Array(N);
+    const cs = new Float64Array(N),
+        sn = new Float64Array(N);
+    for (let k = 0; k < N; k++) {
+        cs[k] = Math.cos((2 * Math.PI * k) / N);
+        sn[k] = Math.sin((2 * Math.PI * k) / N);
+    }
     const sign = opts.inverse ? 1 : -1;
     for (let k = 0; k < N; k++) {
-        let sr = 0, si = 0;
+        let sr = 0,
+            si = 0;
         for (let j = 0; j < N; j++) {
             const idx = (k * j) % N;
-            const c = cs[idx], s = sign * sn[idx];
-            const xr = re[j], xi = im ? im[j] : 0;
+            const c = cs[idx],
+                s = sign * sn[idx];
+            const xr = re[j],
+                xi = im ? im[j] : 0;
             sr += xr * c - xi * s;
             si += xr * s + xi * c;
         }
@@ -30,7 +38,8 @@ export function numDft(re, im = null, opts = {}) {
 export function numFft(re, im = null, opts = {}) {
     let n = 1;
     while (n < re.length) n <<= 1;
-    const R = new Float64Array(n), I = new Float64Array(n);
+    const R = new Float64Array(n),
+        I = new Float64Array(n);
     R.set(re);
     if (im) I.set(im);
     for (let i = 1, j = 0; i < n; i++) {
@@ -38,26 +47,41 @@ export function numFft(re, im = null, opts = {}) {
         for (; j & bit; bit >>= 1) j ^= bit;
         j ^= bit;
         if (i < j) {
-            let t = R[i]; R[i] = R[j]; R[j] = t;
-            t = I[i]; I[i] = I[j]; I[j] = t;
+            let t = R[i];
+            R[i] = R[j];
+            R[j] = t;
+            t = I[i];
+            I[i] = I[j];
+            I[j] = t;
         }
     }
     const sign = opts.inverse ? 1 : -1;
     for (let len = 2; len <= n; len <<= 1) {
         const half = len >> 1;
-        const wr = new Float64Array(half), wi = new Float64Array(half);
-        for (let k = 0; k < half; k++) { wr[k] = Math.cos((2 * Math.PI * k) / len); wi[k] = sign * Math.sin((2 * Math.PI * k) / len); }
+        const wr = new Float64Array(half),
+            wi = new Float64Array(half);
+        for (let k = 0; k < half; k++) {
+            wr[k] = Math.cos((2 * Math.PI * k) / len);
+            wi[k] = sign * Math.sin((2 * Math.PI * k) / len);
+        }
         for (let i = 0; i < n; i += len) {
             for (let k = 0; k < half; k++) {
-                const a = i + k, b = a + half;
+                const a = i + k,
+                    b = a + half;
                 const tr = R[b] * wr[k] - I[b] * wi[k];
                 const ti = R[b] * wi[k] + I[b] * wr[k];
-                R[b] = R[a] - tr; I[b] = I[a] - ti;
-                R[a] += tr; I[a] += ti;
+                R[b] = R[a] - tr;
+                I[b] = I[a] - ti;
+                R[a] += tr;
+                I[a] += ti;
             }
         }
     }
-    if (opts.inverse) for (let i = 0; i < n; i++) { R[i] /= n; I[i] /= n; }
+    if (opts.inverse)
+        for (let i = 0; i < n; i++) {
+            R[i] /= n;
+            I[i] /= n;
+        }
     return { re: R, im: I };
 }
 
@@ -77,7 +101,8 @@ export function numFourierCoefficients(f, N, period = 2 * Math.PI, opts = {}) {
     const from = opts.from ?? -T / 2;
     const M = opts.samples ?? Math.max(4096, 64 * N);
     const w = (2 * Math.PI) / T;
-    const a = new Array(N + 1).fill(0), b = new Array(N + 1).fill(0);
+    const a = new Array(N + 1).fill(0),
+        b = new Array(N + 1).fill(0);
     for (let j = 0; j < M; j++) {
         const x = from + ((j + 0.5) * T) / M;
         const y = evalSafe(f, x);
@@ -87,7 +112,10 @@ export function numFourierCoefficients(f, N, period = 2 * Math.PI, opts = {}) {
             if (k) b[k] += y * Math.sin(k * w * x);
         }
     }
-    for (let k = 0; k <= N; k++) { a[k] *= 2 / M; b[k] *= 2 / M; }
+    for (let k = 0; k <= N; k++) {
+        a[k] *= 2 / M;
+        b[k] *= 2 / M;
+    }
     return { a, b, period: T, mean: a[0] / 2 };
 }
 

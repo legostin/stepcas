@@ -9,10 +9,13 @@ import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- radicals (irrational equations)
 
-const isRadical = (n, v) => n.type === 'pow' && containsVar(n.base, v) && (() => {
-    const e = numValue(n.exp);
-    return !!e && !e.isInt();
-})();
+const isRadical = (n, v) =>
+    n.type === 'pow' &&
+    containsVar(n.base, v) &&
+    (() => {
+        const e = numValue(n.exp);
+        return !!e && !e.isInt();
+    })();
 
 export const hasRadical = (node, v) => nodeSome(node, (n) => isRadical(n, v));
 
@@ -59,14 +62,16 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const rhs2 = expd(pow(g, num(q))) ?? pow(g, num(q));
     const gNonNeg = !gConst && hasRadical(g, v) && termsOfSum(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
     const powWord = qn2 === 2 ? msg('solve.radical.squared') : qn2 === 3 ? msg('solve.radical.cubed') : msg('solve.radical.to_power', { qn2 });
-    steps.push(S(msg('solve.radical.raise_both_sides', { p: powWord }), {
-        tex: eachLanguage((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
-        text: even
-            ? (gConst || gNonNeg
-                ? msg('solve.radical.raising_to_even_power_may_add')
-                : msg('solve.radical.even_root_is_non_negative_so', { g: (lng) => tex(g, lng), R: (lng) => tex(R, lng) }))
-            : msg('solve.radical.odd_power_is_equivalent_transformation_no'),
-    }));
+    steps.push(
+        S(msg('solve.radical.raise_both_sides', { p: powWord }), {
+            tex: eachLanguage((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
+            text: even
+                ? gConst || gNonNeg
+                    ? msg('solve.radical.raising_to_even_power_may_add')
+                    : msg('solve.radical.even_root_is_non_negative_so', { g: (lng) => tex(g, lng), R: (lng) => tex(R, lng) })
+                : msg('solve.radical.odd_power_is_equivalent_transformation_no'),
+        }),
+    );
     const sub = subSolve(lhs2, rhs2, ctx);
     if (sub.kind === 'unsupported' || sub.periodic) return null;
     pushPart(steps, lhs2, rhs2, sub, v);
@@ -82,10 +87,19 @@ export function solveRadical(lhs, rhs, E, ctx) {
         }
         if (bad.length) {
             reject(ctx, bad, 'sign');
-            steps.push(S(msg('solve.radical.drop_roots_where', { g: (lng) => tex(g, lng) }), {
-                tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}:\\ ${tex(substitute(g, { [v]: r.node }), l)} = ${tex(simpOr(substitute(g, { [v]: r.node })), l)} < 0`).join(';\\ ')),
-                text: msg('solve.radical.these_are_extraneous_even_root_cannot'),
-            }));
+            steps.push(
+                S(msg('solve.radical.drop_roots_where', { g: (lng) => tex(g, lng) }), {
+                    tex: eachLanguage((l) =>
+                        bad
+                            .map(
+                                (r) =>
+                                    `${v} = ${tex(r.node, l)}:\\ ${tex(substitute(g, { [v]: r.node }), l)} = ${tex(simpOr(substitute(g, { [v]: r.node })), l)} < 0`,
+                            )
+                            .join(';\\ '),
+                    ),
+                    text: msg('solve.radical.these_are_extraneous_even_root_cannot'),
+                }),
+            );
         }
         roots = good;
     }

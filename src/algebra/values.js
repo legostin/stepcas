@@ -254,9 +254,17 @@ function rulePowers(n) {
     if (fact.some((f) => !f)) return null;
     const primes = [...new Set(fact.flatMap((f) => [...f.keys()]))].sort((a, b) => (a < b ? -1 : 1));
     if (primes.length > 4) return null;
-    const powers = primes.map((pr) => pow(num(new Q(pr)), add(cand.flatMap(({ f, s }, i) => (fact[i].has(pr) ? [term(new Q(BigInt(fact[i].get(pr))), f.exp, s)] : [])))));
+    const powers = primes.map((pr) =>
+        pow(num(new Q(pr)), add(cand.flatMap(({ f, s }, i) => (fact[i].has(pr) ? [term(new Q(BigInt(fact[i].get(pr))), f.exp, s)] : [])))),
+    );
     const isPrime = (b, i) => b.isInt() && fact[i].size === 1 && fact[i].get(b.n) === 1;
-    const conv = [...new Set(bases.flatMap((b, i) => (isPrime(b, i) ? [] : [`${qt(b)} = ${[...fact[i]].map(([pr, e]) => powTex(new Q(pr), new Q(BigInt(e)))).join(' \\cdot ')}`])))];
+    const conv = [
+        ...new Set(
+            bases.flatMap((b, i) =>
+                isPrime(b, i) ? [] : [`${qt(b)} = ${[...fact[i]].map(([pr, e]) => powTex(new Q(pr), new Q(BigInt(e)))).join(' \\cdot ')}`],
+            ),
+        ),
+    ];
     return {
         node: rebuild(powers),
         title: msg('algebra.values.factor_bases_into_primes'),
@@ -284,14 +292,23 @@ function ruleRationalPower(n) {
     if (!e) return null;
     if (n.base.type === 'fn' && n.base.name === 'sqrt' && e.isInt()) {
         const half = e.div(2);
-        return { node: half.isOne() ? n.base.args[0] : pow(n.base.args[0], num(half)), title: msg('algebra.values.square_of_root'), text: '$\\left(\\sqrt{a}\\right)^2 = a$.', quiet: true };
+        return {
+            node: half.isOne() ? n.base.args[0] : pow(n.base.args[0], num(half)),
+            title: msg('algebra.values.square_of_root'),
+            text: '$\\left(\\sqrt{a}\\right)^2 = a$.',
+            quiet: true,
+        };
     }
     const b = qv(n.base);
     if (!b || e.isInt() || !b.isPos()) return null;
     const r = b.exactRoot(Number(e.d));
     if (!r) return null;
     const res = e.n === 1n ? num(r) : pow(num(r), num(new Q(e.n)));
-    return { node: res, title: msg('algebra.values.fractional_power'), text: `$a^{\\frac{m}{n}} = \\left(\\sqrt[n]{a}\\right)^m$, $\\sqrt[${e.d}]{${qt(b)}} = ${qt(r)}$.` };
+    return {
+        node: res,
+        title: msg('algebra.values.fractional_power'),
+        text: `$a^{\\frac{m}{n}} = \\left(\\sqrt[n]{a}\\right)^m$, $\\sqrt[${e.d}]{${qt(b)}} = ${qt(r)}$.`,
+    };
 }
 
 // √a · √b → √(ab)
@@ -321,7 +338,11 @@ function ruleSqrtValue(n) {
         }
     }
     if (out === 1n) return null;
-    return { node: mul(num(new Q(out)), fn('sqrt', num(new Q(inner)))), title: msg('algebra.values.take_factor_out_of_root'), text: `$${v.n} = ${out * out} \\cdot ${inner}$, $\\sqrt{a^2 b} = a\\sqrt{b}$.` };
+    return {
+        node: mul(num(new Q(out)), fn('sqrt', num(new Q(inner)))),
+        title: msg('algebra.values.take_factor_out_of_root'),
+        text: `$${v.n} = ${out * out} \\cdot ${inner}$, $\\sqrt{a^2 b} = a\\sqrt{b}$.`,
+    };
 }
 
 // (a − b)(a + b) → a² − b²
@@ -330,10 +351,17 @@ function ruleDiffSquares(n) {
     const [u, w] = n.args;
     if (u.type !== 'add' || w.type !== 'add' || u.args.length !== 2 || w.args.length !== 2) return null;
     if (u.args.every((x) => isArith(x))) return null; // (65 − 56)(65 + 56) is just arithmetic
-    for (const [[a1, b1], [a2, b2]] of [[u.args, w.args], [w.args, u.args]]) {
+    for (const [[a1, b1], [a2, b2]] of [
+        [u.args, w.args],
+        [w.args, u.args],
+    ]) {
         if (same(a1, a2) && same(b1, neg(b2))) {
             const pos = b1.type === 'neg' ? b1.arg : b1;
-            return { node: add(pow(a1, num(2)), neg(pow(pos, num(2)))), title: msg('algebra.values.difference_of_squares'), text: '$(a - b)(a + b) = a^2 - b^2$.' };
+            return {
+                node: add(pow(a1, num(2)), neg(pow(pos, num(2)))),
+                title: msg('algebra.values.difference_of_squares'),
+                text: '$(a - b)(a + b) = a^2 - b^2$.',
+            };
         }
     }
     return null;
@@ -398,7 +426,15 @@ function ruleDenest(n) {
     return {
         node: inner,
         title: msg('algebra.values.perfect_square_under_root'),
-        text: msg('algebra.values.as_and_root_is', { p: (lng) => sq(lng), p2: toTex(pow(rx, num(2))), p3: toTex(pow(ry, num(2))), a: qt(a), p4: toTex(mul(rx, ry)), p5: toTex(sign > 0 ? t : t.arg), inner: toTex(inner) }),
+        text: msg('algebra.values.as_and_root_is', {
+            p: (lng) => sq(lng),
+            p2: toTex(pow(rx, num(2))),
+            p3: toTex(pow(ry, num(2))),
+            a: qt(a),
+            p4: toTex(mul(rx, ry)),
+            p5: toTex(sign > 0 ? t : t.arg),
+            inner: toTex(inner),
+        }),
     };
 }
 
@@ -407,7 +443,15 @@ function ruleDenest(n) {
 // a trigonometric function's TeX name in a language's notation (\\operatorname{tg} or \\tan)
 const fnTex = (name, lang) => notation(lang).fnTex?.[name] ?? `\\${name}`;
 // In degree mode (the input wrote 135°, ctx.deg) angles stay k·π/180, printed back as k°.
-const isDegNode = (n) => n.type === 'div' && n.den.type === 'num' && n.den.value.eq(180) && n.num.type === 'mul' && n.num.args.length === 2 && n.num.args[0].type === 'num' && n.num.args[1].type === 'sym' && n.num.args[1].name === 'pi';
+const isDegNode = (n) =>
+    n.type === 'div' &&
+    n.den.type === 'num' &&
+    n.den.value.eq(180) &&
+    n.num.type === 'mul' &&
+    n.num.args.length === 2 &&
+    n.num.args[0].type === 'num' &&
+    n.num.args[1].type === 'sym' &&
+    n.num.args[1].name === 'pi';
 const piNode = (q, ctx) => (ctx.deg && q.mul(180).isInt() && !q.isZero() ? degNode(q) : trySimplify(mul(num(q), sym('pi'))));
 function degNode(q) {
     const k = q.mul(180);
@@ -418,7 +462,12 @@ const DEG_RE = /\\frac\{([0-9]+)\\pi\}\{180\}/g;
 const degTex = (s) => (typeof s === 'string' ? s.replace(DEG_RE, '$1^\\circ') : s);
 function degSteps(steps) {
     const fix = (v) => (typeof v === 'string' ? degTex(v) : v && typeof v === 'object' ? eachLanguage((l) => degTex(inLanguage(v, l)), { compact: false }) : v);
-    return steps.map((st) => ({ ...st, title: fix(st.title), ...(st.tex !== undefined ? { tex: fix(st.tex) } : {}), ...(st.text ? { text: fix(st.text) } : {}) }));
+    return steps.map((st) => ({
+        ...st,
+        title: fix(st.title),
+        ...(st.tex !== undefined ? { tex: fix(st.tex) } : {}),
+        ...(st.text ? { text: fix(st.text) } : {}),
+    }));
 }
 // 2u for an angle u, kept in degrees in degree mode
 function double(u, ctx) {
@@ -490,7 +539,11 @@ function ruleTrigValue(n, ctx) {
     if (!q) return null;
     const r = trigChain(n.name, q, ctx);
     if (!r) return null;
-    const texChain = (lang) => [fn(n.name, piNode(q, ctx)), ...r.chain].map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
+    const texChain = (lang) =>
+        [fn(n.name, piNode(q, ctx)), ...r.chain]
+            .map((x) => toTex(x, { lang }))
+            .filter((t, i, all) => i === 0 || t !== all[i - 1])
+            .join(' = ');
     if (!r.notes.length) return { node: r.value, title: msg('algebra.values.table_value'), text: eachLanguage((l) => `$${texChain(l)}$.`) };
     return {
         node: r.value,
@@ -544,7 +597,8 @@ function ruleDoubleAngle(n, ctx) {
         const [p, q] = n.args;
         const u = sq(p, 'cos');
         const w = q.type === 'neg' ? sq(q.arg, 'sin') : null;
-        if (u && w && same(u, w)) return { node: fn('cos', double(u, ctx)), title: msg('algebra.values.double_angle_cosine'), text: '$\\cos^2 u - \\sin^2 u = \\cos 2u$.' };
+        if (u && w && same(u, w))
+            return { node: fn('cos', double(u, ctx)), title: msg('algebra.values.double_angle_cosine'), text: '$\\cos^2 u - \\sin^2 u = \\cos 2u$.' };
     }
     return null;
 }
@@ -608,7 +662,26 @@ function ruleSimplifyPart(n, ctx) {
     return { node: v, quiet: true };
 }
 
-const RULES = [ruleLogSum, ruleChangeBase, ruleLogIdentity, ruleLogOfPower, ruleDiffSquares, ruleFactorSquares, ruleSquareSum, rulePowers, rulePowPow, rulePowProduct, ruleRationalPower, ruleSqrtProduct, ruleSqrtValue, ruleDenest, ruleCofunction, ruleDoubleAngle, ruleLowerPower, ruleTrigValue];
+const RULES = [
+    ruleLogSum,
+    ruleChangeBase,
+    ruleLogIdentity,
+    ruleLogOfPower,
+    ruleDiffSquares,
+    ruleFactorSquares,
+    ruleSquareSum,
+    rulePowers,
+    rulePowPow,
+    rulePowProduct,
+    ruleRationalPower,
+    ruleSqrtProduct,
+    ruleSqrtValue,
+    ruleDenest,
+    ruleCofunction,
+    ruleDoubleAngle,
+    ruleLowerPower,
+    ruleTrigValue,
+];
 
 // the first rewrite, outermost first; a whole arithmetic subtree goes one layer at a time. ctx: {deg}
 function rewriteOnce(n, ctx) {
@@ -677,10 +750,16 @@ function run(start, want, maxSteps, ctx) {
     const steps = entries.map((e) => {
         const title = e.quiet && e.chain.length > 2 ? COMPUTE : e.title;
         const text = e.texts.length ? joined(e.texts) : undefined;
-        const chain = (lang) => e.chain.map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
+        const chain = (lang) =>
+            e.chain
+                .map((x) => toTex(x, { lang }))
+                .filter((t, i, all) => i === 0 || t !== all[i - 1])
+                .join(' = ');
         return step({ title, tex: eachLanguage((l) => chain(l)), text, rule: e.rule ?? (e.quiet ? 'arith' : 'rule') });
     });
-    steps.push(step({ title: msg('algebra.values.answer'), tex: eachLanguage((lang) => `${toTex(start, { lang })} = ${toTex(value, { lang })}`), rule: 'answer' }));
+    steps.push(
+        step({ title: msg('algebra.values.answer'), tex: eachLanguage((lang) => `${toTex(start, { lang })} = ${toTex(value, { lang })}`), rule: 'answer' }),
+    );
     steps[steps.length - 1].final = true;
     return { value, approx: want, exact: freeVars(value).length === 0, steps: ctx.deg ? degSteps(steps) : steps };
 }

@@ -14,7 +14,12 @@ import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---- trigonometric forms
 
-const TRIG_REWRITE = { tan: (u) => div(fn('sin', u), fn('cos', u)), cot: (u) => div(fn('cos', u), fn('sin', u)), sec: (u) => div(N1, fn('cos', u)), csc: (u) => div(N1, fn('sin', u)) };
+const TRIG_REWRITE = {
+    tan: (u) => div(fn('sin', u), fn('cos', u)),
+    cot: (u) => div(fn('cos', u), fn('sin', u)),
+    sec: (u) => div(N1, fn('cos', u)),
+    csc: (u) => div(N1, fn('sin', u)),
+};
 
 function toSinCos(f) {
     let changed = false;
@@ -79,7 +84,10 @@ export function substResult(f, ctx, { t, uNode, g, title, text, rule, dtTex }) {
         method: rule,
         step: step({
             title,
-            tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage(
+                (L) =>
+                    `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`,
+            ),
             text,
             rule,
             sub: [r.step],
@@ -107,7 +115,10 @@ export function mTrig(f, ctx) {
             // t = cos L, dt = −k sin L dx
             const gt = mul(neg(c), kInv, pow(oneMinus, num((m - 1) / 2)), pow(T, num(n)));
             return substResult(f, ctx, {
-                t, uNode: fn('cos', L), g: expandSafe(gt), rule: 'trig-substitution',
+                t,
+                uNode: fn('cos', L),
+                g: expandSafe(gt),
+                rule: 'trig-substitution',
                 title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('cos', L), lng) }),
                 dtTex: (Lg) => `d${t} = -${coefTex(k, Lg)}\\sin ${''}${paren(tx(L, Lg)).replace(/^\((.*)\)$/, L.type === 'sym' ? '$1' : '($1)')}\\,d${v}`,
                 text: msg('calculus.integral.trig.sine_has_odd_power_keep_one'),
@@ -116,7 +127,10 @@ export function mTrig(f, ctx) {
         if (useSin) {
             const gt = mul(c, kInv, pow(T, num(m)), pow(oneMinus, num((n - 1) / 2)));
             return substResult(f, ctx, {
-                t, uNode: fn('sin', L), g: expandSafe(gt), rule: 'trig-substitution',
+                t,
+                uNode: fn('sin', L),
+                g: expandSafe(gt),
+                rule: 'trig-substitution',
                 title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('sin', L), lng) }),
                 dtTex: (Lg) => `d${t} = ${coefTex(k, Lg)}\\cos${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}\\,d${v}`,
                 text: msg('calculus.integral.trig.cosine_has_odd_power_keep_one'),
@@ -126,9 +140,13 @@ export function mTrig(f, ctx) {
             // t = tg L: sin^m cos^n = t^m (1 + t²)^{−(m+n)/2}, dx = dt/(k(1 + t²))
             const gt = mul(c, kInv, pow(T, num(m)), pow(add(N1, pow(T, N2)), num(-(m + n) / 2 - 1)));
             return substResult(f, ctx, {
-                t, uNode: fn('tan', L), g: gt, rule: 'trig-substitution',
+                t,
+                uNode: fn('tan', L),
+                g: gt,
+                rule: 'trig-substitution',
                 title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('tan', L), lng) }),
-                dtTex: (Lg) => `d${t} = \\frac{${coefTex(k, Lg) ? coefTex(k, Lg) + '\\,' : ''}d${v}}{\\cos^{2}${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}}`,
+                dtTex: (Lg) =>
+                    `d${t} = \\frac{${coefTex(k, Lg) ? coefTex(k, Lg) + '\\,' : ''}d${v}}{\\cos^{2}${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}}`,
                 text: msg('calculus.integral.trig.powers_of_sine_and_cosine_are'),
             });
         }
@@ -157,7 +175,13 @@ export function mTrig(f, ctx) {
         return {
             F: r.F,
             method: 'trig-power',
-            step: step({ title: msg('calculus.integral.trig.lower_powers'), tex: eachLanguage((Lg) => `${iTex(f, v, Lg)} = ${iTex(X, v, Lg)}`), text, rule: 'trig-power', sub: [r.step] }),
+            step: step({
+                title: msg('calculus.integral.trig.lower_powers'),
+                tex: eachLanguage((Lg) => `${iTex(f, v, Lg)} = ${iTex(X, v, Lg)}`),
+                text,
+                rule: 'trig-power',
+                sub: [r.step],
+            }),
         };
     }
     // product to sum: sin a·cos b, sin a·sin b, cos a·cos b with different linear arguments
@@ -194,7 +218,11 @@ export function mTrigLower(f, ctx) {
         const u3 = mul(num(3), u);
         let r = null;
         if (k === 2) r = x.base.name === 'sin' ? div(add(N1, neg(fn('cos', u2))), N2) : div(add(N1, fn('cos', u2)), N2);
-        else if (k === 3) r = x.base.name === 'sin' ? div(add(mul(num(3), fn('sin', u)), neg(fn('sin', u3))), num(4)) : div(add(mul(num(3), fn('cos', u)), fn('cos', u3)), num(4));
+        else if (k === 3)
+            r =
+                x.base.name === 'sin'
+                    ? div(add(mul(num(3), fn('sin', u)), neg(fn('sin', u3))), num(4))
+                    : div(add(mul(num(3), fn('cos', u)), fn('cos', u3)), num(4));
         else if (k === 4) {
             const c2 = x.base.name === 'sin' ? neg(fn('cos', u2)) : fn('cos', u2);
             r = div(add(num(3), mul(num(4), c2), fn('cos', mul(num(4), u))), num(8));
@@ -335,7 +363,9 @@ export function mTrigSub(f, ctx) {
     const r = I(g, sub(ctx, { v: t }));
     if (!r) return null;
     const arc = kind === 'sin' ? fn('asin', div(sym(v), A)) : fn('atan', div(sym(v), A));
-    const Ft = mapNode(r.F, (m) => (m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan' ? m.args[0].args[0] : undefined));
+    const Ft = mapNode(r.F, (m) =>
+        m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan' ? m.args[0].args[0] : undefined,
+    );
     const back = trySimp(unArc(substitute(Ft, { [t]: arc }), v));
     if (!back) return null;
     return {
@@ -343,10 +373,14 @@ export function mTrigSub(f, ctx) {
         method: 'trig-root-substitution',
         step: step({
             title: kind === 'sin' ? msg('calculus.integral.trig.substitution_sin', { v, t }) : msg('calculus.integral.trig.substitution_tan', { v, t }),
-            tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[${v} = ${tx(simp(xOfT), L)},\\ d${v} = ${tx(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(back, L)}`),
-            text: kind === 'sin'
-                ? msg('calculus.integral.trig.under_root_substitution_sin_2_2', { v, t })
-                : msg('calculus.integral.trig.under_root_substitution_tan_2_2', { v, t }),
+            tex: eachLanguage(
+                (L) =>
+                    `${iTex(f, v, L)} = \\left[${v} = ${tx(simp(xOfT), L)},\\ d${v} = ${tx(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(back, L)}`,
+            ),
+            text:
+                kind === 'sin'
+                    ? msg('calculus.integral.trig.under_root_substitution_sin_2_2', { v, t })
+                    : msg('calculus.integral.trig.under_root_substitution_tan_2_2', { v, t }),
             rule: 'trig-root-substitution',
             sub: [r.step],
         }),
@@ -372,9 +406,7 @@ export function mCyclic(f, ctx) {
     const beta = linearParts(tr.args[0], v).k;
     const G = tr.args[0];
     const den = add(pow(alpha, N2), pow(beta, N2));
-    const body = tr.name === 'sin'
-        ? add(mul(alpha, fn('sin', G)), neg(mul(beta, fn('cos', G))))
-        : add(mul(alpha, fn('cos', G)), mul(beta, fn('sin', G)));
+    const body = tr.name === 'sin' ? add(mul(alpha, fn('sin', G)), neg(mul(beta, fn('cos', G)))) : add(mul(alpha, fn('cos', G)), mul(beta, fn('sin', G)));
     const c = mul([num(coef), ...consts]);
     const F = mul(c, ex, body, pow(den, NM1));
     const J = tr.name === 'sin' ? 'cos' : 'sin';
@@ -412,7 +444,10 @@ export function mWeierstrass(f, ctx) {
     if (!gt || !ratFunctionOf(gt, t)) return null;
     void X;
     return substResult(f, ctx, {
-        t, uNode: fn('tan', div(sym(v), N2)), g: gt, rule: 'universal-substitution',
+        t,
+        uNode: fn('tan', div(sym(v), N2)),
+        g: gt,
+        rule: 'universal-substitution',
         title: msg('calculus.integral.trig.universal_substitution'),
         dtTex: (L) => `\\sin ${v} = \\frac{2${t}}{1 + ${t}^{2}},\\ \\cos ${v} = \\frac{1 - ${t}^{2}}{1 + ${t}^{2}},\\ d${v} = \\frac{2\\,d${t}}{1 + ${t}^{2}}`,
         text: msg('calculus.integral.trig.integrand_is_rational_function_of_sin'),

@@ -57,15 +57,21 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     const kind = opts.kind || 'both';
     const wantSteps = opts.steps !== false;
     const f = trySimplify(asNode(fIn));
-    const A = trySimplify(asNode(aIn)), B = trySimplify(asNode(bIn));
-    const a = approx(A), b = approx(B);
+    const A = trySimplify(asNode(aIn)),
+        B = trySimplify(asNode(bIn));
+    const a = approx(A),
+        b = approx(B);
     if (!(Number.isFinite(a) && Number.isFinite(b)) || !(a < b)) {
         throw new MathError(msg('calculus.extrema.segment_b_with_numeric_ends_b'), null, null, 'segment');
     }
     const others = freeVars(f).filter((x) => x !== v);
     if (others.length) throw new MathError(msg('calculus.extrema.function_has_letters_besides', { p: others.join(', '), v }), null, null, 'unbound');
     let fc;
-    try { fc = compile(f, [v]); } catch { fc = null; }
+    try {
+        fc = compile(f, [v]);
+    } catch {
+        fc = null;
+    }
     if (!fc) throw new MathError(msg('calculus.extrema.function_could_not_be_evaluated'), null, null, 'nan');
     // defined on the segment?
     let bad = 0;
@@ -77,10 +83,12 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     const x = v;
 
     if (wantSteps) {
-        steps.push(step({
-            title: msg('calculus.extrema.method'),
-            text: msg('calculus.extrema.function_is_continuous_on_so_its', { A: (lng) => texOf(A, lng), B: (lng) => texOf(B, lng), x }),
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.extrema.method'),
+                text: msg('calculus.extrema.function_is_continuous_on_so_its', { A: (lng) => texOf(A, lng), B: (lng) => texOf(B, lng), x }),
+            }),
+        );
     }
 
     // 1. the derivative
@@ -95,9 +103,11 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     let solved;
     try {
         solved = solveEquation(rel('=', df, num(0)), v, { steps: wantSteps, interval: [A, B] });
-    } catch { solved = null; }
+    } catch {
+        solved = null;
+    }
     if (solved && solved.kind !== 'unsupported' && !solved.numeric) {
-        const list = solved.families?.length && solved.inInterval ? solved.inInterval : (solved.roots || []);
+        const list = solved.families?.length && solved.inInterval ? solved.inInterval : solved.roots || [];
         for (const r of list) {
             const t = typeof r.approx === 'number' ? r.approx : approx(r.node);
             if (inside(t)) crit.push({ x: r.node, t, why: 'f′ = 0' });
@@ -107,27 +117,49 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     if (!exactCrit) {
         crit.length = 0;
         let dc;
-        try { dc = compile(df, [v]); } catch { dc = null; }
+        try {
+            dc = compile(df, [v]);
+        } catch {
+            dc = null;
+        }
         for (const r of dc ? numFindRoots(dc, a, b, { samples: 2000 }) : []) {
             if (r.kind === 'interval' || !inside(r.x)) continue;
             const g = exactGuess(r.x);
-            crit.push({ x: g && Math.abs(approx(g) - r.x) < 1e-9 ? g : num(+r.x.toPrecision(12)), t: r.x, why: msg('calculus.extrema.f_0_numerically'), numeric: !g });
+            crit.push({
+                x: g && Math.abs(approx(g) - r.x) < 1e-9 ? g : num(+r.x.toPrecision(12)),
+                t: r.x,
+                why: msg('calculus.extrema.f_0_numerically'),
+                numeric: !g,
+            });
         }
     }
     // points where f′ does not exist (|x − 1|, ∛x): f finite, f′ not
     let dcomp;
-    try { dcomp = compile(df, [v]); } catch { dcomp = null; }
+    try {
+        dcomp = compile(df, [v]);
+    } catch {
+        dcomp = null;
+    }
     if (dcomp) {
         const N = 2000;
         for (let i = 1; i < N; i++) {
-            const t0 = a + ((b - a) * (i - 0.5)) / N, t1 = a + ((b - a) * (i + 0.5)) / N;
-            const y0 = dcomp(t0), y1 = dcomp(t1);
+            const t0 = a + ((b - a) * (i - 0.5)) / N,
+                t1 = a + ((b - a) * (i + 0.5)) / N;
+            const y0 = dcomp(t0),
+                y1 = dcomp(t1);
             // a jump of the derivative's sign with a huge or undefined derivative between: a corner or a cusp
             if (Number.isFinite(y0) && Number.isFinite(y1) && Math.sign(y0) !== Math.sign(y1) && Math.abs(y0 - y1) > 1e-6) {
-                let lo = t0, hi = t1;
-                for (let k = 0; k < 60; k++) { const m = (lo + hi) / 2; const ym = dcomp(m); if (Number.isFinite(ym) && Math.sign(ym) === Math.sign(y0)) lo = m; else hi = m; }
+                let lo = t0,
+                    hi = t1;
+                for (let k = 0; k < 60; k++) {
+                    const m = (lo + hi) / 2;
+                    const ym = dcomp(m);
+                    if (Number.isFinite(ym) && Math.sign(ym) === Math.sign(y0)) lo = m;
+                    else hi = m;
+                }
                 const m = (lo + hi) / 2;
-                const yl = dcomp(lo), yr = dcomp(hi);
+                const yl = dcomp(lo),
+                    yr = dcomp(hi);
                 // a corner (|x|) or a cusp (∛x²): the sign flips but the derivative stays away from zero on both sides
                 const jump = !Number.isFinite(yl) || !Number.isFinite(yr) || Math.min(Math.abs(yl), Math.abs(yr)) > 1e-7;
                 if (jump) {
@@ -141,41 +173,45 @@ export function extremeOnSegment(fIn, v = 'x', aIn, bIn, opts = {}) {
     }
     crit.sort((p, q) => p.t - q.t);
     if (wantSteps) {
-        steps.push(step({
-            title: msg('calculus.extrema.critical_points_inside_segment'),
-            tex: crit.length ? eachLanguage((l) => crit.map((c) => `${x} = ${texOf(c.x, l)}`).join(sepL(l))) : undefined,
-            text: crit.length
-                ? msg('calculus.extrema.solve_and_keep_roots_inside', { x, A: (lng) => texOf(A, lng), B: (lng) => texOf(B, lng) })
-                : msg('calculus.extrema.inside_segment_derivative_has_no_zeros'),
-            sub: solved?.steps?.length && exactCrit ? solved.steps : undefined,
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.extrema.critical_points_inside_segment'),
+                tex: crit.length ? eachLanguage((l) => crit.map((c) => `${x} = ${texOf(c.x, l)}`).join(sepL(l))) : undefined,
+                text: crit.length
+                    ? msg('calculus.extrema.solve_and_keep_roots_inside', { x, A: (lng) => texOf(A, lng), B: (lng) => texOf(B, lng) })
+                    : msg('calculus.extrema.inside_segment_derivative_has_no_zeros'),
+                sub: solved?.steps?.length && exactCrit ? solved.steps : undefined,
+            }),
+        );
     }
 
     // 3. values
-    const cands = [
-        { x: A, t: a, why: msg('calculus.extrema.left_end') },
-        ...crit,
-        { x: B, t: b, why: msg('calculus.extrema.right_end') },
-    ].map((c) => {
-        const y = trySimplify(substitute(f, { [v]: c.x }));
-        let yv = approx(y);
-        if (!Number.isFinite(yv)) yv = fc(c.t);
-        return { ...c, y, approx: yv };
-    }).filter((c) => Number.isFinite(c.approx));
+    const cands = [{ x: A, t: a, why: msg('calculus.extrema.left_end') }, ...crit, { x: B, t: b, why: msg('calculus.extrema.right_end') }]
+        .map((c) => {
+            const y = trySimplify(substitute(f, { [v]: c.x }));
+            let yv = approx(y);
+            if (!Number.isFinite(yv)) yv = fc(c.t);
+            return { ...c, y, approx: yv };
+        })
+        .filter((c) => Number.isFinite(c.approx));
     if (!cands.length) return { kind: 'unsupported', reason: msg('calculus.extrema.could_not_evaluate_function'), steps };
     const maxC = cands.reduce((p, q) => (q.approx > p.approx + 1e-12 ? q : p));
     const minC = cands.reduce((p, q) => (q.approx < p.approx - 1e-12 ? q : p));
     const nice = (c, l) => (numValue(c.y) !== null ? texOf(c.y, l) : `${texOf(c.y, l)} \\approx ${fmt(c.approx, l)}`);
     if (wantSteps) {
-        steps.push(step({
-            title: msg('calculus.extrema.values_at_these_points'),
-            tex: eachLanguage((l) => cands.map((c) => `f\\left(${texOf(c.x, l)}\\right) = ${nice(c, l)}`).join(' \\\\ ')),
-            text: msg('calculus.extrema.compare_values_at_ends_and_at'),
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.extrema.values_at_these_points'),
+                tex: eachLanguage((l) => cands.map((c) => `f\\left(${texOf(c.x, l)}\\right) = ${nice(c, l)}`).join(' \\\\ ')),
+                text: msg('calculus.extrema.compare_values_at_ends_and_at'),
+            }),
+        );
     }
     const seg = (l) => `[${texOf(A, l)}${sepL(l)}${texOf(B, l)}]`;
     const line = (c, which, l) => `\\${which}_{${seg(l)}} f = ${texOf(c.y, l)}${msg('calculus.extrema.at').in(l)}${x} = ${texOf(c.x, l)}`;
-    const texAns = eachLanguage((l) => (kind === 'max' ? line(maxC, 'max', l) : kind === 'min' ? line(minC, 'min', l) : `${line(maxC, 'max', l)};\\quad ${line(minC, 'min', l)}`));
+    const texAns = eachLanguage((l) =>
+        kind === 'max' ? line(maxC, 'max', l) : kind === 'min' ? line(minC, 'min', l) : `${line(maxC, 'max', l)};\\quad ${line(minC, 'min', l)}`,
+    );
     if (wantSteps) steps.push(step({ title: msg('calculus.extrema.answer'), tex: texAns, rule: 'answer' }));
     const pick = kind === 'min' ? minC : maxC;
     const last = steps[steps.length - 1];
@@ -212,7 +248,11 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
     if (wantSteps) steps.push(step({ title: msg('calculus.extrema.derivative'), tex: eachLanguage((l) => `f'(${v}) = ${texOf(df, l)}`), sub: d.steps }));
     let pts = [];
     let solved;
-    try { solved = solveEquation(rel('=', df, num(0)), v, { steps: wantSteps }); } catch { solved = null; }
+    try {
+        solved = solveEquation(rel('=', df, num(0)), v, { steps: wantSteps });
+    } catch {
+        solved = null;
+    }
     if (solved && solved.kind === 'roots' && !solved.families?.length && !solved.numeric) {
         pts = solved.roots.map((r) => ({ x: r.node, t: typeof r.approx === 'number' ? r.approx : approx(r.node) }));
     } else {
@@ -226,7 +266,8 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
     const out = { max: [], min: [], critical: [] };
     for (const p of pts) {
         const h = 1e-4 * Math.max(1, Math.abs(p.t));
-        const l = dc(p.t - h), r = dc(p.t + h);
+        const l = dc(p.t - h),
+            r = dc(p.t + h);
         const kindP = l > 0 && r < 0 ? 'max' : l < 0 && r > 0 ? 'min' : 'none';
         const y = trySimplify(substitute(f, { [v]: p.x }));
         const item = { x: p.x, y, approx: approx(y), kind: kindP };
@@ -234,22 +275,44 @@ export function extremePoints(fIn, v = 'x', opts = {}) {
         if (kindP !== 'none') out[kindP].push(item);
     }
     if (wantSteps) {
-        steps.push(step({
-            title: msg('calculus.extrema.critical_points'),
-            tex: out.critical.length ? eachLanguage((l) => out.critical.map((c) => `${v} = ${texOf(c.x, l)}`).join(sepL(l))) : undefined,
-            text: out.critical.length ? msg('calculus.extrema.solve', { v }) : msg('calculus.extrema.derivative_is_never_zero_there_are'),
-            sub: solved?.steps,
-        }));
-        steps.push(step({
-            title: msg('calculus.extrema.signs_of_derivative'),
-            tex: eachLanguage((l) => out.critical.map((c) => `${v} = ${texOf(c.x, l)}:\\ ${c.kind === 'max' ? '+\\ \\to\\ -\\ (\\max)' : c.kind === 'min' ? '-\\ \\to\\ +\\ (\\min)' : msg('calculus.extrema.no_sign_change').in(l)}`).join(' \\\\ ')),
-            text: msg('calculus.extrema.if_derivative_changes_sign_from_plus'),
-        }));
-        steps.push(step({
-            title: msg('calculus.extrema.answer'),
-            tex: eachLanguage((l) => [out.max.length ? `x_{\\max} = ${out.max.map((c) => texOf(c.x, l)).join(sepL(l))}` : null, out.min.length ? `x_{\\min} = ${out.min.map((c) => texOf(c.x, l)).join(sepL(l))}` : null].filter(Boolean).join(';\\quad ') || (msg('calculus.extrema.no_extrema').in(l))),
-            rule: 'answer', final: true,
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.extrema.critical_points'),
+                tex: out.critical.length ? eachLanguage((l) => out.critical.map((c) => `${v} = ${texOf(c.x, l)}`).join(sepL(l))) : undefined,
+                text: out.critical.length ? msg('calculus.extrema.solve', { v }) : msg('calculus.extrema.derivative_is_never_zero_there_are'),
+                sub: solved?.steps,
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.extrema.signs_of_derivative'),
+                tex: eachLanguage((l) =>
+                    out.critical
+                        .map(
+                            (c) =>
+                                `${v} = ${texOf(c.x, l)}:\\ ${c.kind === 'max' ? '+\\ \\to\\ -\\ (\\max)' : c.kind === 'min' ? '-\\ \\to\\ +\\ (\\min)' : msg('calculus.extrema.no_sign_change').in(l)}`,
+                        )
+                        .join(' \\\\ '),
+                ),
+                text: msg('calculus.extrema.if_derivative_changes_sign_from_plus'),
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.extrema.answer'),
+                tex: eachLanguage(
+                    (l) =>
+                        [
+                            out.max.length ? `x_{\\max} = ${out.max.map((c) => texOf(c.x, l)).join(sepL(l))}` : null,
+                            out.min.length ? `x_{\\min} = ${out.min.map((c) => texOf(c.x, l)).join(sepL(l))}` : null,
+                        ]
+                            .filter(Boolean)
+                            .join(';\\quad ') || msg('calculus.extrema.no_extrema').in(l),
+                ),
+                rule: 'answer',
+                final: true,
+            }),
+        );
     }
     return { ...out, steps, derivative: df };
 }

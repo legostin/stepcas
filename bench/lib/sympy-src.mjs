@@ -2,10 +2,32 @@
 import * as E from '../../src/index.js';
 
 const FN = {
-    sin: 'sin', cos: 'cos', tan: 'tan', cot: 'cot', sec: 'sec', csc: 'csc',
-    asin: 'asin', acos: 'acos', atan: 'atan', acot: 'acot',
-    sinh: 'sinh', cosh: 'cosh', tanh: 'tanh', coth: 'coth', asinh: 'asinh', acosh: 'acosh', atanh: 'atanh',
-    ln: 'log', exp: 'exp', sqrt: 'sqrt', abs: 'Abs', sign: 'sign', floor: 'floor', ceil: 'ceiling', fact: 'factorial', cbrt: 'cbrt',
+    sin: 'sin',
+    cos: 'cos',
+    tan: 'tan',
+    cot: 'cot',
+    sec: 'sec',
+    csc: 'csc',
+    asin: 'asin',
+    acos: 'acos',
+    atan: 'atan',
+    acot: 'acot',
+    sinh: 'sinh',
+    cosh: 'cosh',
+    tanh: 'tanh',
+    coth: 'coth',
+    asinh: 'asinh',
+    acosh: 'acosh',
+    atanh: 'atanh',
+    ln: 'log',
+    exp: 'exp',
+    sqrt: 'sqrt',
+    abs: 'Abs',
+    sign: 'sign',
+    floor: 'floor',
+    ceil: 'ceiling',
+    fact: 'factorial',
+    cbrt: 'cbrt',
 };
 
 const SYM = { pi: 'pi', e: 'E', i: 'I', inf: 'oo' };
@@ -17,12 +39,18 @@ export function toSympy(node, rename = {}) {
             const q = node.value;
             return q.d === 1n ? `Integer(${q.n})` : `Rational(${q.n}, ${q.d})`;
         }
-        case 'sym': return rename[node.name] ?? SYM[node.name] ?? (node.name === 'lambda' ? 'lamda' : node.name);
-        case 'add': return `(${node.args.map(p).join(' + ')})`;
-        case 'mul': return `(${node.args.map(p).join('*')})`;
-        case 'div': return `((${p(node.num)})/(${p(node.den)}))`;
-        case 'neg': return `(-(${p(node.arg)}))`;
-        case 'pow': return `((${p(node.base)})**(${p(node.exp)}))`;
+        case 'sym':
+            return rename[node.name] ?? SYM[node.name] ?? (node.name === 'lambda' ? 'lamda' : node.name);
+        case 'add':
+            return `(${node.args.map(p).join(' + ')})`;
+        case 'mul':
+            return `(${node.args.map(p).join('*')})`;
+        case 'div':
+            return `((${p(node.num)})/(${p(node.den)}))`;
+        case 'neg':
+            return `(-(${p(node.arg)}))`;
+        case 'pow':
+            return `((${p(node.base)})**(${p(node.exp)}))`;
         case 'fn': {
             if (node.name === 'lg') return `log(${p(node.args[0])}, 10)`;
             if (node.name === 'log') return `log(${p(node.args[1])}, ${p(node.args[0])})`;
@@ -30,7 +58,8 @@ export function toSympy(node, rename = {}) {
             return `${FN[node.name] ?? node.name}(${node.args.map(p).join(', ')})`;
         }
         case 'rel': {
-            const l = p(node.lhs), r = p(node.rhs);
+            const l = p(node.lhs),
+                r = p(node.rhs);
             if (node.op === '=') return `Eq(${l}, ${r})`;
             if (node.op === '!=') return `Ne(${l}, ${r})`;
             return `(${l} ${node.op} ${r})`;
@@ -40,8 +69,10 @@ export function toSympy(node, rename = {}) {
             for (let k = 0; k < node.ops.length; k++) parts.push(`(${p(node.items[k])} ${node.ops[k]} ${p(node.items[k + 1])})`);
             return `And(${parts.join(', ')})`;
         }
-        case 'list': return `[${node.items.map(p).join(', ')}]`;
-        default: return '0';
+        case 'list':
+            return `[${node.items.map(p).join(', ')}]`;
+        default:
+            return '0';
     }
 }
 

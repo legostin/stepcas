@@ -1,16 +1,17 @@
 // linalg/float — the float toolkit on number[][]: products, solving, eigenvalues of symmetric matrices, SVD, QR.
 
-
-
 // ---------------------------------------------------------------- float toolkit (number[][])
 
 /** Product of float matrices (or matrix × vector). */
 export function fmatMul(A, B) {
     if (!Array.isArray(B[0]) && !ArrayBuffer.isView(B[0])) return A.map((r) => r.reduce((s, x, j) => s + x * B[j], 0));
-    const m = A.length, n = B[0].length, p = B.length;
+    const m = A.length,
+        n = B[0].length,
+        p = B.length;
     const out = Array.from({ length: m }, () => new Array(n).fill(0));
     for (let i = 0; i < m; i++) {
-        const Ai = A[i], Oi = out[i];
+        const Ai = A[i],
+            Oi = out[i];
         for (let k = 0; k < p; k++) {
             const a = Ai[k];
             if (a === 0) continue;
@@ -51,7 +52,10 @@ export function fmatSolve(A, b) {
 /** Inverse of a float matrix (Gauss–Jordan with partial pivoting); null if singular. */
 export function fmatInv(A) {
     const n = A.length;
-    return fmatSolve(A, Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))));
+    return fmatSolve(
+        A,
+        Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))),
+    );
 }
 
 /**
@@ -64,27 +68,32 @@ export function fmatEigSym(A, opts = {}) {
     const V = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
     const maxSweeps = opts.maxSweeps ?? 100;
     for (let sweep = 0; sweep < maxSweeps; sweep++) {
-        let off = 0, diag = 0;
-        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) (i === j ? (diag += a[i][j] ** 2) : (off += a[i][j] ** 2));
+        let off = 0,
+            diag = 0;
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) i === j ? (diag += a[i][j] ** 2) : (off += a[i][j] ** 2);
         if (off <= 1e-30 * Math.max(diag, 1e-300)) break;
         for (let p = 0; p < n - 1; p++) {
             for (let q = p + 1; q < n; q++) {
                 if (Math.abs(a[p][q]) < 1e-300) continue;
                 const theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
                 const t = (theta >= 0 ? 1 : -1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
-                const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+                const c = 1 / Math.sqrt(t * t + 1),
+                    s = t * c;
                 for (let k = 0; k < n; k++) {
-                    const akp = a[k][p], akq = a[k][q];
+                    const akp = a[k][p],
+                        akq = a[k][q];
                     a[k][p] = c * akp - s * akq;
                     a[k][q] = s * akp + c * akq;
                 }
                 for (let k = 0; k < n; k++) {
-                    const apk = a[p][k], aqk = a[q][k];
+                    const apk = a[p][k],
+                        aqk = a[q][k];
                     a[p][k] = c * apk - s * aqk;
                     a[q][k] = s * apk + c * aqk;
                 }
                 for (let k = 0; k < n; k++) {
-                    const vkp = V[k][p], vkq = V[k][q];
+                    const vkp = V[k][p],
+                        vkq = V[k][q];
                     V[k][p] = c * vkp - s * vkq;
                     V[k][q] = s * vkp + c * vkq;
                 }
@@ -98,23 +107,45 @@ export function fmatEigSym(A, opts = {}) {
 /** One-sided Jacobi SVD on columns (Float64Array each) of an m×n matrix, m ≥ n. */
 function jacobiSvdCols(cols, m, sweepsMax = 60) {
     const n = cols.length;
-    const V = Array.from({ length: n }, (_, i) => { const v = new Float64Array(n); v[i] = 1; return v; });
+    const V = Array.from({ length: n }, (_, i) => {
+        const v = new Float64Array(n);
+        v[i] = 1;
+        return v;
+    });
     for (let sweep = 0; sweep < sweepsMax; sweep++) {
         let rotated = false;
         for (let p = 0; p < n - 1; p++) {
             const up = cols[p];
             for (let q = p + 1; q < n; q++) {
                 const uq = cols[q];
-                let alpha = 0, beta = 0, gamma = 0;
-                for (let i = 0; i < m; i++) { alpha += up[i] * up[i]; beta += uq[i] * uq[i]; gamma += up[i] * uq[i]; }
+                let alpha = 0,
+                    beta = 0,
+                    gamma = 0;
+                for (let i = 0; i < m; i++) {
+                    alpha += up[i] * up[i];
+                    beta += uq[i] * uq[i];
+                    gamma += up[i] * uq[i];
+                }
                 if (gamma === 0 || Math.abs(gamma) <= 1e-15 * Math.sqrt(alpha * beta)) continue;
                 rotated = true;
                 const zeta = (beta - alpha) / (2 * gamma);
                 const t = (zeta >= 0 ? 1 : -1) / (Math.abs(zeta) + Math.sqrt(1 + zeta * zeta));
-                const c = 1 / Math.sqrt(1 + t * t), s = c * t;
-                for (let i = 0; i < m; i++) { const x = up[i], y = uq[i]; up[i] = c * x - s * y; uq[i] = s * x + c * y; }
-                const vp = V[p], vq = V[q];
-                for (let i = 0; i < n; i++) { const x = vp[i], y = vq[i]; vp[i] = c * x - s * y; vq[i] = s * x + c * y; }
+                const c = 1 / Math.sqrt(1 + t * t),
+                    s = c * t;
+                for (let i = 0; i < m; i++) {
+                    const x = up[i],
+                        y = uq[i];
+                    up[i] = c * x - s * y;
+                    uq[i] = s * x + c * y;
+                }
+                const vp = V[p],
+                    vq = V[q];
+                for (let i = 0; i < n; i++) {
+                    const x = vp[i],
+                        y = vq[i];
+                    vp[i] = c * x - s * y;
+                    vq[i] = s * x + c * y;
+                }
             }
         }
         if (!rotated) break;
@@ -131,7 +162,8 @@ const colsToRows = (cols, m) => Array.from({ length: m }, (_, i) => cols.map((c)
 
 /** Thin SVD A = U·diag(S)·Vᵀ (one-sided Jacobi, accurate; fine up to ~200×200) → {U (m×r rows), S, V (n×r rows)}. */
 export function fmatSvd(A) {
-    const m = A.length, n = A[0].length;
+    const m = A.length,
+        n = A[0].length;
     if (m < n) {
         const t = fmatSvd(fmatTranspose(A));
         return { U: t.V, S: t.S, V: t.U };
@@ -165,15 +197,47 @@ function orthonormalize(cols, m) {
  * {oversample = 10, powerIters = 2, seed = 1}.
  */
 export function fmatSvdTruncated(A, k, opts = {}) {
-    const m = A.length, n = A[0].length;
+    const m = A.length,
+        n = A[0].length;
     const l = Math.min(n, m, k + (opts.oversample ?? 10));
     const q = opts.powerIters ?? 2;
     let seed = (opts.seed ?? 1) >>> 0 || 1;
-    const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
-    const gauss = () => { const u = rnd() || 1e-12, v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    const rnd = () => {
+        seed ^= seed << 13;
+        seed >>>= 0;
+        seed ^= seed >>> 17;
+        seed ^= seed << 5;
+        seed >>>= 0;
+        return seed / 4294967296;
+    };
+    const gauss = () => {
+        const u = rnd() || 1e-12,
+            v = rnd();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
     const Af = A.map((r) => Float64Array.from(r));
-    const mulA = (cols) => cols.map((c) => { const y = new Float64Array(m); for (let i = 0; i < m; i++) { const r = Af[i]; let s = 0; for (let j = 0; j < n; j++) s += r[j] * c[j]; y[i] = s; } return y; });
-    const mulAt = (cols) => cols.map((c) => { const y = new Float64Array(n); for (let i = 0; i < m; i++) { const r = Af[i], ci = c[i]; if (ci === 0) continue; for (let j = 0; j < n; j++) y[j] += r[j] * ci; } return y; });
+    const mulA = (cols) =>
+        cols.map((c) => {
+            const y = new Float64Array(m);
+            for (let i = 0; i < m; i++) {
+                const r = Af[i];
+                let s = 0;
+                for (let j = 0; j < n; j++) s += r[j] * c[j];
+                y[i] = s;
+            }
+            return y;
+        });
+    const mulAt = (cols) =>
+        cols.map((c) => {
+            const y = new Float64Array(n);
+            for (let i = 0; i < m; i++) {
+                const r = Af[i],
+                    ci = c[i];
+                if (ci === 0) continue;
+                for (let j = 0; j < n; j++) y[j] += r[j] * ci;
+            }
+            return y;
+        });
     let Qc = orthonormalize(mulA(Array.from({ length: l }, () => Float64Array.from({ length: n }, gauss))), m);
     for (let it = 0; it < q; it++) {
         const Z = orthonormalize(mulAt(Qc), n);
@@ -181,15 +245,30 @@ export function fmatSvdTruncated(A, k, opts = {}) {
     }
     // B = Qᵀ A (l × n); SVD of Bᵀ (n × l): Bᵀ = U'·S·V'ᵀ ⇒ B = V'·S·U'ᵀ
     const Bt = mulAt(Qc); // columns: Aᵀ q_i → the rows of B, i.e. the columns of Bᵀ
-    const { S: s, Ucols, Vcols } = jacobiSvdCols(Bt.map((c) => Float64Array.from(c)), n);
+    const {
+        S: s,
+        Ucols,
+        Vcols,
+    } = jacobiSvdCols(
+        Bt.map((c) => Float64Array.from(c)),
+        n,
+    );
     const kk = Math.min(k, s.length);
-    const Ucols2 = Vcols.slice(0, kk).map((v) => { const u = new Float64Array(m); v.forEach((w, i) => { const qi = Qc[i]; for (let r = 0; r < m; r++) u[r] += w * qi[r]; }); return u; });
+    const Ucols2 = Vcols.slice(0, kk).map((v) => {
+        const u = new Float64Array(m);
+        v.forEach((w, i) => {
+            const qi = Qc[i];
+            for (let r = 0; r < m; r++) u[r] += w * qi[r];
+        });
+        return u;
+    });
     return { U: colsToRows(Ucols2, m), S: s.slice(0, kk), V: colsToRows(Ucols.slice(0, kk), n) };
 }
 
 /** Rebuild the rank-k approximation U·diag(S)·Vᵀ (k defaults to all) → m×n number[][]. */
 export function fmatLowRank(svd, k = svd.S.length) {
-    const m = svd.U.length, n = svd.V.length;
+    const m = svd.U.length,
+        n = svd.V.length;
     const out = Array.from({ length: m }, () => new Array(n).fill(0));
     for (let t = 0; t < Math.min(k, svd.S.length); t++) {
         const s = svd.S[t];
@@ -205,7 +284,9 @@ export function fmatLowRank(svd, k = svd.S.length) {
 
 /** Householder QR: A (m×n) = Q·R with Q m×r orthonormal columns and R r×n upper triangular, r = min(m, n). */
 export function fmatQr(A) {
-    const m = A.length, n = A[0].length, r = Math.min(m, n);
+    const m = A.length,
+        n = A[0].length,
+        r = Math.min(m, n);
     const Rm = A.map((row) => Array.from(row));
     const vs = [];
     for (let k = 0; k < r; k++) {
@@ -213,12 +294,18 @@ export function fmatQr(A) {
         for (let i = k; i < m; i++) norm += Rm[i][k] ** 2;
         norm = Math.sqrt(norm);
         const v = new Float64Array(m);
-        if (norm === 0) { vs.push(null); continue; }
+        if (norm === 0) {
+            vs.push(null);
+            continue;
+        }
         const alpha = Rm[k][k] > 0 ? -norm : norm;
         for (let i = k; i < m; i++) v[i] = Rm[i][k];
         v[k] -= alpha;
         const vv = v.reduce((s, x) => s + x * x, 0);
-        if (vv === 0) { vs.push(null); continue; }
+        if (vv === 0) {
+            vs.push(null);
+            continue;
+        }
         for (let j = k; j < n; j++) {
             let s = 0;
             for (let i = k; i < m; i++) s += v[i] * Rm[i][j];

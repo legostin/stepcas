@@ -61,7 +61,7 @@ function unfoldAbs(f, v, P) {
         changed = true;
         return m.name === 'abs' ? (s > 0 ? u : neg(u)) : num(s);
     });
-    return changed ? trySimp(g) ?? f : f;
+    return changed ? (trySimp(g) ?? f) : f;
 }
 
 function mapNodeDeep(n, fnc) {
@@ -156,7 +156,8 @@ function settleAbs(f, v, P) {
 
 export function limit(node, v = 'x', a = 0, opts = {}) {
     node = asNode(node);
-    if (node.type === 'rel' || node.type === 'list' || node.type === 'chain') throw new MathError(msg('calculus.limit.limit.formula_is_needed'), null, null, 'not-expr');
+    if (node.type === 'rel' || node.type === 'list' || node.type === 'chain')
+        throw new MathError(msg('calculus.limit.limit.formula_is_needed'), null, null, 'not-expr');
     const others = freeVars(node).filter((w) => w !== v);
     const side = opts.side ?? 'both';
     let P = makePoint(asNode(a), side);
@@ -171,7 +172,8 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     if (P.side === 'both' && Number.isFinite(P.x) && !others.length) {
         const scale = Math.max(1, Math.abs(P.x));
         const lives = (dir) => [1e-3, 1e-5, 1e-7].some((h) => !Number.isNaN(evalAt(f, v, P.x + dir * h * scale)));
-        const l = lives(-1), r = lives(1);
+        const l = lives(-1),
+            r = lives(1);
         if (l !== r) {
             domainSide = r ? 'right' : 'left';
             P = { ...P, side: domainSide };
@@ -185,13 +187,16 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     if (wantSteps) {
         steps.push(step({ title: msg('calculus.limit.limit.what_we_look_for'), tex: eachLanguage(head), rule: 'start' }));
         if (domainSide) {
-            steps.push(step({
-                title: msg('calculus.limit.limit.where_function_is_defined'),
-                text: domainSide === 'right'
-                    ? msg('calculus.limit.limit.left_of_function_is_undefined_so', { v, P: (lng) => plainNum(P, lng) })
-                    : msg('calculus.limit.limit.right_of_function_is_undefined_so', { v, P: (lng) => plainNum(P, lng) }),
-                rule: 'domain-side',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.limit.limit.where_function_is_defined'),
+                    text:
+                        domainSide === 'right'
+                            ? msg('calculus.limit.limit.left_of_function_is_undefined_so', { v, P: (lng) => plainNum(P, lng) })
+                            : msg('calculus.limit.limit.right_of_function_is_undefined_so', { v, P: (lng) => plainNum(P, lng) }),
+                    rule: 'domain-side',
+                }),
+            );
         }
     }
     let result;
@@ -214,10 +219,26 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
         sidesInfo = { left: valueOut(vl), right: valueOut(vr) };
         const same = vl && vr && vl.k === vr.k && (vl.k !== 'fin' || Math.abs(vl.x - vr.x) < 1e-12) && (vl.k !== 'inf' || vl.s === vr.s);
         if (wantSteps) {
-            steps.push(step({ title: msg('calculus.limit.limit.limit_from_left'), tex: eachLanguage((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`), rule: 'left', sub: l.C?.log ?? [] }));
-            steps.push(step({ title: msg('calculus.limit.limit.limit_from_right'), tex: eachLanguage((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`), rule: 'right', sub: r.C?.log ?? [] }));
+            steps.push(
+                step({
+                    title: msg('calculus.limit.limit.limit_from_left'),
+                    tex: eachLanguage((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`),
+                    rule: 'left',
+                    sub: l.C?.log ?? [],
+                }),
+            );
+            steps.push(
+                step({
+                    title: msg('calculus.limit.limit.limit_from_right'),
+                    tex: eachLanguage((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`),
+                    rule: 'right',
+                    sub: r.C?.log ?? [],
+                }),
+            );
         }
-        result = same ? { L: vl, C: l.C, method: l.method } : { L: vl && vr ? DNE : null, C: { log: [], methods: new Set() }, method: 'one-sided', splitDiffer: !!(vl && vr) };
+        result = same
+            ? { L: vl, C: l.C, method: l.method }
+            : { L: vl && vr ? DNE : null, C: { log: [], methods: new Set() }, method: 'one-sided', splitDiffer: !!(vl && vr) };
     }
     let L = result.L;
     let method = result.method;
@@ -244,7 +265,12 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             if (!agreeSides) {
                 L = DNE;
                 method = 'numeric';
-                sidesInfo = { left: e1.k === 'inf' ? (e1.s > 0 ? 'inf' : '-inf') : null, right: e2.k === 'inf' ? (e2.s > 0 ? 'inf' : '-inf') : null, leftApprox: e1.k === 'fin' ? e1.x : undefined, rightApprox: e2.k === 'fin' ? e2.x : undefined };
+                sidesInfo = {
+                    left: e1.k === 'inf' ? (e1.s > 0 ? 'inf' : '-inf') : null,
+                    right: e2.k === 'inf' ? (e2.s > 0 ? 'inf' : '-inf') : null,
+                    leftApprox: e1.k === 'fin' ? e1.x : undefined,
+                    rightApprox: e2.k === 'fin' ? e2.x : undefined,
+                };
             } else if (e1.k === 'inf') {
                 L = infV(e1.s);
                 method = 'numeric';
@@ -256,50 +282,63 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
     }
     const value = approx !== undefined ? null : valueOut(L);
     if (value === null && approx === undefined) method = null;
-    const tex = approx !== undefined
-        ? eachLanguage((Lg) => `${head(Lg)} \\approx ${fmtNum(approx, Lg)}`)
-        : value !== null
-            ? eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`)
-            : null;
+    const tex =
+        approx !== undefined
+            ? eachLanguage((Lg) => `${head(Lg)} \\approx ${fmtNum(approx, Lg)}`)
+            : value !== null
+              ? eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`)
+              : null;
     if (wantSteps) {
         if (method === 'substitution') {
-            steps.push(step({
-                title: msg('calculus.limit.limit.substitute'),
-                tex: eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`),
-                text: msg('calculus.limit.limit.function_is_defined_and_continuous_at', { v, P: (lng) => plainNum(P, lng) }),
-                rule: 'substitution',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.limit.limit.substitute'),
+                    tex: eachLanguage((Lg) => `${head(Lg)} = ${valueTex(value, Lg)}`),
+                    text: msg('calculus.limit.limit.function_is_defined_and_continuous_at', { v, P: (lng) => plainNum(P, lng) }),
+                    rule: 'substitution',
+                }),
+            );
         } else if (result.C && result.C.log && !result.split) {
             const form = firstForm(f, v, P);
             if (form) {
-                steps.push(step({
-                    title: msg('calculus.limit.limit.identify_indeterminate_form'),
-                    tex: eachLanguage((Lg) => `${head(Lg)} = \\left[${FORM_TEX[form]}\\right]`),
-                    text: msg('calculus.limit.limit.substitution_gives_indeterminate_form_expression_has', { p: FORM_NAME[form] }),
-                    rule: 'form',
-                }));
+                steps.push(
+                    step({
+                        title: msg('calculus.limit.limit.identify_indeterminate_form'),
+                        tex: eachLanguage((Lg) => `${head(Lg)} = \\left[${FORM_TEX[form]}\\right]`),
+                        text: msg('calculus.limit.limit.substitution_gives_indeterminate_form_expression_has', { p: FORM_NAME[form] }),
+                        rule: 'form',
+                    }),
+                );
             }
             steps.push(...result.C.log);
         }
         if (result.splitDiffer || (L && L.k === 'dne')) {
-            steps.push(step({
-                title: msg('calculus.limit.limit.no_limit'),
-                text: sidesInfo
-                    ? msg('calculus.limit.limit.limits_from_left_and_from_right')
-                    : msg('calculus.limit.limit.function_oscillates_and_approaches_no_number'),
-                rule: 'dne',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.limit.limit.no_limit'),
+                    text: sidesInfo
+                        ? msg('calculus.limit.limit.limits_from_left_and_from_right')
+                        : msg('calculus.limit.limit.function_oscillates_and_approaches_no_number'),
+                    rule: 'dne',
+                }),
+            );
         }
         if (table.length) steps.push(tableStep(table, v, P, f));
         if (approx !== undefined) {
-            steps.push(step({
-                title: msg('calculus.limit.limit.numeric_estimate'),
-                text: msg('calculus.limit.limit.exact_methods_did_not_work_judging'),
-                rule: 'numeric',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.limit.limit.numeric_estimate'),
+                    text: msg('calculus.limit.limit.exact_methods_did_not_work_judging'),
+                    rule: 'numeric',
+                }),
+            );
         }
         if (tex) {
-            const s = step({ title: approx !== undefined ? msg('calculus.limit.limit.answer_approximate') : msg('calculus.limit.limit.answer'), tex, rule: 'answer' });
+            const s = step({
+                title: approx !== undefined ? msg('calculus.limit.limit.answer_approximate') : msg('calculus.limit.limit.answer'),
+                tex,
+                rule: 'answer',
+            });
             s.final = true;
             steps.push(s);
         } else {

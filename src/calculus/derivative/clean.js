@@ -130,7 +130,9 @@ function polyShort(P, v, mode = 'short') {
     const fl = factors.map((f) => ({ ...f }));
     for (const f of fl) {
         if (f.done || f.poly.degree !== 1 || !f.poly.c[1].isOne() || f.poly.c[0].isZero()) continue;
-        const partner = fl.find((g) => !g.done && g !== f && g.mult === f.mult && g.poly.degree === 1 && g.poly.c[1].isOne() && g.poly.c[0].eq(f.poly.c[0].neg()));
+        const partner = fl.find(
+            (g) => !g.done && g !== f && g.mult === f.mult && g.poly.degree === 1 && g.poly.c[1].isOne() && g.poly.c[0].eq(f.poly.c[0].neg()),
+        );
         if (partner) {
             partner.done = true;
             f.poly = new Poly([f.poly.c[0].mul(partner.poly.c[0]), Q.ZERO, Q.ONE]);
@@ -163,7 +165,17 @@ function collectFns(X, v) {
         const others = [];
         for (const f of fs) {
             if (f.type === 'sym' && f.name === v && !isConst(f)) deg += 1;
-            else if (f.type === 'pow' && f.base.type === 'sym' && f.base.name === v && !isConst(f.base) && isNum(f.exp) && f.exp.value.isInt() && f.exp.value.isPos() && f.exp.value.le(50)) deg += Number(f.exp.value.n);
+            else if (
+                f.type === 'pow' &&
+                f.base.type === 'sym' &&
+                f.base.name === v &&
+                !isConst(f.base) &&
+                isNum(f.exp) &&
+                f.exp.value.isInt() &&
+                f.exp.value.isPos() &&
+                f.exp.value.le(50)
+            )
+                deg += Number(f.exp.value.n);
             else others.push(f);
         }
         const key = others.map(nodeKey).join('*');
@@ -187,7 +199,9 @@ function collectFns(X, v) {
         // a coefficient polynomial with a negative leading term goes in with a minus: −(x⁵ − 20x³)·cos x
         if (pf.length === 1 && pf[0].type === 'add' && g.poly.lead.isNeg()) {
             const pos = polyShort(g.poly.neg(), v);
-            const posLead = (pos.length === 1 && isNum(pos[0]) ? (pos[0].value.isOne() ? [] : [pos[0]]) : pos).flatMap((x) => (x.type === 'mul' ? x.args : [x]));
+            const posLead = (pos.length === 1 && isNum(pos[0]) ? (pos[0].value.isOne() ? [] : [pos[0]]) : pos).flatMap((x) =>
+                x.type === 'mul' ? x.args : [x],
+            );
             terms.push(neg(mul([...posLead, ...g.others])));
             continue;
         }
@@ -346,7 +360,12 @@ export function penalty(c, opts = {}) {
     if (top.type === 'div' && hasRadical(top.num)) return 12;
     if (opts.fnFractions === false) {
         if (top.type === 'div' && hasFn(top.num)) return 1000;
-        if (top.type === 'mul' && top.args.some((f) => f.type === 'pow' && isNum(f.exp) && f.exp.value.isNeg()) && top.args.some((f) => f.type === 'add' && hasFn(f))) return 1000;
+        if (
+            top.type === 'mul' &&
+            top.args.some((f) => f.type === 'pow' && isNum(f.exp) && f.exp.value.isNeg()) &&
+            top.args.some((f) => f.type === 'add' && hasFn(f))
+        )
+            return 1000;
     }
     return 0;
 }

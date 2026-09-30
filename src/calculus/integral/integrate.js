@@ -20,10 +20,14 @@ function nonElementaryHint(f, v) {
     const vfs = fs.filter((x) => containsVar(x, v));
     const key = (x) => nodeKey(x);
     const X = sym(v);
-    const quadExp = (x) => x.type === 'pow' && isConst(x.base) && x.base.name === 'e' && (() => {
-        const P = Poly.fromNode(x.exp, v);
-        return P && P.degree === 2;
-    })();
+    const quadExp = (x) =>
+        x.type === 'pow' &&
+        isConst(x.base) &&
+        x.base.name === 'e' &&
+        (() => {
+            const P = Poly.fromNode(x.exp, v);
+            return P && P.degree === 2;
+        })();
     if (vfs.length === 1 && quadExp(vfs[0])) {
         // e^(−x²) goes with erf, e^(+x²) with the imaginary error function erfi
         if (Poly.fromNode(vfs[0].exp, v).lead.isPos()) {
@@ -37,7 +41,8 @@ function nonElementaryHint(f, v) {
         const other = vfs.find((x) => key(x) !== xm1);
         if (other.type === 'fn' && other.name === 'sin' && isVar(other.args[0], v)) return msg('calculus.integral.integrate.sin_x_x_dx_has_no');
         if (other.type === 'fn' && other.name === 'cos' && isVar(other.args[0], v)) return msg('calculus.integral.integrate.cos_x_x_dx_has_no');
-        if (other.type === 'pow' && isConst(other.base) && other.base.name === 'e' && isVar(other.exp, v)) return msg('calculus.integral.integrate.e_x_dx_has_no_elementary');
+        if (other.type === 'pow' && isConst(other.base) && other.base.name === 'e' && isVar(other.exp, v))
+            return msg('calculus.integral.integrate.e_x_dx_has_no_elementary');
     }
     if (vfs.length === 1 && vfs[0].type === 'pow' && isNum(vfs[0].exp) && vfs[0].exp.value.eq(-1) && vfs[0].base.type === 'fn' && vfs[0].base.name === 'ln') {
         return msg('calculus.integral.integrate.dx_ln_x_has_no_elementary');
@@ -46,7 +51,8 @@ function nonElementaryHint(f, v) {
         const P = Poly.fromNode(vfs[0].args[0], v);
         if (P && P.degree === 2) return msg('calculus.integral.integrate.fresnel_integrals_sin_x_dx_and');
     }
-    if (vfs.length === 1 && vfs[0].type === 'pow' && isVar(vfs[0].base, v) && isVar(vfs[0].exp, v)) return msg('calculus.integral.integrate.x_dx_has_no_elementary_antiderivative');
+    if (vfs.length === 1 && vfs[0].type === 'pow' && isVar(vfs[0].base, v) && isVar(vfs[0].exp, v))
+        return msg('calculus.integral.integrate.x_dx_has_no_elementary_antiderivative');
     void names;
     return null;
 }
@@ -58,7 +64,13 @@ export function cleanAnti(F, v) {
     // atan(tan u) = u up to a piecewise constant — fine for an antiderivative
     G = simp(mapNode(G, (m) => (m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan' ? m.args[0].args[0] : undefined)));
     // ln|u| with u > 0 everywhere (after a substitution t = eˣ, …) is just ln u
-    G = simp(mapNode(G, (m) => (m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' && surelyPositive(m.args[0].args[0], v) ? fn('ln', m.args[0].args[0]) : undefined)));
+    G = simp(
+        mapNode(G, (m) =>
+            m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' && surelyPositive(m.args[0].args[0], v)
+                ? fn('ln', m.args[0].args[0])
+                : undefined,
+        ),
+    );
     if (G.type === 'add') {
         const kept = G.args.filter((t) => containsVar(t, v));
         if (kept.length && kept.length < G.args.length) G = simp(add(kept));
@@ -140,27 +152,29 @@ export function integrate(node, v = 'x', opts = {}) {
             const raw = simp(r.F);
             const dropped = raw.type === 'add' && raw.args.some((t) => !containsVar(t, v));
             const atanTan = nodeSome(raw, (m) => m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan');
-            let text = dropped
-                ? msg('calculus.integral.integrate.tidy_up_answer_constant_terms_go')
-                : msg('calculus.integral.integrate.tidy_up_answer');
+            let text = dropped ? msg('calculus.integral.integrate.tidy_up_answer_constant_terms_go') : msg('calculus.integral.integrate.tidy_up_answer');
             if (atanTan) {
                 text = msg('calculus.integral.integrate.arctan_tan_u_differs_from_u', { p: text });
             }
-            steps.push(step({
-                title: msg('calculus.integral.integrate.simplify'),
-                tex: eachLanguage((L) => `${rawTex(L)} = ${tx(F, L)}${dropped ? ' + \\mathrm{const}' : ''}`),
-                text,
-                rule: 'simplify',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.integral.integrate.simplify'),
+                    tex: eachLanguage((L) => `${rawTex(L)} = ${tx(F, L)}${dropped ? ' + \\mathrm{const}' : ''}`),
+                    text,
+                    rule: 'simplify',
+                }),
+            );
         }
-        steps.push(step({
-            title: msg('calculus.integral.integrate.check'),
-            tex: eachLanguage((L) => `\\left(${tx(F, L)}\\right)' = ${tx(f, L)}`),
-            text: verified
-                ? msg('calculus.integral.integrate.differentiate_answer_and_compare_with_integrand')
-                : msg('calculus.integral.integrate.numeric_check_could_not_be_done'),
-            rule: 'check',
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.integral.integrate.check'),
+                tex: eachLanguage((L) => `\\left(${tx(F, L)}\\right)' = ${tx(f, L)}`),
+                text: verified
+                    ? msg('calculus.integral.integrate.differentiate_answer_and_compare_with_integrand')
+                    : msg('calculus.integral.integrate.numeric_check_could_not_be_done'),
+                rule: 'check',
+            }),
+        );
         steps.push(answerStep(msg('calculus.integral.integrate.answer'), tex));
     }
     return { result: F, method: r.method, steps, verified, tex };

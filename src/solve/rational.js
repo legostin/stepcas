@@ -60,24 +60,39 @@ export function solveRational(lhs, rhs, E, ctx) {
     N = N.scale(k);
     const steps = [];
     const Lnode = factoredNode(Lp, v);
-    steps.push(S(msg('solve.rational.move_everything_to_left_and_bring'), {
-        tex: eachLanguage((l) => `\\frac{${polyTex(N, v, l)}}{${tex(Lnode, l)}} = 0`),
-        text: msg('solve.rational.fraction_is_zero_when_its_numerator'),
-    }));
+    steps.push(
+        S(msg('solve.rational.move_everything_to_left_and_bring'), {
+            tex: eachLanguage((l) => `\\frac{${polyTex(N, v, l)}}{${tex(Lnode, l)}} = 0`),
+            text: msg('solve.rational.fraction_is_zero_when_its_numerator'),
+        }),
+    );
     const poles = Lp.degree >= 1 ? solveAnyPoly(Lp, { v, domain: 'real' }).roots : [];
     const res = N.degree >= 1 ? solveAnyPoly(N, { ...ctx }) : { kind: N.isZero() ? 'all' : 'none', roots: [], cplx: [], steps: [] };
-    if (N.degree >= 1) steps.push(partStep(eachLanguage((l) => `${polyTex(N, v, l)} = 0`), res, v));
+    if (N.degree >= 1)
+        steps.push(
+            partStep(
+                eachLanguage((l) => `${polyTex(N, v, l)} = 0`),
+                res,
+                v,
+            ),
+        );
     const Np = N.primitive();
     for (const r of res.roots ?? []) if (r.minPoly && !r.approxOnly) r.mult = multOf(Np, r.minPoly.primitive());
     let roots = mergeRoots(res.roots ?? []);
-    const bad = roots.filter((r) => Math.abs(Lp.evalNumber(r.approx)) <= 1e-9 * Math.max(1, Math.abs(r.approx)) ** Lp.degree && (r.approxOnly || exactZero(substitute(Lp.toNode(v), { [v]: r.node })) !== false));
+    const bad = roots.filter(
+        (r) =>
+            Math.abs(Lp.evalNumber(r.approx)) <= 1e-9 * Math.max(1, Math.abs(r.approx)) ** Lp.degree &&
+            (r.approxOnly || exactZero(substitute(Lp.toNode(v), { [v]: r.node })) !== false),
+    );
     if (bad.length) {
         reject(ctx, bad, 'pole');
         roots = roots.filter((r) => !bad.includes(r));
-        steps.push(S(msg('solve.rational.drop_roots_that_make_denominator_zero'), {
-            tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
-            text: msg('solve.rational.at_these_values_denominator_is_zero'),
-        }));
+        steps.push(
+            S(msg('solve.rational.drop_roots_that_make_denominator_zero'), {
+                tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
+                text: msg('solve.rational.at_these_values_denominator_is_zero'),
+            }),
+        );
     }
     if (N.degree < 1) {
         if (N.isZero()) {
@@ -115,10 +130,12 @@ export function solveNodePoly(E, ctx) {
         const q = div(neg(c0), c1);
         const r = simpOr(q, cx ? { complex: true } : undefined);
         const shown = cx && nodeKey(r) !== nodeKey(simpOr(q)) ? simpOr(q) : null;
-        steps.push(S(msg('solve.rational.solve_for', { v }), {
-            tex: eachLanguage((l) => `${v} = ${shown ? `${tex(shown, l)} = ` : ''}${tex(r, l)}`),
-            text: shown ? msg('solve.rational.to_divide_by_complex_number_multiply') : undefined,
-        }));
+        steps.push(
+            S(msg('solve.rational.solve_for', { v }), {
+                tex: eachLanguage((l) => `${v} = ${shown ? `${tex(shown, l)} = ` : ''}${tex(r, l)}`),
+                text: shown ? msg('solve.rational.to_divide_by_complex_number_multiply') : undefined,
+            }),
+        );
         const root = cx ? mkRootC(r) : mkRoot(r);
         if (root.complex && ctx.domain !== 'complex') {
             steps.push(S(msg('solve.rational.root_is_not_real_no_real')));

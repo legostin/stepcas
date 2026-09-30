@@ -48,7 +48,6 @@ export function trySimp(n) {
     }
 }
 
-
 export const tx = (n, L) => calcTex(n, L);
 const tall = (s) => /\\frac|\\sqrt|\\left|\^\{/.test(s);
 export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);
@@ -64,7 +63,8 @@ export const lt = (n, L) => (n.type === 'add' ? paren(tx(n, L)) : tx(n, L));
 export function makePoint(aNode, side) {
     const s = trySimp(aNode) ?? aNode;
     if (isConst(s) && s.name === 'inf') return { a: null, x: Infinity, side: 'left' };
-    if (s.type === 'mul' && s.args.length === 2 && isNum(s.args[0]) && s.args[0].value.isNeg() && isConst(s.args[1]) && s.args[1].name === 'inf') return { a: null, x: -Infinity, side: 'right' };
+    if (s.type === 'mul' && s.args.length === 2 && isNum(s.args[0]) && s.args[0].value.isNeg() && isConst(s.args[1]) && s.args[1].name === 'inf')
+        return { a: null, x: -Infinity, side: 'right' };
     const x = evaluate(s);
     if (!Number.isFinite(x)) throw new MathError(msg('calculus.limit.common.point_must_be_number_or'), null, null, 'range');
     return { a: s, x, side };

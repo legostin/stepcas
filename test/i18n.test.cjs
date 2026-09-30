@@ -25,12 +25,13 @@ const slots = (tpl) => new Set([...String(tpl).matchAll(/%\{(\w+)(?:\|[^}]*)?\}/
 const SRC = path.join(__dirname, '../src');
 const sources = () => {
     const out = [];
-    const walk = (d) => fs.readdirSync(d).forEach((f) => {
-        const p = path.join(d, f);
-        if (fs.statSync(p).isDirectory()) {
-            if (f !== 'i18n') walk(p);
-        } else if (p.endsWith('.js')) out.push(fs.readFileSync(p, 'utf8'));
-    });
+    const walk = (d) =>
+        fs.readdirSync(d).forEach((f) => {
+            const p = path.join(d, f);
+            if (fs.statSync(p).isDirectory()) {
+                if (f !== 'i18n') walk(p);
+            } else if (p.endsWith('.js')) out.push(fs.readFileSync(p, 'utf8'));
+        });
     walk(SRC);
     return out.join('\n');
 };
@@ -68,7 +69,9 @@ test('every key the code names exists, and every message is used', () => {
 });
 
 test('no language is written into the code', () => {
-    const code = sources().replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    const code = sources()
+        .replace(/\/\/.*$/gm, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '');
     const russianText = code.match(/['"`][^'"`\n]*[А-Яа-яЁё][^'"`\n]*['"`]/g) ?? [];
     assert.deepEqual(russianText, [], 'Russian text outside the catalogs');
     assert.ok(!/===\s*'ru'|'ru'\s*===|===\s*'en'|'en'\s*===/.test(code), 'a comparison with a language code');
@@ -76,8 +79,14 @@ test('no language is written into the code', () => {
 
 test('plural slots follow the rules of each language', () => {
     const n = (k) => E.msg('numbers.theory.modular.solutions_modulo', { d: k, n: k, M: 7 });
-    assert.deepEqual([1, 2, 5, 11, 21, 22].map((k) => n(k).ru.split(' ')[1]), ['решение', 'решения', 'решений', 'решений', 'решение', 'решения']);
-    assert.deepEqual([1, 2, 21].map((k) => n(k).en.split(' ')[1]), ['solution', 'solutions', 'solutions']);
+    assert.deepEqual(
+        [1, 2, 5, 11, 21, 22].map((k) => n(k).ru.split(' ')[1]),
+        ['решение', 'решения', 'решений', 'решений', 'решение', 'решения'],
+    );
+    assert.deepEqual(
+        [1, 2, 21].map((k) => n(k).en.split(' ')[1]),
+        ['solution', 'solutions', 'solutions'],
+    );
 });
 
 test('messages render lazily, stringify in the default language and serialise in every language', () => {
@@ -94,18 +103,25 @@ test('messages render lazily, stringify in the default language and serialise in
 });
 
 test('a third language joins with one call: its own words, the rest from its base', () => {
-    E.registerLanguage('xx', {
-        notation: { decimalTex: '{\\cdot}', listTex: ' \\mid ' },
-        solve: { parameter: { express_parameter: 'XX: express %{a}' } },
-        algebra: { values: { answer: 'XX answer' } },
-    }, { base: 'ru' });
+    E.registerLanguage(
+        'xx',
+        {
+            notation: { decimalTex: '{\\cdot}', listTex: ' \\mid ' },
+            solve: { parameter: { express_parameter: 'XX: express %{a}' } },
+            algebra: { values: { answer: 'XX answer' } },
+        },
+        { base: 'ru' },
+    );
     assert.ok(E.LANGUAGES.includes('xx'));
     const m = E.msg('solve.parameter.express_parameter');
     assert.equal(m.xx, 'XX: express %{a}'.replace('%{a}', ''));
     assert.equal(E.msg('solve.parameter.problem').in('xx'), 'Задача', 'a missing message comes from the base language');
     assert.equal(E.toTex(E.parse('2,5'), { lang: 'xx' }), '2{\\cdot}5', 'its own notation');
     assert.equal(E.toTex(E.parse('tan(x)'), { lang: 'xx' }), '\\operatorname{tg} x', 'notation it does not define comes from the base');
-    assert.deepEqual(E.eachLanguage((l) => l, { compact: false }), { ru: 'ru', en: 'en', xx: 'xx' });
+    assert.deepEqual(
+        E.eachLanguage((l) => l, { compact: false }),
+        { ru: 'ru', en: 'en', xx: 'xx' },
+    );
     const r = E.evaluateSteps('2 + 3');
     assert.equal(E.localize(r, 'xx').steps.at(-1).title, 'XX answer');
     assert.equal(E.parseIntervalSet('(1; 2)', 'xx').toText('en'), '(1, 2)');

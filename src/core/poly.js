@@ -104,7 +104,9 @@ function realRootIntervals(f) {
     const out = [];
     for (let k = 0; k < n; k++) {
         const { re, im } = zs[k];
-        let pr = 0, pi = 0, S = 0;
+        let pr = 0,
+            pi = 0,
+            S = 0;
         const r = Math.hypot(re, im);
         for (let j = n; j >= 0; j--) {
             const t = pr * re - pi * im + a[j];
@@ -115,7 +117,7 @@ function realRootIntervals(f) {
         const err = Math.hypot(pr, pi) + (8 * n + 8) * EPS * S;
         let prod = lead;
         for (let j = 0; j < n; j++) if (j !== k) prod *= Math.hypot(re - zs[j].re, im - zs[j].im);
-        const rad = (n * err / prod) * (1 + 1e-6) + 4 * EPS * r;
+        const rad = ((n * err) / prod) * (1 + 1e-6) + 4 * EPS * r;
         if (!Number.isFinite(rad) || !(prod > 0)) return null;
         if (Math.abs(im) <= rad) out.push([re - rad, re + rad]);
     }
@@ -134,7 +136,8 @@ function realRootIntervals(f) {
 function nearCandidates(p0, getP, Qd) {
     let f = p0;
     const a0 = bigAbs(p0.c[0].n);
-    let P = null, Pf = null;
+    let P = null,
+        Pf = null;
     const needP = () => {
         if (!P) {
             P = getP();
@@ -142,7 +145,8 @@ function nearCandidates(p0, getP, Qd) {
         }
     };
     const lower = (x) => {
-        let lo = 0, hi = Pf.length;
+        let lo = 0,
+            hi = Pf.length;
         while (lo < hi) {
             const m = (lo + hi) >> 1;
             if (Pf[m] < x) lo = m + 1;
@@ -205,7 +209,7 @@ function nearCandidates(p0, getP, Qd) {
         const iv = realRootIntervals(f);
         if (!iv) {
             if (!round) return null;
-            for (const rs of pending) tryRanges(rs);   // the last good bound still covers every root
+            for (const rs of pending) tryRanges(rs); // the last good bound still covers every root
             break;
         }
         const before = found.size;
@@ -217,7 +221,7 @@ function nearCandidates(p0, getP, Qd) {
         }
         if (!pending.length) break;
         if (found.size === before || round === 7) {
-            for (const rs of pending) tryRanges(rs);   // no progress: search the wide intervals in full
+            for (const rs of pending) tryRanges(rs); // no progress: search the wide intervals in full
             break;
         }
     }
@@ -537,7 +541,7 @@ export class Poly {
         if (p.degree >= 1) {
             const P = divisorsOf(p.c[0].n);
             const Qd = divisorsOf(p.lead.n);
-            cands = P.length * Qd.length <= ENUM_LIMIT ? allCandidates(P, Qd) : nearCandidates(p, () => P, Qd) ?? allCandidates(P, Qd);
+            cands = P.length * Qd.length <= ENUM_LIMIT ? allCandidates(P, Qd) : (nearCandidates(p, () => P, Qd) ?? allCandidates(P, Qd));
         }
         for (const c of cands ?? []) {
             if (p.degree < 1) break;
@@ -555,7 +559,9 @@ export class Poly {
             enumerable: true,
             configurable: true,
             get: () => (list ??= full.rootCandidates()),
-            set: (v) => { list = v; },
+            set: (v) => {
+                list = v;
+            },
         });
         return roots;
     }
@@ -620,7 +626,10 @@ export class Poly {
         }
         if (this.degree === 3) {
             const [d, c, b, a] = this.c;
-            return b.mul(b).mul(c).mul(c)
+            return b
+                .mul(b)
+                .mul(c)
+                .mul(c)
                 .sub(a.mul(c.pow(3)).mul(4))
                 .sub(b.pow(3).mul(d).mul(4))
                 .sub(a.mul(a).mul(d).mul(d).mul(27))

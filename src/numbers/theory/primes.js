@@ -53,8 +53,12 @@ export function isPrimeBig(n) {
         if (n % p === 0n) return n === p;
         if (p > 200n) break;
     }
-    let d = n - 1n, s = 0;
-    while ((d & 1n) === 0n) { d >>= 1n; s++; }
+    let d = n - 1n,
+        s = 0;
+    while ((d & 1n) === 0n) {
+        d >>= 1n;
+        s++;
+    }
     for (const a of mrBases(n).bases) {
         if (a % n === 0n) continue;
         if (!mrRound(n, a, d, s).pass) return false;
@@ -78,52 +82,83 @@ export function ntMillerRabin(n, opts = {}) {
     if (N < 5n || N % 2n === 0n) {
         res.prime = N === 2n || N === 3n;
         if (opts.steps) {
-            st.push(S(msg('numbers.theory.primes.no_test_needed'), null,
-                N < 2n ? msg('numbers.theory.primes.is_not_prime_primes_start_at', { N: sn(N) })
-                    : res.prime ? msg('numbers.theory.primes.is_prime', { N: sn(N) })
-                        : msg('numbers.theory.primes.is_even_and_greater_than_2', { N: sn(N) }), { rule: 'answer' }));
+            st.push(
+                S(
+                    msg('numbers.theory.primes.no_test_needed'),
+                    null,
+                    N < 2n
+                        ? msg('numbers.theory.primes.is_not_prime_primes_start_at', { N: sn(N) })
+                        : res.prime
+                          ? msg('numbers.theory.primes.is_prime', { N: sn(N) })
+                          : msg('numbers.theory.primes.is_even_and_greater_than_2', { N: sn(N) }),
+                    { rule: 'answer' },
+                ),
+            );
             res.steps = st;
         }
         return res;
     }
-    let d = N - 1n, s = 0;
-    while ((d & 1n) === 0n) { d >>= 1n; s++; }
+    let d = N - 1n,
+        s = 0;
+    while ((d & 1n) === 0n) {
+        d >>= 1n;
+        s++;
+    }
     res.d = d;
     res.s = s;
     let bases, certain;
-    if (opts.bases) { bases = opts.bases.map((b) => big(b)); certain = false; }
-    else ({ bases, certain } = mrBases(N));
+    if (opts.bases) {
+        bases = opts.bases.map((b) => big(b));
+        certain = false;
+    } else ({ bases, certain } = mrBases(N));
     for (const a of bases) {
         if (bmod(a, N) === 0n) continue;
         const r = mrRound(N, a, d, s);
         res.rounds.push(r);
-        if (!r.pass) { res.witness = a; break; }
+        if (!r.pass) {
+            res.witness = a;
+            break;
+        }
     }
     res.prime = res.witness === null;
     res.certain = res.prime ? certain : true;
     if (!opts.steps) return res;
-    st.push(S(msg('numbers.theory.primes.idea'), `${tn(N)} - 1 = 2^{${s}} \\cdot ${tn(d)}`,
-        msg('numbers.theory.primes.if_n_is_prime_fermat_s', { s, d: sn(d) }),
-        { rule: 'mr-idea' }));
+    st.push(
+        S(msg('numbers.theory.primes.idea'), `${tn(N)} - 1 = 2^{${s}} \\cdot ${tn(d)}`, msg('numbers.theory.primes.if_n_is_prime_fermat_s', { s, d: sn(d) }), {
+            rule: 'mr-idea',
+        }),
+    );
     for (const r of res.rounds) {
         let text;
         if (r.pass) {
-            text = r.seq[0] === 1n
-                ? msg('numbers.theory.primes.chain_starts_at_1_base_does', { p: sn(r.a) })
-                : msg('numbers.theory.primes.chain_passes_through_1_just_as', { p: sn(N - 1n), p2: sn(r.a) });
+            text =
+                r.seq[0] === 1n
+                    ? msg('numbers.theory.primes.chain_starts_at_1_base_does', { p: sn(r.a) })
+                    : msg('numbers.theory.primes.chain_passes_through_1_just_as', { p: sn(N - 1n), p2: sn(r.a) });
         } else if (r.seq[r.seq.length - 1] === 1n) {
             const prev = r.seq[r.seq.length - 2];
             text = msg('numbers.theory.primes.we_reached_1_but_number_before', { prev: sn(prev), N: sn(N), p: sn(r.a) });
         } else {
             text = msg('numbers.theory.primes.chain_never_reached_1_or_1', { N: sn(N), p: sn(r.a) });
         }
-        st.push(S(msg('numbers.theory.primes.base', { p: sn(r.a) }), `${r.seq.map(tn).join(',\\ ')} \\pmod{${tn(N)}}`, text, { rule: r.pass ? 'mr-pass' : 'mr-witness' }));
+        st.push(
+            S(msg('numbers.theory.primes.base', { p: sn(r.a) }), `${r.seq.map(tn).join(',\\ ')} \\pmod{${tn(N)}}`, text, {
+                rule: r.pass ? 'mr-pass' : 'mr-witness',
+            }),
+        );
     }
-    st.push(S(msg('numbers.theory.primes.conclusion'), null,
-        !res.prime ? msg('numbers.theory.primes.is_composite_miller_rabin_test_does', { N: sn(N) })
-            : res.certain ? msg('numbers.theory.primes.is_prime_for_numbers_below_3', { N: sn(N) })
-                : msg('numbers.theory.primes.is_almost_certainly_prime_none_of', { N: sn(N), length: res.rounds.length }),
-        { rule: 'answer' }));
+    st.push(
+        S(
+            msg('numbers.theory.primes.conclusion'),
+            null,
+            !res.prime
+                ? msg('numbers.theory.primes.is_composite_miller_rabin_test_does', { N: sn(N) })
+                : res.certain
+                  ? msg('numbers.theory.primes.is_prime_for_numbers_below_3', { N: sn(N) })
+                  : msg('numbers.theory.primes.is_almost_certainly_prime_none_of', { N: sn(N), length: res.rounds.length }),
+            { rule: 'answer' },
+        ),
+    );
     res.steps = st;
     return res;
 }
@@ -145,7 +180,12 @@ function rho(n) {
     let budget = RHO_BUDGET;
     for (let c = 1n; c < 200n; c++) {
         const f = (v) => (v * v + c) % n;
-        let y = 2n + c, r = 1, q = 1n, g = 1n, x, ys = 0n;
+        let y = 2n + c,
+            r = 1,
+            q = 1n,
+            g = 1n,
+            x,
+            ys = 0n;
         const m = 128;
         do {
             x = y;
@@ -168,7 +208,10 @@ function rho(n) {
             }
         } while (g === 1n);
         if (g === n) {
-            do { ys = f(ys); g = gcdCore(babs(x - ys), n); } while (g === 1n);
+            do {
+                ys = f(ys);
+                g = gcdCore(babs(x - ys), n);
+            } while (g === 1n);
         }
         if (g !== n) return g;
     }
@@ -187,9 +230,15 @@ function perfectPower(n) {
 
 function splitInto(m, out, mult = 1) {
     if (m === 1n) return;
-    if (isPrimeBig(m)) { out.set(m, (out.get(m) ?? 0) + mult); return; }
+    if (isPrimeBig(m)) {
+        out.set(m, (out.get(m) ?? 0) + mult);
+        return;
+    }
     const pp = perfectPower(m);
-    if (pp) { splitInto(pp.r, out, mult * pp.k); return; }
+    if (pp) {
+        splitInto(pp.r, out, mult * pp.k);
+        return;
+    }
     const d = rho(m);
     splitInto(d, out, mult);
     splitInto(m / d, out, mult);
@@ -202,7 +251,10 @@ export function factorMap(N) {
         if (p * p > m) break;
         if (m % p === 0n) {
             let e = 0;
-            do { m /= p; e++; } while (m % p === 0n);
+            do {
+                m /= p;
+                e++;
+            } while (m % p === 0n);
             out.set(p, e);
         }
     }
@@ -246,23 +298,31 @@ export function ntFactor(n, opts = {}) {
     let skipped = [];
     let reason = null;
     if (N < 0n) {
-        st.push(S(msg('numbers.theory.primes.take_out_minus_sign'), `${tn(N)} = -${tn(m)}`,
-            msg('numbers.theory.primes.we_factor_absolute_value_and_keep')));
+        st.push(S(msg('numbers.theory.primes.take_out_minus_sign'), `${tn(N)} = -${tn(m)}`, msg('numbers.theory.primes.we_factor_absolute_value_and_keep')));
     }
     if (m === 1n) {
         st.push(S(msg('numbers.theory.primes.one'), '1 = 1', msg('numbers.theory.primes.one_has_no_prime_factors_it'), { rule: 'answer' }));
         return { value: [], tex: '1', ladder: [], steps: st };
     }
-    st.push(S(msg('numbers.theory.primes.divide_by_primes_in_order'), null,
-        msg('numbers.theory.primes.we_try_primes_in_increasing_order'),
-        { rule: 'trial-division' }));
+    st.push(
+        S(msg('numbers.theory.primes.divide_by_primes_in_order'), null, msg('numbers.theory.primes.we_try_primes_in_increasing_order'), {
+            rule: 'trial-division',
+        }),
+    );
     const ladder = [];
     for (const p of SMALL_BIG) {
-        if (p * p > m) { reason = 'sqrt'; break; }
+        if (p * p > m) {
+            reason = 'sqrt';
+            break;
+        }
         if (m % p === 0n) {
             const before = m;
             let e = 0;
-            do { ladder.push({ n: m, p }); m /= p; e++; } while (m % p === 0n);
+            do {
+                ladder.push({ n: m, p });
+                m /= p;
+                e++;
+            } while (m % p === 0n);
             groups.push({ p, e, before, after: m, skipped });
             skipped = [];
         } else skipped.push(p);
@@ -271,21 +331,49 @@ export function ntFactor(n, opts = {}) {
     for (const gr of groups) {
         const piece = (i) => `${i === 1 ? tn(gr.p) : `${tn(gr.p)}^{${i}}`} \\cdot ${tn(gr.before / gr.p ** BigInt(i))}`;
         const pieces = gr.e <= 5 ? Array.from({ length: gr.e }, (_, i) => piece(i + 1)) : [piece(1), '\\ldots', piece(gr.e)];
-        const skipTxt = (l) => (gr.skipped.length ? (msg('numbers.theory.primes.it_is_not_divisible_by', { p: listText(gr.skipped, l) }).in(l)) : '');
+        const skipTxt = (l) => (gr.skipped.length ? msg('numbers.theory.primes.it_is_not_divisible_by', { p: listText(gr.skipped, l) }).in(l) : '');
         const times = (l) => msg('numbers.theory.primes.times', { e: gr.e }).in(l);
-        st.push(S(msg('numbers.theory.primes.divide_by', { p: sn(gr.p) }),
-            `${tn(gr.before)} = ${pieces.join(' = ')}`,
-            eachLanguage((l) => (msg('numbers.theory.primes.is_divisible_by_is_left', { l: skipTxt(l), p: sn(gr.before), p2: sn(gr.p), p3: ruleHint(Number(gr.p), gr.before, l), p4: (lng) => gr.e > 1 ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng) : msg('numbers.theory.primes.we_divide').in(lng), p5: sn(gr.after) }).in(l))),
-            { rule: 'divide', p: gr.p, e: gr.e }));
+        st.push(
+            S(
+                msg('numbers.theory.primes.divide_by', { p: sn(gr.p) }),
+                `${tn(gr.before)} = ${pieces.join(' = ')}`,
+                eachLanguage((l) =>
+                    msg('numbers.theory.primes.is_divisible_by_is_left', {
+                        l: skipTxt(l),
+                        p: sn(gr.before),
+                        p2: sn(gr.p),
+                        p3: ruleHint(Number(gr.p), gr.before, l),
+                        p4: (lng) =>
+                            gr.e > 1
+                                ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng)
+                                : msg('numbers.theory.primes.we_divide').in(lng),
+                        p5: sn(gr.after),
+                    }).in(l),
+                ),
+                { rule: 'divide', p: gr.p, e: gr.e },
+            ),
+        );
     }
     const out = new Map(groups.map((g) => [g.p, g.e]));
     if (reason === 'sqrt' && m > 1n) {
         const r = Math.sqrt(Number(m));
         const whole = groups.length === 0;
-        st.push(S(whole ? msg('numbers.theory.primes.number_is_prime') : msg('numbers.theory.primes.what_is_left_is_prime'),
-            eachLanguage((l) => `\\sqrt{${tn(m)}} \\approx ${dec(r, 1, l, true)}`),
-            eachLanguage((l) => (msg('numbers.theory.primes.and_none_divides_it_so_is', { p: (lng) => whole ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng) : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng), m: sn(m) }).in(l))),
-            { rule: 'sqrt-bound' }));
+        st.push(
+            S(
+                whole ? msg('numbers.theory.primes.number_is_prime') : msg('numbers.theory.primes.what_is_left_is_prime'),
+                eachLanguage((l) => `\\sqrt{${tn(m)}} \\approx ${dec(r, 1, l, true)}`),
+                eachLanguage((l) =>
+                    msg('numbers.theory.primes.and_none_divides_it_so_is', {
+                        p: (lng) =>
+                            whole
+                                ? msg('numbers.theory.primes.we_have_tried_every_prime_up', { m: sn(m), r: dec(r, 1, l) }).in(lng)
+                                : msg('numbers.theory.primes.is_left_we_have_already_tried', { m: sn(m), r: dec(r, 1, l) }).in(lng),
+                        m: sn(m),
+                    }).in(l),
+                ),
+                { rule: 'sqrt-bound' },
+            ),
+        );
         out.set(m, (out.get(m) ?? 0) + 1);
         ladder.push({ n: m, p: m });
     } else if (reason === 'big') {
@@ -295,33 +383,50 @@ export function ntFactor(n, opts = {}) {
         const certain = ps.every(([p]) => p < MR_LIMIT);
         const single = ps.length === 1 && ps[0][1] === 1;
         const digits = m.toString().length;
-        st.push(S(single ? msg('numbers.theory.primes.large_prime_cofactor') : msg('numbers.theory.primes.large_cofactor'),
-            `${tn(m)} = ${ntFactorTex(ps.map(([p, e]) => ({ p, e })))}`,
-            msg(single ? 'numbers.theory.primes.cofactor_is_prime' : 'numbers.theory.primes.cofactor_is_composite', {
-                trial: sn(TRIAL),
-                digits,
-                m: sn(m),
-                caveat: certain ? '' : msg(single ? 'numbers.theory.primes.error_probability' : 'numbers.theory.primes.probabilistically'),
-            }),
-            { rule: single ? 'miller-rabin' : 'pollard-rho' }));
+        st.push(
+            S(
+                single ? msg('numbers.theory.primes.large_prime_cofactor') : msg('numbers.theory.primes.large_cofactor'),
+                `${tn(m)} = ${ntFactorTex(ps.map(([p, e]) => ({ p, e })))}`,
+                msg(single ? 'numbers.theory.primes.cofactor_is_prime' : 'numbers.theory.primes.cofactor_is_composite', {
+                    trial: sn(TRIAL),
+                    digits,
+                    m: sn(m),
+                    caveat: certain ? '' : msg(single ? 'numbers.theory.primes.error_probability' : 'numbers.theory.primes.probabilistically'),
+                }),
+                { rule: single ? 'miller-rabin' : 'pollard-rho' },
+            ),
+        );
         for (const [p, e] of ps) {
             out.set(p, (out.get(p) ?? 0) + e);
-            for (let i = 0; i < e; i++) { ladder.push({ n: m, p }); m /= p; }
+            for (let i = 0; i < e; i++) {
+                ladder.push({ n: m, p });
+                m /= p;
+            }
         }
     }
     const value = [...out.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([p, e]) => ({ p, e }));
     if (ladder.length > 1 && ladder.length <= 40) {
         const rowsTex = ladder.map(({ n: k, p }) => `${tn(k)} & ${tn(p)}`).join(' \\\\ ') + ' \\\\ 1 & ';
-        st.push(S(msg('numbers.theory.primes.division_ladder'), `\\begin{array}{r|l} ${rowsTex} \\end{array}`,
-            msg('numbers.theory.primes.usual_notebook_layout_on_left_what'),
-            { rule: 'ladder' }));
+        st.push(
+            S(
+                msg('numbers.theory.primes.division_ladder'),
+                `\\begin{array}{r|l} ${rowsTex} \\end{array}`,
+                msg('numbers.theory.primes.usual_notebook_layout_on_left_what'),
+                { rule: 'ladder' },
+            ),
+        );
     }
     const tex = ntFactorTex(value);
-    st.push(S(msg('numbers.theory.primes.answer'), `${tn(N)} = ${N < 0n ? '-' : ''}${tex}`,
-        value.length === 1 && value[0].e === 1
-            ? msg('numbers.theory.primes.is_prime_2', { p: sn(babs(N)) })
-            : msg('numbers.theory.primes.by_fundamental_theorem_of_arithmetic_this'),
-        { rule: 'answer' }));
+    st.push(
+        S(
+            msg('numbers.theory.primes.answer'),
+            `${tn(N)} = ${N < 0n ? '-' : ''}${tex}`,
+            value.length === 1 && value[0].e === 1
+                ? msg('numbers.theory.primes.is_prime_2', { p: sn(babs(N)) })
+                : msg('numbers.theory.primes.by_fundamental_theorem_of_arithmetic_this'),
+            { rule: 'answer' },
+        ),
+    );
     return { value, tex, ladder, steps: st };
 }
 
@@ -334,7 +439,10 @@ export function ntDivisors(n) {
         const next = [];
         for (const d of divs) {
             let pk = 1n;
-            for (let i = 0; i <= e; i++) { next.push(d * pk); pk *= p; }
+            for (let i = 0; i <= e; i++) {
+                next.push(d * pk);
+                pk *= p;
+            }
         }
         divs = next;
         if (divs.length > 2_000_000) throw fail(msg('numbers.theory.primes.too_many_divisors'), 'too-big');
@@ -358,7 +466,10 @@ export function ntSigma(n, k = 1) {
     const K = BigInt(k);
     let s = 1n;
     for (const [p, e] of factorMap(N)) {
-        if (K === 0n) { s *= BigInt(e + 1); continue; }
+        if (K === 0n) {
+            s *= BigInt(e + 1);
+            continue;
+        }
         const pk = p ** K;
         s *= (pk ** BigInt(e + 1) - 1n) / (pk - 1n);
     }
@@ -386,29 +497,46 @@ export function ntPhi(n, opts = {}) {
     for (const { p } of fs) value = (value / p) * (p - 1n);
     if (!opts.steps) return value;
     const st = [];
-    st.push(S(msg('numbers.theory.primes.what_we_count'), `\\varphi(${tn(N)})`,
-        msg('numbers.theory.primes.n_is_how_many_numbers_from'), { rule: 'phi-def' }));
+    st.push(S(msg('numbers.theory.primes.what_we_count'), `\\varphi(${tn(N)})`, msg('numbers.theory.primes.n_is_how_many_numbers_from'), { rule: 'phi-def' }));
     if (N === 1n) {
         st.push(S(msg('numbers.theory.primes.answer'), '\\varphi(1) = 1', msg('numbers.theory.primes.one_is_coprime_to_itself'), { rule: 'answer' }));
         return { value, steps: st };
     }
-    st.push(S(msg('numbers.theory.primes.factor_into_primes'), `${tn(N)} = ${ntFactorTex(fs)}`, null, { rule: 'factor', sub: ntFactor(N, { steps: true }).steps }));
+    st.push(
+        S(msg('numbers.theory.primes.factor_into_primes'), `${tn(N)} = ${ntFactorTex(fs)}`, null, { rule: 'factor', sub: ntFactor(N, { steps: true }).steps }),
+    );
     const brackets = fs.map(({ p }) => `\\left(1 - \\frac{1}{${tn(p)}}\\right)`).join('');
     const fracs = fs.map(({ p }) => `\\frac{${tn(p - 1n)}}{${tn(p)}}`).join(' \\cdot ');
-    st.push(S(msg('numbers.theory.primes.euler_s_formula'), `\\varphi(${tn(N)}) = ${tn(N)} ${brackets} = ${tn(N)} \\cdot ${fracs} = ${tn(value)}`,
-        msg('numbers.theory.primes.among_any_p_consecutive_numbers_exactly'),
-        { rule: 'phi-formula' }));
+    st.push(
+        S(
+            msg('numbers.theory.primes.euler_s_formula'),
+            `\\varphi(${tn(N)}) = ${tn(N)} ${brackets} = ${tn(N)} \\cdot ${fracs} = ${tn(value)}`,
+            msg('numbers.theory.primes.among_any_p_consecutive_numbers_exactly'),
+            { rule: 'phi-formula' },
+        ),
+    );
     if (fs.length > 1 || fs[0].e > 1) {
         const alt = fs.map(({ p, e }) => (e === 1 ? `${tn(p - 1n)}` : `(${tn(p ** BigInt(e))} - ${tn(p ** BigInt(e - 1))})`)).join(' \\cdot ');
-        st.push(S(msg('numbers.theory.primes.another_way'), `\\varphi(${tn(N)}) = ${fs.map(({ p, e }) => `\\varphi(${e === 1 ? tn(p) : `${tn(p)}^{${e}}`})`).join('\\,')} = ${alt} = ${tn(value)}`,
-            msg('numbers.theory.primes.is_multiplicative_for_coprime_factors_values'),
-            { rule: 'phi-multiplicative' }));
+        st.push(
+            S(
+                msg('numbers.theory.primes.another_way'),
+                `\\varphi(${tn(N)}) = ${fs.map(({ p, e }) => `\\varphi(${e === 1 ? tn(p) : `${tn(p)}^{${e}}`})`).join('\\,')} = ${alt} = ${tn(value)}`,
+                msg('numbers.theory.primes.is_multiplicative_for_coprime_factors_values'),
+                { rule: 'phi-multiplicative' },
+            ),
+        );
     }
     if (N <= 100n) {
         const list = [];
         for (let k = 1n; k <= N; k++) if (gcdCore(k, N) === 1n) list.push(k);
-        st.push(S(msg('numbers.theory.primes.check_by_listing'), null,
-            msg('numbers.theory.primes.coprime_to_of_them', { N: sn(N), p: list.map(sn).join(', '), length: list.length }), { rule: 'check' }));
+        st.push(
+            S(
+                msg('numbers.theory.primes.check_by_listing'),
+                null,
+                msg('numbers.theory.primes.coprime_to_of_them', { N: sn(N), p: list.map(sn).join(', '), length: list.length }),
+                { rule: 'check' },
+            ),
+        );
     }
     return { value, steps: st };
 }
@@ -433,7 +561,10 @@ export function ntSieve(n) {
     const spf = new Int32Array(n + 1);
     const primes = [];
     for (let i = 2; i <= n; i++) {
-        if (spf[i] === 0) { spf[i] = i; primes.push(i); }
+        if (spf[i] === 0) {
+            spf[i] = i;
+            primes.push(i);
+        }
         for (const p of primes) {
             if (p > spf[i] || p * i > n) break;
             spf[p * i] = p;
@@ -462,7 +593,8 @@ export function ntPrimePi(n) {
     for (let i = 1; i <= r; i++) hi[i] = Math.floor(n / i) - 1;
     for (let p = 2; p <= r; p++) {
         if (lo[p] === lo[p - 1]) continue;
-        const sp = lo[p - 1], p2 = p * p;
+        const sp = lo[p - 1],
+            p2 = p * p;
         const lim = Math.min(r, Math.floor(n / p2));
         for (let i = 1; i <= lim; i++) {
             const d = i * p;
@@ -478,7 +610,7 @@ export function ntNextPrime(n) {
     let N = big(n);
     if (N < 2n) return 2n;
     if (N === 2n) return 3n;
-    N += (N & 1n) ? 2n : 1n;
+    N += N & 1n ? 2n : 1n;
     while (!isPrimeBig(N)) N += 2n;
     return N;
 }
@@ -488,7 +620,7 @@ export function ntPrevPrime(n) {
     let N = big(n);
     if (N <= 2n) return null;
     if (N === 3n) return 2n;
-    N -= (N & 1n) ? 2n : 1n;
+    N -= N & 1n ? 2n : 1n;
     while (!isPrimeBig(N)) N -= 2n;
     return N;
 }
@@ -505,6 +637,9 @@ export function ntDigitSum(n, base = 10) {
     let N = babs(big(n));
     const B = BigInt(needBase(base));
     let s = 0n;
-    while (N > 0n) { s += N % B; N /= B; }
+    while (N > 0n) {
+        s += N % B;
+        N /= B;
+    }
     return s;
 }

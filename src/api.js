@@ -17,9 +17,22 @@ import { MathError } from './core/rational.js';
 import { toText } from './core/print.js';
 import { texBoth } from './core/steps.js';
 import { msg, eachLanguage } from './i18n/index.js';
-import { solveEquation as solveEquation0, solveTrig as solveTrig0, solveInequality as solveInequality0, solveLinearSystem as solveLinearSystem0, solveSystem2 as solveSystem20, checkRoot as checkRoot0 } from './solve/index.js';
+import {
+    solveEquation as solveEquation0,
+    solveTrig as solveTrig0,
+    solveInequality as solveInequality0,
+    solveLinearSystem as solveLinearSystem0,
+    solveSystem2 as solveSystem20,
+    checkRoot as checkRoot0,
+} from './solve/index.js';
 import { solveWithParameter as solveWithParameter0 } from './solve/parameter.js';
-import { derivative as derivative0, partialDerivative as partialDerivative0, derivativeN as derivativeN0, gradientOf as gradientOf0, tangentLine as tangentLine0 } from './calculus/derivative/index.js';
+import {
+    derivative as derivative0,
+    partialDerivative as partialDerivative0,
+    derivativeN as derivativeN0,
+    gradientOf as gradientOf0,
+    tangentLine as tangentLine0,
+} from './calculus/derivative/index.js';
 import { integrate as integrate0, integrateDefinite as integrateDefinite0, areaBetween as areaBetween0 } from './calculus/integral/index.js';
 import { limit as limit0, taylorPolynomial as taylorPolynomial0 } from './calculus/limit/index.js';
 import { extremeOnSegment as extremeOnSegment0, extremePoints as extremePoints0 } from './calculus/extrema.js';
@@ -106,14 +119,25 @@ export const partialDerivative = solver(partialDerivative0, derivativeSpec(2));
 /** The n-th derivative. */
 export const derivativeN = solver(derivativeN0, derivativeSpec(3));
 /** The gradient of a function of several variables. */
-export const gradientOf = solver(gradientOf0, { opts: 2, ok: (r) => !!r.components, kind: () => 'gradient', answer: (r) => ({ tex: r.tex, text: eachLanguage((lang) => `(${toText(r.result, { lang })})`) }) });
+export const gradientOf = solver(gradientOf0, {
+    opts: 2,
+    ok: (r) => !!r.components,
+    kind: () => 'gradient',
+    answer: (r) => ({ tex: r.tex, text: eachLanguage((lang) => `(${toText(r.result, { lang })})`) }),
+});
 /** The tangent line at a point. */
 export const tangentLine = solver(tangentLine0, { opts: 3, ok: (r) => !!r.line, kind: () => 'line', answer: (r) => ({ tex: r.tex, text: textOf(r.line) }) });
 /** An antiderivative, with the method that found it. */
-export const integrate = solver(integrate0, { opts: 2, ok: (r) => !!r.result, kind: () => 'antiderivative', answer: (r) => ({ tex: r.tex, text: eachLanguage((lang) => `${toText(r.result, { lang })} + C`) }) });
+export const integrate = solver(integrate0, {
+    opts: 2,
+    ok: (r) => !!r.result,
+    kind: () => 'antiderivative',
+    answer: (r) => ({ tex: r.tex, text: eachLanguage((lang) => `${toText(r.result, { lang })} + C`) }),
+});
 
 const definiteKind = (r) => (r.converges === false ? 'diverges' : r.value != null && typeof r.value === 'object' ? 'value' : 'approx');
-const definiteText = (r) => (r.converges === false ? msg('api.diverges') : r.value != null && typeof r.value === 'object' ? textOf(r.value) : String(r.numeric));
+const definiteText = (r) =>
+    r.converges === false ? msg('api.diverges') : r.value != null && typeof r.value === 'object' ? textOf(r.value) : String(r.numeric);
 /** A definite (also improper) integral: exact, numeric or divergent. */
 export const integrateDefinite = solver(integrateDefinite0, {
     opts: 4,
@@ -129,12 +153,32 @@ export const areaBetween = solver(areaBetween0, {
     answer: (r) => ({ tex: r.tex, text: definiteText(r) }),
 });
 
-const limitKind = (r) => (r.value === 'dne' ? 'dne' : r.value === 'inf' || r.value === '-inf' ? 'infinite' : r.value && typeof r.value === 'object' ? 'value' : 'approx');
-const limitText = (r) => (r.value === 'dne' ? msg('api.does_not_exist') : r.value === 'inf' ? '+∞' : r.value === '-inf' ? '-∞' : r.value && typeof r.value === 'object' ? textOf(r.value) : `≈ ${r.approx}`);
+const limitKind = (r) =>
+    r.value === 'dne' ? 'dne' : r.value === 'inf' || r.value === '-inf' ? 'infinite' : r.value && typeof r.value === 'object' ? 'value' : 'approx';
+const limitText = (r) =>
+    r.value === 'dne'
+        ? msg('api.does_not_exist')
+        : r.value === 'inf'
+          ? '+∞'
+          : r.value === '-inf'
+            ? '-∞'
+            : r.value && typeof r.value === 'object'
+              ? textOf(r.value)
+              : `≈ ${r.approx}`;
 /** A limit at a point or at ±∞, with the method and a table of values. */
-export const limit = solver(limit0, { opts: 3, ok: (r) => r.value != null || Number.isFinite(r.approx), kind: limitKind, answer: (r) => ({ tex: r.tex, text: limitText(r) }) });
+export const limit = solver(limit0, {
+    opts: 3,
+    ok: (r) => r.value != null || Number.isFinite(r.approx),
+    kind: limitKind,
+    answer: (r) => ({ tex: r.tex, text: limitText(r) }),
+});
 /** A Taylor polynomial with exact coefficients. */
-export const taylorPolynomial = solver(taylorPolynomial0, { opts: 4, ok: (r) => !!r.poly, kind: () => 'polynomial', answer: (r) => ({ tex: r.tex, text: textOf(r.poly) }) });
+export const taylorPolynomial = solver(taylorPolynomial0, {
+    opts: 4,
+    ok: (r) => !!r.poly,
+    kind: () => 'polynomial',
+    answer: (r) => ({ tex: r.tex, text: textOf(r.poly) }),
+});
 /** The greatest or least value on a segment; the kind asked for stays in `extremum`. */
 export const extremeOnSegment = solver(extremeOnSegment0, {
     opts: 4,
@@ -148,7 +192,20 @@ export const extremePoints = solver(extremePoints0, {
     opts: 2,
     ok: (r) => Array.isArray(r.critical),
     kind: () => 'points',
-    answer: (r) => ({ tex: eachLanguage((lang) => [r.max.length ? `x_{\\max} = ${r.max.map((c) => toText(c.x, { lang })).join(', ')}` : null, r.min.length ? `x_{\\min} = ${r.min.map((c) => toText(c.x, { lang })).join(', ')}` : null].filter(Boolean).join(',\\quad ') || '\\varnothing'), text: eachLanguage((lang) => `max: ${r.max.map((c) => toText(c.x, { lang })).join(', ') || '—'}; min: ${r.min.map((c) => toText(c.x, { lang })).join(', ') || '—'}`) }),
+    answer: (r) => ({
+        tex: eachLanguage(
+            (lang) =>
+                [
+                    r.max.length ? `x_{\\max} = ${r.max.map((c) => toText(c.x, { lang })).join(', ')}` : null,
+                    r.min.length ? `x_{\\min} = ${r.min.map((c) => toText(c.x, { lang })).join(', ')}` : null,
+                ]
+                    .filter(Boolean)
+                    .join(',\\quad ') || '\\varnothing',
+        ),
+        text: eachLanguage(
+            (lang) => `max: ${r.max.map((c) => toText(c.x, { lang })).join(', ') || '—'}; min: ${r.min.map((c) => toText(c.x, { lang })).join(', ') || '—'}`,
+        ),
+    }),
 });
 /** An ordinary differential equation with initial conditions after «;». */
 export const solveOde = solver(solveOde0, { opts: 1, ok: notUnsupported, answer: (r) => ({ tex: r.tex, text: r.text }) });
@@ -156,7 +213,12 @@ export const solveOde = solver(solveOde0, { opts: 1, ok: notUnsupported, answer:
 export const sumSeries = solver(sumSeries0, {
     opts: 1,
     ok: notUnsupported,
-    answer: (r) => (r.kind === 'value' ? answerOf(r.value) : r.kind === 'diverges' ? { tex: msg('api.diverges_tex'), text: msg('api.diverges') } : { tex: `S \\approx ${r.approx}`, text: r.text }),
+    answer: (r) =>
+        r.kind === 'value'
+            ? answerOf(r.value)
+            : r.kind === 'diverges'
+              ? { tex: msg('api.diverges_tex'), text: msg('api.diverges') }
+              : { tex: `S \\approx ${r.approx}`, text: r.text },
 });
 
 /* ------------------------------------------------------------------ algebra */

@@ -64,7 +64,14 @@ function expectRoots(eq, expected, opts = {}) {
     if (opts.type) assert.equal(r.type, opts.type, `${eq}: type`);
     if (opts.extraneous) {
         const ex = (r.extraneous ?? []).map((x) => x.approx).sort((a, b) => a - b);
-        assert.deepEqual(ex.map((x) => Math.round(x * 1e6) / 1e6), opts.extraneous.map(val).sort((a, b) => a - b).map((x) => Math.round(x * 1e6) / 1e6), `${eq}: extraneous`);
+        assert.deepEqual(
+            ex.map((x) => Math.round(x * 1e6) / 1e6),
+            opts.extraneous
+                .map(val)
+                .sort((a, b) => a - b)
+                .map((x) => Math.round(x * 1e6) / 1e6),
+            `${eq}: extraneous`,
+        );
     }
     // substitution check: every kept root is checked and fits
     assert.ok(r.check.length >= r.roots.length, `${eq}: every root is checked`);
@@ -215,7 +222,10 @@ for (const [eq, roots] of QUADRATIC) test(`quadratic: ${eq}`, () => expectRoots(
 test('quadratic: no real roots, complex roots as an aside or in the complex domain', () => {
     const r = expectKind('x^2 + 2x + 5 = 0', 'none');
     assert.equal(r.complexRoots.length, 2);
-    assert.deepEqual(r.complexRoots.map((z) => E.toTex(z.node)), ['-1 - 2i', '-1 + 2i']);
+    assert.deepEqual(
+        r.complexRoots.map((z) => E.toTex(z.node)),
+        ['-1 - 2i', '-1 + 2i'],
+    );
     assert.ok(r.steps.some((s) => /D < 0/.test(s.title.ru) && /комплексных/.test(s.text?.ru ?? '')));
     expectKind('2x^2 + 8 = 0', 'none');
     expectKind('x^2 + 1 = 0', 'none');
@@ -228,7 +238,10 @@ test('quadratic: no real roots, complex roots as an aside or in the complex doma
         assert.ok(Math.hypot(p.re, p.im) < 1e-9);
     }
     const i2 = E.solveEquation('x^2 = -4', 'x', { domain: 'complex' });
-    assert.deepEqual(i2.roots.map((z) => E.toTex(z.node)), ['-2i', '2i']);
+    assert.deepEqual(
+        i2.roots.map((z) => E.toTex(z.node)),
+        ['-2i', '2i'],
+    );
 });
 
 test('quadratic: discriminant step, simplified surds, Vieta check, double root multiplicity', () => {
@@ -238,11 +251,17 @@ test('quadratic: discriminant step, simplified surds, Vieta check, double root m
     const s = E.solveEquation('x^2 - 3x - 1 = 0');
     assert.equal(E.pickLang(s.answer.tex, 'ru'), 'x_{1} = \\frac{3 - \\sqrt{13}}{2};\\quad x_{2} = \\frac{3 + \\sqrt{13}}{2}');
     const t = E.solveEquation('x^2 - 8 = 0');
-    assert.deepEqual(t.roots.map((x) => E.toTex(x.node)), ['-2\\sqrt{2}', '2\\sqrt{2}']);
+    assert.deepEqual(
+        t.roots.map((x) => E.toTex(x.node)),
+        ['-2\\sqrt{2}', '2\\sqrt{2}'],
+    );
     const d = E.solveEquation('x^2 - 6x + 9 = 0');
     assert.equal(d.roots[0].mult, 2);
     const u = E.solveEquation('2x^2 - 12x + 8 = 0'); // D = 80 → (6 ± 2√5)/2 → 3 ± √5
-    assert.deepEqual(u.roots.map((x) => E.toTex(x.node)), ['3 - \\sqrt{5}', '3 + \\sqrt{5}']);
+    assert.deepEqual(
+        u.roots.map((x) => E.toTex(x.node)),
+        ['3 - \\sqrt{5}', '3 + \\sqrt{5}'],
+    );
 });
 
 test('quadratic: incomplete forms are solved the short way', () => {
@@ -302,7 +321,13 @@ test('polynomial: rational root theorem, Horner table and multiplicities', () =>
     const h = r.steps.find((s) => /Горнера/.test(s.title.ru));
     assert.equal(h.tex, '\\begin{array}{c|cccc} & 1 & -6 & 11 & -6 \\\\ \\hline 1 & 1 & -5 & 6 & 0 \\end{array}');
     const m = E.solveEquation('x^3 - 3x + 2 = 0');
-    assert.deepEqual(m.roots.map((x) => [x.approx, x.mult]), [[-2, 1], [1, 2]]);
+    assert.deepEqual(
+        m.roots.map((x) => [x.approx, x.mult]),
+        [
+            [-2, 1],
+            [1, 2],
+        ],
+    );
     const t = E.solveEquation('x^3 - 3x^2 + 3x - 1 = 0');
     assert.equal(t.roots[0].mult, 3);
     const z = E.solveEquation('x^5 - x^3 = 0');
@@ -318,7 +343,10 @@ test('polynomial: substitution t = x^2, symmetric equations, grouping', () => {
     assert.match(g.steps[0].title.ru, /Группируем/);
     const c = E.solveEquation('x^3 = 8', 'x', { domain: 'complex' });
     assert.equal(c.roots.length, 3);
-    assert.deepEqual(c.roots.map((x) => E.toTex(x.node)), ['2', '-1 - i\\sqrt{3}', '-1 + i\\sqrt{3}']);
+    assert.deepEqual(
+        c.roots.map((x) => E.toTex(x.node)),
+        ['2', '-1 - i\\sqrt{3}', '-1 + i\\sqrt{3}'],
+    );
 });
 
 // ---------------------------------------------------------------- rational equations
@@ -413,8 +441,14 @@ test('radical: extraneous roots are explained, ОДЗ is stated', () => {
     const n = expectKind('sqrt(x) = -3', 'none');
     assert.ok(n.steps.some((s) => /не бывает отрицательным/.test(s.title.ru)));
     const c = E.solveEquation('sqrt(x-3) = x - 5');
-    assert.equal(c.check.find((x) => !x.ok), undefined); // 4 is dropped before the check by the g ≥ 0 condition
-    assert.deepEqual(c.extraneous.map((x) => [x.approx, x.reason]), [[4, 'sign']]);
+    assert.equal(
+        c.check.find((x) => !x.ok),
+        undefined,
+    ); // 4 is dropped before the check by the g ≥ 0 condition
+    assert.deepEqual(
+        c.extraneous.map((x) => [x.approx, x.reason]),
+        [[4, 'sign']],
+    );
 });
 
 // ---------------------------------------------------------------- exponential equations
@@ -482,7 +516,8 @@ const LOG = [
     ['log_(1/2)(x) = 3', ['1/8']],
     ['lg(x)^2 - lg(x) - 2 = 0', ['1/10', 100]],
 ];
-for (const [eq, roots, extr] of LOG) test(`logarithmic: ${eq}`, () => expectRoots(eq, roots, extr ? { extraneous: extr, type: 'logarithmic' } : { type: 'logarithmic' }));
+for (const [eq, roots, extr] of LOG)
+    test(`logarithmic: ${eq}`, () => expectRoots(eq, roots, extr ? { extraneous: extr, type: 'logarithmic' } : { type: 'logarithmic' }));
 
 test('logarithmic: ОДЗ and the combined logarithm', () => {
     const r = E.solveEquation('log_2(x)+log_2(x-2)=3');
@@ -525,7 +560,10 @@ test('numeric fallback: marked ≈ with the search range', () => {
     assert.deepEqual(r.range, [-10, 10]);
     assert.ok(r.steps.some((s) => /численно/.test(s.title.ru)));
     const c = expectRoots('cos x = x', [0.7390851332151607], { approx: true });
-    assert.deepEqual(c.range.map((x) => Math.round(x * 1000) / 1000), [-6.283, 6.283]);
+    assert.deepEqual(
+        c.range.map((x) => Math.round(x * 1000) / 1000),
+        [-6.283, 6.283],
+    );
     expectRoots('e^x = 2 - x', [0.4428544010023885], { approx: true });
     expectRoots('x^x = 4', [2], { approx: true });
     const fl = E.solveEquation('floor(x) = 2');
@@ -606,10 +644,11 @@ for (const [eq, roots] of TRIG) test(`trig: ${eq}`, () => expectTrig(eq, roots))
 test('trig: cos 3x = 1/3 (arccos, period 2π/3)', () => {
     const a = Math.acos(1 / 3);
     const want = [];
-    for (let n = -3; n <= 3; n++) for (const s of [1, -1]) {
-        const x = (s * a + 2 * PI * n) / 3;
-        if (x >= 0 && x < 2 * PI - 1e-9) want.push(x);
-    }
+    for (let n = -3; n <= 3; n++)
+        for (const s of [1, -1]) {
+            const x = (s * a + 2 * PI * n) / 3;
+            if (x >= 0 && x < 2 * PI - 1e-9) want.push(x);
+        }
     expectTrig('cos(3x) = 1/3', want);
 });
 
@@ -653,14 +692,26 @@ test('trig: RU and EN general-solution forms', () => {
 
 test('trig: roots on an interval (ЕГЭ, part 2)', () => {
     const r = E.solveEquation('sin x = 1/2', 'x', { interval: '[0; 2pi]' });
-    assert.deepEqual(r.inInterval.map((x) => E.toTex(x.node)), ['\\frac{\\pi}{6}', '\\frac{5\\pi}{6}']);
+    assert.deepEqual(
+        r.inInterval.map((x) => E.toTex(x.node)),
+        ['\\frac{\\pi}{6}', '\\frac{5\\pi}{6}'],
+    );
     assert.ok(r.steps.some((s) => /Отбираем корни на промежутке/.test(s.title.ru)));
     const c = E.solveEquation('2cos(x)^2 - 1 = 0', 'x', { interval: [E.parse('-pi'), E.parse('pi')] });
-    assert.deepEqual(c.inInterval.map((x) => E.toTex(x.node)), ['-\\frac{3\\pi}{4}', '-\\frac{\\pi}{4}', '\\frac{\\pi}{4}', '\\frac{3\\pi}{4}']);
+    assert.deepEqual(
+        c.inInterval.map((x) => E.toTex(x.node)),
+        ['-\\frac{3\\pi}{4}', '-\\frac{\\pi}{4}', '\\frac{\\pi}{4}', '\\frac{3\\pi}{4}'],
+    );
     const e = E.solveEquation('2sin(x)^2 + 3cos x - 3 = 0', 'x', { interval: '[pi; 5pi/2]' });
-    assert.deepEqual(e.inInterval.map((x) => E.toTex(x.node)), ['\\frac{5\\pi}{3}', '2\\pi', '\\frac{7\\pi}{3}']);
+    assert.deepEqual(
+        e.inInterval.map((x) => E.toTex(x.node)),
+        ['\\frac{5\\pi}{3}', '2\\pi', '\\frac{7\\pi}{3}'],
+    );
     const t = E.solveTrig('tg x = -1', 'x', { interval: '(0; 7)' });
-    assert.deepEqual(t.inInterval.map((x) => E.toTex(x.node)), ['\\frac{3\\pi}{4}', '\\frac{7\\pi}{4}']);
+    assert.deepEqual(
+        t.inInterval.map((x) => E.toTex(x.node)),
+        ['\\frac{3\\pi}{4}', '\\frac{7\\pi}{4}'],
+    );
     const en = E.solveEquation('cos x = 0', 'x', { interval: '[0, 2pi]', lang: 'en' });
     assert.equal(en.inInterval.length, 2);
 });
@@ -754,15 +805,30 @@ for (const [ineq, set] of INEQ) test(`inequality: ${ineq}`, () => expectSet(ineq
 
 test('inequality: sign chart for the method of intervals', () => {
     const r = E.solveInequality('(x-1)^2(x+2) >= 0');
-    assert.deepEqual(r.signChart.points.map((p) => [p.x, p.kind, p.included, p.mult]), [[-2, 'zero', true, 1], [1, 'zero', true, 2]]);
+    assert.deepEqual(
+        r.signChart.points.map((p) => [p.x, p.kind, p.included, p.mult]),
+        [
+            [-2, 'zero', true, 1],
+            [1, 'zero', true, 2],
+        ],
+    );
     assert.deepEqual(r.signChart.signs, ['-', '+', '+']);
     assert.ok(r.steps.some((s) => /чётной кратности/.test(s.text?.ru ?? '')));
     const q = E.solveInequality('(x+1)/(x-2) <= 0');
-    assert.deepEqual(q.signChart.points.map((p) => [p.x, p.kind, p.included]), [[-1, 'zero', true], [2, 'pole', false]]);
+    assert.deepEqual(
+        q.signChart.points.map((p) => [p.x, p.kind, p.included]),
+        [
+            [-1, 'zero', true],
+            [2, 'pole', false],
+        ],
+    );
     assert.deepEqual(q.signChart.signs, ['+', '-', '+']);
     assert.ok(q.steps.some((s) => /всегда выколотые/.test(s.title.ru)));
     const s = E.solveInequality('x^2 - 2 > 0');
-    assert.deepEqual(s.signChart.points.map((p) => p.tex), ['-\\sqrt{2}', '\\sqrt{2}']);
+    assert.deepEqual(
+        s.signChart.points.map((p) => p.tex),
+        ['-\\sqrt{2}', '\\sqrt{2}'],
+    );
     const z = E.solveInequality('x^2 + 1 > 0');
     assert.deepEqual(z.signChart, { points: [], signs: ['+'] });
 });
@@ -819,7 +885,10 @@ test('IntervalSet: operations', () => {
     const s = IntervalSet.interval(E.parse('-sqrt(2)'), E.parse('sqrt(2)'), true, false);
     assert.equal(E.intervalTex(s), '[-\\sqrt{2};\\,\\sqrt{2})');
     assert.ok(s.contains(1.414) && !s.contains(1.4143));
-    assert.deepEqual(a.toJSON(), [{ lo: '-inf', hi: '2', loClosed: false, hiClosed: true }, { lo: '3', hi: '+inf', loClosed: false, hiClosed: false }]);
+    assert.deepEqual(a.toJSON(), [
+        { lo: '-inf', hi: '2', loClosed: false, hiClosed: true },
+        { lo: '3', hi: '+inf', loClosed: false, hiClosed: false },
+    ]);
 });
 
 const SETS = [
@@ -854,9 +923,18 @@ for (const [text, lang, want] of SETS) {
 }
 
 test('parseIntervalSet: errors and intervalEquals', () => {
-    assert.throws(() => E.parseIntervalSet('(1; 2; 3)'), (e) => e instanceof E.MathError && e.code === 'interval');
-    assert.throws(() => E.parseIntervalSet('x < y'), (e) => e instanceof E.MathError);
-    assert.throws(() => E.parseIntervalSet(''), (e) => e instanceof E.MathError);
+    assert.throws(
+        () => E.parseIntervalSet('(1; 2; 3)'),
+        (e) => e instanceof E.MathError && e.code === 'interval',
+    );
+    assert.throws(
+        () => E.parseIntervalSet('x < y'),
+        (e) => e instanceof E.MathError,
+    );
+    assert.throws(
+        () => E.parseIntervalSet(''),
+        (e) => e instanceof E.MathError,
+    );
     assert.ok(E.intervalEquals('(-∞; 2] ∪ (3; +∞)', 'x <= 2 или x > 3'));
     assert.ok(!E.intervalEquals('[1;3)', '[1;3]'));
     assert.ok(E.intervalEquals('[1, 3)', '1 <= x < 3', 'en'));
@@ -963,14 +1041,26 @@ test('solveSystem2: a linear and a quadratic equation by substitution', () => {
     const pairs = (r) => r.solutions.map((s) => [E.evaluate(s.x), E.evaluate(s.y)]);
     const a = E.solveSystem2(['x+y=5', 'xy=6']);
     assert.equal(a.kind, 'solutions');
-    assert.deepEqual(pairs(a), [[2, 3], [3, 2]]);
+    assert.deepEqual(pairs(a), [
+        [2, 3],
+        [3, 2],
+    ]);
     checkSteps(a.steps, 'system2');
     assert.equal(a.answer.tex.ru, '\\left(2;\\ 3\\right);\\quad \\left(3;\\ 2\\right)');
-    assert.deepEqual(pairs(E.solveSystem2(['y = x + 1', 'x^2 + y^2 = 25'])), [[-4, -3], [3, 4]]);
+    assert.deepEqual(pairs(E.solveSystem2(['y = x + 1', 'x^2 + y^2 = 25'])), [
+        [-4, -3],
+        [3, 4],
+    ]);
     assert.deepEqual(pairs(E.solveSystem2(['x - y = 1', 'x^2 - y^2 = 5'])), [[3, 2]]);
-    assert.deepEqual(pairs(E.solveSystem2(['2x - y = 0', 'x^2 + y = 3'])), [[-3, -6], [1, 2]]);
+    assert.deepEqual(pairs(E.solveSystem2(['2x - y = 0', 'x^2 + y = 3'])), [
+        [-3, -6],
+        [1, 2],
+    ]);
     const irr = E.solveSystem2(['y = x', 'x^2 + y^2 = 4']);
-    assert.deepEqual(irr.solutions.map((s) => E.toTex(s.x)), ['-\\sqrt{2}', '\\sqrt{2}']);
+    assert.deepEqual(
+        irr.solutions.map((s) => E.toTex(s.x)),
+        ['-\\sqrt{2}', '\\sqrt{2}'],
+    );
     assert.equal(E.solveSystem2(['x + y = 1', 'x^2 + y^2 = -1']).kind, 'none');
     assert.equal(E.solveSystem2(['x^2 + y^2 = 1', 'x^2 - y = 0']).kind, 'unsupported');
     const lin = E.solveSystem2(['x + y = 3', 'x - y = 1']);
@@ -980,7 +1070,19 @@ test('solveSystem2: a linear and a quadratic equation by substitution', () => {
 // ---------------------------------------------------------------- shapes and exports
 
 test('exports are unique engine names and results have the documented shape', () => {
-    for (const name of ['solveEquation', 'solveTrig', 'solveInequality', 'solveLinearSystem', 'solveSystem2', 'checkRoot', 'IntervalSet', 'intervalTex', 'intervalText', 'parseIntervalSet', 'intervalEquals']) {
+    for (const name of [
+        'solveEquation',
+        'solveTrig',
+        'solveInequality',
+        'solveLinearSystem',
+        'solveSystem2',
+        'checkRoot',
+        'IntervalSet',
+        'intervalTex',
+        'intervalText',
+        'parseIntervalSet',
+        'intervalEquals',
+    ]) {
         assert.ok(E[name], name);
     }
     const r = E.solveEquation('x^2 - 1 = 0', 'x', { steps: false });

@@ -45,10 +45,21 @@ export default [
     e.roots('|x^2 - 4x| = 3x', ['0', '1', '7']),
     e.roots('lg(x^2 - 15) = lg(2x)', ['5']),
     // №12: trigonometric equations
-    t.fams('2sin(x)^2 + 3cos(x) = 0', [['2pi/3', '2pi'], ['-2pi/3', '2pi']]),
-    t.fams('sin(2x) = sqrt(3)cos(x)', [['pi/2', 'pi'], ['pi/3', '2pi'], ['2pi/3', '2pi']]),
+    t.fams('2sin(x)^2 + 3cos(x) = 0', [
+        ['2pi/3', '2pi'],
+        ['-2pi/3', '2pi'],
+    ]),
+    t.fams('sin(2x) = sqrt(3)cos(x)', [
+        ['pi/2', 'pi'],
+        ['pi/3', '2pi'],
+        ['2pi/3', '2pi'],
+    ]),
     t.fams('cos(2x) + sin(x)^2 = 1/2', [['pi/4', 'pi/2']]),
-    t.fams('2cos(x)^2 - sin(x) - 1 = 0', [['pi/6', '2pi'], ['5pi/6', '2pi'], ['-pi/2', '2pi']]),
+    t.fams('2cos(x)^2 - sin(x) - 1 = 0', [
+        ['pi/6', '2pi'],
+        ['5pi/6', '2pi'],
+        ['-pi/2', '2pi'],
+    ]),
     t.onInterval('2cos(x)^2 - sin(x) - 1 = 0', ['pi', '5pi/2'], ['3pi/2', '13pi/6']),
     t.onInterval('sin(2x) = sqrt(3)cos(x)', ['-3pi/2', '0'], ['-3pi/2', '-4pi/3', '-pi/2']),
     // №18: parameters through graphs

@@ -20,7 +20,10 @@ for (const f of JSON.parse(out)) {
         const i = m.line - 1;
         const mm = lines[i]?.match(/^import \{([^}]*)\} from (.*)$/);
         if (!name || !mm) continue;
-        const keep = mm[1].split(',').map((s) => s.trim()).filter((s) => s && s.split(' as ').pop().trim() !== name);
+        const keep = mm[1]
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s && s.split(' as ').pop().trim() !== name);
         lines[i] = keep.length ? `import { ${keep.join(', ')} } from ${mm[2]}` : null;
         changed = true;
         removed++;

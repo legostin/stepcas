@@ -9,15 +9,25 @@ export function num(x) {
     if (typeof x === 'number') return x;
     if (x == null) return NaN;
     if (typeof x === 'object' && x.type) {
-        try { const v = E.evaluate(x, {}); return typeof v === 'number' ? v : NaN; } catch { return NaN; }
+        try {
+            const v = E.evaluate(x, {});
+            return typeof v === 'number' ? v : NaN;
+        } catch {
+            return NaN;
+        }
     }
     const s = String(x).trim();
     if (/^[+]?(inf|∞|oo)$/i.test(s)) return Infinity;
     if (/^[-−](inf|∞|oo)$/i.test(s)) return -Infinity;
-    try { const v = E.evaluate(E.parse(s, { lang: 'en' }), {}); return typeof v === 'number' ? v : NaN; } catch { return NaN; }
+    try {
+        const v = E.evaluate(E.parse(s, { lang: 'en' }), {});
+        return typeof v === 'number' ? v : NaN;
+    } catch {
+        return NaN;
+    }
 }
 
-export const close = (a, b) => (a === b) || (Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= TOL * Math.max(1, Math.abs(a), Math.abs(b)));
+export const close = (a, b) => a === b || (Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= TOL * Math.max(1, Math.abs(a), Math.abs(b)));
 
 export function sameNumbers(got, want) {
     const g = [...new Set(got.map((x) => +x.toPrecision(12)))].sort((a, b) => a - b);
@@ -29,9 +39,13 @@ export function sameNumbers(got, want) {
 export function familyRoots(fams, lo = -20, hi = 20) {
     const out = [];
     for (const [b, p] of fams) {
-        const base = num(b), per = num(p);
+        const base = num(b),
+            per = num(p);
         if (!Number.isFinite(base)) continue;
-        if (!Number.isFinite(per) || per === 0) { if (base >= lo && base <= hi) out.push(base); continue; }
+        if (!Number.isFinite(per) || per === 0) {
+            if (base >= lo && base <= hi) out.push(base);
+            continue;
+        }
         for (let n = Math.ceil((lo - base) / per); base + n * per <= hi; n++) out.push(base + n * per);
     }
     return out;
@@ -43,14 +57,23 @@ export function sameFunction(a, b, vars = ['x']) {
     try {
         fa = E.compile(typeof a === 'string' ? E.parse(a, { lang: 'en' }) : a, vars);
         fb = E.compile(typeof b === 'string' ? E.parse(b, { lang: 'en' }) : b, vars);
-    } catch { return false; }
+    } catch {
+        return false;
+    }
     let good = 0;
     // points in several ranges, small positives included (domains like (0; 1) for arcsin √x)
-    const XS = [0.07, 0.13, 0.21, 0.29, 0.37, 0.43, 0.51, 0.63, 0.71, 0.87, 0.93, 1.3, 1.7, 2.2, 2.9, 3.6, -0.13, -0.41, -0.77, -1.3, -2.1, -2.9, -3.6, 4.4, 5.3];
+    const XS = [
+        0.07, 0.13, 0.21, 0.29, 0.37, 0.43, 0.51, 0.63, 0.71, 0.87, 0.93, 1.3, 1.7, 2.2, 2.9, 3.6, -0.13, -0.41, -0.77, -1.3, -2.1, -2.9, -3.6, 4.4, 5.3,
+    ];
     for (let i = 0; i < XS.length * vars.length; i++) {
         const pt = vars.map((_, k) => XS[(i + k * 7) % XS.length]);
         let x, y;
-        try { x = fa(...pt); y = fb(...pt); } catch { continue; }
+        try {
+            x = fa(...pt);
+            y = fb(...pt);
+        } catch {
+            continue;
+        }
         if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
         if (Math.abs(x - y) > 1e-6 * Math.max(1, Math.abs(x), Math.abs(y))) return false;
         good++;
@@ -61,12 +84,22 @@ export function sameFunction(a, b, vars = ['x']) {
 // F′ = f at sample points (indefinite integrals: any antiderivative counts).
 export function isAntiderivative(F, f, v = 'x') {
     let g, h;
-    try { g = E.compile(F, [v]); h = E.compile(typeof f === 'string' ? E.parse(f, { lang: 'en' }) : f, [v]); } catch { return false; }
+    try {
+        g = E.compile(F, [v]);
+        h = E.compile(typeof f === 'string' ? E.parse(f, { lang: 'en' }) : f, [v]);
+    } catch {
+        return false;
+    }
     let good = 0;
     for (let i = 0; i < 40; i++) {
         const x = -3.3 + ((i * 0.617) % 6.9);
         let d, y;
-        try { d = E.numDerivative(g, x); y = h(x); } catch { continue; }
+        try {
+            d = E.numDerivative(g, x);
+            y = h(x);
+        } catch {
+            continue;
+        }
         if (!Number.isFinite(d) || !Number.isFinite(y)) continue;
         if (Math.abs(d - y) > 1e-5 * Math.max(1, Math.abs(y))) return false;
         good++;
@@ -75,5 +108,9 @@ export function isAntiderivative(F, f, v = 'x') {
 }
 
 export function sameInterval(gotSet, wantText) {
-    try { return E.intervalEquals(gotSet, wantText, 'ru'); } catch { return false; }
+    try {
+        return E.intervalEquals(gotSet, wantText, 'ru');
+    } catch {
+        return false;
+    }
 }

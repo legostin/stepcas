@@ -97,8 +97,15 @@ export function mParts(f, ctx) {
         method: 'parts',
         step: step({
             title: msg('calculus.integral.parts.integration_by_parts'),
-            tex: eachLanguage((L) => `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
-            text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', { u: (lng) => plainish(u, lng), p: why ?? msg('calculus.integral.parts.this_makes_integral_simpler'), Vs: (lng) => plainish(Vs, lng) }),
+            tex: eachLanguage(
+                (L) =>
+                    `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`,
+            ),
+            text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', {
+                u: (lng) => plainish(u, lng),
+                p: why ?? msg('calculus.integral.parts.this_makes_integral_simpler'),
+                Vs: (lng) => plainish(Vs, lng),
+            }),
             rule: 'parts',
             sub: [rv.step, rj.step].filter(Boolean),
         }),
@@ -115,7 +122,12 @@ export function mPolyTimes(f, ctx) {
     let other = null;
     for (const x of rest.args) {
         if (!containsVar(x, v)) polys.push(x);
-        else if (!other && ((x.type === 'pow' && !containsVar(x.base, v) && linearParts(x.exp, v)) || (x.type === 'fn' && (x.name === 'sin' || x.name === 'cos') && linearParts(x.args[0], v)))) other = x;
+        else if (
+            !other &&
+            ((x.type === 'pow' && !containsVar(x.base, v) && linearParts(x.exp, v)) ||
+                (x.type === 'fn' && (x.name === 'sin' || x.name === 'cos') && linearParts(x.args[0], v)))
+        )
+            other = x;
         else polys.push(x);
     }
     if (!other) return null;

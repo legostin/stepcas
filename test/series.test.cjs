@@ -3,7 +3,9 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 let E;
-before(async () => { E = await import('../src/index.js'); });
+before(async () => {
+    E = await import('../src/index.js');
+});
 const T = (n) => E.toText(n, { lang: 'en' });
 const S = (s) => E.sumSeries(s);
 

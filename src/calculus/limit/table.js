@@ -78,7 +78,9 @@ export function numericEstimate(n, v, P) {
 /** Does the numeric behaviour agree with the symbolic value on this side? 'agree' | 'contradict' | 'unclear' */
 export function crossCheck(n, v, P, val) {
     const est = numericEstimate(n, v, P);
-    const xs = !Number.isFinite(P.x) ? [1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e10, 1e12].map((t) => (P.x > 0 ? t : -t)) : [...HS, 1e-9, 1e-10, 1e-12, 1e-14].map((h) => atPoint(P, h)).filter((x) => x !== P.x);
+    const xs = !Number.isFinite(P.x)
+        ? [1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e10, 1e12].map((t) => (P.x > 0 ? t : -t))
+        : [...HS, 1e-9, 1e-10, 1e-12, 1e-14].map((h) => atPoint(P, h)).filter((x) => x !== P.x);
     const ys = xs.map((x) => evalAt(n, v, x));
     if (val.k === 'fin') {
         const L = val.x;
@@ -94,7 +96,12 @@ export function crossCheck(n, v, P, val) {
         const lastBig = fy.slice(-3);
         if (lastBig.length && lastBig.every((y) => Math.sign(y) === val.s) && Math.abs(lastBig[lastBig.length - 1]) > 100) return 'agree';
         const tail = fy.slice(-5);
-        if (tail.length >= 4 && tail.every((y, i) => Math.sign(y) === val.s && (i === 0 || Math.abs(y) > Math.abs(tail[i - 1]))) && Math.abs(tail[tail.length - 1]) > 10) return 'agree';
+        if (
+            tail.length >= 4 &&
+            tail.every((y, i) => Math.sign(y) === val.s && (i === 0 || Math.abs(y) > Math.abs(tail[i - 1]))) &&
+            Math.abs(tail[tail.length - 1]) > 10
+        )
+            return 'agree';
         if (est && est.k === 'fin') return 'contradict';
         if (est && est.k === 'inf' && est.s !== val.s) return 'contradict';
         return 'unclear';
@@ -126,7 +133,16 @@ export function tableStep(rows, v, P, n) {
         title: msg('calculus.limit.table.table_of_values'),
         tex,
         text: Number.isFinite(P.x)
-            ? msg('calculus.limit.table.values_of_function_closer_and_closer', { v, P: (lng) => plainNum(P, lng), p: (lng) => P.side === 'both' ? msg('calculus.limit.table.from_both_sides').in(lng) : P.side === 'left' ? msg('calculus.limit.table.from_left').in(lng) : msg('calculus.limit.table.from_right').in(lng) })
+            ? msg('calculus.limit.table.values_of_function_closer_and_closer', {
+                  v,
+                  P: (lng) => plainNum(P, lng),
+                  p: (lng) =>
+                      P.side === 'both'
+                          ? msg('calculus.limit.table.from_both_sides').in(lng)
+                          : P.side === 'left'
+                            ? msg('calculus.limit.table.from_left').in(lng)
+                            : msg('calculus.limit.table.from_right').in(lng),
+              })
             : msg('calculus.limit.table.values_of_function_for_larger_and', { v }),
         rule: 'table',
     });

@@ -78,7 +78,18 @@ export function prettyForm(node, opts = {}) {
                 if (args.length === 2 && negLeading(args[0]) && !negLeading(args[1])) return add(args[1], args[0]);
                 // 1 + 2/x rather than 2/x + 1: a positive constant goes first when the rest are reciprocals
                 const last = args[args.length - 1];
-                if (args.length >= 2 && isNum(last) && last.value.isPos() && args.slice(0, -1).every((t) => nodeSome(t, (m) => m.type === 'pow' && isNum(m.exp) && m.exp.value.isNeg() && freeVars(m.base).length > 0) && !negLeading(t) === !negLeading(args[0]))) {
+                if (
+                    args.length >= 2 &&
+                    isNum(last) &&
+                    last.value.isPos() &&
+                    args
+                        .slice(0, -1)
+                        .every(
+                            (t) =>
+                                nodeSome(t, (m) => m.type === 'pow' && isNum(m.exp) && m.exp.value.isNeg() && freeVars(m.base).length > 0) &&
+                                !negLeading(t) === !negLeading(args[0]),
+                        )
+                ) {
                     return add([last, ...args.slice(0, -1)]);
                 }
                 const hasFnT = (t) => nodeSome(t, (m) => m.type === 'fn');
@@ -126,7 +137,10 @@ export function prettyForm(node, opts = {}) {
             case 'sym':
                 return n;
             case 'fn':
-                return withChildren(n, n.args.map((a) => tidyArg(P(a))));
+                return withChildren(
+                    n,
+                    n.args.map((a) => tidyArg(P(a))),
+                );
             default: {
                 const kids = nodeChildren(n);
                 return kids.length ? withChildren(n, kids.map(P)) : n;
@@ -158,7 +172,8 @@ function sumsBeforeFns(fs) {
     return [...fs.slice(0, k), ...fs.slice(k).filter(isSum), ...fs.slice(k).filter((f) => !isSum(f))];
 }
 
-const isNumRadical = (f) => f.type === 'pow' && isNum(f.base) && f.base.value.isInt() && f.base.value.gt(1) && isNum(f.exp) && f.exp.value.n === 1n && f.exp.value.d > 1n;
+const isNumRadical = (f) =>
+    f.type === 'pow' && isNum(f.base) && f.base.value.isInt() && f.base.value.gt(1) && isNum(f.exp) && f.exp.value.n === 1n && f.exp.value.d > 1n;
 
 /** ⅔·√3·arctg(…) → (2√3/3)·arctg(…): a rational coefficient with a numeric radical reads as one fraction. */
 function groupRadicalCoef(n) {
@@ -258,7 +273,6 @@ export function calcTexBoth(node) {
     return eachLanguage((lang) => calcTex(node, lang));
 }
 
-
 const tall = (s) => /\\frac|\\sqrt|\\left|\\dfrac|\^\{/.test(s);
 export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);
 
@@ -276,7 +290,16 @@ export function plain(node, lang) {
 
 // ---------------------------------------------------------------- numeric sampling
 
-const RANGES = [[0.2, 1.8], [-1.8, -0.2], [2, 6], [-6, -2], [0.05, 0.95], [-0.95, -0.05], [6, 20], [-20, -6]];
+const RANGES = [
+    [0.2, 1.8],
+    [-1.8, -0.2],
+    [2, 6],
+    [-6, -2],
+    [0.05, 0.95],
+    [-0.95, -0.05],
+    [6, 20],
+    [-20, -6],
+];
 
 export function randomEnv(vars, r) {
     const env = {};

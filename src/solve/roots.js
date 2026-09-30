@@ -53,7 +53,6 @@ export function rootsTex(roots, v, lang, start = 1) {
     return roots.map((r, k) => `${idx ? `${v}_{${k + start}}` : v} ${rootValueTex(r, lang)}`).join(notation(lang).listWideTex);
 }
 
-
 /** Distinct roots, ascending (complex ones after the real ones); equal roots merge (mult added when sum). */
 export function mergeRoots(list, sumMult = false) {
     const out = [];
@@ -82,7 +81,9 @@ export function sameRoot(a, b) {
     const ar = typeof a.approx === 'number';
     const br = typeof b.approx === 'number';
     if (ar !== br) return false;
-    const near = ar ? close(a.approx, b.approx, 1e-9) : Math.hypot(a.approx.re - b.approx.re, a.approx.im - b.approx.im) <= 1e-9 * Math.max(1, Math.hypot(a.approx.re, a.approx.im));
+    const near = ar
+        ? close(a.approx, b.approx, 1e-9)
+        : Math.hypot(a.approx.re - b.approx.re, a.approx.im - b.approx.im) <= 1e-9 * Math.max(1, Math.hypot(a.approx.re, a.approx.im));
     if (!near) return false;
     if (a.approxOnly || b.approxOnly) return true;
     const z = exactZero(add(a.node, neg(b.node)), ar ? undefined : { complex: true });
@@ -120,10 +121,17 @@ export function answerOf(res, v) {
             if (res.families) {
                 return {
                     tex: eachLanguage((l) => familiesTex(res.families, v, l)),
-                    text: eachLanguage((l) => `${res.families.map((f) => `${v} = ${toText(simpOr(add(f.base, mul(f.period, N_SYM))), { lang: l })}`).join('; ')}, n ∈ Z`),
+                    text: eachLanguage(
+                        (l) => `${res.families.map((f) => `${v} = ${toText(simpOr(add(f.base, mul(f.period, N_SYM))), { lang: l })}`).join('; ')}, n ∈ Z`,
+                    ),
                 };
             }
-            return { tex: eachLanguage((l) => rootsTex(res.roots, v, l)), text: eachLanguage((l) => res.roots.map((r) => (r.approxOnly ? `≈ ${approxText(r.approx, l)}` : toText(r.node, { lang: l }))).join(notation(l).listText)) };
+            return {
+                tex: eachLanguage((l) => rootsTex(res.roots, v, l)),
+                text: eachLanguage((l) =>
+                    res.roots.map((r) => (r.approxOnly ? `≈ ${approxText(r.approx, l)}` : toText(r.node, { lang: l }))).join(notation(l).listText),
+                ),
+            };
         default:
             return { tex: '', text: res.reason ?? msg('solve.roots.could_not_solve') };
     }

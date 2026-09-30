@@ -4,7 +4,23 @@
 import { containsVar, nodeKey, numValue, add, num, neg, nodeChildren, fn, substitute, rel, mul } from '../core/ast.js';
 import { Q, MathError } from '../core/rational.js';
 import { parse } from '../core/parse.js';
-import { N0, S, approxC, approxNode, approxOf, approxShowComplex, approxShowNode, approxTex, close, exactZero, expd, simp, simpOr, termScale, tex } from './common.js';
+import {
+    N0,
+    S,
+    approxC,
+    approxNode,
+    approxOf,
+    approxShowComplex,
+    approxShowNode,
+    approxTex,
+    close,
+    exactZero,
+    expd,
+    simp,
+    simpOr,
+    termScale,
+    tex,
+} from './common.js';
 import { IntervalSet, intervalTex } from './intervals.js';
 import { complexApproxNode } from './polynomial.js';
 import { approxComplexTex } from './roots.js';
@@ -29,7 +45,8 @@ export function collectConds(node, v) {
         const prev = byKey.get(key);
         if (prev) {
             if (prev.kind === kind || kind === 'cos' || kind === 'sin') return;
-            prev.kind = (prev.kind === 'ne0' && kind === 'ge0') || (prev.kind === 'ge0' && kind === 'ne0') ? 'gt0' : RANK[kind] > RANK[prev.kind] ? kind : prev.kind;
+            prev.kind =
+                (prev.kind === 'ne0' && kind === 'ge0') || (prev.kind === 'ge0' && kind === 'ne0') ? 'gt0' : RANK[kind] > RANK[prev.kind] ? kind : prev.kind;
             prev.whys.add(why);
             return;
         }
@@ -185,7 +202,11 @@ export function relHoldsNum(op, a, b) {
  */
 export function checkRel(r, v, root, opts = {}) {
     const conds = opts.conds ?? collectConds(r, v);
-    const val = root.approxOnly ? (typeof root.approx === 'number' ? approxNode(root.approx, 16) : complexApproxNode(root.approx.re, root.approx.im)) : root.node;
+    const val = root.approxOnly
+        ? typeof root.approx === 'number'
+            ? approxNode(root.approx, 16)
+            : complexApproxNode(root.approx.re, root.approx.im)
+        : root.node;
     const complex = !!opts.complex;
     const Ls = substitute(r.lhs, { [v]: val });
     const Rs = substitute(r.rhs, { [v]: val });
@@ -205,7 +226,9 @@ export function checkRel(r, v, root, opts = {}) {
         rr = approxOf(Rs);
         defined = Number.isFinite(l) && Number.isFinite(rr);
     }
-    const inDomain = complex || conds.every((c) => condHolds(c, v, { node: val, approx: typeof root.approx === 'number' ? root.approx : approxOf(val), approxOnly: root.approxOnly }));
+    const inDomain =
+        complex ||
+        conds.every((c) => condHolds(c, v, { node: val, approx: typeof root.approx === 'number' ? root.approx : approxOf(val), approxOnly: root.approxOnly }));
     let exact = false;
     let ok = false;
     let lv = null;
@@ -222,7 +245,9 @@ export function checkRel(r, v, root, opts = {}) {
             else {
                 // numerically, relative to the size of the terms (they may cancel: 735134400x⁵ − x − 735134400)
                 const scale = Math.max(1, termScale(Ls, complex), termScale(Rs, complex));
-                ok = complex ? Math.hypot(l.re - rr.re, l.im - rr.im) <= 1e-8 * Math.max(scale, Math.hypot(l.re, l.im)) : Math.abs(l - rr) <= 1e-8 * Math.max(scale, Math.abs(l), Math.abs(rr)) + roundingSpread(r, v, root.approx);
+                ok = complex
+                    ? Math.hypot(l.re - rr.re, l.im - rr.im) <= 1e-8 * Math.max(scale, Math.hypot(l.re, l.im))
+                    : Math.abs(l - rr) <= 1e-8 * Math.max(scale, Math.abs(l), Math.abs(rr)) + roundingSpread(r, v, root.approx);
             }
         } else if (!complex) {
             const lq = lv && numValue(lv);
@@ -247,7 +272,8 @@ export function checkRel(r, v, root, opts = {}) {
                 // a plain number on this side: nothing to approximate (… ≈ 0, not «0 ≈ 0»)
                 if (big) parts.push(tex(side, lang));
             } else if (typeof approx === 'number' && Number.isFinite(approx)) parts.push(`\\approx ${approxTex(approx, lang)}`);
-            else if (root.approxOnly && approx && typeof approx === 'object' && Number.isFinite(approx.re) && Number.isFinite(approx.im)) parts.push(`\\approx ${approxComplexTex(approx, lang)}`);
+            else if (root.approxOnly && approx && typeof approx === 'object' && Number.isFinite(approx.re) && Number.isFinite(approx.im))
+                parts.push(`\\approx ${approxComplexTex(approx, lang)}`);
             return parts.join(' = ').replace('= \\approx', '\\approx');
         };
         if (!defined || !inDomain) return tex(rel(r.op, LsD, RsD), lang);
@@ -261,16 +287,17 @@ export function checkRel(r, v, root, opts = {}) {
         return `${left} \\,${op}\\, ${right}${mark}`;
     };
     const texOut = eachLanguage(texL);
-    const valTex = (lang) => (root.approxOnly
-        ? `${v} \\approx ${typeof root.approx === 'number' ? approxTex(root.approx, lang) : approxComplexTex(root.approx, lang)}`
-        : `${v} = ${tex(val, lang)}`);
+    const valTex = (lang) =>
+        root.approxOnly
+            ? `${v} \\approx ${typeof root.approx === 'number' ? approxTex(root.approx, lang) : approxComplexTex(root.approx, lang)}`
+            : `${v} = ${tex(val, lang)}`;
     const text = ok
         ? msg('solve.domain.true_equality_root_fits')
         : reason === 'odz'
-            ? msg('solve.domain.value_is_outside_domain_expression_makes')
-            : reason === 'undefined'
-                ? msg('solve.domain.expression_is_not_defined_at_this')
-                : msg('solve.domain.equality_is_false_extraneous_root');
+          ? msg('solve.domain.value_is_outside_domain_expression_makes')
+          : reason === 'undefined'
+            ? msg('solve.domain.expression_is_not_defined_at_this')
+            : msg('solve.domain.equality_is_false_extraneous_root');
     const ineqText = r.op !== '=' ? (ok ? msg('solve.domain.inequality_holds') : msg('solve.domain.inequality_fails')) : text;
     return {
         ok,
@@ -352,7 +379,12 @@ export function odzInfo(conds, v) {
         return t;
     };
     const tx = eachLanguage(texOf);
-    const text = msg('solve.domain.conditions', { p: joined(whys.map((w) => WHY[w]), '; ') });
+    const text = msg('solve.domain.conditions', {
+        p: joined(
+            whys.map((w) => WHY[w]),
+            '; ',
+        ),
+    });
     return {
         conds,
         set: partial && set.isAll() ? null : set,

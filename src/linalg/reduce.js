@@ -12,14 +12,22 @@ import { msg } from '../i18n/index.js';
  * whole row (dividing keeps integers); else the smallest |entry|. Ties keep the current row (no swap).
  */
 function pickPivot(W, r, c, m) {
-    let best = -1, bestKey = null;
+    let best = -1,
+        bestKey = null;
     for (let i = r; i < m; i++) {
         const v = W[i][c];
         if (v.isZero()) continue;
         const cls = v.isOne() ? 0 : v.eq(Q.MINUS_ONE) ? 1 : W[i].every((x) => x.div(v).isInt()) ? 2 : 3;
         const key = [cls, cls >= 2 ? v.abs() : Q.ZERO, i === r ? 0 : 1, i];
-        const better = !bestKey || key[0] < bestKey[0] || (key[0] === bestKey[0] && (key[1].lt(bestKey[1]) || (key[1].eq(bestKey[1]) && (key[2] < bestKey[2] || (key[2] === bestKey[2] && key[3] < bestKey[3])))));
-        if (better) { best = i; bestKey = key; }
+        const better =
+            !bestKey ||
+            key[0] < bestKey[0] ||
+            (key[0] === bestKey[0] &&
+                (key[1].lt(bestKey[1]) || (key[1].eq(bestKey[1]) && (key[2] < bestKey[2] || (key[2] === bestKey[2] && key[3] < bestKey[3])))));
+        if (better) {
+            best = i;
+            bestKey = key;
+        }
     }
     return best;
 }
@@ -67,16 +75,29 @@ function applyOp(W, op) {
  */
 export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOnSingular = false } = {}) {
     const W = W0.map((r) => r.slice());
-    const m = W.length, n = W[0].length, lim = n - augmented;
-    const ops = [], st = [];
+    const m = W.length,
+        n = W[0].length,
+        lim = n - augmented;
+    const ops = [],
+        st = [];
     const tex = () => new Matrix(W).toTex({ augmented });
     const record = (op, phase, title, why) => {
         applyOp(W, op);
         ops.push({ op: op.op, i: op.i, j: op.j, k: op.k, phase });
         if (steps) {
             const mt = tex();
-            st.push(S(title, `\\xrightarrow{${arrowLabel(op)}} ${mt}`, opText(op, phase, why),
-                { rule: `row-${op.op}`, op: op.op, i: op.i, j: op.j, k: op.k, phase, opTex: opTex(op), matrixTex: mt }));
+            st.push(
+                S(title, `\\xrightarrow{${arrowLabel(op)}} ${mt}`, opText(op, phase, why), {
+                    rule: `row-${op.op}`,
+                    op: op.op,
+                    i: op.i,
+                    j: op.j,
+                    k: op.k,
+                    phase,
+                    opTex: opTex(op),
+                    matrixTex: mt,
+                }),
+            );
         }
     };
     const pivots = [];
@@ -85,21 +106,28 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
     for (let c = 0; c < lim && r < m; c++) {
         const p = pickPivot(W, r, c, m);
         if (p < 0) {
-            if (stopOnSingular) { singularAt = c; break; }
+            if (stopOnSingular) {
+                singularAt = c;
+                break;
+            }
             if (steps && W.some((row, i) => i >= r && !row[c].isZero()) === false && r > 0) {
-                st.push(S(msg('linalg.reduce.column_no_pivot', { p: c + 1 }), null,
-                    msg('linalg.reduce.below_pivots_found_so_far_column', { p: c + 1 }),
-                    { rule: 'no-pivot', col: c }));
+                st.push(
+                    S(msg('linalg.reduce.column_no_pivot', { p: c + 1 }), null, msg('linalg.reduce.below_pivots_found_so_far_column', { p: c + 1 }), {
+                        rule: 'no-pivot',
+                        col: c,
+                    }),
+                );
             }
             continue;
         }
         if (p !== r) {
-            const v = W[p][c], cur = W[r][c];
+            const v = W[p][c],
+                cur = W[r][c];
             const why = cur.isZero()
                 ? msg('linalg.reduce.pivot_position_in_column_holds_0', { col: c + 1, v: qs(v), from: p + 1, to: r + 1 })
                 : v.isOne() || v.eq(Q.MINUS_ONE)
-                    ? msg('linalg.reduce.pivot_of_is_handier_it_sits', { unit: v.isOne() ? 1 : -1, v: qs(v), from: p + 1, to: r + 1 })
-                    : msg('linalg.reduce.we_take_in_row_as_pivot', { v: qs(v), from: p + 1, to: r + 1 });
+                  ? msg('linalg.reduce.pivot_of_is_handier_it_sits', { unit: v.isOne() ? 1 : -1, v: qs(v), from: p + 1, to: r + 1 })
+                  : msg('linalg.reduce.we_take_in_row_as_pivot', { v: qs(v), from: p + 1, to: r + 1 });
             record({ op: 'swap', i: r, j: p }, 'forward', msg('linalg.reduce.swap_rows'), why);
         }
         const piv = W[r][c];
@@ -134,14 +162,26 @@ export function matRref(A, opts = {}) {
     const res = reduce(A.a, { augmented, steps: !!opts.steps });
     const out = { matrix: new Matrix(res.W), pivots: res.pivots, rank: res.pivots.length, ops: res.ops };
     if (opts.steps) {
-        const st = [S(msg('linalg.reduce.row_reduce'), A.toTex({ augmented }),
-            msg('linalg.reduce.forward_pass_go_through_columns_left', { p: STRATEGY }),
-            { rule: 'rref-plan' }), ...res.steps];
-        st.push(S(msg('linalg.reduce.reduced_row_echelon_form'), out.matrix.toTex({ augmented }),
-            res.pivots.length
-                ? msg('linalg.reduce.leading_ones_sit_in_column_their', { p: (lng) => res.pivots.length === 1 ? msg('linalg.reduce.formula').in(lng) : msg('linalg.reduce.s').in(lng), p2: res.pivots.map((c) => c + 1).join(', '), length: res.pivots.length })
-                : msg('linalg.reduce.matrix_is_zero_its_rank_is'),
-            { rule: 'answer' }));
+        const st = [
+            S(msg('linalg.reduce.row_reduce'), A.toTex({ augmented }), msg('linalg.reduce.forward_pass_go_through_columns_left', { p: STRATEGY }), {
+                rule: 'rref-plan',
+            }),
+            ...res.steps,
+        ];
+        st.push(
+            S(
+                msg('linalg.reduce.reduced_row_echelon_form'),
+                out.matrix.toTex({ augmented }),
+                res.pivots.length
+                    ? msg('linalg.reduce.leading_ones_sit_in_column_their', {
+                          p: (lng) => (res.pivots.length === 1 ? msg('linalg.reduce.formula').in(lng) : msg('linalg.reduce.s').in(lng)),
+                          p2: res.pivots.map((c) => c + 1).join(', '),
+                          length: res.pivots.length,
+                      })
+                    : msg('linalg.reduce.matrix_is_zero_its_rank_is'),
+                { rule: 'answer' },
+            ),
+        );
         out.steps = st;
     }
     return out;
@@ -171,7 +211,9 @@ export function nullspaceFrom(W, pivots, n, integer = true) {
     return free.map((f) => {
         const v = new Array(n).fill(Q.ZERO);
         v[f] = Q.ONE;
-        pivots.forEach((c, r) => { v[c] = W[r][f].neg(); });
+        pivots.forEach((c, r) => {
+            v[c] = W[r][f].neg();
+        });
         return integer ? primitiveVector(v) : v;
     });
 }

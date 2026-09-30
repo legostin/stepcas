@@ -12,5 +12,36 @@ export { numDerivative, numIntegrate, numIntegrateInfo, numRiemann } from './cal
 export { numEuler, numOdeAdaptive, numRk4, odeLorenz, odeLotkaVolterra, odePendulum, odeSir } from './ode.js';
 export { sampleFunction } from './sampling.js';
 export { numDft, numFft, numFourierCoefficients, numFourierEval, numIfft } from './signals.js';
-export { numGamma, numLogGamma, probArrangements, probBetaRegularized, probBinomialCdf, probBinomialPmf, probChiSquareCdf, probChoose, probErf, probErfc, probFactorial, probGammaRegularized, probGeometricCdf, probGeometricPmf, probNormalCdf, probNormalInv, probNormalPdf, probPoissonCdf, probPoissonPmf, probStudentTCdf, probStudentTInv, statCorrelation, statLinearRegression, statMean, statMedian, statMode, statPolyFit, statQuantile, statStd, statVariance } from './statistics.js';
+export {
+    numGamma,
+    numLogGamma,
+    probArrangements,
+    probBetaRegularized,
+    probBinomialCdf,
+    probBinomialPmf,
+    probChiSquareCdf,
+    probChoose,
+    probErf,
+    probErfc,
+    probFactorial,
+    probGammaRegularized,
+    probGeometricCdf,
+    probGeometricPmf,
+    probNormalCdf,
+    probNormalInv,
+    probNormalPdf,
+    probPoissonCdf,
+    probPoissonPmf,
+    probStudentTCdf,
+    probStudentTInv,
+    statCorrelation,
+    statLinearRegression,
+    statMean,
+    statMedian,
+    statMode,
+    statPolyFit,
+    statQuantile,
+    statStd,
+    statVariance,
+} from './statistics.js';
 export { numLagrange, numPolyRoots } from './interpolation.js';

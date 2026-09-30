@@ -10,13 +10,43 @@ import { toText } from '../../core/print.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
 import { evaluate } from '../../core/evaluate.js';
-import { E_, HALF, N0, N1, N2, NM1, chainEq, fin, infV, isNum, isZeroN, isZeroV, limTex, lt, negLeadNode, paren, paren2, qn2, simp, trySimp, tx } from './common.js';
+import {
+    E_,
+    HALF,
+    N0,
+    N1,
+    N2,
+    NM1,
+    chainEq,
+    fin,
+    infV,
+    isNum,
+    isZeroN,
+    isZeroV,
+    limTex,
+    lt,
+    negLeadNode,
+    paren,
+    paren2,
+    qn2,
+    simp,
+    trySimp,
+    tx,
+} from './common.js';
 import { ev, splitNumDen } from './evaluator.js';
 import { msg, eachLanguage, notation, joined, sameText, DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- indeterminate forms
 
-export const FORM_TEX = { '0/0': '\\frac{0}{0}', 'inf/inf': '\\frac{\\infty}{\\infty}', 'inf-inf': '\\infty - \\infty', '0*inf': '0 \\cdot \\infty', '1^inf': '1^{\\infty}', '0^0': '0^{0}', 'inf^0': '\\infty^{0}' };
+export const FORM_TEX = {
+    '0/0': '\\frac{0}{0}',
+    'inf/inf': '\\frac{\\infty}{\\infty}',
+    'inf-inf': '\\infty - \\infty',
+    '0*inf': '0 \\cdot \\infty',
+    '1^inf': '1^{\\infty}',
+    '0^0': '0^{0}',
+    'inf^0': '\\infty^{0}',
+};
 export const FORM_NAME = { '0/0': '0/0', 'inf/inf': '∞/∞', 'inf-inf': '∞ − ∞', '0*inf': '0·∞', '1^inf': '1^∞', '0^0': '0⁰', 'inf^0': '∞⁰' };
 
 function vTex(L, Lg) {
@@ -46,13 +76,15 @@ export function resolve(n, C, form) {
         C.active.delete(key);
     }
     if (!res) return null;
-    C.log.push(step({
-        title: res.title,
-        tex: res.tex,
-        text: res.text,
-        rule: res.rule,
-        sub: [...(res.sub ?? []), ...C2.log],
-    }));
+    C.log.push(
+        step({
+            title: res.title,
+            tex: res.tex,
+            text: res.text,
+            rule: res.rule,
+            sub: [...(res.sub ?? []), ...C2.log],
+        }),
+    );
     C.methods.add(res.rule);
     return res.val;
 }
@@ -91,7 +123,12 @@ function mRational(n, C, form) {
             return {
                 val,
                 title: msg('calculus.limit.forms.take_out_highest_power'),
-                tex: eachLanguage((L) => `${limTex(P, v, L)} ${lt(n, L)} = ${limTex(P, v, L)} ${dp === 1 && p.lead.div(q.lead).isOne() ? tx(X, L) : lt(lead, L)}${inner.type === 'add' ? paren(tx(inner, L)) : ''} = ${vTex(val, L)}`.replace(/\\cdot\s*$/, '')),
+                tex: eachLanguage((L) =>
+                    `${limTex(P, v, L)} ${lt(n, L)} = ${limTex(P, v, L)} ${dp === 1 && p.lead.div(q.lead).isOne() ? tx(X, L) : lt(lead, L)}${inner.type === 'add' ? paren(tx(inner, L)) : ''} = ${vTex(val, L)}`.replace(
+                        /\\cdot\s*$/,
+                        '',
+                    ),
+                ),
                 text: msg('calculus.limit.forms.as_polynomial_behaves_like_its_leading', { v, p: P.x > 0 ? '+∞' : '−∞', dp: supd(dp) }),
                 rule: 'leading-power',
             };
@@ -99,12 +136,20 @@ function mRational(n, C, form) {
         return {
             val,
             title: form === 'inf-inf' ? msg('calculus.limit.forms.common_denominator') : msg('calculus.limit.forms.divide_by_highest_power'),
-            tex: eachLanguage((L) => chainEq([`${limTex(P, v, L)} ${lt(n, L)}`, `${limTex(P, v, L)} ${lt(q.degree > 0 ? div(p.toNode(v), q.toNode(v)) : p.toNode(v), L)}`, k > 0 ? `${limTex(P, v, L)} \\frac{${tx(dividedBy(p, k, v), L)}}{${tx(dividedBy(q, k, v), L)}}` : null, vTex(val, L)])),
-            text: dp < dq
-                ? msg('calculus.limit.forms.numerator_s_degree_is_less_than', { dp, dq, v, k: supd(k) })
-                : dp === dq
-                    ? msg('calculus.limit.forms.degrees_are_equal_divide_both_by', { dp, v, k: supd(k) })
-                    : msg('calculus.limit.forms.numerator_s_degree_exceeds_denominator_s', { dp, dq }),
+            tex: eachLanguage((L) =>
+                chainEq([
+                    `${limTex(P, v, L)} ${lt(n, L)}`,
+                    `${limTex(P, v, L)} ${lt(q.degree > 0 ? div(p.toNode(v), q.toNode(v)) : p.toNode(v), L)}`,
+                    k > 0 ? `${limTex(P, v, L)} \\frac{${tx(dividedBy(p, k, v), L)}}{${tx(dividedBy(q, k, v), L)}}` : null,
+                    vTex(val, L),
+                ]),
+            ),
+            text:
+                dp < dq
+                    ? msg('calculus.limit.forms.numerator_s_degree_is_less_than', { dp, dq, v, k: supd(k) })
+                    : dp === dq
+                      ? msg('calculus.limit.forms.degrees_are_equal_divide_both_by', { dp, v, k: supd(k) })
+                      : msg('calculus.limit.forms.numerator_s_degree_exceeds_denominator_s', { dp, dq }),
             rule: 'rational-infinity',
         };
     }
@@ -121,7 +166,10 @@ function mRational(n, C, form) {
     return {
         val: L,
         title: msg('calculus.limit.forms.factor_and_cancel'),
-        tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)}${showFactor ? ` = ${limTex(P, v, Lg)} \\frac{${fN(Lg)}}{${fD(Lg)}}` : ''} = ${limTex(P, v, Lg)} ${lt(reduced, Lg)} = ${vTex(L, Lg)}`),
+        tex: eachLanguage(
+            (Lg) =>
+                `${limTex(P, v, Lg)} ${lt(n, Lg)}${showFactor ? ` = ${limTex(P, v, Lg)} \\frac{${fN(Lg)}}{${fD(Lg)}}` : ''} = ${limTex(P, v, Lg)} ${lt(reduced, Lg)} = ${vTex(L, Lg)}`,
+        ),
         text: msg('calculus.limit.forms.both_numerator_and_denominator_vanish_at', { v, P: (lng) => plainNum(P, lng) }),
         rule: 'factor-cancel',
     };
@@ -146,13 +194,21 @@ function dividedBy(Pl, k, v) {
 
 function supd(k) {
     const S = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
-    return k === 1 ? '' : String(k).split('').map((c) => S[c]).join('');
+    return k === 1
+        ? ''
+        : String(k)
+              .split('')
+              .map((c) => S[c])
+              .join('');
 }
 
 /** The point a as readable text in a language (π, √, ·), for the explanations. */
 export function plainNum(P, lang = DEFAULT_LANGUAGE) {
     try {
-        return toText(prettyForm(P.a), { lang }).replace(/\bpi\b/g, 'π').replace(/sqrt\(/g, '√(').replace(/\*/g, '·');
+        return toText(prettyForm(P.a), { lang })
+            .replace(/\bpi\b/g, 'π')
+            .replace(/sqrt\(/g, '√(')
+            .replace(/\*/g, '·');
     } catch {
         return String(P.x);
     }
@@ -196,9 +252,12 @@ function equivalentOf(F, C) {
     }
     if (F.type === 'fn' && (F.name === 'ln' || F.name === 'lg') && tendsTo(F.args[0], N1, C)) {
         const E = add(F.args[0], NM1);
-        return F.name === 'ln' ? { E, law: 'ln(1 + u) ~ u' } : { E: div(E, fn('ln', num(10))), law: eachLanguage((l) => `${notation(l).log10Text}(1 + u) ~ u/ln 10`) };
+        return F.name === 'ln'
+            ? { E, law: 'ln(1 + u) ~ u' }
+            : { E: div(E, fn('ln', num(10))), law: eachLanguage((l) => `${notation(l).log10Text}(1 + u) ~ u/ln 10`) };
     }
-    if (F.type === 'fn' && F.name === 'log' && tendsTo(F.args[1], N1, C)) return { E: div(add(F.args[1], NM1), fn('ln', F.args[0])), law: 'logₐ(1 + u) ~ u/ln a' };
+    if (F.type === 'fn' && F.name === 'log' && tendsTo(F.args[1], N1, C))
+        return { E: div(add(F.args[1], NM1), fn('ln', F.args[0])), law: 'logₐ(1 + u) ~ u/ln a' };
     if (F.type === 'add' && F.args.length === 2) {
         const kIdx = F.args.findIndex((t) => isNum(t));
         if (kIdx < 0) return null;
@@ -220,7 +279,10 @@ function equivalentOf(F, C) {
             return wrap(mul(Y.exp, add(Y.base, NM1)), '(1 + u)ᵃ − 1 ~ a·u');
         }
         if (Y.type === 'fn' && Y.name === 'cosh' && tendsTo(Y.args[0], N0, C)) {
-            return wrap(div(pow(Y.args[0], N2), N2), eachLanguage((l) => `${fnName('cosh', l)} u − 1 ~ u²/2`));
+            return wrap(
+                div(pow(Y.args[0], N2), N2),
+                eachLanguage((l) => `${fnName('cosh', l)} u − 1 ~ u²/2`),
+            );
         }
     }
     return null;
@@ -262,7 +324,10 @@ function mEquivalents(n, C) {
     return {
         val: L,
         title: msg('calculus.limit.forms.equivalent_infinitesimals'),
-        tex: eachLanguage((Lg) => `${used.map((u) => `${tx(u.from, Lg)} \\sim ${tx(u.to, Lg)}`).join(',\\quad ')};\\qquad ${limTex(P, v, Lg)} ${lt(n, Lg)} = ${containsVar(next, v) ? `${limTex(P, v, Lg)} ${paren2(tx(next, Lg), next)} = ` : ''}${vTex(L, Lg)}`),
+        tex: eachLanguage(
+            (Lg) =>
+                `${used.map((u) => `${tx(u.from, Lg)} \\sim ${tx(u.to, Lg)}`).join(',\\quad ')};\\qquad ${limTex(P, v, Lg)} ${lt(n, Lg)} = ${containsVar(next, v) ? `${limTex(P, v, Lg)} ${paren2(tx(next, Lg), next)} = ` : ''}${vTex(L, Lg)}`,
+        ),
         text: msg('calculus.limit.forms.replace_infinitesimal_factors_by_equivalent_ones', { laws: joined(laws, '; ') }),
         rule: 'equivalents',
     };
@@ -305,7 +370,10 @@ function mConjugate(n, C) {
         return {
             val: L,
             title: msg('calculus.limit.forms.multiply_by_conjugate'),
-            tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${paren(tx(base, Lg))}${paren(tx(conj, Lg))}}{${tx(conj, Lg)}}${e.isOne() ? '' : '^{-1}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)} = ${vTex(L, Lg)}`),
+            tex: eachLanguage(
+                (Lg) =>
+                    `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${paren(tx(base, Lg))}${paren(tx(conj, Lg))}}{${tx(conj, Lg)}}${e.isOne() ? '' : '^{-1}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)} = ${vTex(L, Lg)}`,
+            ),
             text: cube
                 ? msg('calculus.limit.forms.difference_of_cube_roots_is_indeterminate')
                 : msg('calculus.limit.forms.difference_with_root_is_indeterminate_multiply'),
@@ -392,7 +460,21 @@ function mLeading(n, C) {
         val,
         title: msg('calculus.limit.forms.divide_by_highest_power'),
         tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${vTex(val, Lg)}`),
-        text: msg('calculus.limit.forms.as_each_sum_is_dominated_by', { v, p: flip ? '−∞' : '+∞', p2: k.isOne() ? '' : '^' + k.toString(), p3: (lng) => flip ? msg('calculus.limit.forms.for_negative').in(lng) + v + msg('calculus.limit.forms.formula').in(lng) + v + msg('calculus.limit.forms.formula_2').in(lng) + v + ')' : '' }),
+        text: msg('calculus.limit.forms.as_each_sum_is_dominated_by', {
+            v,
+            p: flip ? '−∞' : '+∞',
+            p2: k.isOne() ? '' : '^' + k.toString(),
+            p3: (lng) =>
+                flip
+                    ? msg('calculus.limit.forms.for_negative').in(lng) +
+                      v +
+                      msg('calculus.limit.forms.formula').in(lng) +
+                      v +
+                      msg('calculus.limit.forms.formula_2').in(lng) +
+                      v +
+                      ')'
+                    : '',
+        }),
         rule: 'leading-terms',
     };
 }
@@ -407,7 +489,8 @@ function exactFromFloat(c) {
     for (const m of [2, 3, 5, 6, 7, 10]) {
         for (const d of [1, 2, 3, 4, 5, 6, 10]) {
             const k = Math.round((c * d) / Math.sqrt(m));
-            if (k && Math.abs((k * Math.sqrt(m)) / d - c) < 1e-10 * Math.max(1, Math.abs(c))) return simp(mul(num(new Q(BigInt(k), BigInt(d))), pow(num(m), HALF)));
+            if (k && Math.abs((k * Math.sqrt(m)) / d - c) < 1e-10 * Math.max(1, Math.abs(c)))
+                return simp(mul(num(new Q(BigInt(k), BigInt(d))), pow(num(m), HALF)));
         }
     }
     return null;
@@ -449,7 +532,10 @@ function mLHopital(n, C, form) {
     return {
         val: L,
         title: msg('calculus.limit.forms.l_h_pital_s_rule'),
-        tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} \\frac{${tx(uS, Lg)}}{${tx(wS, Lg)}} = ${limTex(P, v, Lg)} \\frac{${paren(tx(uS, Lg))}'}{${paren(tx(wS, Lg))}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)}${tx(tidy, Lg) !== tx(next, Lg) ? ` = ${limTex(P, v, Lg)} ${paren2(tx(tidy, Lg), tidy)}` : ''} = ${vTex(L, Lg)}`),
+        tex: eachLanguage(
+            (Lg) =>
+                `${limTex(P, v, Lg)} \\frac{${tx(uS, Lg)}}{${tx(wS, Lg)}} = ${limTex(P, v, Lg)} \\frac{${paren(tx(uS, Lg))}'}{${paren(tx(wS, Lg))}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)}${tx(tidy, Lg) !== tx(next, Lg) ? ` = ${limTex(P, v, Lg)} ${paren2(tx(tidy, Lg), tidy)}` : ''} = ${vTex(L, Lg)}`,
+        ),
         text: msg('calculus.limit.forms.form_numerator_and_denominator_are_differentiable', { p: FORM_NAME[form] }),
         rule: 'lhopital',
     };
@@ -561,7 +647,10 @@ function mDominant(n, C) {
         return {
             val,
             title: msg('calculus.limit.forms.take_out_dominant_term'),
-            tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${paren(tx(n, Lg))} = ${limTex(P, v, Lg)} ${T.type === 'add' || T.type === 'mul' ? paren(tx(T, Lg)) : tx(T, Lg)}\\left(${tx(add(N1, rest), Lg)}\\right) = ${vTex(val, Lg)}`),
+            tex: eachLanguage(
+                (Lg) =>
+                    `${limTex(P, v, Lg)} ${paren(tx(n, Lg))} = ${limTex(P, v, Lg)} ${T.type === 'add' || T.type === 'mul' ? paren(tx(T, Lg)) : tx(T, Lg)}\\left(${tx(add(N1, rest), Lg)}\\right) = ${vTex(val, Lg)}`,
+            ),
             text: msg('calculus.limit.forms.take_out_fastest_growing_term_bracket'),
             rule: 'dominant-term',
             sub: C2.log,
@@ -627,7 +716,12 @@ function mSecondRemarkable(n, C) {
             const innerN = niceForm(inner, v);
             const core = `\\left(1 + ${uT}\\right)^{${tx(inv, Lg)}}`;
             const outer = isNum(innerN) && innerN.value.isOne() ? core : `\\left[${core}\\right]^{${tx(innerN, Lg)}}`;
-            return chainEq([`${limTex(P, v, Lg)} ${lt(n, Lg)}`, `${limTex(P, v, Lg)} ${outer}`, containsVar(innerN, v) ? `e^{${limTex(P, v, Lg)} ${lt(innerN, Lg)}}` : null, vTex(val, Lg)]);
+            return chainEq([
+                `${limTex(P, v, Lg)} ${lt(n, Lg)}`,
+                `${limTex(P, v, Lg)} ${outer}`,
+                containsVar(innerN, v) ? `e^{${limTex(P, v, Lg)} ${lt(innerN, Lg)}}` : null,
+                vTex(val, Lg),
+            ]);
         }),
         text: msg('calculus.limit.forms.form_1_write_base_as_1'),
         rule: 'second-remarkable',

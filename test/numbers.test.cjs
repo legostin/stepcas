@@ -26,7 +26,11 @@ function checkSteps(steps, where = '') {
             for (const t of texts) {
                 assert.ok(!/undefined|NaN|\[object/.test(t), `${where}: bad tex ${t}`);
                 let depth = 0;
-                for (const ch of t.replace(/\\[{}]/g, '')) { if (ch === '{') depth++; if (ch === '}') depth--; assert.ok(depth >= 0, `${where}: braces in ${t}`); }
+                for (const ch of t.replace(/\\[{}]/g, '')) {
+                    if (ch === '{') depth++;
+                    if (ch === '}') depth--;
+                    assert.ok(depth >= 0, `${where}: braces in ${t}`);
+                }
                 assert.equal(depth, 0, `${where}: unbalanced braces in ${t}`);
             }
         }
@@ -41,10 +45,15 @@ function checkSteps(steps, where = '') {
 }
 function* pairs(n, seed = 1) {
     let s = seed;
-    const rnd = () => ((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648);
+    const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
     for (let i = 0; i < n; i++) yield [Math.floor(rnd() * 5000) - 1000, Math.floor(rnd() * 5000) - 1000];
 }
-const bruteGcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+const bruteGcd = (a, b) => {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) [a, b] = [b, a % b];
+    return a;
+};
 
 // ---------------------------------------------------------------- gcd / lcm / Bézout
 
@@ -52,7 +61,14 @@ test('gcd(1071, 462) = 21 with the Euclid table', () => {
     assert.equal(E.ntGcd(1071, 462), 21n);
     const r = E.ntGcd(1071n, 462n, { steps: true });
     assert.equal(r.value, 21n);
-    assert.deepEqual(r.rows.map((x) => [x.a, x.b, x.q, x.r]), [[1071n, 462n, 2n, 147n], [462n, 147n, 3n, 21n], [147n, 21n, 7n, 0n]]);
+    assert.deepEqual(
+        r.rows.map((x) => [x.a, x.b, x.q, x.r]),
+        [
+            [1071n, 462n, 2n, 147n],
+            [462n, 147n, 3n, 21n],
+            [147n, 21n, 7n, 0n],
+        ],
+    );
     checkSteps(r.steps, 'gcd');
     assert.match(r.steps[1].title.ru, /Делим 1071 на 462/);
     assert.match(r.steps[1].text.ru, /Получаем 2, остаток 147/);
@@ -71,7 +87,10 @@ test('gcd edge cases and inputs', () => {
     checkSteps(E.ntGcd(0, 0, { steps: true }).steps, 'gcd00');
     checkSteps(E.ntGcd(-12, 0, { steps: true }).steps, 'gcd-12,0');
     checkSteps(E.ntGcd(462, 1071, { steps: true }).steps, 'gcd swapped');
-    assert.throws(() => E.ntGcd(1.5, 2), (e) => e.name === 'MathError' && /целое/.test(e.msg.ru));
+    assert.throws(
+        () => E.ntGcd(1.5, 2),
+        (e) => e.name === 'MathError' && /целое/.test(e.msg.ru),
+    );
     assert.throws(() => E.ntGcd('abc', 2), /not an integer/);
     for (const [a, b] of pairs(150, 7)) assert.equal(E.ntGcd(a, b), BigInt(bruteGcd(a, b)), `gcd(${a}, ${b})`);
 });
@@ -115,7 +134,16 @@ test('extended Euclid with back-substitution', () => {
         assert.equal(BigInt(a) * e.x + BigInt(b) * e.y, e.g, `bezout ${a}, ${b}`);
         assert.equal(e.g, BigInt(bruteGcd(a, b)));
     }
-    for (const [a, b] of [[240, 46], [-240, 46], [17, 0], [0, -5], [5, 25], [0, 0], [1, 1], [-7, -21]]) {
+    for (const [a, b] of [
+        [240, 46],
+        [-240, 46],
+        [17, 0],
+        [0, -5],
+        [5, 25],
+        [0, 0],
+        [1, 1],
+        [-7, -21],
+    ]) {
         const e = E.ntEgcd(a, b, { steps: true });
         assert.equal(BigInt(a) * e.x + BigInt(b) * e.y, e.g);
         checkSteps(e.steps, `egcd ${a},${b}`);
@@ -158,7 +186,8 @@ test('primality: sieve agreement, Carmichael numbers, big primes', () => {
     assert.equal(E.ntIsCarmichael(563), false);
     assert.equal(E.ntIsCarmichael(560), false);
     // strong pseudoprimes to base 2 and the classic hard composite
-    for (const c of [2047n, 3215031751n, 3825123056546413051n, 318665857834031151167461n, 3317044064679887385961981n]) assert.equal(E.ntIsPrime(c), false, `${c}`);
+    for (const c of [2047n, 3215031751n, 3825123056546413051n, 318665857834031151167461n, 3317044064679887385961981n])
+        assert.equal(E.ntIsPrime(c), false, `${c}`);
     for (const p of [1000000007n, 2n ** 61n - 1n, 2n ** 89n - 1n, 2n ** 127n - 1n, 18446744073709551557n]) assert.equal(E.ntIsPrime(p), true, `${p} prime`);
     assert.equal(E.ntIsPrime(2n ** 128n + 1n), false);
     assert.equal(E.ntIsPrime((2n ** 61n - 1n) * (2n ** 31n - 1n)), false);
@@ -187,25 +216,58 @@ test('Miller–Rabin in detail: 561 exposed by base 2', () => {
 });
 
 test('factorisation: Project Euler 3, ladders, Pollard rho', () => {
-    assert.deepEqual(E.ntFactor(600851475143), [{ p: 71n, e: 1 }, { p: 839n, e: 1 }, { p: 1471n, e: 1 }, { p: 6857n, e: 1 }]);
+    assert.deepEqual(E.ntFactor(600851475143), [
+        { p: 71n, e: 1 },
+        { p: 839n, e: 1 },
+        { p: 1471n, e: 1 },
+        { p: 6857n, e: 1 },
+    ]);
     const r = E.ntFactor(600851475143n, { steps: true });
     checkSteps(r.steps, 'factor PE3');
     assert.equal(r.tex, '71 \\cdot 839 \\cdot 1471 \\cdot 6857');
-    assert.deepEqual(r.ladder.map((x) => x.p), [71n, 839n, 1471n, 6857n]);
+    assert.deepEqual(
+        r.ladder.map((x) => x.p),
+        [71n, 839n, 1471n, 6857n],
+    );
     assert.ok(r.steps.some((s) => s.rule === 'sqrt-bound'));
     const s = E.ntFactor(360, { steps: true });
     assert.equal(s.tex, '2^{3} \\cdot 3^{2} \\cdot 5');
-    assert.deepEqual(s.ladder.map((x) => [x.n, x.p]), [[360n, 2n], [180n, 2n], [90n, 2n], [45n, 3n], [15n, 3n], [5n, 5n]]);
+    assert.deepEqual(
+        s.ladder.map((x) => [x.n, x.p]),
+        [
+            [360n, 2n],
+            [180n, 2n],
+            [90n, 2n],
+            [45n, 3n],
+            [15n, 3n],
+            [5n, 5n],
+        ],
+    );
     checkSteps(s.steps, 'factor 360');
     assert.match(s.steps.find((x) => x.rule === 'divide').text.ru, /последняя цифра чётная/);
     assert.deepEqual(E.ntFactor(1), []);
-    assert.deepEqual(E.ntFactor(-12), [{ p: 2n, e: 2 }, { p: 3n, e: 1 }]);
+    assert.deepEqual(E.ntFactor(-12), [
+        { p: 2n, e: 2 },
+        { p: 3n, e: 1 },
+    ]);
     assert.deepEqual(E.ntFactor(97), [{ p: 97n, e: 1 }]);
-    assert.throws(() => E.ntFactor(0), (e) => e.name === 'MathError');
+    assert.throws(
+        () => E.ntFactor(0),
+        (e) => e.name === 'MathError',
+    );
     // large: rho and prime powers
-    assert.deepEqual(E.ntFactor(1000000016000000063n), [{ p: 1000000007n, e: 1 }, { p: 1000000009n, e: 1 }]);
-    assert.deepEqual(E.ntFactor(2n ** 64n + 1n), [{ p: 274177n, e: 1 }, { p: 67280421310721n, e: 1 }]);
-    assert.deepEqual(E.ntFactor(1000003n ** 3n * 999983n), [{ p: 999983n, e: 1 }, { p: 1000003n, e: 3 }]);
+    assert.deepEqual(E.ntFactor(1000000016000000063n), [
+        { p: 1000000007n, e: 1 },
+        { p: 1000000009n, e: 1 },
+    ]);
+    assert.deepEqual(E.ntFactor(2n ** 64n + 1n), [
+        { p: 274177n, e: 1 },
+        { p: 67280421310721n, e: 1 },
+    ]);
+    assert.deepEqual(E.ntFactor(1000003n ** 3n * 999983n), [
+        { p: 999983n, e: 1 },
+        { p: 1000003n, e: 3 },
+    ]);
     assert.deepEqual(E.ntFactor(2n ** 100n), [{ p: 2n, e: 100 }]);
     const big = E.ntFactor(1000000016000000063n, { steps: true });
     checkSteps(big.steps, 'factor rho');
@@ -216,7 +278,10 @@ test('factorisation: Project Euler 3, ladders, Pollard rho', () => {
     // products reassemble
     for (let n = 2; n < 3000; n += 7) {
         const f = E.ntFactor(n);
-        assert.equal(f.reduce((acc, { p, e }) => acc * p ** BigInt(e), 1n), BigInt(n));
+        assert.equal(
+            f.reduce((acc, { p, e }) => acc * p ** BigInt(e), 1n),
+            BigInt(n),
+        );
         assert.ok(f.every(({ p }) => E.ntIsPrime(p)));
     }
     assert.equal(E.ntFactorTex([]), '1');
@@ -249,7 +314,10 @@ test('divisors, τ, σ, φ, μ', () => {
         assert.equal(E.ntPhi(n), BigInt(c), `phi(${n})`);
         const divs = E.ntDivisors(n);
         assert.equal(BigInt(divs.length), E.ntTau(n));
-        assert.equal(divs.reduce((a, b) => a + b, 0n), E.ntSigma(n));
+        assert.equal(
+            divs.reduce((a, b) => a + b, 0n),
+            E.ntSigma(n),
+        );
     }
     assert.throws(() => E.ntPhi(0));
 });
@@ -292,8 +360,14 @@ test('modular power: 2^100 mod 13 and the squaring table', () => {
     const r = E.ntModPow(2, 100, 13, { steps: true });
     assert.equal(r.value, 3n);
     checkSteps(r.steps, 'modpow');
-    assert.deepEqual(r.rows.map((x) => x.value), [2n, 4n, 3n, 9n, 3n, 9n, 3n]);
-    assert.deepEqual(r.rows.filter((x) => x.bit).map((x) => x.k), [2, 5, 6]);
+    assert.deepEqual(
+        r.rows.map((x) => x.value),
+        [2n, 4n, 3n, 9n, 3n, 9n, 3n],
+    );
+    assert.deepEqual(
+        r.rows.filter((x) => x.bit).map((x) => x.k),
+        [2, 5, 6],
+    );
     assert.equal(r.steps[0].tex, '100 = 1100100_2 = 64 + 32 + 4');
     assert.ok(r.steps.some((s) => s.rule === 'fermat'));
     assert.equal(E.ntModPow(3, 0, 7), 1n);
@@ -306,11 +380,16 @@ test('modular power: 2^100 mod 13 and the squaring table', () => {
     assert.equal(E.ntModPow(4, 13, 497), 445n);
     checkSteps(E.ntModPow(7, 0, 5, { steps: true }).steps, 'modpow e=0');
     checkSteps(E.ntModPow(7, 5, 1, { steps: true }).steps, 'modpow m=1');
-    for (let a = -5; a < 12; a++) for (let e = 0; e < 30; e += 3) for (const m of [1, 2, 7, 12, 97]) {
-        const expect = ((BigInt(a) ** BigInt(e)) % BigInt(m) + BigInt(m)) % BigInt(m);
-        assert.equal(E.ntModPow(a, e, m), expect, `${a}^${e} mod ${m}`);
-    }
-    assert.throws(() => E.ntModPow(2, 3, 0), (e) => e.name === 'MathError');
+    for (let a = -5; a < 12; a++)
+        for (let e = 0; e < 30; e += 3)
+            for (const m of [1, 2, 7, 12, 97]) {
+                const expect = ((BigInt(a) ** BigInt(e) % BigInt(m)) + BigInt(m)) % BigInt(m);
+                assert.equal(E.ntModPow(a, e, m), expect, `${a}^${e} mod ${m}`);
+            }
+    assert.throws(
+        () => E.ntModPow(2, 3, 0),
+        (e) => e.name === 'MathError',
+    );
 });
 
 test('modular inverse, linear congruences, order and primitive roots', () => {
@@ -322,11 +401,12 @@ test('modular inverse, linear congruences, order and primitive roots', () => {
     assert.equal(inv.value, 23n);
     checkSteps(inv.steps, 'modinv');
     checkSteps(E.ntModInv(4, 6, { steps: true }).steps, 'modinv none');
-    for (let m = 2; m < 60; m++) for (let a = 0; a < m; a++) {
-        const v = E.ntModInv(a, m);
-        if (bruteGcd(a, m) === 1) assert.equal((BigInt(a) * v) % BigInt(m), 1n % BigInt(m));
-        else assert.equal(v, null);
-    }
+    for (let m = 2; m < 60; m++)
+        for (let a = 0; a < m; a++) {
+            const v = E.ntModInv(a, m);
+            if (bruteGcd(a, m) === 1) assert.equal((BigInt(a) * v) % BigInt(m), 1n % BigInt(m));
+            else assert.equal(v, null);
+        }
     const c = E.ntSolveCongruence(6, 4, 10, { steps: true });
     assert.equal(c.solvable, true);
     assert.equal(c.d, 2n);
@@ -340,12 +420,14 @@ test('modular inverse, linear congruences, order and primitive roots', () => {
     assert.deepEqual(all.solutions, [0n, 1n, 2n, 3n, 4n]);
     checkSteps(all.steps, 'congruence all');
     checkSteps(E.ntSolveCongruence(3, 2, 7, { steps: true }).steps, 'congruence unique');
-    for (let m = 1; m < 30; m++) for (let a = -3; a < m; a += 2) for (let b = 0; b < m; b += 3) {
-        const r = E.ntSolveCongruence(a, b, m);
-        const brute = [];
-        for (let x = 0; x < m; x++) if ((((a * x - b) % m) + m) % m === 0) brute.push(BigInt(x));
-        assert.deepEqual(r.solvable ? r.solutions : [], brute, `${a}x ≡ ${b} mod ${m}`);
-    }
+    for (let m = 1; m < 30; m++)
+        for (let a = -3; a < m; a += 2)
+            for (let b = 0; b < m; b += 3) {
+                const r = E.ntSolveCongruence(a, b, m);
+                const brute = [];
+                for (let x = 0; x < m; x++) if ((((a * x - b) % m) + m) % m === 0) brute.push(BigInt(x));
+                assert.deepEqual(r.solvable ? r.solutions : [], brute, `${a}x ≡ ${b} mod ${m}`);
+            }
     assert.equal(E.ntOrder(2, 7), 3n);
     assert.equal(E.ntOrder(3, 7), 6n);
     assert.equal(E.ntOrder(2, 6), null);
@@ -378,7 +460,10 @@ test('Chinese remainder theorem: Sunzi, non-coprime moduli, conflicts', () => {
         ms.forEach((m, k) => assert.equal(c.x % BigInt(m), BigInt(rs[k])));
         assert.equal(c.m, E.ntLcmMany(ms));
     }
-    assert.throws(() => E.ntCrt([1, 2], [3]), (e) => e.name === 'MathError');
+    assert.throws(
+        () => E.ntCrt([1, 2], [3]),
+        (e) => e.name === 'MathError',
+    );
 });
 
 test('toy RSA: encrypt then decrypt', () => {
@@ -422,17 +507,24 @@ test('bases: integers, fractions with periods, letters, signs', () => {
     assert.match(r.steps.find((s) => s.rule === 'repeated-multiplication').text.ru, /0,2 уже встречалась/);
     const t = E.ntToBase(25, 2, { steps: true });
     checkSteps(t.steps, 'toBase 25');
-    assert.deepEqual(t.steps.find((s) => s.rule === 'repeated-division').rows.map((x) => x.r), [1n, 0n, 0n, 1n, 1n]);
+    assert.deepEqual(
+        t.steps.find((s) => s.rule === 'repeated-division').rows.map((x) => x.r),
+        [1n, 0n, 0n, 1n, 1n],
+    );
     checkSteps(E.ntToBase(-2748, 16, { steps: true }).steps, 'toBase hex');
     const tr = E.ntToBase('1/97', 2, { steps: true, maxDigits: 20 });
     assert.equal(tr.truncated, true);
     checkSteps(tr.steps, 'toBase truncated');
-    assert.throws(() => E.ntToBase(5, 1), (e) => e.name === 'MathError');
+    assert.throws(
+        () => E.ntToBase(5, 1),
+        (e) => e.name === 'MathError',
+    );
     assert.throws(() => E.ntToBase(5, 37));
-    for (let b = 2; b <= 36; b++) for (const n of [0, 1, 7, 35, 36, 1000, 65535, -99]) {
-        assert.equal(E.ntToBase(n, b), n < 0 ? '-' + (-n).toString(b).toUpperCase() : n.toString(b).toUpperCase());
-        assert.equal(E.ntFromBase(E.ntToBase(n, b), b), BigInt(n), `round trip ${n} base ${b}`);
-    }
+    for (let b = 2; b <= 36; b++)
+        for (const n of [0, 1, 7, 35, 36, 1000, 65535, -99]) {
+            assert.equal(E.ntToBase(n, b), n < 0 ? '-' + (-n).toString(b).toUpperCase() : n.toString(b).toUpperCase());
+            assert.equal(E.ntFromBase(E.ntToBase(n, b), b), BigInt(n), `round trip ${n} base ${b}`);
+        }
 });
 
 test('from base: positional sums, Horner, periods', () => {
@@ -453,7 +545,10 @@ test('from base: positional sums, Horner, periods', () => {
     assert.ok(h.steps.some((s) => s.rule === 'horner' && /22 \\cdot 2 \+ 1 = 45/.test(s.tex)));
     checkSteps(E.ntFromBase('0.(0011)', 2, { steps: true }).steps, 'fromBase period');
     checkSteps(E.ntFromBase('-777', 8, { steps: true }).steps, 'fromBase negative');
-    assert.throws(() => E.ntFromBase('129', 2), (e) => e.name === 'MathError' && /Цифры «2» нет/.test(e.msg.ru));
+    assert.throws(
+        () => E.ntFromBase('129', 2),
+        (e) => e.name === 'MathError' && /Цифры «2» нет/.test(e.msg.ru),
+    );
     assert.throws(() => E.ntFromBase('1.2.3', 10));
     assert.throws(() => E.ntFromBase('', 10));
     for (const s of ['0.5', '2.75', '0.(142857)', '3.1(4)', '-0.125']) {
@@ -483,7 +578,10 @@ test('continued fractions and convergents', () => {
     assert.deepEqual(pi.terms.slice(0, 5), [3n, 7n, 15n, 1n, 292n]);
     assert.equal(pi.exact, false);
     const conv = E.ntConvergents([3n, 7n, 15n, 1n]);
-    assert.deepEqual(conv.map((c) => `${c.p}/${c.q}`), ['3/1', '22/7', '333/106', '355/113']);
+    assert.deepEqual(
+        conv.map((c) => `${c.p}/${c.q}`),
+        ['3/1', '22/7', '333/106', '355/113'],
+    );
     const pell = E.ntConvergents(E.ntContinuedFraction({ sqrt: 2 }), { count: 6 });
     for (const { p, q } of pell) assert.ok(p * p - 2n * q * q === 1n || p * p - 2n * q * q === -1n);
     const s61 = E.ntConvergents(E.ntContinuedFraction({ sqrt: 61 }), { count: 11 }).at(-1);
@@ -493,7 +591,11 @@ test('continued fractions and convergents', () => {
     assert.deepEqual(E.ntBestApprox(Math.PI, 100), { p: 311n, q: 99n });
     assert.deepEqual(E.ntBestApprox('0.333', 10), { p: 1n, q: 3n });
     assert.deepEqual(E.ntBestApprox(Math.E, 1000), { p: 1457n, q: 536n });
-    for (const [x, D] of [[Math.SQRT2, 50], [0.1234, 30], [2.718281828, 200]]) {
+    for (const [x, D] of [
+        [Math.SQRT2, 50],
+        [0.1234, 30],
+        [2.718281828, 200],
+    ]) {
         const best = E.ntBestApprox(x, D);
         let bestErr = Infinity;
         for (let q = 1; q <= D; q++) bestErr = Math.min(bestErr, Math.abs(Math.round(x * q) / q - x));
@@ -511,21 +613,46 @@ test('Egyptian fractions (greedy)', () => {
     checkSteps(r.steps, 'egyptian');
     assert.throws(() => E.ntEgyptian('3/2'));
     assert.throws(() => E.ntEgyptian(0));
-    for (let d = 2; d < 40; d++) for (let n = 1; n < d; n++) {
-        const dens = E.ntEgyptian(`${n}/${d}`);
-        let sn = 0n, sd = 1n;
-        for (const x of dens) { sn = sn * x + sd; sd *= x; }
-        assert.equal(sn * BigInt(d), sd * BigInt(n), `${n}/${d}`);
-        for (let i = 1; i < dens.length; i++) assert.ok(dens[i] > dens[i - 1]);
-    }
+    for (let d = 2; d < 40; d++)
+        for (let n = 1; n < d; n++) {
+            const dens = E.ntEgyptian(`${n}/${d}`);
+            let sn = 0n,
+                sd = 1n;
+            for (const x of dens) {
+                sn = sn * x + sd;
+                sd *= x;
+            }
+            assert.equal(sn * BigInt(d), sd * BigInt(n), `${n}/${d}`);
+            for (let i = 1; i < dens.length; i++) assert.ok(dens[i] > dens[i - 1]);
+        }
 });
 
 test('divisibility rules with explanations', () => {
     const cases = [
-        [123456, 3, true], [123457, 3, false], [918082, 11, true], [918083, 11, false], [7128, 12, true],
-        [1000, 8, true], [1004, 8, false], [375, 25, true], [370, 25, false], [4096, 4, true], [4098, 4, false],
-        [999999999999, 9, true], [98765, 5, true], [98764, 5, false], [120, 10, true], [121, 2, false], [0, 11, true],
-        [7, 4, false], [36, 6, true], [135, 45, true], [2250, 75, true], [1500, 100, true], [360, 36, true], [5050, 20, false],
+        [123456, 3, true],
+        [123457, 3, false],
+        [918082, 11, true],
+        [918083, 11, false],
+        [7128, 12, true],
+        [1000, 8, true],
+        [1004, 8, false],
+        [375, 25, true],
+        [370, 25, false],
+        [4096, 4, true],
+        [4098, 4, false],
+        [999999999999, 9, true],
+        [98765, 5, true],
+        [98764, 5, false],
+        [120, 10, true],
+        [121, 2, false],
+        [0, 11, true],
+        [7, 4, false],
+        [36, 6, true],
+        [135, 45, true],
+        [2250, 75, true],
+        [1500, 100, true],
+        [360, 36, true],
+        [5050, 20, false],
     ];
     for (const [n, d, ok] of cases) {
         const r = E.ntDivisibilityRule(n, d);
@@ -535,10 +662,14 @@ test('divisibility rules with explanations', () => {
     }
     assert.equal(E.ntDivisibilityRule(123456, 3).steps[0].tex, '1 + 2 + 3 + 4 + 5 + 6 = 21');
     assert.match(E.ntDivisibilityRule('98 765 432 123 456 789 000', 9).steps[0].text.ru, /Сумма цифр/);
-    for (let n = 0; n < 3000; n += 13) for (const d of [2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 15, 18, 25]) {
-        assert.equal(E.ntDivisibilityRule(n, d).divides, n % d === 0, `${n} % ${d}`);
-    }
-    assert.throws(() => E.ntDivisibilityRule(10, 7), (e) => e.name === 'MathError');
+    for (let n = 0; n < 3000; n += 13)
+        for (const d of [2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 15, 18, 25]) {
+            assert.equal(E.ntDivisibilityRule(n, d).divides, n % d === 0, `${n} % ${d}`);
+        }
+    assert.throws(
+        () => E.ntDivisibilityRule(10, 7),
+        (e) => e.name === 'MathError',
+    );
 });
 
 // ---------------------------------------------------------------- numeric: roots and optimisation
@@ -548,18 +679,36 @@ test('roots: bisection, Brent, Newton, all roots', () => {
     close(b.root, Math.SQRT2, 1e-11);
     assert.equal(b.converged, true);
     assert.ok(b.trace.length > 30 && b.trace[0].m === 1);
-    assert.throws(() => E.numBisect((x) => x * x + 1, -1, 1), (e) => e.name === 'MathError' && e.code === 'no-sign-change');
+    assert.throws(
+        () => E.numBisect((x) => x * x + 1, -1, 1),
+        (e) => e.name === 'MathError' && e.code === 'no-sign-change',
+    );
     assert.equal(E.numBisect((x) => x, 0, 1).root, 0);
     close(E.numBrent(Math.cos, 0, 3).root, Math.PI / 2, 1e-14);
     close(E.numBrent((x) => x ** 3 - 2 * x - 5, 2, 3).root, 2.0945514815423265, 1e-14);
     close(E.numBrent((x) => Math.exp(x) - 10, 0, 5).root, Math.log(10), 1e-14);
-    const n = E.numNewton((x) => x * x - 2, (x) => 2 * x, 1, { trace: true });
+    const n = E.numNewton(
+        (x) => x * x - 2,
+        (x) => 2 * x,
+        1,
+        { trace: true },
+    );
     close(n.root, Math.SQRT2, 1e-15);
     assert.ok(n.iterations <= 7);
     close(E.numNewton((x) => Math.cos(x) - x, null, 1).root, 0.7390851332151607, 1e-12);
-    assert.equal(E.numNewton((x) => x * x + 1, (x) => 2 * x, 0).reason, 'flat');
+    assert.equal(
+        E.numNewton(
+            (x) => x * x + 1,
+            (x) => 2 * x,
+            0,
+        ).reason,
+        'flat',
+    );
     const roots = E.numFindRoots((x) => (x - 1) ** 2 * (x + 2) * Math.sin(x), -4, 4);
-    assert.deepEqual(roots.map((r) => r.kind), ['cross', 'cross', 'cross', 'touch', 'cross']);
+    assert.deepEqual(
+        roots.map((r) => r.kind),
+        ['cross', 'cross', 'cross', 'touch', 'cross'],
+    );
     [-Math.PI, -2, 0, 1, Math.PI].forEach((x, i) => close(roots[i].x, x, 1e-7));
     assert.equal(roots[3].multiplicity, 2);
     assert.equal(roots[1].multiplicity, 1);
@@ -571,11 +720,17 @@ test('roots: bisection, Brent, Newton, all roots', () => {
     assert.equal(E.numFindRoots((x) => x * x + 1e-6, -1, 1).length, 0);
     assert.equal(E.numFindRoots((x) => Math.floor(x) - 0.5, 0, 3).length, 0, 'a jump is not a root');
     const flat = E.numFindRoots((x) => Math.max(0, x) * (x - 2), -1, 3);
-    assert.deepEqual(flat.map((r) => r.kind), ['interval', 'cross']);
+    assert.deepEqual(
+        flat.map((r) => r.kind),
+        ['interval', 'cross'],
+    );
     assert.equal(flat[0].from, -1);
     close(flat[0].to, 0, 1e-12);
     close(flat[1].x, 2, 1e-12);
-    assert.deepEqual(E.numFindRoots(() => 0, 0, 1).map((r) => [r.kind, r.from, r.to]), [['interval', 0, 1]]);
+    assert.deepEqual(
+        E.numFindRoots(() => 0, 0, 1).map((r) => [r.kind, r.from, r.to]),
+        [['interval', 0, 1]],
+    );
     const sq = E.numFindRoots((x) => x * x - 2, -3, 3);
     close(sq[0].x, -Math.SQRT2, 1e-12);
     close(sq[1].x, Math.SQRT2, 1e-12);
@@ -587,9 +742,12 @@ test('optimisation: golden section, extrema', () => {
     close(g.fx, 1, 1e-12);
     assert.ok(g.trace.length > 10);
     const ex = E.numExtrema(Math.sin, 0, 10);
-    assert.deepEqual(ex.map((e) => e.kind), ['max', 'min', 'max']);
+    assert.deepEqual(
+        ex.map((e) => e.kind),
+        ['max', 'min', 'max'],
+    );
     close(ex[0].x, Math.PI / 2, 1e-7);
-    close(ex[1].x, 3 * Math.PI / 2, 1e-7);
+    close(ex[1].x, (3 * Math.PI) / 2, 1e-7);
     const cubic = E.numExtrema((x) => x ** 3 - 3 * x, -3, 3);
     assert.equal(cubic.length, 2);
     close(cubic[0].x, -1, 1e-7);
@@ -606,7 +764,11 @@ test('optimisation: golden section, extrema', () => {
 test('derivatives by Richardson extrapolation', () => {
     close(E.numDerivative(Math.exp, 1), Math.E, 1e-12);
     close(E.numDerivative(Math.sin, 2), Math.cos(2), 1e-12);
-    close(E.numDerivative((x) => x ** 3, 2), 12, 1e-12);
+    close(
+        E.numDerivative((x) => x ** 3, 2),
+        12,
+        1e-12,
+    );
     close(E.numDerivative(Math.sin, 1, { order: 2 }), -Math.sin(1), 1e-10);
     close(E.numDerivative(Math.sin, 1, { order: 3 }), -Math.cos(1), 1e-9);
     // near the pole of tan the first tableau from a wide step is garbage; the restart must catch it
@@ -619,7 +781,13 @@ test('derivatives by Richardson extrapolation', () => {
     close(d.value, 0.5, 1e-12);
     assert.ok(d.error < 1e-10);
     assert.throws(() => E.numDerivative(Math.sin, 0, { order: 5 }));
-    for (let x = -3; x <= 3; x += 0.25) close(E.numDerivative((t) => Math.sin(t) * Math.exp(t / 3), x), Math.cos(x) * Math.exp(x / 3) + Math.sin(x) * Math.exp(x / 3) / 3, 1e-10, `d at ${x}`);
+    for (let x = -3; x <= 3; x += 0.25)
+        close(
+            E.numDerivative((t) => Math.sin(t) * Math.exp(t / 3), x),
+            Math.cos(x) * Math.exp(x / 3) + (Math.sin(x) * Math.exp(x / 3)) / 3,
+            1e-10,
+            `d at ${x}`,
+        );
 });
 
 test('integrals versus closed forms (incl. singular ends and infinite limits)', () => {
@@ -644,7 +812,11 @@ test('integrals versus closed forms (incl. singular ends and infinite limits)', 
         [(x) => Math.cos(50 * x), 0, 1, Math.sin(50) / 50],
     ];
     for (const [f, a, b, v] of cases) close(E.numIntegrate(f, a, b), v, 1e-9, `∫ ${f} from ${a} to ${b}`);
-    close(E.numIntegrate((x) => x, 1, 0), -0.5, 1e-14);
+    close(
+        E.numIntegrate((x) => x, 1, 0),
+        -0.5,
+        1e-14,
+    );
     assert.equal(E.numIntegrate(Math.sin, 2, 2), 0);
     const info = E.numIntegrate(Math.log, 0, 1, { info: true });
     assert.equal(info.method, 'tanh-sinh');
@@ -749,9 +921,19 @@ test('sampleFunction splits at poles, jumps and domain edges', () => {
     assert.equal(circle.length, 1);
     close(circle[0][0][0], -1, 1e-6);
     close(circle[0].at(-1)[0], 1, 1e-6);
-    const throwsInside = E.sampleFunction((x) => { if (x > 0) throw new Error('boom'); return x; }, -1, 1);
+    const throwsInside = E.sampleFunction(
+        (x) => {
+            if (x > 0) throw new Error('boom');
+            return x;
+        },
+        -1,
+        1,
+    );
     assert.equal(throwsInside.length, 1);
-    assert.deepEqual(E.sampleFunction(() => NaN, 0, 1), []);
+    assert.deepEqual(
+        E.sampleFunction(() => NaN, 0, 1),
+        [],
+    );
     const recip = E.sampleFunction((x) => 1 / (x * x), -1, 1, { yRange: [0, 5] });
     assert.equal(recip.length, 2, 'even pole: both branches go up');
 });
@@ -761,10 +943,19 @@ test('sampleFunction splits at poles, jumps and domain edges', () => {
 test('DFT and FFT: known spectra and round trips', () => {
     const x = [1, 2, 3, 4];
     const d = E.numDft(x);
-    assert.deepEqual(Array.from(d.re).map((v) => +v.toFixed(12)), [10, -2, -2, -2]);
-    assert.deepEqual(Array.from(d.im).map((v) => +v.toFixed(12) + 0), [0, 2, 0, -2]);
+    assert.deepEqual(
+        Array.from(d.re).map((v) => +v.toFixed(12)),
+        [10, -2, -2, -2],
+    );
+    assert.deepEqual(
+        Array.from(d.im).map((v) => +v.toFixed(12) + 0),
+        [0, 2, 0, -2],
+    );
     const f = E.numFft(x);
-    for (let k = 0; k < 4; k++) { close(f.re[k], d.re[k], 1e-12); close(f.im[k], d.im[k], 1e-12); }
+    for (let k = 0; k < 4; k++) {
+        close(f.re[k], d.re[k], 1e-12);
+        close(f.im[k], d.im[k], 1e-12);
+    }
     const N = 256;
     const sig = Array.from({ length: N }, (_, i) => Math.sin((2 * Math.PI * 5 * i) / N) + 0.5 * Math.cos((2 * Math.PI * 12 * i) / N));
     const S = E.numFft(sig);
@@ -776,7 +967,8 @@ test('DFT and FFT: known spectra and round trips', () => {
     const padded = E.numFft([1, 1, 1]);
     assert.equal(padded.re.length, 4);
     const rnd = Array.from({ length: 50 }, (_, i) => Math.sin(i * i));
-    const D2 = E.numDft(rnd), D3 = E.numDft(D2.re, D2.im, { inverse: true });
+    const D2 = E.numDft(rnd),
+        D3 = E.numDft(D2.re, D2.im, { inverse: true });
     rnd.forEach((v, i) => close(D3.re[i], v, 1e-12));
     const F = E.numFft(rnd.slice(0, 32));
     const Dd = E.numDft(rnd.slice(0, 32));
@@ -825,36 +1017,91 @@ test('descriptive statistics', () => {
     const big = Array.from({ length: 1000 }, () => 1e9 + 0.1);
     close(E.statMean(big), 1e9 + 0.1, 1e-15);
     close(E.statVariance([1e9 + 1, 1e9 + 2, 1e9 + 3]), 2 / 3, 1e-9);
-    assert.throws(() => E.statMean([]), (e) => e.name === 'MathError');
+    assert.throws(
+        () => E.statMean([]),
+        (e) => e.name === 'MathError',
+    );
     assert.throws(() => E.statMean([1, 'x']));
     assert.throws(() => E.statVariance([1], 'sample'));
     assert.throws(() => E.statQuantile([1, 2], 1.5));
 });
 
 test('regression and polynomial fit', () => {
-    const r = E.statLinearRegression([[1, 3], [2, 5], [3, 7], [4, 9]]);
+    const r = E.statLinearRegression([
+        [1, 3],
+        [2, 5],
+        [3, 7],
+        [4, 9],
+    ]);
     close(r.a, 2, 1e-14);
     close(r.b, 1, 1e-14);
     close(r.r2, 1, 1e-14);
-    const n = E.statLinearRegression([{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 1.3 }, { x: 4, y: 3.75 }, { x: 5, y: 2.25 }]);
+    const n = E.statLinearRegression([
+        { x: 1, y: 1 },
+        { x: 2, y: 2 },
+        { x: 3, y: 1.3 },
+        { x: 4, y: 3.75 },
+        { x: 5, y: 2.25 },
+    ]);
     close(n.slope, 0.425, 1e-12);
     close(n.intercept, 0.785, 1e-12);
     close(n.r, 4.25 / Math.sqrt(10 * 4.597), 1e-12);
-    assert.throws(() => E.statLinearRegression([[1, 1], [1, 2]]), (e) => e.code === 'degenerate');
-    const p = E.statPolyFit([[0, 1], [1, 0], [2, 1], [3, 4]], 2);
+    assert.throws(
+        () =>
+            E.statLinearRegression([
+                [1, 1],
+                [1, 2],
+            ]),
+        (e) => e.code === 'degenerate',
+    );
+    const p = E.statPolyFit(
+        [
+            [0, 1],
+            [1, 0],
+            [2, 1],
+            [3, 4],
+        ],
+        2,
+    );
     [1, -2, 1].forEach((c, i) => close(p.coefs[i], c, 1e-10));
     close(p.r2, 1, 1e-12);
-    const pts = Array.from({ length: 30 }, (_, i) => { const x = 1990 + i; return [x, 0.5 * (x - 2000) ** 3 - 2 * (x - 2000) + 7]; });
+    const pts = Array.from({ length: 30 }, (_, i) => {
+        const x = 1990 + i;
+        return [x, 0.5 * (x - 2000) ** 3 - 2 * (x - 2000) + 7];
+    });
     const cub = E.statPolyFit(pts, 3);
-    for (const [x, y] of pts) close(cub.coefs.reduceRight((acc, c) => acc * x + c, 0), y, 1e-6, `poly fit at ${x}`);
-    const line = E.statPolyFit([[0, 0], [1, 1], [2, 2]], 1);
+    for (const [x, y] of pts)
+        close(
+            cub.coefs.reduceRight((acc, c) => acc * x + c, 0),
+            y,
+            1e-6,
+            `poly fit at ${x}`,
+        );
+    const line = E.statPolyFit(
+        [
+            [0, 0],
+            [1, 1],
+            [2, 2],
+        ],
+        1,
+    );
     close(line.coefs[1], 1, 1e-14);
     assert.throws(() => E.statPolyFit([[0, 1]], 2));
 });
 
 test('special functions and distributions against reference values', () => {
-    const erf = [[0, 0], [0.1, 0.1124629160182849], [0.5, 0.5204998778130465], [1, 0.8427007929497149], [2, 0.9953222650189527], [3, 0.9999779095030014]];
-    for (const [x, v] of erf) { close(E.probErf(x), v, 2e-15, `erf(${x})`); close(E.probErf(-x), -v, 2e-15); }
+    const erf = [
+        [0, 0],
+        [0.1, 0.1124629160182849],
+        [0.5, 0.5204998778130465],
+        [1, 0.8427007929497149],
+        [2, 0.9953222650189527],
+        [3, 0.9999779095030014],
+    ];
+    for (const [x, v] of erf) {
+        close(E.probErf(x), v, 2e-15, `erf(${x})`);
+        close(E.probErf(-x), -v, 2e-15);
+    }
     close(E.probErfc(3), 2.209049699858544e-5, 1e-13);
     close(E.probErfc(5), 1.5374597944280349e-12, 1e-12);
     close(E.probErfc(10), 2.088487583762545e-45, 1e-12);
@@ -874,8 +1121,17 @@ test('special functions and distributions against reference values', () => {
     assert.equal(E.probNormalInv(0), -Infinity);
     assert.throws(() => E.probNormalInv(1.2));
     // Student t (tables): t_{0.975} for df = 1, 2, 5, 10, 30; cdf values
-    const tq = [[1, 12.706204736174698], [2, 4.302652729749464], [5, 2.570581835636314], [10, 2.228138851986273], [30, 2.042272456301236]];
-    for (const [df, q] of tq) { close(E.probStudentTInv(0.975, df), q, 1e-10, `t(0.975, ${df})`); close(E.probStudentTCdf(q, df), 0.975, 1e-12); }
+    const tq = [
+        [1, 12.706204736174698],
+        [2, 4.302652729749464],
+        [5, 2.570581835636314],
+        [10, 2.228138851986273],
+        [30, 2.042272456301236],
+    ];
+    for (const [df, q] of tq) {
+        close(E.probStudentTInv(0.975, df), q, 1e-10, `t(0.975, ${df})`);
+        close(E.probStudentTCdf(q, df), 0.975, 1e-12);
+    }
     close(E.probStudentTCdf(1, 1), 0.75, 1e-14);
     close(E.probStudentTCdf(-2, 3), 0.06966298427942164, 1e-12);
     close(E.probStudentTInv(0.05, 8), -1.8595480375228428, 1e-10);
@@ -925,11 +1181,22 @@ test('discrete distributions and exact combinatorics', () => {
 // ---------------------------------------------------------------- interpolation and polynomial roots
 
 test('Lagrange interpolation and polynomial roots', () => {
-    const L = E.numLagrange([[0, 1], [1, 3], [2, 11]]);
+    const L = E.numLagrange([
+        [0, 1],
+        [1, 3],
+        [2, 11],
+    ]);
     [1, -1, 3].forEach((c, i) => close(L.coefs[i], c, 1e-12));
     close(L.fn(1.5), 1 - 1.5 + 3 * 2.25, 1e-12);
     assert.equal(L.fn(2), 11);
-    assert.throws(() => E.numLagrange([[1, 2], [1, 3]]), (e) => e.code === 'degenerate');
+    assert.throws(
+        () =>
+            E.numLagrange([
+                [1, 2],
+                [1, 3],
+            ]),
+        (e) => e.code === 'degenerate',
+    );
     const pts = [-2, -1, 0, 1, 2, 3].map((x) => [x, x ** 5 - 3 * x ** 2 + 1]);
     const L5 = E.numLagrange(pts);
     [1, 0, -3, 0, 0, 1].forEach((c, i) => close(L5.coefs[i], c, 1e-10));
@@ -937,7 +1204,10 @@ test('Lagrange interpolation and polynomial roots', () => {
     assert.deepEqual(E.numLinspace(0, 1, 5), [0, 0.25, 0.5, 0.75, 1]);
     assert.deepEqual(E.numLinspace(3, 3, 1), [3]);
     const r = E.numPolyRoots([-6, 11, -6, 1]);
-    [1, 2, 3].forEach((v, i) => { close(r[i].re, v, 1e-12); assert.equal(r[i].im, 0); });
+    [1, 2, 3].forEach((v, i) => {
+        close(r[i].re, v, 1e-12);
+        assert.equal(r[i].im, 0);
+    });
     const c = E.numPolyRoots([1, 0, 1]);
     close(c[0].im, -1, 1e-14);
     close(c[1].im, 1, 1e-14);
@@ -947,7 +1217,10 @@ test('Lagrange interpolation and polynomial roots', () => {
     const t = E.numPolyRoots([-1, 3, -3, 1]);
     t.forEach((z) => close(z.re, 1, 1e-10));
     const z0 = E.numPolyRoots([0, 0, 1, 1]);
-    assert.deepEqual(z0.map((z) => z.re), [-1, 0, 0]);
+    assert.deepEqual(
+        z0.map((z) => z.re),
+        [-1, 0, 0],
+    );
     const w = E.numPolyRoots([-1, 0, 0, 0, 0, 1]);
     assert.equal(w.length, 5);
     for (const z of w) close(Math.hypot(z.re, z.im), 1, 1e-13, 'fifth roots of unity');
@@ -957,18 +1230,101 @@ test('Lagrange interpolation and polynomial roots', () => {
 });
 
 test('exported names are unique and prefixed', () => {
-    const mine = ['ntGcd', 'ntLcm', 'ntGcdMany', 'ntLcmMany', 'ntEgcd', 'ntDiophantine', 'ntIsPrime', 'ntMillerRabin', 'ntIsCarmichael',
-        'ntFactor', 'ntFactorTex', 'ntDivisors', 'ntTau', 'ntSigma', 'ntMobius', 'ntPhi', 'ntPrimesUpTo', 'ntSieve', 'ntPrimePi',
-        'ntNextPrime', 'ntPrevPrime', 'ntIsPerfectSquare', 'ntDigitSum', 'ntModPow', 'ntModInv', 'ntSolveCongruence', 'ntCrt',
-        'ntOrder', 'ntPrimitiveRoot', 'ntRsaKey', 'ntToBase', 'ntFromBase', 'ntContinuedFraction', 'ntConvergents', 'ntBestApprox',
-        'ntEgyptian', 'ntDivisibilityRule', 'numLinspace', 'numBisect', 'numBrent', 'numNewton', 'numFindRoots', 'numGoldenMin',
-        'numExtrema', 'numDerivative', 'numIntegrate', 'numIntegrateInfo', 'numRiemann', 'numEuler', 'numRk4', 'numOdeAdaptive', 'odeSir',
-        'odeLotkaVolterra', 'odePendulum', 'odeLorenz', 'sampleFunction', 'numDft', 'numFft', 'numIfft', 'numFourierCoefficients',
-        'numFourierEval', 'statMean', 'statMedian', 'statMode', 'statVariance', 'statStd', 'statQuantile', 'statCorrelation',
-        'statLinearRegression', 'statPolyFit', 'numLogGamma', 'numGamma', 'probErf', 'probErfc', 'probNormalPdf', 'probNormalCdf',
-        'probNormalInv', 'probChoose', 'probFactorial', 'probArrangements', 'probBinomialPmf', 'probBetaRegularized',
-        'probGammaRegularized', 'probBinomialCdf', 'probPoissonPmf', 'probPoissonCdf', 'probGeometricPmf', 'probGeometricCdf',
-        'probStudentTCdf', 'probStudentTInv', 'probChiSquareCdf', 'numLagrange', 'numPolyRoots'];
+    const mine = [
+        'ntGcd',
+        'ntLcm',
+        'ntGcdMany',
+        'ntLcmMany',
+        'ntEgcd',
+        'ntDiophantine',
+        'ntIsPrime',
+        'ntMillerRabin',
+        'ntIsCarmichael',
+        'ntFactor',
+        'ntFactorTex',
+        'ntDivisors',
+        'ntTau',
+        'ntSigma',
+        'ntMobius',
+        'ntPhi',
+        'ntPrimesUpTo',
+        'ntSieve',
+        'ntPrimePi',
+        'ntNextPrime',
+        'ntPrevPrime',
+        'ntIsPerfectSquare',
+        'ntDigitSum',
+        'ntModPow',
+        'ntModInv',
+        'ntSolveCongruence',
+        'ntCrt',
+        'ntOrder',
+        'ntPrimitiveRoot',
+        'ntRsaKey',
+        'ntToBase',
+        'ntFromBase',
+        'ntContinuedFraction',
+        'ntConvergents',
+        'ntBestApprox',
+        'ntEgyptian',
+        'ntDivisibilityRule',
+        'numLinspace',
+        'numBisect',
+        'numBrent',
+        'numNewton',
+        'numFindRoots',
+        'numGoldenMin',
+        'numExtrema',
+        'numDerivative',
+        'numIntegrate',
+        'numIntegrateInfo',
+        'numRiemann',
+        'numEuler',
+        'numRk4',
+        'numOdeAdaptive',
+        'odeSir',
+        'odeLotkaVolterra',
+        'odePendulum',
+        'odeLorenz',
+        'sampleFunction',
+        'numDft',
+        'numFft',
+        'numIfft',
+        'numFourierCoefficients',
+        'numFourierEval',
+        'statMean',
+        'statMedian',
+        'statMode',
+        'statVariance',
+        'statStd',
+        'statQuantile',
+        'statCorrelation',
+        'statLinearRegression',
+        'statPolyFit',
+        'numLogGamma',
+        'numGamma',
+        'probErf',
+        'probErfc',
+        'probNormalPdf',
+        'probNormalCdf',
+        'probNormalInv',
+        'probChoose',
+        'probFactorial',
+        'probArrangements',
+        'probBinomialPmf',
+        'probBetaRegularized',
+        'probGammaRegularized',
+        'probBinomialCdf',
+        'probPoissonPmf',
+        'probPoissonCdf',
+        'probGeometricPmf',
+        'probGeometricCdf',
+        'probStudentTCdf',
+        'probStudentTInv',
+        'probChiSquareCdf',
+        'numLagrange',
+        'numPolyRoots',
+    ];
     for (const name of mine) assert.equal(typeof E[name], 'function', `${name} is exported through index.js`);
 });
 
@@ -1002,7 +1358,10 @@ test('numIntegrateInfo: divergent and unreliable integrals are flagged, good one
         assert.ok(r.msg.ru && r.msg.en);
     }
     // the old call is unchanged: a bare number (and the same one as the raw estimate)
-    assert.equal(E.numIntegrate((x) => 1 / x, 1, Infinity), I((x) => 1 / x, 1, Infinity).estimate);
+    assert.equal(
+        E.numIntegrate((x) => 1 / x, 1, Infinity),
+        I((x) => 1 / x, 1, Infinity).estimate,
+    );
     assert.equal(E.numIntegrate((x) => 1 / x, 2, 1, { info: true }).ok, undefined);
     // reversed limits: the sign flips, the verdict stays
     assert.equal(I((x) => 1 / x, Infinity, 1).value, -Infinity);
@@ -1035,12 +1394,23 @@ test('numIntegrateInfo: divergent and unreliable integrals are flagged, good one
     assert.equal(I((x) => x * Math.sin(x), 0, Infinity).ok, false);
     // convergent ones stay ok (integrable singularities inside are split off and integrated properly)
     const good = [
-        [Math.sin, 0, Math.PI, 2], [(x) => 1 / Math.sqrt(x), 0, 1, 2], [Math.log, 0, 1, -1], [(x) => x ** -0.9, 0, 1, 10],
-        [(x) => Math.exp(-x * x), -Infinity, Infinity, Math.sqrt(Math.PI)], [(x) => 1 / (1 + x * x), 0, Infinity, Math.PI / 2],
-        [(x) => Math.exp(x), -Infinity, 0, 1], [(x) => Math.exp(-x) * Math.log(x), 0, Infinity, -0.5772156649015329],
-        [(x) => Math.cos(50 * x), 0, 1, Math.sin(50) / 50], [(x) => 1 / x ** 2, 1, Infinity, 1], [(x) => (x < 0.5 ? 1 : 3), 0, 1, 2],
-        [(x) => 1 / Math.sqrt(Math.abs(x - 1)), 0, 2, 4], [(x) => Math.log(Math.abs(x - 1)), 0, 2, -2], [(x) => Math.exp(-x) * Math.sin(x), 0, Infinity, 0.5],
-        [(x) => 1 / Math.sqrt(1 - x * x), -1, 1, Math.PI], [(x) => 1 / (x * x + 1e-14), -1, 1, 2e7 * Math.atan(1e7)], [Math.tan, 0, 1.5, -Math.log(Math.cos(1.5))],
+        [Math.sin, 0, Math.PI, 2],
+        [(x) => 1 / Math.sqrt(x), 0, 1, 2],
+        [Math.log, 0, 1, -1],
+        [(x) => x ** -0.9, 0, 1, 10],
+        [(x) => Math.exp(-x * x), -Infinity, Infinity, Math.sqrt(Math.PI)],
+        [(x) => 1 / (1 + x * x), 0, Infinity, Math.PI / 2],
+        [(x) => Math.exp(x), -Infinity, 0, 1],
+        [(x) => Math.exp(-x) * Math.log(x), 0, Infinity, -0.5772156649015329],
+        [(x) => Math.cos(50 * x), 0, 1, Math.sin(50) / 50],
+        [(x) => 1 / x ** 2, 1, Infinity, 1],
+        [(x) => (x < 0.5 ? 1 : 3), 0, 1, 2],
+        [(x) => 1 / Math.sqrt(Math.abs(x - 1)), 0, 2, 4],
+        [(x) => Math.log(Math.abs(x - 1)), 0, 2, -2],
+        [(x) => Math.exp(-x) * Math.sin(x), 0, Infinity, 0.5],
+        [(x) => 1 / Math.sqrt(1 - x * x), -1, 1, Math.PI],
+        [(x) => 1 / (x * x + 1e-14), -1, 1, 2e7 * Math.atan(1e7)],
+        [Math.tan, 0, 1.5, -Math.log(Math.cos(1.5))],
     ];
     for (const [f, a, b, v] of good) {
         const r = I(f, a, b);

@@ -27,7 +27,12 @@ const partOf = (line) => plan.parts.findIndex((p) => p.ranges.some(([a, b]) => l
 const external = new Map();
 for (const st of ast.body) {
     if (st.type !== 'ImportDeclaration') continue;
-    for (const sp of st.specifiers) external.set(sp.local.name, { source: st.source.value, imported: sp.imported ? sp.imported.name : 'default', ns: sp.type === 'ImportNamespaceSpecifier' });
+    for (const sp of st.specifiers)
+        external.set(sp.local.name, {
+            source: st.source.value,
+            imported: sp.imported ? sp.imported.name : 'default',
+            ns: sp.type === 'ImportNamespaceSpecifier',
+        });
 }
 
 // top-level declarations: name → part
@@ -63,7 +68,13 @@ function refs(node) {
         if (n.type !== 'Identifier') return;
         const parent = anc[anc.length - 2];
         if (parent?.type === 'MemberExpression' && parent.property === n && !parent.computed) return;
-        if ((parent?.type === 'Property' || parent?.type === 'MethodDefinition' || parent?.type === 'PropertyDefinition') && parent.key === n && !parent.computed && !parent.shorthand) return;
+        if (
+            (parent?.type === 'Property' || parent?.type === 'MethodDefinition' || parent?.type === 'PropertyDefinition') &&
+            parent.key === n &&
+            !parent.computed &&
+            !parent.shorthand
+        )
+            return;
         if (parent?.type === 'LabeledStatement' || parent?.type === 'BreakStatement' || parent?.type === 'ContinueStatement') return;
         out.add(n.name);
     });
@@ -107,7 +118,10 @@ plan.parts.forEach((p, k) => {
 const relSpec = (fromFile, spec) => {
     if (!spec.startsWith('.')) return spec;
     const target = path.resolve(path.dirname(srcPath), spec);
-    const r = path.relative(path.dirname(path.resolve(root, fromFile)), target).split(path.sep).join('/');
+    const r = path
+        .relative(path.dirname(path.resolve(root, fromFile)), target)
+        .split(path.sep)
+        .join('/');
     return r.startsWith('.') ? r : `./${r}`;
 };
 plan.parts.forEach((p, k) => {
@@ -119,7 +133,8 @@ plan.parts.forEach((p, k) => {
         if (!bySource.has(key)) bySource.set(key, []);
         bySource.get(key).push(e.ns ? `* as ${local}` : e.imported === local ? local : `${e.imported} as ${local}`);
     }
-    for (const [src, names] of bySource) imports.push(names.some((n) => n.startsWith('* as')) ? `import ${names[0]} from '${src}';` : `import { ${names.join(', ')} } from '${src}';`);
+    for (const [src, names] of bySource)
+        imports.push(names.some((n) => n.startsWith('* as')) ? `import ${names[0]} from '${src}';` : `import { ${names.join(', ')} } from '${src}';`);
     const sib = new Map();
     for (const [name, owner] of P.uses) {
         const f = `./${path.basename(plan.parts[owner].file)}`;
@@ -139,7 +154,10 @@ for (const n of publicNames) {
     if (!byPart.has(k)) byPart.set(k, []);
     byPart.get(k).push(n);
 }
-const idx = [plan.indexDoc?.trim() ?? '', ...[...byPart].sort((a, b) => a[0] - b[0]).map(([k, names]) => `export { ${names.sort().join(', ')} } from './${path.basename(plan.parts[k].file)}';`)].join('\n');
+const idx = [
+    plan.indexDoc?.trim() ?? '',
+    ...[...byPart].sort((a, b) => a[0] - b[0]).map(([k, names]) => `export { ${names.sort().join(', ')} } from './${path.basename(plan.parts[k].file)}';`),
+].join('\n');
 fs.writeFileSync(path.resolve(root, plan.index), `${idx}\n`);
 fs.unlinkSync(srcPath);
 

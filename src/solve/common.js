@@ -12,7 +12,7 @@ import { msg, eachLanguage, decimalIn, DEFAULT_LANGUAGE } from '../i18n/index.js
 // ---------------------------------------------------------------- small helpers
 
 export const T = (ru, en = ru) => ({ ru, en });
-export const pick = (x, lang) => (typeof x === 'string' ? x : x?.[lang] ?? '');
+export const pick = (x, lang) => (typeof x === 'string' ? x : (x?.[lang] ?? ''));
 export const tex = (node, lang = DEFAULT_LANGUAGE, o = {}) => toTex(node, { ...o, lang });
 export const texB = (node, o = {}) => eachLanguage((l) => tex(node, l, o));
 
@@ -195,4 +195,4 @@ export function linearIn(E, name, v) {
     return { alpha, beta: ct.get(0) ?? N0 };
 }
 
-export const orTex = (l) => (msg('solve.common.or').in(l));
+export const orTex = (l) => msg('solve.common.or').in(l);

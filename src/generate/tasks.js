@@ -102,7 +102,9 @@ const GEN = {
         let c = g.nz(-6, 6);
         if (c === a) c = a + 1 || 2;
         const b = g.int(-12, 12);
-        const d = q(a - c).mul(r).add(q(b)); // a·r + b = c·r + d
+        const d = q(a - c)
+            .mul(r)
+            .add(q(b)); // a·r + b = c·r + d
         const task = `${poly([a, b])} = ${poly([c, d])}`;
         return { op: 'solve', task, answer: { roots: [qs(r)] }, prompt: SOLVE };
     },
@@ -194,7 +196,7 @@ const GEN = {
             // log_b(p) + log_b(r) with p·r = b^m
             const m = g.int(2, 4);
             const divs = [];
-            for (let d = 2; d < b ** m; d++) if ((b ** m) % d === 0) divs.push(d);
+            for (let d = 2; d < b ** m; d++) if (b ** m % d === 0) divs.push(d);
             const p = g.pick(divs);
             return { op: 'value', task: `log_${b}(${p}) + log_${b}(${b ** m / p})`, answer: { value: String(m) }, prompt: msg('generate.tasks.find_value') };
         }
@@ -212,7 +214,12 @@ const GEN = {
             const m = g.int(1, 2 * n - 1);
             const total = g.int(1, 3);
             const p = total * n - m;
-            return { op: 'value', task: `${a}^(${m}/${n}) * ${a}^(${p}/${n})`, answer: { value: String(a ** total) }, prompt: msg('generate.tasks.find_value') };
+            return {
+                op: 'value',
+                task: `${a}^(${m}/${n}) * ${a}^(${p}/${n})`,
+                answer: { value: String(a ** total) },
+                prompt: msg('generate.tasks.find_value'),
+            };
         }
         if (kind === 1) {
             // (a^k)^(m/n) with k·m/n integer: 8^(2/3), 27^(4/3)
@@ -246,7 +253,11 @@ const GEN = {
         const exactSign = Math.sign(row.f === 'sin' ? Math.sin(rad) : row.f === 'cos' ? Math.cos(rad) : Math.tan(rad));
         const k = g.pick([2, 4, 6, 8, 10, 12]);
         // k·root·f(θ) = k·(root·value) where root·(√2/2) → the rows keep value·root² = integer/2
-        const value = row.root ? q(k).mul(row.v).mul(q(row.root === 'sqrt(2)' ? 2 : 3)) : q(k).mul(row.v);
+        const value = row.root
+            ? q(k)
+                  .mul(row.v)
+                  .mul(q(row.root === 'sqrt(2)' ? 2 : 3))
+            : q(k).mul(row.v);
         const task = `${k}${row.root ? row.root : ''} ${row.f}(${theta}°)`;
         return { op: 'value', task, answer: { value: qs(value.mul(q(exactSign))) }, prompt: msg('generate.tasks.find_value') };
     },
@@ -280,9 +291,24 @@ const GEN = {
         const a = g.int(-2, 1);
         const b = a + g.int(1, 3);
         // ∫ Σ c_i x^(deg−i) = Σ c_i x^(deg−i+1)/(deg−i+1)
-        const F = (x) => cs.reduce((acc, c, i) => acc.add(q(c).mul(q(x).pow(deg - i + 1)).div(q(deg - i + 1))), Q.ZERO);
+        const F = (x) =>
+            cs.reduce(
+                (acc, c, i) =>
+                    acc.add(
+                        q(c)
+                            .mul(q(x).pow(deg - i + 1))
+                            .div(q(deg - i + 1)),
+                    ),
+                Q.ZERO,
+            );
         const value = F(b).sub(F(a));
-        return { op: 'integral', task: poly(cs), bounds: [String(a), String(b)], answer: { value: qs(value) }, prompt: msg('generate.tasks.compute_integral_from_to', { a, b }) };
+        return {
+            op: 'integral',
+            task: poly(cs),
+            bounds: [String(a), String(b)],
+            answer: { value: qs(value) },
+            prompt: msg('generate.tasks.compute_integral_from_to', { a, b }),
+        };
     },
     'linear-system'(g) {
         const x0 = g.int(-6, 6);
@@ -295,7 +321,12 @@ const GEN = {
             [a1, b1, a2, b2] = [g.nz(-5, 5), g.nz(-5, 5), g.nz(-5, 5), g.nz(-5, 5)];
         } while (a1 * b2 - a2 * b1 === 0);
         const eq = (a, b) => `${poly([a, 0])}${b < 0 ? ` - ${Math.abs(b) === 1 ? '' : Math.abs(b)}y` : ` + ${b === 1 ? '' : b}y`} = ${a * x0 + b * y0}`;
-        return { op: 'system', task: [eq(a1, b1), eq(a2, b2)].join('; '), answer: { solutions: [[String(x0), String(y0)]] }, prompt: msg('generate.tasks.solve_system') };
+        return {
+            op: 'system',
+            task: [eq(a1, b1), eq(a2, b2)].join('; '),
+            answer: { solutions: [[String(x0), String(y0)]] },
+            prompt: msg('generate.tasks.solve_system'),
+        };
     },
     factor(g, level) {
         const rs = g.distinct(level >= 2 ? 3 : 2, -6, 6);
@@ -308,13 +339,23 @@ const GEN = {
         const [r1, r2, r3] = g.distinct(3, -6, 6);
         const top = fromRoots([r1, r2]);
         const bottom = fromRoots([r1, r3]);
-        return { op: 'simplify', task: `(${poly(top)})/(${poly(bottom)})`, answer: { expr: `(${lin(r2)})/(${lin(r3)})` }, prompt: msg('generate.tasks.reduce_fraction') };
+        return {
+            op: 'simplify',
+            task: `(${poly(top)})/(${poly(bottom)})`,
+            answer: { expr: `(${lin(r2)})/(${lin(r3)})` },
+            prompt: msg('generate.tasks.reduce_fraction'),
+        };
     },
     ode(g, level) {
         if (level === 1) {
             const k = g.nz(-3, 3);
             const c = g.nz(-5, 5);
-            return { op: 'ode', task: `y' = ${k === 1 ? '' : k === -1 ? '-' : k}y; y(0) = ${c}`, answer: { expr: `${c}e^(${k}x)` }, prompt: msg('generate.tasks.solve_initial_value_problem') };
+            return {
+                op: 'ode',
+                task: `y' = ${k === 1 ? '' : k === -1 ? '-' : k}y; y(0) = ${c}`,
+                answer: { expr: `${c}e^(${k}x)` },
+                prompt: msg('generate.tasks.solve_initial_value_problem'),
+            };
         }
         const [r1, r2] = g.distinct(2, -3, 3);
         const A = g.nz(-3, 3);
@@ -322,7 +363,12 @@ const GEN = {
         const s = r1 + r2;
         const p = r1 * r2;
         const lhs = `y''${s === 0 ? '' : s > 0 ? ` - ${s === 1 ? '' : s}y'` : ` + ${-s === 1 ? '' : -s}y'`}${p === 0 ? '' : p > 0 ? ` + ${p === 1 ? '' : p}y` : ` - ${-p === 1 ? '' : -p}y`}`;
-        return { op: 'ode', task: `${lhs} = 0; y(0) = ${A + B}; y'(0) = ${A * r1 + B * r2}`, answer: { expr: `${A}e^(${r1}x) + ${B}e^(${r2}x)` }, prompt: msg('generate.tasks.solve_initial_value_problem') };
+        return {
+            op: 'ode',
+            task: `${lhs} = 0; y(0) = ${A + B}; y'(0) = ${A * r1 + B * r2}`,
+            answer: { expr: `${A}e^(${r1}x) + ${B}e^(${r2}x)` },
+            prompt: msg('generate.tasks.solve_initial_value_problem'),
+        };
     },
     'geometric-series'(g) {
         const den = g.pick([2, 3, 4, 5]);
@@ -331,25 +377,56 @@ const GEN = {
         const c = g.nz(-4, 4);
         const s = g.int(0, 2);
         const value = q(c).mul(ratio.pow(s)).div(Q.ONE.sub(ratio));
-        return { op: 'series', task: `sum(${c}*(${num}/${den})^k, k, ${s}, inf)`, answer: { value: qs(value) }, prompt: msg('generate.tasks.find_sum_of_series') };
+        return {
+            op: 'series',
+            task: `sum(${c}*(${num}/${den})^k, k, ${s}, inf)`,
+            answer: { value: qs(value) },
+            prompt: msg('generate.tasks.find_sum_of_series'),
+        };
     },
     'param-two-roots'(g) {
         if (g.r() < 0.5) {
             const c = g.int(1, 6);
-            return { op: 'param', task: `x^2 - 2a x + ${c * c} = 0`, param: 'a', want: 'two-roots', answer: { set: setText([iv(null, -c, false, false), iv(c, null, false, false)]) }, prompt: msg('generate.tasks.for_which_are_there_two_roots') };
+            return {
+                op: 'param',
+                task: `x^2 - 2a x + ${c * c} = 0`,
+                param: 'a',
+                want: 'two-roots',
+                answer: { set: setText([iv(null, -c, false, false), iv(c, null, false, false)]) },
+                prompt: msg('generate.tasks.for_which_are_there_two_roots'),
+            };
         }
         const b = 2 * g.nz(-4, 4);
-        return { op: 'param', task: `x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x + a = 0`, param: 'a', want: 'two-roots', answer: { set: iv(null, (b * b) / 4, false, false) }, prompt: msg('generate.tasks.for_which_are_there_two_roots') };
+        return {
+            op: 'param',
+            task: `x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x + a = 0`,
+            param: 'a',
+            want: 'two-roots',
+            answer: { set: iv(null, (b * b) / 4, false, false) },
+            prompt: msg('generate.tasks.for_which_are_there_two_roots'),
+        };
     },
     limit(g) {
         const kind = g.int(0, 2);
         if (kind === 0) {
             const r = g.nz(-6, 6);
-            return { op: 'limit', task: `(x^2 - ${r * r})/(${lin(r)})`, at: String(r), answer: { value: String(2 * r) }, prompt: msg('generate.tasks.find_limit_as_x', { r }) };
+            return {
+                op: 'limit',
+                task: `(x^2 - ${r * r})/(${lin(r)})`,
+                at: String(r),
+                answer: { value: String(2 * r) },
+                prompt: msg('generate.tasks.find_limit_as_x', { r }),
+            };
         }
         if (kind === 1) {
             const [a, d] = [g.nz(-6, 6), g.nz(-6, 6)];
-            return { op: 'limit', task: `(${poly([a, g.int(-5, 5), g.int(-5, 5)])})/(${poly([d, g.int(-5, 5), g.nz(-5, 5)])})`, at: 'inf', answer: { value: qs(q(a).div(q(d))) }, prompt: msg('generate.tasks.find_limit_as_x_2') };
+            return {
+                op: 'limit',
+                task: `(${poly([a, g.int(-5, 5), g.int(-5, 5)])})/(${poly([d, g.int(-5, 5), g.nz(-5, 5)])})`,
+                at: 'inf',
+                answer: { value: qs(q(a).div(q(d))) },
+                prompt: msg('generate.tasks.find_limit_as_x_2'),
+            };
         }
         const [k, m] = [g.nz(1, 7), g.nz(1, 7)];
         return { op: 'limit', task: `sin(${k}x)/(${m}x)`, at: '0', answer: { value: qs(q(k).div(q(m))) }, prompt: msg('generate.tasks.find_limit_as_x_0') };
@@ -358,7 +435,22 @@ const GEN = {
         // k(t − c₁)(t − c₂) = 0 with t = cos x or sin x and table values; the roots on [Aπ; Bπ]
         const f = g.pick(['cos', 'sin']);
         // [value, arccos or arcsin of it in units of π]
-        const vals = f === 'cos' ? [[1, 0], [-1, 1], [0, 0.5], [0.5, 1 / 3], [-0.5, 2 / 3]] : [[1, 0.5], [-1, -0.5], [0, 0], [0.5, 1 / 6], [-0.5, -1 / 6]];
+        const vals =
+            f === 'cos'
+                ? [
+                      [1, 0],
+                      [-1, 1],
+                      [0, 0.5],
+                      [0.5, 1 / 3],
+                      [-0.5, 2 / 3],
+                  ]
+                : [
+                      [1, 0.5],
+                      [-1, -0.5],
+                      [0, 0],
+                      [0.5, 1 / 6],
+                      [-0.5, -1 / 6],
+                  ];
         const [i1, i2] = g.distinct(2, 0, vals.length - 1);
         const [c1, c2] = [vals[i1][0], vals[i2][0]];
         const k = c1 % 1 !== 0 || c2 % 1 !== 0 ? 2 : 1;
@@ -369,14 +461,22 @@ const GEN = {
         const t = `${f}(x)`;
         const term = (c, pw) => (c === 0 ? '' : `${c < 0 ? ' - ' : ' + '}${Math.abs(c) === 1 && pw ? '' : Math.abs(c)}${pw}`);
         const task = `${A === 1 ? '' : A}${t}^2${term(B, t)}${term(C, '')} = 0`;
-        const [lo, hi] = g.pick([[-2, -0.5], [0, 1.5], [1, 2.5], [-1, 0.5], [1.5, 3], [-3, -1.5]]);
+        const [lo, hi] = g.pick([
+            [-2, -0.5],
+            [0, 1.5],
+            [1, 2.5],
+            [-1, 0.5],
+            [1.5, 3],
+            [-3, -1.5],
+        ]);
         const roots = [];
         for (const [c, base] of [vals[i1], vals[i2]]) {
             const bases = f === 'cos' ? [base, -base] : [base, 1 - base];
-            for (const b0 of bases) for (let n = -4; n <= 4; n++) {
-                const x = b0 + 2 * n;
-                if (x >= lo - 1e-12 && x <= hi + 1e-12 && !roots.some((y) => Math.abs(y - x) < 1e-12)) roots.push(x);
-            }
+            for (const b0 of bases)
+                for (let n = -4; n <= 4; n++) {
+                    const x = b0 + 2 * n;
+                    if (x >= lo - 1e-12 && x <= hi + 1e-12 && !roots.some((y) => Math.abs(y - x) < 1e-12)) roots.push(x);
+                }
             void c;
         }
         const piText = (x) => {
@@ -384,7 +484,13 @@ const GEN = {
             const num = r.n === 1n ? '' : r.n === -1n ? '-' : String(r.n);
             return r.isZero() ? '0' : r.isInt() ? `${num}pi` : `${num}pi/${r.d}`;
         };
-        return { op: 'solve', task, interval: [piText(lo), piText(hi)], answer: { roots: roots.sort((u, v) => u - v).map(piText) }, prompt: msg('generate.tasks.solve_and_find_roots_on', { lo: piText(lo), hi: piText(hi) }) };
+        return {
+            op: 'solve',
+            task,
+            interval: [piText(lo), piText(hi)],
+            answer: { roots: roots.sort((u, v) => u - v).map(piText) },
+            prompt: msg('generate.tasks.solve_and_find_roots_on', { lo: piText(lo), hi: piText(hi) }),
+        };
     },
     'log-ineq'(g) {
         const small = g.r() < 0.4;
@@ -432,7 +538,17 @@ const GEN = {
         const [u, w] = g.distinct(2, -6, 6);
         const s = u + w;
         const p = u * w;
-        return { op: 'system', task: `x + y = ${s}; x y = ${p}`, answer: { solutions: [[String(u), String(w)], [String(w), String(u)]] }, prompt: msg('generate.tasks.solve_system') };
+        return {
+            op: 'system',
+            task: `x + y = ${s}; x y = ${p}`,
+            answer: {
+                solutions: [
+                    [String(u), String(w)],
+                    [String(w), String(u)],
+                ],
+            },
+            prompt: msg('generate.tasks.solve_system'),
+        };
     },
     'abs-eq'(g) {
         if (g.r() < 0.5) {
@@ -443,7 +559,12 @@ const GEN = {
             return { op: 'solve', task: `|${poly([a, b])}| = ${c}`, answer: { roots }, prompt: SOLVE };
         }
         const [a, b] = g.distinct(2, -8, 8);
-        return { op: 'solve', task: `|x ${a < 0 ? '+' : '-'} ${Math.abs(a)}| = |x ${b < 0 ? '+' : '-'} ${Math.abs(b)}|`, answer: { roots: [qs(q(a + b).div(q(2)))] }, prompt: SOLVE };
+        return {
+            op: 'solve',
+            task: `|x ${a < 0 ? '+' : '-'} ${Math.abs(a)}| = |x ${b < 0 ? '+' : '-'} ${Math.abs(b)}|`,
+            answer: { roots: [qs(q(a + b).div(q(2)))] },
+            prompt: SOLVE,
+        };
     },
     antiderivative(g, level) {
         // f = F' for a random F from a few shapes; the check differentiates the answer

@@ -44,7 +44,11 @@ export function dec(x, digits, lang, tex = false) {
     return tex ? s : s.replace('-', '−');
 }
 const SUBS = '₀₁₂₃₄₅₆₇₈₉';
-export const subscript = (n) => String(n).split('').map((c) => SUBS[+c]).join('');
+export const subscript = (n) =>
+    String(n)
+        .split('')
+        .map((c) => SUBS[+c])
+        .join('');
 /** k·x in TeX with the coefficient 1 / −1 hidden. */
 export const coefX = (a, v = 'x') => (a === 1n ? v : a === -1n ? `-${v}` : `${tn(a)}${v}`);
 
@@ -52,20 +56,26 @@ export const coefX = (a, v = 'x') => (a === 1n ? v : a === -1n ? `-${v}` : `${tn
 export function listText(items, lang) {
     const a = items.map(sn);
     if (a.length === 1) return a[0];
-    if (a.length <= 4) return a.slice(0, -1).join(', ') + (msg('numbers.theory.common.and').in(lang)) + a[a.length - 1];
+    if (a.length <= 4) return a.slice(0, -1).join(', ') + msg('numbers.theory.common.and').in(lang) + a[a.length - 1];
     return `${a[0]}, ${a[1]}, ${a[2]}, …, ${a[a.length - 1]}`;
 }
 
-export const G = (l, a, b) => (msg('numbers.theory.common.formula', { a: tn(a), b: tn(b) }).in(l));
-export const Lc = (l, a, b) => (msg('numbers.theory.common.lcm', { a: tn(a), b: tn(b) }).in(l));
-export const gT = (l, a, b) => (msg('numbers.theory.common.gcd', { a: sn(a), b: sn(b) }).in(l));
+export const G = (l, a, b) => msg('numbers.theory.common.formula', { a: tn(a), b: tn(b) }).in(l);
+export const Lc = (l, a, b) => msg('numbers.theory.common.lcm', { a: tn(a), b: tn(b) }).in(l);
+export const gT = (l, a, b) => msg('numbers.theory.common.gcd', { a: sn(a), b: sn(b) }).in(l);
 
 /** Anything integer-like → BigInt. */
 export function big(x, what) {
     if (typeof x === 'bigint') return x;
     if (typeof x === 'number') {
         if (Number.isInteger(x)) return BigInt(x);
-        throw fail(msg(what ? 'numbers.theory.common.integer_is_required_for' : 'numbers.theory.common.integer_is_required_got', { what, x: (lng) => String(x).replace('.', notation(lng).decimalText) }), 'not-int');
+        throw fail(
+            msg(what ? 'numbers.theory.common.integer_is_required_for' : 'numbers.theory.common.integer_is_required_got', {
+                what,
+                x: (lng) => String(x).replace('.', notation(lng).decimalText),
+            }),
+            'not-int',
+        );
     }
     if (typeof x === 'string') {
         const s = x.replace(/[\s_\u00a0\u202f\u2009']/g, '').replace(/^[−–]/, '-');
@@ -83,16 +93,24 @@ export function big(x, what) {
 export function doubleExact(x) {
     const dv = new DataView(new ArrayBuffer(8));
     dv.setFloat64(0, x);
-    const hi = dv.getUint32(0), lo = dv.getUint32(4);
+    const hi = dv.getUint32(0),
+        lo = dv.getUint32(4);
     const exp = (hi >>> 20) & 0x7ff;
     let mant = (BigInt(hi & 0xfffff) << 32n) | BigInt(lo);
     let e;
     if (exp === 0) e = -1074;
-    else { mant |= 1n << 52n; e = exp - 1075; }
-    let num = mant, den = 1n;
+    else {
+        mant |= 1n << 52n;
+        e = exp - 1075;
+    }
+    let num = mant,
+        den = 1n;
     if (e > 0) num <<= BigInt(e);
     else den <<= BigInt(-e);
-    while (num % 2n === 0n && den % 2n === 0n && den > 1n) { num /= 2n; den /= 2n; }
+    while (num % 2n === 0n && den % 2n === 0n && den > 1n) {
+        num /= 2n;
+        den /= 2n;
+    }
     return { num: hi >>> 31 ? -num : num, den };
 }
 
@@ -112,7 +130,8 @@ export function ratOf(x) {
 }
 
 export function gcdCore(a, b) {
-    a = babs(a); b = babs(b);
+    a = babs(a);
+    b = babs(b);
     while (b) [a, b] = [b, a % b];
     return a;
 }

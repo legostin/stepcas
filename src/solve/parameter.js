@@ -38,7 +38,16 @@ const fits = (want, count) => (want.min !== undefined ? count >= want.min : coun
 /* ------------------------------------------------------------------ the quadratic way */
 
 function quadratic(E, x, a, want) {
-    if (nodeSome(E, (n) => (n.type === 'fn' && containsVar(n, x)) || (n.type === 'div' && containsVar(n.den, x)) || (n.type === 'pow' && containsVar(n.base, x) && !numValue(n.exp)?.isInt()))) return null;
+    if (
+        nodeSome(
+            E,
+            (n) =>
+                (n.type === 'fn' && containsVar(n, x)) ||
+                (n.type === 'div' && containsVar(n.den, x)) ||
+                (n.type === 'pow' && containsVar(n.base, x) && !numValue(n.exp)?.isInt()),
+        )
+    )
+        return null;
     const A = trySimplify(div(derivativeOf(derivativeOf(E, x), x), num(2)));
     if (containsVar(A, x)) return null;
     const B = trySimplify(substitute(derivativeOf(E, x), { [x]: N0 }));
@@ -46,7 +55,11 @@ function quadratic(E, x, a, want) {
     const X = sym(x);
     // E = Ax² + Bx + C identically
     const back = add(mul(A, pow(X, num(2))), mul(B, X), C);
-    for (const [xv, av] of [[0.37, 1.3], [-1.2, 0.4], [2.1, -0.7]]) {
+    for (const [xv, av] of [
+        [0.37, 1.3],
+        [-1.2, 0.4],
+        [2.1, -0.7],
+    ]) {
         if (Math.abs(approx(E, { [x]: xv, [a]: av }) - approx(back, { [x]: xv, [a]: av })) > 1e-9) return null;
     }
     if (!containsVar(A, a) && approx(A) === 0) return null; // not a quadratic
@@ -71,21 +84,41 @@ function quadratic(E, x, a, want) {
             const n = !bz ? 1 : cz ? Infinity : 0;
             addPiece(IntervalSet.point(a0), n);
             const lin = rel('=', add(mul(b0, X), c0), N0);
-            lines.push(msg('solve.parameter.formula', { a, a0: (lng) => tex(a0, lng), p: (lng) => tex(trySimplify(lin.lhs), lng), p2: (lng) => n === 1 ? msg('solve.parameter.one_root').in(lng) : n === 0 ? msg('solve.parameter.no_roots').in(lng) : msg('solve.parameter.every').in(lng) }));
+            lines.push(
+                msg('solve.parameter.formula', {
+                    a,
+                    a0: (lng) => tex(a0, lng),
+                    p: (lng) => tex(trySimplify(lin.lhs), lng),
+                    p2: (lng) =>
+                        n === 1
+                            ? msg('solve.parameter.one_root').in(lng)
+                            : n === 0
+                              ? msg('solve.parameter.no_roots').in(lng)
+                              : msg('solve.parameter.every').in(lng),
+                }),
+            );
         }
-        steps.push(step({
-            title: msg('solve.parameter.leading_coefficient_is_zero'),
-            tex: eachLanguage((l) => (A.type === 'sym' ? `${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}` : `${tex(A, l)} = 0 \\;\\Rightarrow\\; ${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`)),
-            text: msg('solve.parameter.then_equation_is_linear', { p: joined(lines, '; ') }),
-        }));
+        steps.push(
+            step({
+                title: msg('solve.parameter.leading_coefficient_is_zero'),
+                tex: eachLanguage((l) =>
+                    A.type === 'sym'
+                        ? `${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`
+                        : `${tex(A, l)} = 0 \\;\\Rightarrow\\; ${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`,
+                ),
+                text: msg('solve.parameter.then_equation_is_linear', { p: joined(lines, '; ') }),
+            }),
+        );
     }
     const notZero = IntervalSet.all().minus(IntervalSet.points(zeroA));
     const D = trySimplify(add(mul(B, B), neg(mul(num(4), A, C))));
-    steps.push(step({
-        title: zeroA.length ? msg('solve.parameter.for_quadratic_equation', { A: (lng) => tex(A, lng) }) : msg('solve.parameter.quadratic_equation'),
-        tex: eachLanguage((l) => `D = b^2 - 4ac = ${tex(D, l)}`),
-        text: msg('solve.parameter.two_roots_for_one_for_none'),
-    }));
+    steps.push(
+        step({
+            title: zeroA.length ? msg('solve.parameter.for_quadratic_equation', { A: (lng) => tex(A, lng) }) : msg('solve.parameter.quadratic_equation'),
+            tex: eachLanguage((l) => `D = b^2 - 4ac = ${tex(D, l)}`),
+            text: msg('solve.parameter.two_roots_for_one_for_none'),
+        }),
+    );
     const pos = solveInequality(rel('>', D, N0), a, { steps: true });
     const zer = solveEquation(rel('=', D, N0), a, { steps: true });
     if (!pos.set || !exactRoots(zer)) return null;
@@ -94,7 +127,18 @@ function quadratic(E, x, a, want) {
     addPiece(zeroSet.intersect(notZero), 1);
     addPiece(IntervalSet.all().minus(pos.set).minus(zeroSet).intersect(notZero), 0);
     steps.push(step({ title: '$D > 0$', tex: eachLanguage((l) => `${a} \\in ${intervalTex(pos.set, l)}`), sub: pos.steps.slice(0, -1) }));
-    steps.push(step({ title: '$D = 0$', tex: eachLanguage((l) => (zer.kind === 'none' ? '\\varnothing' : `${a} = ${rootNodes(zer).map((z) => tex(z, l)).join(',\\ ')}`)) }));
+    steps.push(
+        step({
+            title: '$D = 0$',
+            tex: eachLanguage((l) =>
+                zer.kind === 'none'
+                    ? '\\varnothing'
+                    : `${a} = ${rootNodes(zer)
+                          .map((z) => tex(z, l))
+                          .join(',\\ ')}`,
+            ),
+        }),
+    );
     return { count, steps, method: 'quadratic' };
 }
 
@@ -129,7 +173,10 @@ function graphical(E, x, a, want) {
         const v = approx(n);
         if (Number.isFinite(v) && !pts.some((p) => Math.abs(p.x - v) < 1e-12)) pts.push({ node: trySimplify(n), x: v });
     };
-    if (exactRoots(crit)) rootNodes(crit).filter((z) => D.contains(z)).forEach(push);
+    if (exactRoots(crit))
+        rootNodes(crit)
+            .filter((z) => D.contains(z))
+            .forEach(push);
     // corners: zeros of |u| arguments
     const corners = [];
     const walk = (n) => {
@@ -143,7 +190,9 @@ function graphical(E, x, a, want) {
     for (const u of corners) {
         const r = solveEquation(rel('=', u, N0), x, { steps: false });
         if (!exactRoots(r)) return null;
-        rootNodes(r).filter((z) => D.contains(z)).forEach(push);
+        rootNodes(r)
+            .filter((z) => D.contains(z))
+            .forEach(push);
     }
     for (const p of D.parts) {
         if (p.lo) push(p.lo.node);
@@ -169,7 +218,15 @@ function graphical(E, x, a, want) {
     for (let i = 0; i <= pts.length; i++) {
         const lo = i > 0 ? pts[i - 1] : null;
         const hi = i < pts.length ? pts[i] : null;
-        const xs = (lo && hi ? [1, 2, 3, 4, 5, 6, 7].map((j) => lo.x + ((hi.x - lo.x) * j) / 8) : hi ? [0.5, 1, 2, 5, 20, 100].map((t) => hi.x - t) : lo ? [0.5, 1, 2, 5, 20, 100].map((t) => lo.x + t) : [-50, -5, -1, 0.3, 1, 5, 50]).sort((u, v) => u - v);
+        const xs = (
+            lo && hi
+                ? [1, 2, 3, 4, 5, 6, 7].map((j) => lo.x + ((hi.x - lo.x) * j) / 8)
+                : hi
+                  ? [0.5, 1, 2, 5, 20, 100].map((t) => hi.x - t)
+                  : lo
+                    ? [0.5, 1, 2, 5, 20, 100].map((t) => lo.x + t)
+                    : [-50, -5, -1, 0.3, 1, 5, 50]
+        ).sort((u, v) => u - v);
         const inside = xs.map((t) => D.contains(t));
         if (inside.every((z) => !z)) continue;
         if (!inside.every(Boolean)) return null;
@@ -223,18 +280,45 @@ function graphical(E, x, a, want) {
     }
     // steps
     const steps = [];
-    steps.push(step({
-        title: msg('solve.parameter.express_parameter'),
-        tex: eachLanguage((l) => `${a} = ${tex(g, l)}`),
-        text: msg('solve.parameter.number_of_roots_is_number_of', { a, x }),
-    }));
-    if (holes.length) steps.push(step({ title: msg('solve.parameter.excluded_points'), tex: eachLanguage((l) => `${x} \\ne ${holes.map((h) => tex(h, l)).join(',\\ ')}`), text: always ? msg('solve.parameter.here_equation_holds_for_every') : msg('solve.parameter.dividing_by_zero_would_happen_here') }));
+    steps.push(
+        step({
+            title: msg('solve.parameter.express_parameter'),
+            tex: eachLanguage((l) => `${a} = ${tex(g, l)}`),
+            text: msg('solve.parameter.number_of_roots_is_number_of', { a, x }),
+        }),
+    );
+    if (holes.length)
+        steps.push(
+            step({
+                title: msg('solve.parameter.excluded_points'),
+                tex: eachLanguage((l) => `${x} \\ne ${holes.map((h) => tex(h, l)).join(',\\ ')}`),
+                text: always ? msg('solve.parameter.here_equation_holds_for_every') : msg('solve.parameter.dividing_by_zero_would_happen_here'),
+            }),
+        );
     const endTex = (e, l) => (e.inf ? (e.inf > 0 ? '+\\infty' : '-\\infty') : tex(e.node, l));
-    steps.push(step({
-        title: msg('solve.parameter.study', { x }),
-        tex: eachLanguage((l) => pieces.map((p) => `${intervalTex(IntervalSet.interval(p.lo ? p.lo.node : null, p.hi ? p.hi.node : null), l)}\\!:\\ ${p.up ? '\\nearrow' : '\\searrow'}\\ ${endTex(p.left, l)} \\to ${endTex(p.right, l)}`).join(';\\quad ')),
-        text: msg('solve.parameter.derivative_is_g_is_monotone_on', { x, g1: (lng) => tex(g1, lng), p: (lng) => pointVals.length ? msg('solve.parameter.values_at_points', { p: (lng) => pointVals.map((p) => `$g(${tex(p.node, lng)}) = ${tex(p.y, lng)}$`).join(', ') }).in(lng) : '' }),
-    }));
+    steps.push(
+        step({
+            title: msg('solve.parameter.study', { x }),
+            tex: eachLanguage((l) =>
+                pieces
+                    .map(
+                        (p) =>
+                            `${intervalTex(IntervalSet.interval(p.lo ? p.lo.node : null, p.hi ? p.hi.node : null), l)}\\!:\\ ${p.up ? '\\nearrow' : '\\searrow'}\\ ${endTex(p.left, l)} \\to ${endTex(p.right, l)}`,
+                    )
+                    .join(';\\quad '),
+            ),
+            text: msg('solve.parameter.derivative_is_g_is_monotone_on', {
+                x,
+                g1: (lng) => tex(g1, lng),
+                p: (lng) =>
+                    pointVals.length
+                        ? msg('solve.parameter.values_at_points', {
+                              p: (lng) => pointVals.map((p) => `$g(${tex(p.node, lng)}) = ${tex(p.y, lng)}$`).join(', '),
+                          }).in(lng)
+                        : '',
+            }),
+        }),
+    );
     return { count, steps, method: 'graphical' };
 }
 
@@ -270,7 +354,11 @@ export function solveWithParameter(input, opts = {}) {
     for (const { set: s, n } of r.count.values()) if (fits(want, n)) set = set.union(s);
     const summary = [...r.count.values()].filter((z) => !z.set.isEmpty()).sort((u, v) => u.n - v.n);
     const steps = [
-        step({ title: msg('solve.parameter.problem'), tex: eachLanguage((l) => tex(node, l)), text: msg('solve.parameter.for_which_does_equation_have', { a, want: want.phrase }) }),
+        step({
+            title: msg('solve.parameter.problem'),
+            tex: eachLanguage((l) => tex(node, l)),
+            text: msg('solve.parameter.for_which_does_equation_have', { a, want: want.phrase }),
+        }),
         ...r.steps,
         step({
             title: msg('solve.parameter.number_of_roots_against_parameter'),

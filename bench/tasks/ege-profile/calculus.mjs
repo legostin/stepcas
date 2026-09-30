@@ -14,7 +14,7 @@ export default [
     t.diff('e^(3x) cos(x)', 'e^(3x) (3cos(x) - sin(x))'),
     t.diff('arctg(2x)', '2/(1 + 4x^2)'),
     t.diff('(x^2 - 1)^5', '10x (x^2 - 1)^4'),
-    t.value('3 * 2^2 - 6 * 2', '0', { note: 'f\'(2) для x^3 - 3x^2' }),
+    t.value('3 * 2^2 - 6 * 2', '0', { note: "f'(2) для x^3 - 3x^2" }),
     t.extremum('x^3 - 3x + 4', 'max', ['-2', '0'], '6'),
     t.extremum('x^3 - 27x + 19', 'min', ['0', '4'], '-35'),
     t.extremum('(x - 9)e^(x - 8)', 'min', ['7', '9'], '-1'),

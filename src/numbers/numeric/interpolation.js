@@ -11,14 +11,17 @@ export function numLagrange(points) {
     const P = pointsOf(points);
     const n = P.length;
     if (!n) throw fail(msg('numbers.numeric.interpolation.at_least_one_point_is_required'), 'range');
-    const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]);
-    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-        if (xs[i] === xs[j]) throw fail(msg('numbers.numeric.interpolation.two_points_share_same_x_so'), 'degenerate');
-    }
+    const xs = P.map((p) => p[0]),
+        ys = P.map((p) => p[1]);
+    for (let i = 0; i < n; i++)
+        for (let j = i + 1; j < n; j++) {
+            if (xs[i] === xs[j]) throw fail(msg('numbers.numeric.interpolation.two_points_share_same_x_so'), 'degenerate');
+        }
     // barycentric weights for evaluation
     const w = xs.map((xi, i) => 1 / xs.reduce((prod, xj, j) => (j === i ? prod : prod * (xi - xj)), 1));
     const fn = (x) => {
-        let num = 0, den = 0;
+        let num = 0,
+            den = 0;
         for (let i = 0; i < n; i++) {
             if (x === xs[i]) return ys[i];
             const t = w[i] / (x - xs[i]);
@@ -34,7 +37,10 @@ export function numLagrange(points) {
     for (let i = n - 2; i >= 0; i--) {
         // coefs = coefs·(x − x_i) + dd[i]
         const next = new Array(coefs.length + 1).fill(0);
-        for (let k = 0; k < coefs.length; k++) { next[k + 1] += coefs[k]; next[k] -= coefs[k] * xs[i]; }
+        for (let k = 0; k < coefs.length; k++) {
+            next[k + 1] += coefs[k];
+            next[k] -= coefs[k] * xs[i];
+        }
         next[0] += dd[i];
         coefs = next;
     }
@@ -50,7 +56,10 @@ export function numPolyRoots(coefs) {
     while (c.length && c[c.length - 1] === 0) c.pop();
     if (c.length < 2) return [];
     const roots = [];
-    while (c[0] === 0 && c.length > 1) { roots.push({ re: 0, im: 0 }); c = c.slice(1); }
+    while (c[0] === 0 && c.length > 1) {
+        roots.push({ re: 0, im: 0 });
+        c = c.slice(1);
+    }
     const n = c.length - 1;
     if (n === 0) return roots;
     const lead = c[n];
@@ -59,15 +68,27 @@ export function numPolyRoots(coefs) {
     let R = 0;
     for (let k = 0; k < n; k++) R = Math.max(R, Math.abs(a[k]) ** (1 / (n - k)));
     R = Math.max(R, 1e-3);
-    const zr = new Float64Array(n), zi = new Float64Array(n);
-    for (let k = 0; k < n; k++) { const t = (2 * Math.PI * k) / n + 0.4; zr[k] = R * Math.cos(t); zi[k] = R * Math.sin(t); }
+    const zr = new Float64Array(n),
+        zi = new Float64Array(n);
+    for (let k = 0; k < n; k++) {
+        const t = (2 * Math.PI * k) / n + 0.4;
+        zr[k] = R * Math.cos(t);
+        zi[k] = R * Math.sin(t);
+    }
     const evalP = (xr, xi) => {
-        let pr = a[n], pi = 0, dr = 0, di = 0;
+        let pr = a[n],
+            pi = 0,
+            dr = 0,
+            di = 0;
         for (let k = n - 1; k >= 0; k--) {
-            const ndr = dr * xr - di * xi + pr, ndi = dr * xi + di * xr + pi;
-            dr = ndr; di = ndi;
-            const npr = pr * xr - pi * xi + a[k], npi = pr * xi + pi * xr;
-            pr = npr; pi = npi;
+            const ndr = dr * xr - di * xi + pr,
+                ndi = dr * xi + di * xr + pi;
+            dr = ndr;
+            di = ndi;
+            const npr = pr * xr - pi * xi + a[k],
+                npi = pr * xi + pi * xr;
+            pr = npr;
+            pi = npi;
         }
         return [pr, pi, dr, di];
     };
@@ -77,22 +98,32 @@ export function numPolyRoots(coefs) {
             const [pr, pi, dr, di] = evalP(zr[k], zi[k]);
             if (pr === 0 && pi === 0) continue;
             const dd = dr * dr + di * di;
-            if (dd === 0) { zr[k] += 1e-8 * (1 + Math.abs(zr[k])); continue; }
+            if (dd === 0) {
+                zr[k] += 1e-8 * (1 + Math.abs(zr[k]));
+                continue;
+            }
             // ratio = p / p'
-            const qr = (pr * dr + pi * di) / dd, qi = (pi * dr - pr * di) / dd;
-            let sr = 0, si = 0;
+            const qr = (pr * dr + pi * di) / dd,
+                qi = (pi * dr - pr * di) / dd;
+            let sr = 0,
+                si = 0;
             for (let j = 0; j < n; j++) {
                 if (j === k) continue;
-                const xr = zr[k] - zr[j], xi = zi[k] - zi[j];
+                const xr = zr[k] - zr[j],
+                    xi = zi[k] - zi[j];
                 const m = xr * xr + xi * xi;
                 if (m === 0) continue;
-                sr += xr / m; si -= xi / m;
+                sr += xr / m;
+                si -= xi / m;
             }
             // w = ratio / (1 − ratio·sum)
-            const tr = 1 - (qr * sr - qi * si), ti = -(qr * si + qi * sr);
+            const tr = 1 - (qr * sr - qi * si),
+                ti = -(qr * si + qi * sr);
             const tm = tr * tr + ti * ti;
-            const wr = (qr * tr + qi * ti) / tm, wi = (qi * tr - qr * ti) / tm;
-            zr[k] -= wr; zi[k] -= wi;
+            const wr = (qr * tr + qi * ti) / tm,
+                wi = (qi * tr - qr * ti) / tm;
+            zr[k] -= wr;
+            zi[k] -= wi;
             maxStep = Math.max(maxStep, Math.hypot(wr, wi) / Math.max(1, Math.hypot(zr[k], zi[k])));
         }
         if (maxStep < 1e-15) break;
@@ -106,26 +137,43 @@ export function numPolyRoots(coefs) {
         const cl = [k];
         for (let j = k + 1; j < n; j++) if (!done[j] && Math.hypot(zr[j] - zr[k], zi[j] - zi[k]) < 1e-5 * mag) cl.push(j);
         if (cl.length < 2) continue;
-        let cr = 0, ci = 0;
-        for (const j of cl) { cr += zr[j] / cl.length; ci += zi[j] / cl.length; }
+        let cr = 0,
+            ci = 0;
+        for (const j of cl) {
+            cr += zr[j] / cl.length;
+            ci += zi[j] / cl.length;
+        }
         let q = a.slice();
         for (let t = 1; t < cl.length; t++) q = deriv(q);
         const m = q.length - 1;
         for (let s = 0; s < 8 && m >= 1; s++) {
-            let pr = q[m], pi = 0, dr = 0, di = 0;
+            let pr = q[m],
+                pi = 0,
+                dr = 0,
+                di = 0;
             for (let t = m - 1; t >= 0; t--) {
-                const ndr = dr * cr - di * ci + pr, ndi = dr * ci + di * cr + pi;
-                dr = ndr; di = ndi;
-                const npr = pr * cr - pi * ci + q[t], npi = pr * ci + pi * cr;
-                pr = npr; pi = npi;
+                const ndr = dr * cr - di * ci + pr,
+                    ndi = dr * ci + di * cr + pi;
+                dr = ndr;
+                di = ndi;
+                const npr = pr * cr - pi * ci + q[t],
+                    npi = pr * ci + pi * cr;
+                pr = npr;
+                pi = npi;
             }
             const dd = dr * dr + di * di;
             if (dd === 0) break;
-            const sr = (pr * dr + pi * di) / dd, si = (pi * dr - pr * di) / dd;
-            cr -= sr; ci -= si;
+            const sr = (pr * dr + pi * di) / dd,
+                si = (pi * dr - pr * di) / dd;
+            cr -= sr;
+            ci -= si;
             if (Math.hypot(sr, si) < 1e-16 * mag) break;
         }
-        for (const j of cl) { zr[j] = cr; zi[j] = ci; done[j] = true; }
+        for (const j of cl) {
+            zr[j] = cr;
+            zi[j] = ci;
+            done[j] = true;
+        }
     }
     for (let k = 0; k < n; k++) {
         // a couple of Newton polishing steps for simple roots
@@ -142,8 +190,12 @@ export function numPolyRoots(coefs) {
         else if (Math.abs(im) < 1e-6 * mag) {
             // a multiple real root splits into a tiny complex cluster: snap when p(re) is zero to rounding
             const x = zr[k];
-            let p = 0, scale = 0;
-            for (let j = n; j >= 0; j--) { p = p * x + a[j]; scale = scale * Math.abs(x) + Math.abs(a[j]); }
+            let p = 0,
+                scale = 0;
+            for (let j = n; j >= 0; j--) {
+                p = p * x + a[j];
+                scale = scale * Math.abs(x) + Math.abs(a[j]);
+            }
             if (Math.abs(p) <= 1e-12 * scale) im = 0;
         }
         roots.push({ re: zr[k], im });

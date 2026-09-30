@@ -3,7 +3,9 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 let E;
-before(async () => { E = await import('../src/index.js'); });
+before(async () => {
+    E = await import('../src/index.js');
+});
 const T = (n) => E.toText(n, { lang: 'en' });
 
 test('greatest and least values on a segment, exact', () => {
@@ -34,11 +36,23 @@ test('a function undefined on the segment is refused, not guessed', () => {
 
 test('points of maximum and minimum', () => {
     const r = E.extremePoints('x^3 - 48x + 17');
-    assert.deepEqual(r.max.map((c) => T(c.x)), ['-4']);
-    assert.deepEqual(r.min.map((c) => T(c.x)), ['4']);
+    assert.deepEqual(
+        r.max.map((c) => T(c.x)),
+        ['-4'],
+    );
+    assert.deepEqual(
+        r.min.map((c) => T(c.x)),
+        ['4'],
+    );
     const q = E.extremePoints('(x^2 + 196)/x');
-    assert.deepEqual(q.min.map((c) => T(c.x)), ['14']);
-    assert.deepEqual(q.max.map((c) => T(c.x)), ['-14']);
+    assert.deepEqual(
+        q.min.map((c) => T(c.x)),
+        ['14'],
+    );
+    assert.deepEqual(
+        q.max.map((c) => T(c.x)),
+        ['-14'],
+    );
     assert.equal(E.extremePoints('x^3').max.length, 0);
 });
 

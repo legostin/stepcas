@@ -94,10 +94,11 @@ export function setFromChart(chart, op) {
         }
     }
     if (op === '>=' || op === '<=' || op === '=') {
-        for (const p of pts) if (p.kind === 'zero') {
-            const e = endOfPoint(p);
-            parts.push({ lo: e, hi: e, loC: true, hiC: true });
-        }
+        for (const p of pts)
+            if (p.kind === 'zero') {
+                const e = endOfPoint(p);
+                parts.push({ lo: e, hi: e, loC: true, hiC: true });
+            }
     }
     for (const p of pts) p.included = (op === '>=' || op === '<=' || op === '=') && p.kind === 'zero';
     return new IntervalSet(parts);
@@ -112,7 +113,14 @@ function endOfPoint(p) {
 /** Public chart shape for widgets. */
 export function chartOut(chart) {
     return {
-        points: chart.points.map((p) => ({ x: p.approx, tex: p.approxOnly ? texB(approxNode(p.approx, 5), { decimals: true }) : texB(p.node), kind: p.kind, included: !!p.included, mult: p.kind === 'pole' ? p.mL : p.mN, approx: !!p.approxOnly })),
+        points: chart.points.map((p) => ({
+            x: p.approx,
+            tex: p.approxOnly ? texB(approxNode(p.approx, 5), { decimals: true }) : texB(p.node),
+            kind: p.kind,
+            included: !!p.included,
+            mult: p.kind === 'pole' ? p.mL : p.mN,
+            approx: !!p.approxOnly,
+        })),
         signs: chart.signs.map((s) => (s > 0 ? '+' : s < 0 ? '-' : '0')),
     };
 }
@@ -127,6 +135,11 @@ export function signSet(expr, op, v) {
         return relHoldsNum(op, x, 0) ? IntervalSet.all() : IntervalSet.empty();
     }
     const rp = ratParts(s, v);
-    if (!rp || rp.N.isZero()) return rp && rp.N.isZero() ? (op === '>=' || op === '<=' || op === '=' ? IntervalSet.all() : IntervalSet.empty()).minus(IntervalSet.points(realRootsMult(rp.L, v).map((r) => r.node))) : null;
+    if (!rp || rp.N.isZero())
+        return rp && rp.N.isZero()
+            ? (op === '>=' || op === '<=' || op === '=' ? IntervalSet.all() : IntervalSet.empty()).minus(
+                  IntervalSet.points(realRootsMult(rp.L, v).map((r) => r.node)),
+              )
+            : null;
     return setFromChart(chartOf(rp.N, rp.L.degree >= 1 ? rp.L : null, v), op);
 }

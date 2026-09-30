@@ -103,7 +103,8 @@ function dCanon(n, v, C) {
             }
             if (n.name === 'root') {
                 const r = C.fn('root', n.args);
-                if (r.type === 'fn' && r.name === 'root') throw new MathError(msg('calculus.derivative.quick.cannot_differentiate_this_root'), null, null, 'unsupported');
+                if (r.type === 'fn' && r.name === 'root')
+                    throw new MathError(msg('calculus.derivative.quick.cannot_differentiate_this_root'), null, null, 'unsupported');
                 return dCanon(r, v, C);
             }
             if (n.name === 'fact') throw FACT_ERR();

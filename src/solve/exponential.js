@@ -168,26 +168,32 @@ export function solveExponential(lhs, rhs, E, ctx) {
             const rOwn = rc.div(kb); // R = b^(rc/kb)
             const rOwnOk = single && rb !== null;
             if (rOwnOk && (rOwn.isInt() || kb.isOne())) {
-                steps.push(S(msg('solve.exponential.write_right_side_as_power_of', { b: (lng) => tex(b, lng) }), {
-                    tex: eachLanguage((l) => `${tex(left, l)} = ${tex(pow(b, num(rOwn)), l)}`),
-                    text: msg('solve.exponential.bases_are_equal_so_exponents_are'),
-                }));
+                steps.push(
+                    S(msg('solve.exponential.write_right_side_as_power_of', { b: (lng) => tex(b, lng) }), {
+                        tex: eachLanguage((l) => `${tex(left, l)} = ${tex(pow(b, num(rOwn)), l)}`),
+                        text: msg('solve.exponential.bases_are_equal_so_exponents_are'),
+                    }),
+                );
                 sub = subSolve(f, num(rOwn), ctx);
                 pushPart(steps, f, num(rOwn), sub, v);
             } else {
-                steps.push(S(msg('solve.exponential.write_both_sides_as_powers_of', { cN: (lng) => tex(cN, lng) }), {
-                    tex: eachLanguage((l) => `${tex(pow(cN, g), l)} = ${tex(pow(cN, num(rc)), l)}`),
-                    text: msg('solve.exponential.bases_are_equal_so_we_equate'),
-                }));
+                steps.push(
+                    S(msg('solve.exponential.write_both_sides_as_powers_of', { cN: (lng) => tex(cN, lng) }), {
+                        tex: eachLanguage((l) => `${tex(pow(cN, g), l)} = ${tex(pow(cN, num(rc)), l)}`),
+                        text: msg('solve.exponential.bases_are_equal_so_we_equate'),
+                    }),
+                );
                 sub = subSolve(g, num(rc), ctx);
                 pushPart(steps, g, num(rc), sub, v);
             }
         } else {
             const Lg = logNodeB(b, R);
-            steps.push(S(msg('solve.exponential.take_logarithm_to_base', { b: (lng) => tex(b, lng) }), {
-                tex: eachLanguage((l) => `${tex(f, l)} = ${tex(Lg, l)}`),
-                text: msg('solve.exponential.by_definition_of_logarithm', { b: (lng) => tex(b, lng), p: (lng) => tex(logNodeB(b, sym('a')), lng) }),
-            }));
+            steps.push(
+                S(msg('solve.exponential.take_logarithm_to_base', { b: (lng) => tex(b, lng) }), {
+                    tex: eachLanguage((l) => `${tex(f, l)} = ${tex(Lg, l)}`),
+                    text: msg('solve.exponential.by_definition_of_logarithm', { b: (lng) => tex(b, lng), p: (lng) => tex(logNodeB(b, sym('a')), lng) }),
+                }),
+            );
             sub = subSolve(f, Lg, ctx);
             pushPart(steps, f, Lg, sub, v);
         }
@@ -203,20 +209,24 @@ export function solveExponential(lhs, rhs, E, ctx) {
             return { kind: 'none', roots: [], steps, type: 'exponential' };
         }
         if (exactZero(add(K, num(-1))) === true) {
-            steps.push(S(msg('solve.exponential.write_both_sides_as_powers_of', { cN: (lng) => tex(cN, lng) }), {
-                tex: eachLanguage((l) => `${tex(pow(cN, g1), l)} = ${tex(pow(cN, g2), l)}`),
-                text: msg('solve.exponential.bases_are_equal_so_we_equate'),
-            }));
+            steps.push(
+                S(msg('solve.exponential.write_both_sides_as_powers_of', { cN: (lng) => tex(cN, lng) }), {
+                    tex: eachLanguage((l) => `${tex(pow(cN, g1), l)} = ${tex(pow(cN, g2), l)}`),
+                    text: msg('solve.exponential.bases_are_equal_so_we_equate'),
+                }),
+            );
             const sub = subSolve(g1, g2, ctx);
             if (sub.kind === 'unsupported') return null;
             pushPart(steps, g1, g2, sub, v);
             return { ...sub, steps, type: 'exponential' };
         }
         const g = simpOr(add(g1, neg(g2)));
-        steps.push(S(msg('solve.exponential.divide_both_sides_by', { p: (lng) => tex(pow(cN, g2), lng) }), {
-            tex: eachLanguage((l) => `${tex(pow(cN, g), l)} = ${tex(K, l)}`),
-            text: msg('solve.exponential.power_is_positive_so_division_is'),
-        }));
+        steps.push(
+            S(msg('solve.exponential.divide_both_sides_by', { p: (lng) => tex(pow(cN, g2), lng) }), {
+                tex: eachLanguage((l) => `${tex(pow(cN, g), l)} = ${tex(K, l)}`),
+                text: msg('solve.exponential.power_is_positive_so_division_is'),
+            }),
+        );
         const sub = subSolve(pow(cN, g), K, ctx);
         if (sub.kind === 'unsupported') return null;
         steps.push(...sub.steps);
@@ -258,25 +268,41 @@ export function solveExponential(lhs, rhs, E, ctx) {
     const tNode = Bq ? pow(num(Bq), sym(v)) : pow(cN, simpOr(mul(num(m), sym(v))));
     const tTex = (l) => tex(tNode, l);
     const tSym = sym('t');
-    const rewrites = (l) => lin.map((x) => {
-        const j = x.m.div(m);
-        const cs = x.s.isZero() ? Q.ONE : c.pow(x.s.n);
-        const node = simpOr(mul(num(x.k.mul(cs)), pow(tSym, num(j))));
-        return `${tex(x.t.t, l)} = ${tex(node, l)}`;
-    }).join(notation(l).listTex);
-    steps.push(S(msg('solve.exponential.substitute_where', { p: (lng) => tTex(lng) }), {
-        tex: eachLanguage((l) => `${polyTex(Pt, 't', l)} = 0`),
-        text: msg('solve.exponential.every_power_is_expressed_through', { p: (lng) => rewrites(lng), p2: (lng) => jmin < 0 ? msg('solve.exponential.we_multiplied_both_sides_by_it', { p: -jmin }).in(lng) : '' }),
-    }));
+    const rewrites = (l) =>
+        lin
+            .map((x) => {
+                const j = x.m.div(m);
+                const cs = x.s.isZero() ? Q.ONE : c.pow(x.s.n);
+                const node = simpOr(mul(num(x.k.mul(cs)), pow(tSym, num(j))));
+                return `${tex(x.t.t, l)} = ${tex(node, l)}`;
+            })
+            .join(notation(l).listTex);
+    steps.push(
+        S(msg('solve.exponential.substitute_where', { p: (lng) => tTex(lng) }), {
+            tex: eachLanguage((l) => `${polyTex(Pt, 't', l)} = 0`),
+            text: msg('solve.exponential.every_power_is_expressed_through', {
+                p: (lng) => rewrites(lng),
+                p2: (lng) => (jmin < 0 ? msg('solve.exponential.we_multiplied_both_sides_by_it', { p: -jmin }).in(lng) : ''),
+            }),
+        }),
+    );
     const tr = solveAnyPoly(Pt, { v: 't', domain: 'real' });
-    steps.push(partStep(eachLanguage((l) => `${polyTex(Pt, 't', l)} = 0`), tr, 't'));
+    steps.push(
+        partStep(
+            eachLanguage((l) => `${polyTex(Pt, 't', l)} = 0`),
+            tr,
+            't',
+        ),
+    );
     const good = tr.roots.filter((r) => r.approx > 1e-12);
     const bad = tr.roots.filter((r) => !(r.approx > 1e-12));
     if (bad.length) {
-        steps.push(S(msg('solve.exponential.drop'), {
-            tex: eachLanguage((l) => bad.map((r) => `t = ${tex(r.node, l)}`).join(',\\ ')),
-            text: msg('solve.exponential.for_every', { p: (lng) => tTex(lng), v }),
-        }));
+        steps.push(
+            S(msg('solve.exponential.drop'), {
+                tex: eachLanguage((l) => bad.map((r) => `t = ${tex(r.node, l)}`).join(',\\ ')),
+                text: msg('solve.exponential.for_every', { p: (lng) => tTex(lng), v }),
+            }),
+        );
     }
     let roots = [];
     let numeric = !!tr.numeric;
@@ -285,7 +311,13 @@ export function solveExponential(lhs, rhs, E, ctx) {
         if (sub.kind === 'unsupported') return null;
         roots.push(...sub.roots);
         if (sub.numeric) numeric = true;
-        steps.push(partStep(eachLanguage((l) => `${tTex(l)} = ${tex(r.node, l)}`), sub, v));
+        steps.push(
+            partStep(
+                eachLanguage((l) => `${tTex(l)} = ${tex(r.node, l)}`),
+                sub,
+                v,
+            ),
+        );
     }
     roots = mergeRoots(roots);
     return { kind: roots.length ? 'roots' : 'none', roots, steps, type: 'exponential', numeric };
@@ -309,10 +341,12 @@ function solveExpMixed(info, ctx) {
     const rhs2 = add(fn('ln', K), mul(B.pows[0].exp, fn('ln', B.pows[0].base)));
     const l2 = simpOr(lhs2);
     const r2 = simpOr(rhs2);
-    steps.push(S(msg('solve.exponential.take_natural_logarithm_of_both_sides'), {
-        tex: eachLanguage((l) => `${tex(l2, l)} = ${tex(r2, l)}`),
-        text: msg('solve.exponential.both_sides_are_positive_so_we'),
-    }));
+    steps.push(
+        S(msg('solve.exponential.take_natural_logarithm_of_both_sides'), {
+            tex: eachLanguage((l) => `${tex(l2, l)} = ${tex(r2, l)}`),
+            text: msg('solve.exponential.both_sides_are_positive_so_we'),
+        }),
+    );
     const E2 = simpOr(add(l2, neg(r2)));
     const sub = solveNodePoly(E2, ctx);
     if (!sub) return null;

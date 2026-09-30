@@ -3,7 +3,9 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 let E;
-before(async () => { E = await import('../src/index.js'); });
+before(async () => {
+    E = await import('../src/index.js');
+});
 const T = (n) => E.toText(n, { lang: 'en' });
 // the answer against a reference function at a few points
 const same = (a, b) => [0.3, 0.9, 1.4].every((x) => Math.abs(E.evaluate(a, { x }) - E.evaluate(E.parse(b), { x })) < 1e-9);

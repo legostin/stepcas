@@ -44,9 +44,40 @@ const FN_TEX = {
     sign: '\\operatorname{sgn}',
 };
 
-
-const GREEK = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
-    'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda', 'Xi', 'Pi', 'Sigma', 'Phi', 'Psi', 'Omega']);
+const GREEK = new Set([
+    'alpha',
+    'beta',
+    'gamma',
+    'delta',
+    'epsilon',
+    'zeta',
+    'eta',
+    'theta',
+    'iota',
+    'kappa',
+    'lambda',
+    'mu',
+    'nu',
+    'xi',
+    'rho',
+    'sigma',
+    'tau',
+    'upsilon',
+    'phi',
+    'chi',
+    'psi',
+    'omega',
+    'Gamma',
+    'Delta',
+    'Theta',
+    'Lambda',
+    'Xi',
+    'Pi',
+    'Sigma',
+    'Phi',
+    'Psi',
+    'Omega',
+]);
 const GREEK_TEX = { epsilon: '\\varepsilon', phi: '\\varphi' };
 
 const REL_TEX = { '=': '=', '<': '<', '>': '>', '<=': '\\le', '>=': '\\ge', '!=': '\\ne' };
@@ -104,7 +135,8 @@ function prec(n) {
 
 /** Split a term into sign and absolute part for printing sums: a + (−2x) → a − 2x. */
 function splitSign(t, strict = false) {
-    if (t.type === 'num' && t.value.isNeg()) return { neg: true, abs: t.raw ? { ...t, value: t.value.neg(), raw: t.raw.replace(/^-/, '') } : num(t.value.neg()) };
+    if (t.type === 'num' && t.value.isNeg())
+        return { neg: true, abs: t.raw ? { ...t, value: t.value.neg(), raw: t.raw.replace(/^-/, '') } : num(t.value.neg()) };
     if (t.type === 'neg') return { neg: true, abs: t.arg };
     if (t.type === 'mul' && t.args.length) {
         const f = t.args[0];
@@ -188,9 +220,38 @@ function texNum(n, o) {
 }
 
 // A symbol built directly from a Unicode letter (sym('λ')) prints like the parsed name (sym('lambda')).
-const UNICODE_GREEK = { α: 'alpha', β: 'beta', γ: 'gamma', δ: 'delta', ε: 'varepsilon', ζ: 'zeta', η: 'eta', θ: 'theta', ι: 'iota', κ: 'kappa',
-    λ: 'lambda', μ: 'mu', ν: 'nu', ξ: 'xi', π: 'pi', ρ: 'rho', σ: 'sigma', τ: 'tau', φ: 'varphi', χ: 'chi', ψ: 'psi', ω: 'omega',
-    Γ: 'Gamma', Δ: 'Delta', Θ: 'Theta', Λ: 'Lambda', Σ: 'Sigma', Φ: 'Phi', Ψ: 'Psi', Ω: 'Omega' };
+const UNICODE_GREEK = {
+    α: 'alpha',
+    β: 'beta',
+    γ: 'gamma',
+    δ: 'delta',
+    ε: 'varepsilon',
+    ζ: 'zeta',
+    η: 'eta',
+    θ: 'theta',
+    ι: 'iota',
+    κ: 'kappa',
+    λ: 'lambda',
+    μ: 'mu',
+    ν: 'nu',
+    ξ: 'xi',
+    π: 'pi',
+    ρ: 'rho',
+    σ: 'sigma',
+    τ: 'tau',
+    φ: 'varphi',
+    χ: 'chi',
+    ψ: 'psi',
+    ω: 'omega',
+    Γ: 'Gamma',
+    Δ: 'Delta',
+    Θ: 'Theta',
+    Λ: 'Lambda',
+    Σ: 'Sigma',
+    Φ: 'Phi',
+    Ψ: 'Psi',
+    Ω: 'Omega',
+};
 
 function texSym(n) {
     if (!n.var) {
@@ -293,7 +354,8 @@ function texProduct(factors, o) {
                 if (/^[\d.]/.test(s)) dot = true;
                 else if (/^\\[dt]?frac/.test(s)) dot = true;
                 else if (/^\\left\(-|^\(-/.test(s)) dot = true;
-                else if (isBareFn(prev.node) && !(f.type === 'fn' && FN_TEX[f.name]) && !(f.type === 'pow' && f.base.type === 'fn' && FN_TEX[f.base.name])) dot = true;
+                else if (isBareFn(prev.node) && !(f.type === 'fn' && FN_TEX[f.name]) && !(f.type === 'pow' && f.base.type === 'fn' && FN_TEX[f.base.name]))
+                    dot = true;
                 else if (prev.node.type === 'fn' && prev.node.name === 'fact' && /^[a-zA-Z(]/.test(s)) dot = true;
             }
             if (dot) out += ' \\cdot ' + s;
@@ -378,10 +440,16 @@ function texPow(n, o) {
 // substituting x = 2 into −x² + 4x − 4) is a substitution and keeps the term order of the original expression.
 const DISPLAY_FN = new Set(['sqrt', 'root', 'cbrt', 'exp']);
 function notSimplified(t) {
-    return nodeSome(t, (x) => x.type === 'neg' || x.type === 'div' || (x.type === 'num' && !!x.raw)
-        || (x.type === 'fn' && DISPLAY_FN.has(x.name))
-        || (x.type === 'mul' && x.args.filter((a) => a.type === 'num').length > 1)
-        || (x.type === 'pow' && x.base.type === 'num' && x.exp.type === 'num' && x.exp.value.isInt()));
+    return nodeSome(
+        t,
+        (x) =>
+            x.type === 'neg' ||
+            x.type === 'div' ||
+            (x.type === 'num' && !!x.raw) ||
+            (x.type === 'fn' && DISPLAY_FN.has(x.name)) ||
+            (x.type === 'mul' && x.args.filter((a) => a.type === 'num').length > 1) ||
+            (x.type === 'pow' && x.base.type === 'num' && x.exp.type === 'num' && x.exp.value.isInt()),
+    );
 }
 function displayOrder(args) {
     // Left alone: complex numbers (−3 + 2i is the canonical form), sums that start with a plain
@@ -471,7 +539,8 @@ function textSym(n) {
 
 function textFactor(f, o, first) {
     const s = text(f, o);
-    if (f.type === 'add' || f.type === 'rel' || f.type === 'chain' || f.type === 'list' || f.type === 'mul' || f.type === 'div' || f.type === 'neg') return `(${s})`;
+    if (f.type === 'add' || f.type === 'rel' || f.type === 'chain' || f.type === 'list' || f.type === 'mul' || f.type === 'div' || f.type === 'neg')
+        return `(${s})`;
     if (f.type === 'num' && !f.value.isInt() && !f.raw) return `(${s})`;
     if (f.type === 'pow' && isPlainNum(f.exp) && f.exp.value.isNeg()) return `(${s})`;
     if (!first && leadsMinus(f)) return `(${s})`;
@@ -635,8 +704,8 @@ export function texNumber(value, lang = DEFAULT_LANGUAGE, opts = {}) {
     const comma = notation(lang).decimalTex;
     const fix = (s) => {
         const parts = s.split('.');
-    let i = parts[0];
-    const f = parts[1];
+        let i = parts[0];
+        const f = parts[1];
         const neg = i.startsWith('-');
         if (neg) i = i.slice(1);
         if (opts.group) i = groupDigits(i);

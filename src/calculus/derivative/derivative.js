@@ -19,7 +19,14 @@ import { msg, notation, eachLanguage } from '../../i18n/index.js';
 function smoothPoints(f, v, count, seed) {
     const r = rng(seed);
     const vars = freeVars(f).filter((w) => w !== v);
-    const ranges = [[0.3, 1.7], [-1.7, -0.3], [1.7, 4], [-4, -1.7], [0.1, 0.9], [-0.9, -0.1]];
+    const ranges = [
+        [0.3, 1.7],
+        [-1.7, -0.3],
+        [1.7, 4],
+        [-4, -1.7],
+        [0.1, 0.9],
+        [-0.9, -0.1],
+    ];
     const out = [];
     for (let k = 0; k < count * 4 && out.length < count; k++) {
         const env = randomEnv(vars, r);
@@ -99,14 +106,16 @@ export function derivative(node, v = 'x', opts = {}) {
         result = opts.simplify === false ? r.raw : r.res;
         if (wantSteps) {
             const others = freeVars(node).filter((w) => w !== v);
-            steps.push(step({
-                title: msg('calculus.derivative.derivative.what_we_differentiate'),
-                tex: eachLanguage((L) => `f(${v}) = ${calcTex(node, L)}`),
-                text: others.length
-                    ? msg('calculus.derivative.derivative.we_differentiate_with_respect_to_other', { v, p: others.join(', ') })
-                    : msg('calculus.derivative.derivative.we_differentiate_with_respect_to_going', { v }),
-                rule: 'start',
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.derivative.derivative.what_we_differentiate'),
+                    tex: eachLanguage((L) => `f(${v}) = ${calcTex(node, L)}`),
+                    text: others.length
+                        ? msg('calculus.derivative.derivative.we_differentiate_with_respect_to_other', { v, p: others.join(', ') })
+                        : msg('calculus.derivative.derivative.we_differentiate_with_respect_to_going', { v }),
+                    rule: 'start',
+                }),
+            );
             if (r.step) steps.push(r.step);
         }
         if (opts.simplify !== false) {
@@ -115,12 +124,14 @@ export function derivative(node, v = 'x', opts = {}) {
             if (score(alt) + penalty(alt) < score(result) + penalty(result) && agree(alt, result, v, { tol: 1e-8 }).ok !== false) {
                 if (wantSteps) {
                     const from = result;
-                    steps.push(step({
-                        title: msg('calculus.derivative.derivative.simplify'),
-                        tex: eachLanguage((L) => `${calcTex(from, L)} = ${calcTex(alt, L)}`),
-                        text: msg('calculus.derivative.derivative.expand_bring_to_common_denominator_and'),
-                        rule: 'simplify',
-                    }));
+                    steps.push(
+                        step({
+                            title: msg('calculus.derivative.derivative.simplify'),
+                            tex: eachLanguage((L) => `${calcTex(from, L)} = ${calcTex(alt, L)}`),
+                            text: msg('calculus.derivative.derivative.expand_bring_to_common_denominator_and'),
+                            rule: 'simplify',
+                        }),
+                    );
                 }
                 result = alt;
             }
@@ -152,7 +163,8 @@ export function partialDerivative(node, v = 'x', opts = {}) {
 export function derivativeN(node, v = 'x', n = 2, opts = {}) {
     node = asNode(node);
     checkExpr(node);
-    if (!Number.isInteger(n) || n < 1 || n > 30) throw new MathError(msg('calculus.derivative.derivative.order_must_be_whole_number_from'), null, null, 'range');
+    if (!Number.isInteger(n) || n < 1 || n > 30)
+        throw new MathError(msg('calculus.derivative.derivative.order_must_be_whole_number_from'), null, null, 'range');
     let cur = node;
     const list = [];
     const steps = [];
@@ -164,13 +176,15 @@ export function derivativeN(node, v = 'x', n = 2, opts = {}) {
         if (opts.steps) {
             const prevTex = k === 1 ? null : primeTex(v, k - 1);
             const src = cur;
-            steps.push(step({
-                title: msg('calculus.derivative.derivative.derivative_of_order', { k }),
-                tex: eachLanguage((L) => `${primeTex(v, k)} = \\left(${prevTex ?? calcTex(src, L)}\\right)' = ${calcTex(r.result, L)}`),
-                text: k === 1 ? undefined : msg('calculus.derivative.derivative.differentiate_previous_derivative'),
-                rule: 'order',
-                sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.derivative.derivative.derivative_of_order', { k }),
+                    tex: eachLanguage((L) => `${primeTex(v, k)} = \\left(${prevTex ?? calcTex(src, L)}\\right)' = ${calcTex(r.result, L)}`),
+                    text: k === 1 ? undefined : msg('calculus.derivative.derivative.differentiate_previous_derivative'),
+                    rule: 'order',
+                    sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
+                }),
+            );
         }
         cur = r.result;
         if (isZero(r.result)) {
@@ -196,13 +210,15 @@ export function gradientOf(node, vars = null, opts = {}) {
         const r = partialDerivative(node, w, { steps: !!opts.steps });
         components[w] = r.result;
         if (opts.steps) {
-            steps.push(step({
-                title: msg('calculus.derivative.derivative.partial_derivative_with_respect_to', { w }),
-                tex: r.tex,
-                text: msg('calculus.derivative.derivative.differentiate_with_respect_to_keeping_other', { w }),
-                rule: 'partial',
-                sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
-            }));
+            steps.push(
+                step({
+                    title: msg('calculus.derivative.derivative.partial_derivative_with_respect_to', { w }),
+                    tex: r.tex,
+                    text: msg('calculus.derivative.derivative.differentiate_with_respect_to_keeping_other', { w }),
+                    rule: 'partial',
+                    sub: r.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
+                }),
+            );
         }
     }
     const result = Object.freeze({ type: 'list', items: Object.freeze(vs.map((w) => components[w])) });
@@ -250,20 +266,39 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
     const steps = [];
     if (opts.steps) {
         const at = (L) => calcTex(A, L);
-        steps.push(step({
-            title: msg('calculus.derivative.derivative.equation_of_tangent'),
-            tex: eachLanguage((L) => `y = f(${at(L)}) + f'(${at(L)})\\,${isZero(A) ? v : `(${v} ${negLeading(A) ? '+ ' + calcTex(simplify(neg(A)), L) : '- ' + at(L)})`}`),
-            text: msg('calculus.derivative.derivative.tangent_passes_through_point_of_graph'),
-            rule: 'tangent-formula',
-        }));
-        steps.push(step({ title: msg('calculus.derivative.derivative.value_of_function'), tex: eachLanguage((L) => `f(${at(L)}) = ${calcTex(fa, L)}`), rule: 'value' }));
-        steps.push(step({ title: msg('calculus.derivative.derivative.derivative'), tex: d.tex, rule: 'derivative', sub: d.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer') }));
-        steps.push(step({
-            title: msg('calculus.derivative.derivative.slope'),
-            tex: eachLanguage((L) => `k = f'(${at(L)}) = ${calcTex(k, L)}`),
-            text: msg('calculus.derivative.derivative.substitute_point_into_derivative_this_is'),
-            rule: 'slope',
-        }));
+        steps.push(
+            step({
+                title: msg('calculus.derivative.derivative.equation_of_tangent'),
+                tex: eachLanguage(
+                    (L) => `y = f(${at(L)}) + f'(${at(L)})\\,${isZero(A) ? v : `(${v} ${negLeading(A) ? '+ ' + calcTex(simplify(neg(A)), L) : '- ' + at(L)})`}`,
+                ),
+                text: msg('calculus.derivative.derivative.tangent_passes_through_point_of_graph'),
+                rule: 'tangent-formula',
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.derivative.derivative.value_of_function'),
+                tex: eachLanguage((L) => `f(${at(L)}) = ${calcTex(fa, L)}`),
+                rule: 'value',
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.derivative.derivative.derivative'),
+                tex: d.tex,
+                rule: 'derivative',
+                sub: d.steps.filter((s) => s.rule !== 'start' && s.rule !== 'answer'),
+            }),
+        );
+        steps.push(
+            step({
+                title: msg('calculus.derivative.derivative.slope'),
+                tex: eachLanguage((L) => `k = f'(${at(L)}) = ${calcTex(k, L)}`),
+                text: msg('calculus.derivative.derivative.substitute_point_into_derivative_this_is'),
+                rule: 'slope',
+            }),
+        );
         steps.push(answerStep(msg('calculus.derivative.derivative.tangent_line'), tex));
     }
     return { k, b, point: { x: A, y: fa }, line, tex, steps };

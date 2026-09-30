@@ -3,7 +3,9 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 let E;
-before(async () => { E = await import('../src/index.js'); });
+before(async () => {
+    E = await import('../src/index.js');
+});
 
 test('the same seed gives the same task; different seeds vary', () => {
     for (const kind of E.TASK_KINDS) {
@@ -25,7 +27,12 @@ test('generated equations and values are solved with the constructed answer', ()
             const q = E.generateTask('quadratic-eq', { seed, level });
             const r = E.solveEquation(q.task, 'x');
             if (q.answer.none) assert.equal(r.kind, 'none', q.task);
-            else assert.deepEqual(r.roots.map((z) => z.approx).sort((u, v) => u - v), q.answer.roots.map(num).sort((u, v) => u - v), q.task);
+            else
+                assert.deepEqual(
+                    r.roots.map((z) => z.approx).sort((u, v) => u - v),
+                    q.answer.roots.map(num).sort((u, v) => u - v),
+                    q.task,
+                );
             const v = E.generateTask('log-value', { seed, level });
             assert.ok(Math.abs(num(E.toText(E.evaluateSteps(v.task).value)) - num(v.answer.value)) < 1e-9, v.task);
             const t = E.generateTask('trig-value', { seed, level });

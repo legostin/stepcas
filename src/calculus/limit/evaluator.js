@@ -185,7 +185,7 @@ function evPow(n, C) {
         if (Ex.k === 'inf') {
             if (bx === 1) return fin(N1);
             needSign(Ex);
-            return (bx > 1) === (Ex.s > 0) ? infV(1) : fin(N0);
+            return bx > 1 === Ex.s > 0 ? infV(1) : fin(N0);
         }
         return Ex.k === 'bnd' ? BND : null;
     }
@@ -198,7 +198,7 @@ function evPow(n, C) {
     if (B.k === 'fin' && isZeroV(B) && Ex.k === 'inf') return needSign(Ex).s > 0 ? fin(N0) : infV(1);
     if (B.k === 'fin' && B.x > 0 && Ex.k === 'inf') {
         if (B.x === 1) return resolve(n, C, '1^inf');
-        return (B.x > 1) === (needSign(Ex).s > 0) ? infV(1) : fin(N0);
+        return B.x > 1 === needSign(Ex).s > 0 ? infV(1) : fin(N0);
     }
     if (B.k === 'inf' && B.s > 0 && Ex.k === 'inf') return needSign(Ex).s > 0 ? infV(1) : fin(N0);
     if (B.k === 'inf' && B.s > 0 && Ex.k === 'fin') return Ex.x > 0 ? infV(1) : Ex.x < 0 ? fin(N0) : null;

@@ -18,7 +18,7 @@ test('rationalRoots/factor: many candidates are located numerically, the roots s
     let t = performance.now();
     assert.deepEqual(rr(big), []);
     assert.equal(big.factor().factors.length, 1);
-    assert.ok(performance.now() - t < 2000, `too slow: ${performance.now() - t} ms`);   // was ~6.7 s
+    assert.ok(performance.now() - t < 2000, `too slow: ${performance.now() - t} ms`); // was ~6.7 s
     // the full candidate list is still there for the steps (lazily), and quick to build
     t = performance.now();
     const c = big.rationalRoots().candidates;
@@ -32,7 +32,10 @@ test('rationalRoots/factor: many candidates are located numerically, the roots s
     assert.equal(f.factors.map((x) => `${x.poly}^${x.mult}`).join(' | '), 'x - 1^1 | 5x + 3^1 | 7x - 2^2 | 7x - 1^1 | 735134400x^4 + x - 735134400^1');
     // Wilkinson's polynomial: ill-conditioned numerically, still every root
     const W = E.Poly.fromRoots(Array.from({ length: 20 }, (_, i) => i + 1));
-    assert.deepEqual(W.rationalRoots().map((r) => Number(r.root.n)), Array.from({ length: 20 }, (_, i) => i + 1));
+    assert.deepEqual(
+        W.rationalRoots().map((r) => Number(r.root.n)),
+        Array.from({ length: 20 }, (_, i) => i + 1),
+    );
     // small cases unchanged
     assert.deepEqual(rr(P('2x^2 - 3x - 2')), ['-1/2^1', '2^1']);
     assert.deepEqual(P('2x^2 - 3x - 2').rationalRoots().candidates.map(String), ['-2', '-1', '-1/2', '1/2', '1', '2']);
@@ -88,9 +91,15 @@ test('complex domain: complex coefficients and square roots of Gaussian rational
     assert.equal(texOf(lin.answer.tex), 'z = 1 - 2i');
     assert.ok(lin.check.every((c) => c.ok));
     const sq = E.solveEquation('z^2 = 3+4i', 'z', { domain: 'complex' });
-    assert.deepEqual(sq.roots.map((r) => E.toTex(r.node)), ['-2 - i', '2 + i']);
+    assert.deepEqual(
+        sq.roots.map((r) => E.toTex(r.node)),
+        ['-2 - i', '2 + i'],
+    );
     const mixed = E.solveEquation('z^2 + (1+i)z + i = 0', 'z', { domain: 'complex' });
-    assert.deepEqual(mixed.roots.map((r) => E.toTex(r.node)), ['-1', '-i']);
+    assert.deepEqual(
+        mixed.roots.map((r) => E.toTex(r.node)),
+        ['-1', '-i'],
+    );
     assert.equal(E.solveEquation('(1+i)z = 3-i', 'z').kind, 'none');
     const s = (t) => E.toTex(E.simplify(E.parse(t), { complex: true }));
     assert.equal(s('sqrt(3+4i)'), '2 + i');
@@ -131,11 +140,20 @@ test('exponentials and logarithms: a^(log_a b), common factors, taking logarithm
     assert.equal(s('e^(2 ln x + 1)'), 'ex^{2}');
     const f = E.solveEquation('x^2*2^x = 4*2^x');
     assert.ok(!f.numeric);
-    assert.deepEqual(f.roots.map((r) => r.approx), [-2, 2]);
+    assert.deepEqual(
+        f.roots.map((r) => r.approx),
+        [-2, 2],
+    );
     const g = E.solveEquation('x^(lg x) = 100x');
     assert.ok(!g.numeric);
-    assert.deepEqual(g.roots.map((r) => E.toTex(r.node)), ['\\frac{1}{10}', '100']);
-    assert.deepEqual(E.solveEquation('x^(log_2 x) = 16').roots.map((r) => E.toTex(r.node)), ['\\frac{1}{4}', '4']);
+    assert.deepEqual(
+        g.roots.map((r) => E.toTex(r.node)),
+        ['\\frac{1}{10}', '100'],
+    );
+    assert.deepEqual(
+        E.solveEquation('x^(log_2 x) = 16').roots.map((r) => E.toTex(r.node)),
+        ['\\frac{1}{4}', '4'],
+    );
 });
 
 test('systems: clean refusal reasons, one unknown gets an answer text', () => {

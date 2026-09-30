@@ -31,7 +31,10 @@ function ineqTexB(l, op, r) {
     return eachLanguage((lang) => `${typeof l === 'string' ? l : tex(l, lang)} ${OP_TEX[op]} ${typeof r === 'string' ? r : tex(r, lang)}`);
 }
 
-const pointsListTex = (pts, v, l) => pts.map((p) => `${v} = ${tex(p.node, l)}${p.mult > 1 || p.mN > 1 ? `\\ (${msg('solve.inequality.multiplicity').in(l)}${p.mult ?? p.mN})` : ''}`).join(';\\ ');
+const pointsListTex = (pts, v, l) =>
+    pts
+        .map((p) => `${v} = ${tex(p.node, l)}${p.mult > 1 || p.mN > 1 ? `\\ (${msg('solve.inequality.multiplicity').in(l)}${p.mult ?? p.mN})` : ''}`)
+        .join(';\\ ');
 
 function signsTex(chart, l) {
     const pts = chart.points;
@@ -51,33 +54,65 @@ function intervalMethod(N, L, op, ctx, pre = []) {
     const chart = chartOf(N, hasL ? L : null, v);
     const zeros = chart.points.filter((p) => p.mN > 0);
     const poles = chart.points.filter((p) => p.mL > 0);
-    steps.push(S(msg('solve.inequality.mark_zeros_of_numerator_on_number'), {
-        tex: eachLanguage((l) => (zeros.length ? pointsListTex(zeros.map((p) => ({ ...p, mult: p.mN })), v, l) : '\\varnothing')),
-        text: strictOf(op)
-            ? msg('solve.inequality.inequality_is_strict_so_these_points')
-            : msg('solve.inequality.inequality_is_not_strict_so_these'),
-    }));
+    steps.push(
+        S(msg('solve.inequality.mark_zeros_of_numerator_on_number'), {
+            tex: eachLanguage((l) =>
+                zeros.length
+                    ? pointsListTex(
+                          zeros.map((p) => ({ ...p, mult: p.mN })),
+                          v,
+                          l,
+                      )
+                    : '\\varnothing',
+            ),
+            text: strictOf(op) ? msg('solve.inequality.inequality_is_strict_so_these_points') : msg('solve.inequality.inequality_is_not_strict_so_these'),
+        }),
+    );
     if (poles.length) {
-        steps.push(S(msg('solve.inequality.mark_zeros_of_denominator_they_are'), {
-            tex: eachLanguage((l) => pointsListTex(poles.map((p) => ({ ...p, mult: p.mL })), v, l)),
-            text: msg('solve.inequality.division_by_zero_is_not_allowed'),
-        }));
+        steps.push(
+            S(msg('solve.inequality.mark_zeros_of_denominator_they_are'), {
+                tex: eachLanguage((l) =>
+                    pointsListTex(
+                        poles.map((p) => ({ ...p, mult: p.mL })),
+                        v,
+                        l,
+                    ),
+                ),
+                text: msg('solve.inequality.division_by_zero_is_not_allowed'),
+            }),
+        );
     }
     const set = setFromChart(chart, op);
     const even = chart.points.filter((p) => (p.mN + p.mL) % 2 === 0);
-    steps.push(S(msg('solve.inequality.put_signs_on_intervals'), {
-        tex: eachLanguage((l) => signsTex(chart, l)),
-        text: even.length
-            ? msg('solve.inequality.check_sign_by_substituting_point_from', { p: (lng) => even.map((p) => `$${tex(p.node, lng)}$`).join(', ') })
-            : msg('solve.inequality.check_sign_by_substituting_point_from_2'),
-    }));
+    steps.push(
+        S(msg('solve.inequality.put_signs_on_intervals'), {
+            tex: eachLanguage((l) => signsTex(chart, l)),
+            text: even.length
+                ? msg('solve.inequality.check_sign_by_substituting_point_from', { p: (lng) => even.map((p) => `$${tex(p.node, lng)}$`).join(', ') })
+                : msg('solve.inequality.check_sign_by_substituting_point_from_2'),
+        }),
+    );
     const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
-    steps.push(S(msg('solve.inequality.take_intervals_with', { p: want }), {
-        tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
-        text: !strictOf(op) && zeros.some((p) => set.contains(p.node) && !set.parts.some((q) => q.lo && q.hi && cmpEnd(q.lo, q.hi) !== 0 && (q.lo && cmpEnd(q.lo, endOf(p.node)) === 0 || q.hi && cmpEnd(q.hi, endOf(p.node)) === 0)))
-            ? msg('solve.inequality.zeros_of_numerator_are_added_since')
-            : undefined,
-    }));
+    steps.push(
+        S(msg('solve.inequality.take_intervals_with', { p: want }), {
+            tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
+            text:
+                !strictOf(op) &&
+                zeros.some(
+                    (p) =>
+                        set.contains(p.node) &&
+                        !set.parts.some(
+                            (q) =>
+                                q.lo &&
+                                q.hi &&
+                                cmpEnd(q.lo, q.hi) !== 0 &&
+                                ((q.lo && cmpEnd(q.lo, endOf(p.node)) === 0) || (q.hi && cmpEnd(q.hi, endOf(p.node)) === 0)),
+                        ),
+                )
+                    ? msg('solve.inequality.zeros_of_numerator_are_added_since')
+                    : undefined,
+        }),
+    );
     return { set, steps, chart: chartOut(chart), approx: chart.points.some((p) => p.approxOnly) };
 }
 
@@ -92,32 +127,45 @@ function linearIneq(lhs, op, rhs, A, B, ctx) {
     if (den > 1n) {
         A1 = A.scale(new Q(den));
         B1 = B.scale(new Q(den));
-        steps.push(S(msg('solve.inequality.multiply_both_sides_by', { den }), {
-            tex: eqT(A1, B1, op),
-            text: msg('solve.inequality.number_is_positive_so_sign_stays'),
-        }));
+        steps.push(
+            S(msg('solve.inequality.multiply_both_sides_by', { den }), {
+                tex: eqT(A1, B1, op),
+                text: msg('solve.inequality.number_is_positive_so_sign_stays'),
+            }),
+        );
     } else if (nodeKey(simpOr(lhs)) !== nodeKey(A.toNode(v)) || nodeKey(simpOr(rhs)) !== nodeKey(B.toNode(v))) {
         steps.push(S(msg('solve.inequality.expand_brackets_and_collect_like_terms'), { tex: eqT(A1, B1, op) }));
     }
     const a = A1.coeff(1).sub(B1.coeff(1));
     const b = B1.coeff(0).sub(A1.coeff(0));
-    steps.push(S(msg('solve.inequality.move_terms_to_left_and_numbers', { v }), {
-        tex: ineqTexB(monoNode(a, v), op, num(b)),
-    }));
+    steps.push(
+        S(msg('solve.inequality.move_terms_to_left_and_numbers', { v }), {
+            tex: ineqTexB(monoNode(a, v), op, num(b)),
+        }),
+    );
     if (a.isZero()) {
         const ok = relHoldsNum(op, 0, b.toNumber());
-        steps.push(S(ok ? msg('solve.inequality.true_numeric_inequality') : msg('solve.inequality.false_numeric_inequality'), {
-            tex: ineqTexB('0', op, num(b)),
-            text: ok ? msg('solve.inequality.every_number_fits') : msg('solve.inequality.no_solutions'),
-        }));
+        steps.push(
+            S(ok ? msg('solve.inequality.true_numeric_inequality') : msg('solve.inequality.false_numeric_inequality'), {
+                tex: ineqTexB('0', op, num(b)),
+                text: ok ? msg('solve.inequality.every_number_fits') : msg('solve.inequality.no_solutions'),
+            }),
+        );
         return { set: ok ? IntervalSet.all() : IntervalSet.empty(), steps, type: 'linear' };
     }
     const r = b.div(a);
     const op2 = a.isNeg() ? OP_FLIP[op] : op;
     if (!a.isOne()) {
-        steps.push(S(a.isNeg() ? msg('solve.inequality.divide_by_negative_number_so_sign', { p: (lng) => tex(num(a), lng) }) : msg('solve.inequality.divide_by_sign_stays', { p: (lng) => tex(num(a), lng) }), {
-            tex: ineqTexB(v, op2, num(r)),
-        }));
+        steps.push(
+            S(
+                a.isNeg()
+                    ? msg('solve.inequality.divide_by_negative_number_so_sign', { p: (lng) => tex(num(a), lng) })
+                    : msg('solve.inequality.divide_by_sign_stays', { p: (lng) => tex(num(a), lng) }),
+                {
+                    tex: ineqTexB(v, op2, num(r)),
+                },
+            ),
+        );
     }
     const set = relToSet(op2, endOf(num(r)));
     const chart = chartOf(new Poly([r.neg(), Q.ONE]).scale(a.isNeg() ? Q.MINUS_ONE : Q.ONE), null, v);
@@ -133,17 +181,24 @@ function quadIneq(P0, op0, ctx, pre) {
     if (P.lead.isNeg()) {
         P = P.neg();
         op = OP_FLIP[op];
-        steps.push(S(msg('solve.inequality.multiply_by_and_flip_sign'), {
-            tex: eachLanguage((l) => `${polyTex(P, v, l)} ${OP_TEX[op]} 0`),
-            text: msg('solve.inequality.now_leading_coefficient_is_positive'),
-        }));
+        steps.push(
+            S(msg('solve.inequality.multiply_by_and_flip_sign'), {
+                tex: eachLanguage((l) => `${polyTex(P, v, l)} ${OP_TEX[op]} 0`),
+                text: msg('solve.inequality.now_leading_coefficient_is_positive'),
+            }),
+        );
     }
     const q = quadSolve(P, ctx);
     const roots = q.roots;
-    steps.push(S(eachLanguage((l) => (msg('solve.inequality.roots_of_trinomial_solve', { P: polyTex(P, v, l) }).in(l))), {
-        tex: eachLanguage((l) => rootsTex(roots, v, l)),
-        sub: q.steps,
-    }));
+    steps.push(
+        S(
+            eachLanguage((l) => msg('solve.inequality.roots_of_trinomial_solve', { P: polyTex(P, v, l) }).in(l)),
+            {
+                tex: eachLanguage((l) => rootsTex(roots, v, l)),
+                sub: q.steps,
+            },
+        ),
+    );
     const chart = chartOf(P, null, v);
     const set = setFromChart(chart, op);
     const up = msg('solve.inequality.opening_upwards');
@@ -160,9 +215,11 @@ function ineqConst(E, op, steps) {
     const z = exactZero(E);
     const val = z === true ? 0 : x;
     const ok = relHoldsNum(op, val, 0);
-    steps.push(S(ok ? msg('solve.inequality.variable_cancels_and_true_inequality_remains') : msg('solve.inequality.variable_cancels_and_false_inequality_remains'), {
-        tex: ineqTexB(E, op, N0),
-    }));
+    steps.push(
+        S(ok ? msg('solve.inequality.variable_cancels_and_true_inequality_remains') : msg('solve.inequality.variable_cancels_and_false_inequality_remains'), {
+            tex: ineqTexB(E, op, N0),
+        }),
+    );
     return { set: ok ? IntervalSet.all() : IntervalSet.empty(), steps, type: 'identity' };
 }
 
@@ -196,12 +253,18 @@ function ineqCore(lhs, op, rhs, ctx) {
     }
     const rp = ratParts(E, v);
     if (rp && rp.L.degree >= 1) {
-        const pre = [S(msg('solve.inequality.move_everything_to_left_and_bring'), {
-            tex: eachLanguage((l) => `\\frac{${tex(rp.N.degree >= 1 ? factoredNode(rp.N, v) : rp.N.toNode(v), l)}}{${tex(factoredNode(rp.L, v), l)}} ${OP_TEX[op]} 0`),
-            text: msg('solve.inequality.we_may_not_multiply_by_denominator'),
-        })];
+        const pre = [
+            S(msg('solve.inequality.move_everything_to_left_and_bring'), {
+                tex: eachLanguage(
+                    (l) => `\\frac{${tex(rp.N.degree >= 1 ? factoredNode(rp.N, v) : rp.N.toNode(v), l)}}{${tex(factoredNode(rp.L, v), l)}} ${OP_TEX[op]} 0`,
+                ),
+                text: msg('solve.inequality.we_may_not_multiply_by_denominator'),
+            }),
+        ];
         if (rp.N.isZero()) {
-            const set = (op === '>=' || op === '<=' ? IntervalSet.all() : IntervalSet.empty()).minus(IntervalSet.points(realRootsMult(rp.L, v).map((r) => r.node)));
+            const set = (op === '>=' || op === '<=' ? IntervalSet.all() : IntervalSet.empty()).minus(
+                IntervalSet.points(realRootsMult(rp.L, v).map((r) => r.node)),
+            );
             return { set, steps: pre, type: 'rational' };
         }
         return { ...intervalMethod(rp.N, rp.L, op, ctx, pre), type: 'rational' };
@@ -259,9 +322,11 @@ function radIneq(E, op, ctx) {
             return { set: IntervalSet.empty(), steps, type: 'radical' };
         }
         const cq = simpOr(pow(c, num(q)));
-        steps.push(S(msg('solve.inequality.both_sides_are_non_negative_raise'), {
-            tex: eachLanguage((l) => casesTex([`${tex(f, l)} \\ge 0`, `${tex(f, l)} ${OP_TEX[op2]} ${tex(cq, l)}`])),
-        }));
+        steps.push(
+            S(msg('solve.inequality.both_sides_are_non_negative_raise'), {
+                tex: eachLanguage((l) => casesTex([`${tex(f, l)} \\ge 0`, `${tex(f, l)} ${OP_TEX[op2]} ${tex(cq, l)}`])),
+            }),
+        );
         const r = sub(f, op2, cq);
         if (!r.set) return null;
         set = r.set.intersect(dom.set);
@@ -271,7 +336,12 @@ function radIneq(E, op, ctx) {
             set = dom.set;
         } else {
             const cq = simpOr(pow(c, num(q)));
-            steps.push(S(msg('solve.inequality.both_sides_are_non_negative_raise_2'), { tex: ineqTexB(f, op2, cq), text: msg('solve.inequality.condition_holds_automatically_exceeds_positive_number') }));
+            steps.push(
+                S(msg('solve.inequality.both_sides_are_non_negative_raise_2'), {
+                    tex: ineqTexB(f, op2, cq),
+                    text: msg('solve.inequality.condition_holds_automatically_exceeds_positive_number'),
+                }),
+            );
             const r = sub(f, op2, cq);
             if (!r.set) return null;
             set = r.set.intersect(dom.set);
@@ -298,10 +368,12 @@ function nodeLinearIneq(E, op, ctx) {
     if (!Number.isFinite(av) || av === 0) return null;
     const r = simpOr(div(neg(b), a));
     const op2 = av < 0 ? OP_FLIP[op] : op;
-    const steps = [S(msg('solve.inequality.solve_for', { v }), {
-        tex: ineqTexB(v, op2, r),
-        text: av < 0 ? msg('solve.inequality.dividing_by_negative_number_flips_sign') : undefined,
-    })];
+    const steps = [
+        S(msg('solve.inequality.solve_for', { v }), {
+            tex: ineqTexB(v, op2, r),
+            text: av < 0 ? msg('solve.inequality.dividing_by_negative_number_flips_sign') : undefined,
+        }),
+    ];
     return { set: relToSet(op2, endOf(r)), steps, type: 'linear' };
 }
 
@@ -328,19 +400,32 @@ function absIneq(E, op, ctx) {
                 if (cz) {
                     steps.push(S(msg('solve.inequality.absolute_value_is_at_most_zero'), { tex: eachLanguage((l) => `${tex(f, l)} = 0`) }));
                     const r = solveCore(f, N0, { ...ctx, depth: ctx.depth + 1 });
-                    const set = r.kind === 'roots' ? IntervalSet.points(r.roots.map((x) => x.node)) : r.kind === 'all' ? IntervalSet.all() : IntervalSet.empty();
+                    const set =
+                        r.kind === 'roots' ? IntervalSet.points(r.roots.map((x) => x.node)) : r.kind === 'all' ? IntervalSet.all() : IntervalSet.empty();
                     return { set, steps: [...steps, ...r.steps], type: 'abs' };
                 }
-                steps.push(S(msg('solve.inequality.double_inequality'), {
-                    tex: eachLanguage((l) => `${tex(simpOr(neg(c)), l)} ${OP_TEX[op2]} ${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}`),
-                    text: msg('solve.inequality.distance_from_zero_is_less_than'),
-                }));
+                steps.push(
+                    S(msg('solve.inequality.double_inequality'), {
+                        tex: eachLanguage((l) => `${tex(simpOr(neg(c)), l)} ${OP_TEX[op2]} ${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}`),
+                        text: msg('solve.inequality.distance_from_zero_is_less_than'),
+                    }),
+                );
                 const r1 = sub(f, OP_FLIP[op2], simpOr(neg(c)));
                 const r2 = sub(f, op2, c);
                 if (!r1.set || !r2.set) return null;
                 const set = r1.set.intersect(r2.set);
-                steps.push(S(eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)}$`), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r1.set, l)}`), sub: r1.steps }));
-                steps.push(S(eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}$`), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r2.set, l)}`), sub: r2.steps }));
+                steps.push(
+                    S(
+                        eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)}$`),
+                        { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r1.set, l)}`), sub: r1.steps },
+                    ),
+                );
+                steps.push(
+                    S(
+                        eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}$`),
+                        { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r2.set, l)}`), sub: r2.steps },
+                    ),
+                );
                 steps.push(S(msg('solve.inequality.intersect'), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
                 return { set, steps, type: 'abs' };
             }
@@ -352,19 +437,38 @@ function absIneq(E, op, ctx) {
             if (cz) {
                 steps.push(S(msg('solve.inequality.absolute_value_is_positive_except_where'), { tex: eachLanguage((l) => `${tex(f, l)} \\ne 0`) }));
                 const r = solveCore(f, N0, { ...ctx, depth: ctx.depth + 1 });
-                const set = r.kind === 'roots' ? IntervalSet.all().minus(IntervalSet.points(r.roots.map((x) => x.node))) : r.kind === 'all' ? IntervalSet.empty() : IntervalSet.all();
+                const set =
+                    r.kind === 'roots'
+                        ? IntervalSet.all().minus(IntervalSet.points(r.roots.map((x) => x.node)))
+                        : r.kind === 'all'
+                          ? IntervalSet.empty()
+                          : IntervalSet.all();
                 return { set, steps: [...steps, ...r.steps], type: 'abs' };
             }
-            steps.push(S(msg('solve.inequality.two_alternatives'), {
-                tex: eachLanguage((l) => `${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)} ${orTex(l)} ${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}`),
-                text: msg('solve.inequality.distance_from_zero_is_more_than'),
-            }));
+            steps.push(
+                S(msg('solve.inequality.two_alternatives'), {
+                    tex: eachLanguage(
+                        (l) => `${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)} ${orTex(l)} ${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}`,
+                    ),
+                    text: msg('solve.inequality.distance_from_zero_is_more_than'),
+                }),
+            );
             const r1 = sub(f, OP_FLIP[op2], simpOr(neg(c)));
             const r2 = sub(f, op2, c);
             if (!r1.set || !r2.set) return null;
             const set = r1.set.union(r2.set);
-            steps.push(S(eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)}$`), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r1.set, l)}`), sub: r1.steps }));
-            steps.push(S(eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}$`), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r2.set, l)}`), sub: r2.steps }));
+            steps.push(
+                S(
+                    eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[OP_FLIP[op2]]} ${tex(simpOr(neg(c)), l)}$`),
+                    { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r1.set, l)}`), sub: r1.steps },
+                ),
+            );
+            steps.push(
+                S(
+                    eachLanguage((l) => `$${tex(f, l)} ${OP_TEX[op2]} ${tex(c, l)}$`),
+                    { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r2.set, l)}`), sub: r2.steps },
+                ),
+            );
             steps.push(S(msg('solve.inequality.take_union'), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
             return { set, steps, type: 'abs' };
         }
@@ -378,29 +482,38 @@ function absIneq(E, op, ctx) {
     }
     pts = mergeRoots(pts);
     if (pts.length > 12) return null;
-    steps.push(S(msg('solve.inequality.mark_zeros_of_expressions_inside_absolute'), {
-        tex: eachLanguage((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
-        text: msg('solve.inequality.on_each_interval_between_them_absolute'),
-    }));
+    steps.push(
+        S(msg('solve.inequality.mark_zeros_of_expressions_inside_absolute'), {
+            tex: eachLanguage((l) => (pts.length ? pts.map((p) => `${v} = ${tex(p.node, l)}`).join(';\\ ') : '\\varnothing')),
+            text: msg('solve.inequality.on_each_interval_between_them_absolute'),
+        }),
+    );
     const bounds = [null, ...pts, null];
     let set = IntervalSet.empty();
     for (let k = 0; k + 1 < bounds.length; k++) {
         const lo = bounds[k];
         const hi = bounds[k + 1];
         const t = lo === null && hi === null ? 0 : lo === null ? hi.approx - 1 : hi === null ? lo.approx + 1 : (lo.approx + hi.approx) / 2;
-        const Ei = simpOr(mapNode(E, (n) => {
-            if (n.type !== 'fn' || n.name !== 'abs' || !containsVar(n, v)) return undefined;
-            return approxOf(n.args[0], { [v]: t }) >= 0 ? n.args[0] : neg(n.args[0]);
-        }));
+        const Ei = simpOr(
+            mapNode(E, (n) => {
+                if (n.type !== 'fn' || n.name !== 'abs' || !containsVar(n, v)) return undefined;
+                return approxOf(n.args[0], { [v]: t }) >= 0 ? n.args[0] : neg(n.args[0]);
+            }),
+        );
         const piece = IntervalSet.interval(lo && lo.node, hi && hi.node, lo !== null, false);
         const sub = ineqCore(Ei, op, N0, { ...ctx, depth: ctx.depth + 1 });
         if (!sub.set) return null;
         const part = sub.set.intersect(piece);
         set = set.union(part);
-        steps.push(S(eachLanguage((l) => (msg('solve.inequality.on', { piece: intervalTex(piece, l) }).in(l))), {
-            tex: eachLanguage((l) => `${tex(Ei, l)} ${OP_TEX[op]} 0 \\;\\Rightarrow\\; ${v} \\in ${intervalTex(part, l)}`),
-            sub: sub.steps,
-        }));
+        steps.push(
+            S(
+                eachLanguage((l) => msg('solve.inequality.on', { piece: intervalTex(piece, l) }).in(l)),
+                {
+                    tex: eachLanguage((l) => `${tex(Ei, l)} ${OP_TEX[op]} 0 \\;\\Rightarrow\\; ${v} \\in ${intervalTex(part, l)}`),
+                    sub: sub.steps,
+                },
+            ),
+        );
     }
     steps.push(S(msg('solve.inequality.take_union'), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     return { set, steps, type: 'abs' };
@@ -436,10 +549,18 @@ function twoPowersIneq(E, op, ctx) {
     const right = simpOr(add(mul(num(P2.bi.k), P2.exp), num(m)));
     const dec = approxOf(cN) < 1;
     const op3 = dec ? OP_FLIP[op1] : op1;
-    const steps = [S(msg('solve.inequality.bring_both_sides_to_one_base'), {
-        tex: eachLanguage((l) => `${tex(pow(cN, left), l)} ${OP_TEX[op1]} ${tex(pow(cN, right), l)}`),
-        text: msg('solve.inequality.move_one_power_to_right_and', { p: (lng) => num(k).value.toTex(lng), p2: (lng) => tex(pow(cN, num(m)), lng) }),
-    }), S(dec ? msg('solve.inequality.base_is_below_1_function_decreases', { cN: (lng) => tex(cN, lng) }) : msg('solve.inequality.base_is_above_1_function_increases', { cN: (lng) => tex(cN, lng) }), { tex: ineqTexB(left, op3, right) })];
+    const steps = [
+        S(msg('solve.inequality.bring_both_sides_to_one_base'), {
+            tex: eachLanguage((l) => `${tex(pow(cN, left), l)} ${OP_TEX[op1]} ${tex(pow(cN, right), l)}`),
+            text: msg('solve.inequality.move_one_power_to_right_and', { p: (lng) => num(k).value.toTex(lng), p2: (lng) => tex(pow(cN, num(m)), lng) }),
+        }),
+        S(
+            dec
+                ? msg('solve.inequality.base_is_below_1_function_decreases', { cN: (lng) => tex(cN, lng) })
+                : msg('solve.inequality.base_is_above_1_function_increases', { cN: (lng) => tex(cN, lng) }),
+            { tex: ineqTexB(left, op3, right) },
+        ),
+    ];
     const r = ineqCore(left, op3, right, { ...ctx, depth: ctx.depth + 1 });
     if (!r.set) return null;
     return { set: r.set, steps: [...steps, ...r.steps], chart: r.chart, type: 'exponential' };
@@ -463,11 +584,20 @@ function expIneq(E, op, ctx) {
         const R = simpOr(div(neg(constant), coef));
         const b = pows[0].base;
         const f = pows[0].exp;
-        steps.push(S(msg('solve.inequality.isolate_power'), { tex: ineqTexB(pows[0], op2, R), text: kv < 0 ? msg('solve.inequality.we_divided_by_negative_number_so') : undefined }));
+        steps.push(
+            S(msg('solve.inequality.isolate_power'), {
+                tex: ineqTexB(pows[0], op2, R),
+                text: kv < 0 ? msg('solve.inequality.we_divided_by_negative_number_so') : undefined,
+            }),
+        );
         const Rv = approxOf(R);
         if (!(Rv > 0) || exactZero(R) === true) {
             const all = op2 === '>' || op2 === '>=';
-            steps.push(S(msg('solve.inequality.power_of_positive_number_is_always'), { text: all ? msg('solve.inequality.it_holds_for_every') : msg('solve.inequality.no_solutions') }));
+            steps.push(
+                S(msg('solve.inequality.power_of_positive_number_is_always'), {
+                    text: all ? msg('solve.inequality.it_holds_for_every') : msg('solve.inequality.no_solutions'),
+                }),
+            );
             return { set: all ? IntervalSet.all() : IntervalSet.empty(), steps, type: 'exponential' };
         }
         const bv = approxOf(b);
@@ -477,9 +607,20 @@ function expIneq(E, op, ctx) {
         const r = exactPower(bi.c, R);
         const rhsN = r !== null ? num(r.div(bi.k)) : logNodeB(b, R);
         const rDisp = r !== null ? pow(b, rhsN) : null;
-        steps.push(S(dec ? msg('solve.inequality.base_is_below_1_function_decreases_2', { b: (lng) => tex(b, lng) }) : msg('solve.inequality.base_is_above_1_function_increases_2', { b: (lng) => tex(b, lng) }), {
-            tex: eachLanguage((l) => (rDisp ? `${tex(pows[0], l)} ${OP_TEX[op2]} ${tex(rDisp, l)} \\;\\Rightarrow\\; ` : '') + `${tex(f, l)} ${OP_TEX[op3]} ${tex(rhsN, l)}`),
-        }));
+        steps.push(
+            S(
+                dec
+                    ? msg('solve.inequality.base_is_below_1_function_decreases_2', { b: (lng) => tex(b, lng) })
+                    : msg('solve.inequality.base_is_above_1_function_increases_2', { b: (lng) => tex(b, lng) }),
+                {
+                    tex: eachLanguage(
+                        (l) =>
+                            (rDisp ? `${tex(pows[0], l)} ${OP_TEX[op2]} ${tex(rDisp, l)} \\;\\Rightarrow\\; ` : '') +
+                            `${tex(f, l)} ${OP_TEX[op3]} ${tex(rhsN, l)}`,
+                    ),
+                },
+            ),
+        );
         const r2 = sub(f, op3, rhsN);
         if (!r2.set) return null;
         steps.push(...r2.steps);
@@ -511,7 +652,9 @@ function expIneq(E, op, ctx) {
     for (const [j, q] of coefs) arr[j] = q;
     const Pt = new Poly(arr);
     const tNode = m.isInt() ? pow(num(c.pow(m.n)), sym(v)) : pow(cN, simpOr(mul(num(m), sym(v))));
-    steps.push(S(msg('solve.inequality.substitute', { tNode: (lng) => tex(tNode, lng) }), { tex: eachLanguage((l) => `${polyTex(Pt, 't', l)} ${OP_TEX[op]} 0`) }));
+    steps.push(
+        S(msg('solve.inequality.substitute', { tNode: (lng) => tex(tNode, lng) }), { tex: eachLanguage((l) => `${polyTex(Pt, 't', l)} ${OP_TEX[op]} 0`) }),
+    );
     const tr = ineqCore(Pt.toNode('t'), op, N0, { ...ctx, v: 't', depth: ctx.depth + 1 });
     if (!tr.set) return null;
     const tset = tr.set.intersect(IntervalSet.above(0, false));
@@ -523,12 +666,19 @@ function expIneq(E, op, ctx) {
         const r = exactPower(c, node);
         return r !== null ? num(r.div(mq)) : simpOr(div(logNode(c, node), num(mq)));
     };
-    const parts = tset.parts.map((p) => ({ lo: p.lo === null || p.lo.x <= 0 ? null : endOf(back(p.lo.node)), hi: p.hi === null ? null : endOf(back(p.hi.node)), loC: p.lo !== null && p.lo.x > 0 && p.loC, hiC: p.hiC }));
-    const set = new IntervalSet(parts);
-    steps.push(S(msg('solve.inequality.substitute_back'), {
-        tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
-        text: msg('solve.inequality.function_increases_so_bounds_map_to', { tNode: (lng) => tex(tNode, lng) }),
+    const parts = tset.parts.map((p) => ({
+        lo: p.lo === null || p.lo.x <= 0 ? null : endOf(back(p.lo.node)),
+        hi: p.hi === null ? null : endOf(back(p.hi.node)),
+        loC: p.lo !== null && p.lo.x > 0 && p.loC,
+        hiC: p.hiC,
     }));
+    const set = new IntervalSet(parts);
+    steps.push(
+        S(msg('solve.inequality.substitute_back'), {
+            tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
+            text: msg('solve.inequality.function_increases_so_bounds_map_to', { tNode: (lng) => tex(tNode, lng) }),
+        }),
+    );
     return { set, steps, chart: tr.chart, type: 'exponential' };
 }
 
@@ -546,14 +696,18 @@ function logIneq(lhs, op, rhs, E, ctx) {
         if (!s.set) return null;
         odz = odz.intersect(s.set);
     }
-    steps.push(S(msg('solve.inequality.domain_arguments_of_logarithms_are_positive'), {
-        tex: eachLanguage((l) => `${vt.map((x) => `${tex(x.info.arg, l)} > 0`).join(',\\ ')} \\;\\Rightarrow\\; ${v} \\in ${intervalTex(odz, l)}`),
-    }));
+    steps.push(
+        S(msg('solve.inequality.domain_arguments_of_logarithms_are_positive'), {
+            tex: eachLanguage((l) => `${vt.map((x) => `${tex(x.info.arg, l)} > 0`).join(',\\ ')} \\;\\Rightarrow\\; ${v} \\in ${intervalTex(odz, l)}`),
+        }),
+    );
     const monotone = (b) => {
         const dec = approxOf(b) < 1;
         return {
             dec,
-            step: dec ? msg('solve.inequality.base_is_below_1_logarithm_decreases', { b: (lng) => tex(b, lng) }) : msg('solve.inequality.base_is_above_1_logarithm_increases', { b: (lng) => tex(b, lng) }),
+            step: dec
+                ? msg('solve.inequality.base_is_below_1_logarithm_decreases', { b: (lng) => tex(b, lng) })
+                : msg('solve.inequality.base_is_above_1_logarithm_increases', { b: (lng) => tex(b, lng) }),
         };
     };
     let res;
@@ -568,7 +722,15 @@ function logIneq(lhs, op, rhs, E, ctx) {
         const mono = monotone(info.base);
         const op3 = mono.dec ? OP_FLIP[op2] : op2;
         steps.push(S(msg('solve.inequality.isolate_logarithm'), { tex: ineqTexB(F, op2, R) }));
-        steps.push(S(mono.step, { tex: eachLanguage((l) => `${tex(F, l)} ${OP_TEX[op2]} ${tex(logNodeB(info.base, val), l)} \\;\\Rightarrow\\; ${tex(info.arg, l)} ${OP_TEX[op3]} ${tex(val, l)}`), text: msg('solve.inequality.we_wrote_as_logarithm', { R: (lng) => tex(R, lng), p: (lng) => tex(logNodeB(info.base, val), lng) }) }));
+        steps.push(
+            S(mono.step, {
+                tex: eachLanguage(
+                    (l) =>
+                        `${tex(F, l)} ${OP_TEX[op2]} ${tex(logNodeB(info.base, val), l)} \\;\\Rightarrow\\; ${tex(info.arg, l)} ${OP_TEX[op3]} ${tex(val, l)}`,
+                ),
+                text: msg('solve.inequality.we_wrote_as_logarithm', { R: (lng) => tex(R, lng), p: (lng) => tex(logNodeB(info.base, val), lng) }),
+            }),
+        );
         res = sub(info.arg, op3, val);
     } else if (vt.length === 2 && isZeroNode(C) && vt.every((x) => x.p === 1 && x.info.k.isOne()) && nodeKey(vt[0].info.base) === nodeKey(vt[1].info.base)) {
         const k0 = numValue(vt[0].coef);
@@ -594,11 +756,18 @@ function logIneq(lhs, op, rhs, E, ctx) {
         const val = simpOr(pow(b, R));
         const mono = monotone(b);
         const op3 = mono.dec ? OP_FLIP[op] : op;
-        steps.push(S(msg('solve.inequality.write_sum_of_logarithms_as_one'), {
-            tex: ineqTexB(logNodeB(b, prod), op, R),
-            text: msg('solve.inequality.on_domain_every_argument_is_positive'),
-        }));
-        steps.push(S(mono.step, { tex: eachLanguage((l) => `${tex(prod, l)} ${OP_TEX[op3]} ${tex(val, l)}`), text: msg('solve.inequality.we_wrote_as_logarithm', { R: (lng) => tex(R, lng), p: (lng) => tex(logNodeB(b, val), lng) }) }));
+        steps.push(
+            S(msg('solve.inequality.write_sum_of_logarithms_as_one'), {
+                tex: ineqTexB(logNodeB(b, prod), op, R),
+                text: msg('solve.inequality.on_domain_every_argument_is_positive'),
+            }),
+        );
+        steps.push(
+            S(mono.step, {
+                tex: eachLanguage((l) => `${tex(prod, l)} ${OP_TEX[op3]} ${tex(val, l)}`),
+                text: msg('solve.inequality.we_wrote_as_logarithm', { R: (lng) => tex(R, lng), p: (lng) => tex(logNodeB(b, val), lng) }),
+            }),
+        );
         res = sub(prod, op3, val);
     } else if (vt.every((x) => nodeKey(x.F) === nodeKey(vt[0].F)) && vt.some((x) => x.p >= 2)) {
         // a polynomial in one logarithm: the substitution t = log_b f
@@ -630,7 +799,12 @@ function logIneq(lhs, op, rhs, E, ctx) {
                 } else r = sub(F, o, c);
                 if (!r.set) return null;
                 piece = piece.intersect(r.set);
-                backSteps.push(S(eachLanguage((l) => `$${tex(F, l)} ${OP_TEX[o]} ${tex(c, l)}$`), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r.set, l)}`), sub: r.steps }));
+                backSteps.push(
+                    S(
+                        eachLanguage((l) => `$${tex(F, l)} ${OP_TEX[o]} ${tex(c, l)}$`),
+                        { tex: eachLanguage((l) => `${v} \\in ${intervalTex(r.set, l)}`), sub: r.steps },
+                    ),
+                );
             }
             back = back.union(piece);
         }
@@ -656,7 +830,8 @@ function domainOf(node, v, ctx = { v, domain: 'real', depth: 0 }) {
         if (!cs && c.kind === 'ne0') {
             const e = solveEquation(rel('=', c.expr, N0), v, { steps: false });
             if (e.kind === 'none') cs = IntervalSet.all();
-            else if (e.kind === 'roots' && !e.families?.length && !e.roots.some((x) => x.approxOnly)) cs = IntervalSet.all().minus(IntervalSet.points(e.roots.map((x) => x.node)));
+            else if (e.kind === 'roots' && !e.families?.length && !e.roots.some((x) => x.approxOnly))
+                cs = IntervalSet.all().minus(IntervalSet.points(e.roots.map((x) => x.node)));
         } else if (!cs) cs = ineqCore(c.expr, OP_OF[c.kind], N0, { ...ctx, v, depth: (ctx.depth ?? 0) + 1 }).set;
         if (!cs) return null;
         D = D.intersect(cs);
@@ -686,7 +861,8 @@ function rootsIneq(lhs, op, rhs, E, ctx) {
     const eq = solveEquation(rel('=', lhs, rhs), v, { steps: true });
     let roots;
     if (eq.kind === 'none') roots = [];
-    else if (eq.kind === 'roots' && !eq.families?.length && !eq.roots.some((x) => x.approxOnly)) roots = eq.roots.map((x) => x.node).filter((x) => D.contains(x));
+    else if (eq.kind === 'roots' && !eq.families?.length && !eq.roots.some((x) => x.approxOnly))
+        roots = eq.roots.map((x) => x.node).filter((x) => D.contains(x));
     else return null;
     const f = (x) => approxOf(E, { [v]: x });
     const ends = [];
@@ -731,22 +907,31 @@ function rootsIneq(lhs, op, rhs, E, ctx) {
     const steps = [];
     // solveInequality shows the domain itself unless there are logarithms
     if (odz && (odz.partial || nodeSome(node, (n) => n.type === 'fn' && (n.name === 'log' || n.name === 'ln' || n.name === 'lg')))) {
-        steps.push(S(msg('solve.inequality.domain_admissible_values'), { tex: eachLanguage((l) => `${odz.conds.map((c) => condTex(c, l)).join(',\\ ')} \\;\\Rightarrow\\; ${v} \\in ${intervalTex(D, l)}`), text: odz.text }));
+        steps.push(
+            S(msg('solve.inequality.domain_admissible_values'), {
+                tex: eachLanguage((l) => `${odz.conds.map((c) => condTex(c, l)).join(',\\ ')} \\;\\Rightarrow\\; ${v} \\in ${intervalTex(D, l)}`),
+                text: odz.text,
+            }),
+        );
     }
     const fNode = isZeroNode(simpOr(rhs)) ? lhs : add(lhs, neg(rhs));
-    steps.push(S(msg('solve.inequality.generalised_method_of_intervals'), {
-        tex: eachLanguage((l) => `f(${v}) = ${tex(fNode, l)}`),
-        text: msg('solve.inequality.function_is_continuous_on_its_domain'),
-    }));
+    steps.push(
+        S(msg('solve.inequality.generalised_method_of_intervals'), {
+            tex: eachLanguage((l) => `f(${v}) = ${tex(fNode, l)}`),
+            text: msg('solve.inequality.function_is_continuous_on_its_domain'),
+        }),
+    );
     steps.push(S(msg('solve.inequality.zeros_solve_equation'), { tex: eq.answer?.tex, sub: eq.steps.slice(0, -1) }));
     const ivTex = (s, l) => {
         const p = new IntervalSet([{ lo: s.a, hi: s.b, loC: false, hiC: false }]);
         return `${intervalTex(p, l)}\\!:\\ ${s.sign > 0 ? '+' : '-'}`;
     };
-    steps.push(S(msg('solve.inequality.signs_on_intervals'), {
-        tex: eachLanguage((l) => signs.map((s) => ivTex(s, l)).join(';\\quad ')),
-        text: msg('solve.inequality.sign_on_each_interval_is_checked'),
-    }));
+    steps.push(
+        S(msg('solve.inequality.signs_on_intervals'), {
+            tex: eachLanguage((l) => signs.map((s) => ivTex(s, l)).join(';\\quad ')),
+            text: msg('solve.inequality.sign_on_each_interval_is_checked'),
+        }),
+    );
     const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
     steps.push(S(msg('solve.inequality.take_intervals_with', { p: want }), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     return { set, steps, type: 'intervals' };
@@ -765,7 +950,14 @@ export function solveInequality(input, v = 'x', opts = {}) {
         res.answer = res.set
             ? { tex: eachLanguage((l) => `${v} \\in ${intervalTex(res.set, l)}`), text: eachLanguage((l) => intervalText(res.set, l)) }
             : { tex: '', text: res.reason ?? msg('solve.inequality.could_not_solve') };
-        if (res.set) res.steps.push(S(msg('solve.inequality.answer'), { tex: res.answer.tex, final: true, text: res.approx ? msg('solve.inequality.bounds_are_approximate') : undefined }));
+        if (res.set)
+            res.steps.push(
+                S(msg('solve.inequality.answer'), {
+                    tex: res.answer.tex,
+                    final: true,
+                    text: res.approx ? msg('solve.inequality.bounds_are_approximate') : undefined,
+                }),
+            );
         else if (res.reason) res.steps.push(S(msg('solve.inequality.could_not_solve_2'), { text: res.reason, final: true }));
         if (!withSteps) res.steps = [];
         return res;
@@ -778,7 +970,12 @@ export function solveInequality(input, v = 'x', opts = {}) {
             const r = solveInequality(rel(node.ops[k], node.items[k], node.items[k + 1]), v, { steps: true });
             if (!r.set) return out({ reason: r.reason, steps });
             set = set.intersect(r.set);
-            steps.push(S(eachLanguage((l) => `$${tex(rel(node.ops[k], node.items[k], node.items[k + 1]), l)}$`), { tex: r.answer.tex, sub: r.steps.slice(0, -1) }));
+            steps.push(
+                S(
+                    eachLanguage((l) => `$${tex(rel(node.ops[k], node.items[k], node.items[k + 1]), l)}$`),
+                    { tex: r.answer.tex, sub: r.steps.slice(0, -1) },
+                ),
+            );
         }
         steps.push(S(msg('solve.inequality.intersect'), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
         return out({ set, steps, type: 'double' });
@@ -791,7 +988,7 @@ export function solveInequality(input, v = 'x', opts = {}) {
     if (node.op === '!=') {
         const r = solveEquation(rel('=', node.lhs, node.rhs), v, { steps: true });
         const conds = collectConds(node, v);
-        const dom = conds.length ? odzInfo(conds, v).set ?? IntervalSet.all() : IntervalSet.all();
+        const dom = conds.length ? (odzInfo(conds, v).set ?? IntervalSet.all()) : IntervalSet.all();
         let set = null;
         if (r.kind === 'roots' && !r.families && !r.roots.some((x) => x.approxOnly)) set = dom.minus(IntervalSet.points(r.roots.map((x) => x.node)));
         else if (r.kind === 'none') set = dom;
@@ -820,7 +1017,8 @@ export function solveInequality(input, v = 'x', opts = {}) {
         if (odz.set === null) return out({ steps, reason: msg('solve.inequality.could_not_find_domain_exactly') });
         const before = set;
         set = set.intersect(odz.set);
-        if (!before.equals(set)) steps.push(S(msg('solve.inequality.take_domain_into_account'), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
+        if (!before.equals(set))
+            steps.push(S(msg('solve.inequality.take_domain_into_account'), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     }
     // denominators that cancelled during simplification still exclude their zeros
     const dens = collectConds(node, v).filter((c) => c.kind === 'ne0' || c.kind === 'gt0');
@@ -830,11 +1028,20 @@ export function solveInequality(input, v = 'x', opts = {}) {
         const before = set;
         set = set.intersect(ds);
         if (!before.equals(set)) {
-            steps.push(S(msg('solve.inequality.exclude_points_where_fails', { c: (lng) => condTex(c, lng) }), {
-                tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
-                text: msg('solve.inequality.fraction_cancelled_while_simplifying_but_expression'),
-            }));
+            steps.push(
+                S(msg('solve.inequality.exclude_points_where_fails', { c: (lng) => condTex(c, lng) }), {
+                    tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
+                    text: msg('solve.inequality.fraction_cancelled_while_simplifying_but_expression'),
+                }),
+            );
         }
     }
-    return out({ set, steps, signChart: core.chart ?? null, type: core.type, odz: odz && { tex: odz.tex, text: odz.text, set: odz.set }, approx: !!core.approx });
+    return out({
+        set,
+        steps,
+        signChart: core.chart ?? null,
+        type: core.type,
+        odz: odz && { tex: odz.tex, text: odz.text, set: odz.set },
+        approx: !!core.approx,
+    });
 }

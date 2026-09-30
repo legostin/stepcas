@@ -97,7 +97,10 @@ function X(n, C, st) {
             return C.pow(b, e);
         }
         case 'fn':
-            return C.fn(n.name, n.args.map((a) => X(a, C, st)));
+            return C.fn(
+                n.name,
+                n.args.map((a) => X(a, C, st)),
+            );
         case 'rel':
             return Object.freeze({ type: 'rel', op: n.op, lhs: X(n.lhs, C, st), rhs: X(n.rhs, C, st) });
         case 'chain':

@@ -3,7 +3,9 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 let E;
-before(async () => { E = await import('../src/index.js'); });
+before(async () => {
+    E = await import('../src/index.js');
+});
 const T = (n) => E.toText(n, { lang: 'en' });
 const titles = (r) => r.steps.map((s) => s.title.en);
 const texts = (r) => r.steps.map((s) => `${typeof s.tex === 'string' ? s.tex : s.tex.ru} ${s.text?.ru ?? ''}`).join('\n');

@@ -134,7 +134,11 @@ export class Matrix {
     }
 
     equals(B) {
-        try { B = Matrix.from(B); } catch { return false; }
+        try {
+            B = Matrix.from(B);
+        } catch {
+            return false;
+        }
         return B.rows === this.rows && B.cols === this.cols && this.a.every((r, i) => r.every((v, j) => v.eq(B.a[i][j])));
     }
 
@@ -173,7 +177,9 @@ export class Matrix {
     }
 
     toString() {
-        return `[${this.toStrings().map((r) => `[${r.join(', ')}]`).join(', ')}]`;
+        return `[${this.toStrings()
+            .map((r) => `[${r.join(', ')}]`)
+            .join(', ')}]`;
     }
 
     /**

@@ -12,5 +12,9 @@ const pick = (x) => {
 const A = JSON.parse(fs.readFileSync(a, 'utf8'));
 const B = JSON.parse(fs.readFileSync(b, 'utf8'));
 let n = 0;
-for (const k of Object.keys(A)) if (JSON.stringify(pick(A[k])) !== JSON.stringify(pick(B[k]))) { n++; if (n < 5) console.log('differs:', k); }
+for (const k of Object.keys(A))
+    if (JSON.stringify(pick(A[k])) !== JSON.stringify(pick(B[k]))) {
+        n++;
+        if (n < 5) console.log('differs:', k);
+    }
 console.log(`${n} tasks differ in ${lang}`);

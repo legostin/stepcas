@@ -39,7 +39,8 @@ const walk = async (dir) => {
     }
 };
 await walk(path.join(here, 'tasks'));
-for (const f of fs.readdirSync(path.join(here, 'gen')).filter((x) => x.endsWith('.json'))) tasks.push(...JSON.parse(fs.readFileSync(path.join(here, 'gen', f), 'utf8')));
+for (const f of fs.readdirSync(path.join(here, 'gen')).filter((x) => x.endsWith('.json')))
+    tasks.push(...JSON.parse(fs.readFileSync(path.join(here, 'gen', f), 'utf8')));
 
 const LANGS = ['ru', 'en'];
 // a bilingual value (a {ru, en} object, a message with language getters, or a plain string) → {ru, en}
@@ -63,7 +64,12 @@ for (const t of tasks) {
         res = { status: 'error', note: String(e?.message ?? e) };
     }
     const r = lastResult();
-    record[t.id] = { status: res.status, got: res.got === undefined ? undefined : String(res.got), answer: r?.answer ? { tex: text(r.answer.tex), text: text(r.answer.text) } : undefined, steps: Array.isArray(r?.steps) ? r.steps.map(stepOut) : undefined };
+    record[t.id] = {
+        status: res.status,
+        got: res.got === undefined ? undefined : String(res.got),
+        answer: r?.answer ? { tex: text(r.answer.tex), text: text(r.answer.text) } : undefined,
+        steps: Array.isArray(r?.steps) ? r.steps.map(stepOut) : undefined,
+    };
 }
 // API calls outside the corpus: number theory, matrices, calculus options, parse errors — every result in full
 const E = await import('../src/index.js');
@@ -88,7 +94,11 @@ const ser = (x, depth = 0) => {
     for (const k of Object.keys(x).sort()) o[k] = ser(x[k], depth + 1);
     return o;
 };
-const M3 = [[2, 1, -1], [-3, -1, 2], [-2, 1, 2]];
+const M3 = [
+    [2, 1, -1],
+    [-3, -1, 2],
+    [-2, 1, 2],
+];
 const calls = {
     ntGcd: () => E.ntGcd(84n, 36n, { steps: true }),
     ntLcm: () => E.ntLcm(84n, 36n, { steps: true }),
@@ -112,14 +122,74 @@ const calls = {
     matInverse: () => E.matInverse(M3, { steps: true }),
     matSolve: () => E.matSolve(M3, [8, -11, -3], { steps: true }),
     matSolveCramer: () => E.matSolveCramer(M3, [8, -11, -3], { steps: true }),
-    matSolveNone: () => E.matSolve([[1, 2], [2, 4]], [1, 3], { steps: true }),
-    matSolveMany: () => E.matSolve([[1, 2], [2, 4]], [1, 2], { steps: true }),
-    matCharPoly: () => E.matCharPoly([[2, 1], [1, 2]], { steps: true }),
-    matEigen: () => E.matEigen([[4, 1], [2, 3]], { steps: true }),
-    matDiagonalize: () => E.matDiagonalize([[4, 1], [2, 3]], { steps: true }),
-    matNullspace: () => E.matNullspace([[1, 2, 3], [2, 4, 6]], { steps: true }),
-    matGramSchmidt: () => E.matGramSchmidt([[1, 1, 0], [1, 0, 1]], { steps: true }),
-    matLeastSquares: () => E.matLeastSquares([[1, 1], [1, 2], [1, 3]], [1, 2, 2], { steps: true }),
+    matSolveNone: () =>
+        E.matSolve(
+            [
+                [1, 2],
+                [2, 4],
+            ],
+            [1, 3],
+            { steps: true },
+        ),
+    matSolveMany: () =>
+        E.matSolve(
+            [
+                [1, 2],
+                [2, 4],
+            ],
+            [1, 2],
+            { steps: true },
+        ),
+    matCharPoly: () =>
+        E.matCharPoly(
+            [
+                [2, 1],
+                [1, 2],
+            ],
+            { steps: true },
+        ),
+    matEigen: () =>
+        E.matEigen(
+            [
+                [4, 1],
+                [2, 3],
+            ],
+            { steps: true },
+        ),
+    matDiagonalize: () =>
+        E.matDiagonalize(
+            [
+                [4, 1],
+                [2, 3],
+            ],
+            { steps: true },
+        ),
+    matNullspace: () =>
+        E.matNullspace(
+            [
+                [1, 2, 3],
+                [2, 4, 6],
+            ],
+            { steps: true },
+        ),
+    matGramSchmidt: () =>
+        E.matGramSchmidt(
+            [
+                [1, 1, 0],
+                [1, 0, 1],
+            ],
+            { steps: true },
+        ),
+    matLeastSquares: () =>
+        E.matLeastSquares(
+            [
+                [1, 1],
+                [1, 2],
+                [1, 3],
+            ],
+            [1, 2, 2],
+            { steps: true },
+        ),
     derivativeN: () => E.derivativeN('x^3 e^x', 'x', 2, { steps: true }),
     partialDerivative: () => E.partialDerivative('x^2 y + sin(x y)', 'y', { steps: true }),
     gradientOf: () => E.gradientOf('x^2 + x y', ['x', 'y'], { steps: true }),
@@ -151,7 +221,14 @@ const calls = {
     ineqNone: () => E.solveInequality('x^2 + 1 < 0', 'x', { steps: true }),
     systemNone: () => E.solveLinearSystem(['x + y = 1', 'x + y = 2'], ['x', 'y'], { steps: true }),
     systemInfinite: () => E.solveLinearSystem(['x + y = 1', '2x + 2y = 2'], ['x', 'y'], { steps: true }),
-    matInverseSingular: () => E.matInverse([[1, 2], [2, 4]], { steps: true }),
+    matInverseSingular: () =>
+        E.matInverse(
+            [
+                [1, 2],
+                [2, 4],
+            ],
+            { steps: true },
+        ),
     valuesSteps: () => E.evaluateSteps('sqrt(3 + 2sqrt(2)) - sqrt(2)'),
 };
 const badInputs = ['2 +', '(x + 1', 'sin', 'x ** 2', '1/', 'log_(x)', 'foo(x)', '', 'x = = 2', '3..4', 'sqrt()', '[1, 2', 'x^', '2 3 +'];

@@ -55,8 +55,13 @@ function replaceU(r, u, t, v) {
     });
     g = trySimp(g);
     if (!g) return null;
-    if (containsVar(g, v) && u.type === 'fn' && u.name === 'ln' && isVar(u.args[0], v)
-        && nodeSome(r, (m) => m.type === 'fn' && m.name !== 'ln' && nodeSome(m.args[0], (k) => nodeKey(k) === key))) {
+    if (
+        containsVar(g, v) &&
+        u.type === 'fn' &&
+        u.name === 'ln' &&
+        isVar(u.args[0], v) &&
+        nodeSome(r, (m) => m.type === 'fn' && m.name !== 'ln' && nodeSome(m.args[0], (k) => nodeKey(k) === key))
+    ) {
         // cos(ln x): with t = ln x the leftover x is eᵗ (x·ln x is left to parts)
         g = trySimp(substitute(g, { [v]: pow(E_, T) }));
         return g && !containsVar(g, v) ? g : null;
@@ -72,7 +77,8 @@ function replaceU(r, u, t, v) {
         const b = P.coeff(0);
         const back = div(add(T, qn(b.neg())), qn(a));
         g = mapNode(g, (m) => {
-            if (m.type === 'pow' && isVar(m.base, v) && isNum(m.exp) && m.exp.value.isInt() && m.exp.value.n % BigInt(kdeg) === 0n) return pow(back, num(m.exp.value.div(kdeg)));
+            if (m.type === 'pow' && isVar(m.base, v) && isNum(m.exp) && m.exp.value.isInt() && m.exp.value.n % BigInt(kdeg) === 0n)
+                return pow(back, num(m.exp.value.div(kdeg)));
             return undefined;
         });
         g = trySimp(g);
@@ -106,7 +112,10 @@ export function mUSub(f, ctx) {
     cands.sort((a, b) => isConstG(a) - isConstG(b) || a.size - b.size || nodeSize(b.u) - nodeSize(a.u));
     for (const c of cands.slice(0, 5)) {
         const res = substResult(f, ctx, {
-            t, uNode: c.u, g: c.g, rule: 'substitution',
+            t,
+            uNode: c.u,
+            g: c.g,
+            rule: 'substitution',
             title: msg('calculus.integral.substitution.substitution'),
             dtTex: (L) => `d${t} = ${isOne(c.du) ? '' : c.du.type === 'add' ? paren(tx(c.du, L)) : tx(c.du, L) + '\\,'}d${v}`,
             text: msg('calculus.integral.substitution.derivative_of_is_up_to_constant', { p: (lng) => plainish(c.u, lng), t }),
@@ -145,9 +154,15 @@ export function mRationalizing(f, ctx) {
     if (!g || !ratFunctionOf(g, t)) return null;
     const uNode = pow(base, num(q(1, m)));
     return substResult(f, ctx, {
-        t, uNode, g, rule: 'rationalizing',
+        t,
+        uNode,
+        g,
+        rule: 'rationalizing',
         title: msg('calculus.integral.substitution.substitution_that_removes_root'),
         dtTex: (L) => `${v} = ${tx(trySimp(xOfT) ?? xOfT, L)},\\ d${v} = ${tx(simp(div(mul(num(m), pow(T, num(m - 1))), lp.k)), L)}\\,d${t}`,
-        text: msg('calculus.integral.substitution.all_roots_are_of_same_linear', { base: (lng) => plainish(base, lng), p: (lng) => m === 2 ? '√' : msg('calculus.integral.substitution.th_root_of', { m }).in(lng) }),
+        text: msg('calculus.integral.substitution.all_roots_are_of_same_linear', {
+            base: (lng) => plainish(base, lng),
+            p: (lng) => (m === 2 ? '√' : msg('calculus.integral.substitution.th_root_of', { m }).in(lng)),
+        }),
     });
 }

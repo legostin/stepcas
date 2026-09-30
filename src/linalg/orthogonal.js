@@ -16,7 +16,9 @@ const dot = (u, v) => u.reduce((s, x, i) => s.add(x.mul(v[i])), Q.ZERO);
  */
 export function matGramSchmidt(vectors, opts = {}) {
     const vs = vectors.map((v) => v.map(toQ));
-    const us = [], dropped = [], st = [];
+    const us = [],
+        dropped = [],
+        st = [];
     const vt = (v) => vecTex(v);
     vs.forEach((v, k) => {
         let u = v.slice();
@@ -29,9 +31,14 @@ export function matGramSchmidt(vectors, opts = {}) {
         if (u.every((x) => x.isZero())) {
             dropped.push(k);
             if (opts.steps) {
-                st.push(S(msg('linalg.orthogonal.vector_is_dependent', { p: k + 1 }), null,
-                    msg('linalg.orthogonal.subtracting_projections_leaves_zero_vector_v', { p: sub(k + 1) }),
-                    { rule: 'dependent' }));
+                st.push(
+                    S(
+                        msg('linalg.orthogonal.vector_is_dependent', { p: k + 1 }),
+                        null,
+                        msg('linalg.orthogonal.subtracting_projections_leaves_zero_vector_v', { p: sub(k + 1) }),
+                        { rule: 'dependent' },
+                    ),
+                );
             }
             return;
         }
@@ -39,19 +46,33 @@ export function matGramSchmidt(vectors, opts = {}) {
         if (opts.steps) {
             const j = us.length;
             const proj = parts.map(({ c }, i) => `${c.isNeg() ? '+' : '-'} ${c.abs().isOne() ? '' : qt(c.abs())}\\mathbf u_{${i + 1}}`).join(' ');
-            st.push(S(msg('linalg.orthogonal.vector_u', { j: sub(j) }),
-                `\\mathbf u_{${j}} = \\mathbf v_{${k + 1}} ${parts.length ? proj : ''} = ${vt(u)}`,
-                parts.length ? msg('linalg.orthogonal.from_v_we_subtract_its_projections', { p: sub(k + 1) })
-                    : msg('linalg.orthogonal.first_vector_is_taken_as_it'),
-                { rule: 'gram-schmidt' }));
+            st.push(
+                S(
+                    msg('linalg.orthogonal.vector_u', { j: sub(j) }),
+                    `\\mathbf u_{${j}} = \\mathbf v_{${k + 1}} ${parts.length ? proj : ''} = ${vt(u)}`,
+                    parts.length
+                        ? msg('linalg.orthogonal.from_v_we_subtract_its_projections', { p: sub(k + 1) })
+                        : msg('linalg.orthogonal.first_vector_is_taken_as_it'),
+                    { rule: 'gram-schmidt' },
+                ),
+            );
         }
     });
-    const normalized = us.map((u) => { const f = u.map((x) => x.toNumber()); const n = Math.hypot(...f); return f.map((x) => x / n); });
+    const normalized = us.map((u) => {
+        const f = u.map((x) => x.toNumber());
+        const n = Math.hypot(...f);
+        return f.map((x) => x / n);
+    });
     const res = { orthogonal: us, normalized, dropped };
     if (opts.steps) {
-        st.push(S(msg('linalg.orthogonal.normalise'), us.map((u, i) => `\\|\\mathbf u_{${i + 1}}\\| = \\sqrt{${qt(dot(u, u))}}`).join(',\\quad '),
-            msg('linalg.orthogonal.for_orthonormal_basis_divide_each_vector'),
-            { rule: 'normalize' }));
+        st.push(
+            S(
+                msg('linalg.orthogonal.normalise'),
+                us.map((u, i) => `\\|\\mathbf u_{${i + 1}}\\| = \\sqrt{${qt(dot(u, u))}}`).join(',\\quad '),
+                msg('linalg.orthogonal.for_orthonormal_basis_divide_each_vector'),
+                { rule: 'normalize' },
+            ),
+        );
         res.steps = st;
     }
     return res;
@@ -76,16 +97,20 @@ export function matLeastSquares(A, b, opts = {}) {
     A = M(A);
     const bv = b.map((v) => toQ(Array.isArray(v) ? v[0] : v));
     const At = A.transpose();
-    const N = At.mul(A), rhs = At.mul(bv);
+    const N = At.mul(A),
+        rhs = At.mul(bv);
     const sol = matSolve(N, rhs, { steps: !!opts.steps, vars: opts.vars });
     const res = { ...sol };
     delete res.steps;
     if (sol.x) res.residual = A.mul(sol.x).map((v, i) => bv[i].sub(v));
     if (opts.steps) {
         res.steps = [
-            S(msg('linalg.orthogonal.normal_equations'), `A^{\\mathsf T}A\\,\\mathbf x = A^{\\mathsf T}\\mathbf b:\\quad ${N.toTex()}\\mathbf x = ${vecTex(rhs)}`,
+            S(
+                msg('linalg.orthogonal.normal_equations'),
+                `A^{\\mathsf T}A\\,\\mathbf x = A^{\\mathsf T}\\mathbf b:\\quad ${N.toTex()}\\mathbf x = ${vecTex(rhs)}`,
                 msg('linalg.orthogonal.there_is_no_exact_solution_more'),
-                { rule: 'normal-equations' }),
+                { rule: 'normal-equations' },
+            ),
             S(msg('linalg.orthogonal.solve'), sol.tex, null, { rule: 'answer', sub: sol.steps }),
         ];
     }

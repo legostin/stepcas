@@ -53,4 +53,24 @@ export function sub(ctx, extra = {}) {
 }
 
 // the cascade, in order; a function rather than a constant so that the method modules can be loaded in any order
-const cascade = () => [mConst, mTable, mLinearity, mLinearSub, mDerivPattern, mRational, mBiquadratic, mCyclic, mTrig, mExpand, mUSub, mQuadRoot, mRadicalPoly, mRationalizing, mPolyTimes, mParts, mTrigLower, mTrigSub, mWeierstrass];
+const cascade = () => [
+    mConst,
+    mTable,
+    mLinearity,
+    mLinearSub,
+    mDerivPattern,
+    mRational,
+    mBiquadratic,
+    mCyclic,
+    mTrig,
+    mExpand,
+    mUSub,
+    mQuadRoot,
+    mRadicalPoly,
+    mRationalizing,
+    mPolyTimes,
+    mParts,
+    mTrigLower,
+    mTrigSub,
+    mWeierstrass,
+];

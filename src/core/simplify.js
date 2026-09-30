@@ -514,7 +514,10 @@ function cMul(factors, ctx) {
     ({ out, coef } = mergeConstRadicals(out, coef));
     out.sort(compareFactors);
     if (out.length === 1 && out[0].type === 'add' && !coef.isOne()) {
-        return cAdd(out[0].args.map((t) => cMul([num(coef), t], ctx)), ctx);
+        return cAdd(
+            out[0].args.map((t) => cMul([num(coef), t], ctx)),
+            ctx,
+        );
     }
     if (coef.isOne()) return out.length === 1 ? out[0] : mkMul(out);
     return mkMul([num(coef), ...out]);
@@ -622,7 +625,11 @@ function cPow(b, e, ctx) {
             if (r) return cPow(gaussianNode(r, ctx), num(new Q(X.n)), ctx);
         }
         if (b.type === 'mul') {
-            if (X.isInt()) return cMul(b.args.map((f) => cPow(f, e, ctx)), ctx);
+            if (X.isInt())
+                return cMul(
+                    b.args.map((f) => cPow(f, e, ctx)),
+                    ctx,
+                );
             const pulled = [];
             const rest = [];
             let sign = false;
@@ -681,7 +688,8 @@ function cPow(b, e, ctx) {
     }
     if (isC(b, 'e')) {
         if (e.type === 'fn' && e.name === 'ln') return e.args[0];
-        if (e.type === 'mul' && e.args.length === 2 && isNum(e.args[0]) && e.args[1].type === 'fn' && e.args[1].name === 'ln') return cPow(e.args[1].args[0], e.args[0], ctx);
+        if (e.type === 'mul' && e.args.length === 2 && isNum(e.args[0]) && e.args[1].type === 'fn' && e.args[1].name === 'ln')
+            return cPow(e.args[1].args[0], e.args[0], ctx);
         if (ctx.complex) {
             // Euler: e^(iθ) with θ a table multiple of π
             const f = e.type === 'mul' ? e.args : [e];
@@ -758,9 +766,25 @@ function invTable() {
     };
     const t = (pairs) => new Map(pairs.map(([node, q]) => [nodeKey(node), new Q(...q)]));
     INV_TABLE = {
-        asin: t([[v[0], [0n]], [v.half, [1n, 6n]], [v.s2, [1n, 4n]], [v.s3, [1n, 3n]], [v.one, [1n, 2n]]]),
-        atan: t([[v[0], [0n]], [v.r33, [1n, 6n]], [v.one, [1n, 4n]], [v.r3, [1n, 3n]]]),
-        acot: t([[v[0], [1n, 2n]], [v.r3, [1n, 6n]], [v.one, [1n, 4n]], [v.r33, [1n, 3n]]]),
+        asin: t([
+            [v[0], [0n]],
+            [v.half, [1n, 6n]],
+            [v.s2, [1n, 4n]],
+            [v.s3, [1n, 3n]],
+            [v.one, [1n, 2n]],
+        ]),
+        atan: t([
+            [v[0], [0n]],
+            [v.r33, [1n, 6n]],
+            [v.one, [1n, 4n]],
+            [v.r3, [1n, 3n]],
+        ]),
+        acot: t([
+            [v[0], [1n, 2n]],
+            [v.r3, [1n, 6n]],
+            [v.one, [1n, 4n]],
+            [v.r33, [1n, 3n]],
+        ]),
     };
     return INV_TABLE;
 }
@@ -771,12 +795,38 @@ const piTimes = (r, ctx) => (r.isZero() ? N0 : cMul([num(r), PI], ctx));
 // sin(π − x) → sin x, tg(x + π) → tg x, cos(x + π/2) → −sin x. Other shifts only lose whole periods:
 // sin(x + 7π/3) → sin(x + π/3), tg(x + 4π/3) → tg(x + π/3).
 const QUARTER = {
-    sin: [['sin', 1], ['cos', 1], ['sin', -1], ['cos', -1]],
-    cos: [['cos', 1], ['sin', -1], ['cos', -1], ['sin', 1]],
-    sec: [['sec', 1], ['csc', -1], ['sec', -1], ['csc', 1]],
-    csc: [['csc', 1], ['sec', 1], ['csc', -1], ['sec', -1]],
-    tan: [['tan', 1], ['cot', -1]],
-    cot: [['cot', 1], ['tan', -1]],
+    sin: [
+        ['sin', 1],
+        ['cos', 1],
+        ['sin', -1],
+        ['cos', -1],
+    ],
+    cos: [
+        ['cos', 1],
+        ['sin', -1],
+        ['cos', -1],
+        ['sin', 1],
+    ],
+    sec: [
+        ['sec', 1],
+        ['csc', -1],
+        ['sec', -1],
+        ['csc', 1],
+    ],
+    csc: [
+        ['csc', 1],
+        ['sec', 1],
+        ['csc', -1],
+        ['sec', -1],
+    ],
+    tan: [
+        ['tan', 1],
+        ['cot', -1],
+    ],
+    cot: [
+        ['cot', 1],
+        ['tan', -1],
+    ],
 };
 
 function trigShift(name, x, ctx) {
@@ -786,7 +836,10 @@ function trigShift(name, x, ctx) {
     });
     if (k < 0) return null;
     const r = piMultiple(x.args[k]);
-    const u = cAdd(x.args.filter((_, i) => i !== k), ctx);
+    const u = cAdd(
+        x.args.filter((_, i) => i !== k),
+        ctx,
+    );
     const table = QUARTER[name];
     const r2 = r.mul(2);
     if (r2.isInt()) {
@@ -1071,10 +1124,16 @@ function S(n, ctx) {
             r = n;
             break;
         case 'add':
-            r = cAdd(n.args.map((a) => S(a, ctx)), ctx);
+            r = cAdd(
+                n.args.map((a) => S(a, ctx)),
+                ctx,
+            );
             break;
         case 'mul':
-            r = cMul(n.args.map((a) => S(a, ctx)), ctx);
+            r = cMul(
+                n.args.map((a) => S(a, ctx)),
+                ctx,
+            );
             break;
         case 'div':
             r = cMul([S(n.num, ctx), cPow(S(n.den, ctx), NM1, ctx)], ctx);
@@ -1086,7 +1145,11 @@ function S(n, ctx) {
             r = cPow(S(n.base, ctx), S(n.exp, ctx), ctx);
             break;
         case 'fn':
-            r = cFn(n.name, n.args.map((a) => S(a, ctx)), ctx);
+            r = cFn(
+                n.name,
+                n.args.map((a) => S(a, ctx)),
+                ctx,
+            );
             break;
         case 'rel':
             r = freeze({ type: 'rel', op: n.op, lhs: S(n.lhs, ctx), rhs: S(n.rhs, ctx) });

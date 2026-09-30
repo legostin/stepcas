@@ -16,7 +16,10 @@ export function sampleFunction(f, x0, x1, opts = {}) {
     const n = Math.max(2, Math.floor(opts.n ?? 400));
     const maxDepth = opts.maxDepth ?? 8;
     const maxPoints = opts.maxPoints ?? 20000;
-    const ev = (x) => { const y = evalSafe(f, x); return fin(y) ? y : NaN; };
+    const ev = (x) => {
+        const y = evalSafe(f, x);
+        return fin(y) ? y : NaN;
+    };
     const xs = numLinspace(x0, x1, n + 1);
     const ys = xs.map(ev);
     let lo, hi;
@@ -26,7 +29,10 @@ export function sampleFunction(f, x0, x1, opts = {}) {
         if (v.length) {
             lo = v[Math.floor(0.02 * (v.length - 1))];
             hi = v[Math.ceil(0.98 * (v.length - 1))];
-        } else { lo = -1; hi = 1; }
+        } else {
+            lo = -1;
+            hi = 1;
+        }
     }
     const H = hi - lo > 0 ? hi - lo : Math.max(1, Math.abs(hi));
     const tolY = H * (opts.tol ?? 1e-3);
@@ -35,15 +41,27 @@ export function sampleFunction(f, x0, x1, opts = {}) {
     const segs = [];
     let cur = [];
     let count = 0;
-    const push = (x, y) => { cur.push([x, clamp(y)]); count++; };
-    const brk = () => { if (cur.length >= 2) segs.push(cur); cur = []; };
+    const push = (x, y) => {
+        cur.push([x, clamp(y)]);
+        count++;
+    };
+    const brk = () => {
+        if (cur.length >= 2) segs.push(cur);
+        cur = [];
+    };
     const isJump = (xa, ya, xb, yb) => {
         for (let k = 0; k < 60; k++) {
             const xm = (xa + xb) / 2;
             if (xm <= xa || xm >= xb) break;
             const ym = ev(xm);
             if (!fin(ym)) return true;
-            if (Math.abs(ym - ya) >= Math.abs(yb - ym)) { xb = xm; yb = ym; } else { xa = xm; ya = ym; }
+            if (Math.abs(ym - ya) >= Math.abs(yb - ym)) {
+                xb = xm;
+                yb = ym;
+            } else {
+                xa = xm;
+                ya = ym;
+            }
         }
         return Math.abs(yb - ya) > 0.5 * jumpY;
     };
@@ -60,7 +78,8 @@ export function sampleFunction(f, x0, x1, opts = {}) {
                 xa = xm;
             } else {
                 if (!leftFinite) pts.push([xm, ym]);
-                xb = xm; yb = ym;
+                xb = xm;
+                yb = ym;
             }
         }
         if (leftFinite) {
@@ -73,11 +92,16 @@ export function sampleFunction(f, x0, x1, opts = {}) {
         }
     };
     const interval = (xa, ya, xb, yb, depth) => {
-        const fa = fin(ya), fb = fin(yb);
+        const fa = fin(ya),
+            fb = fin(yb);
         if (!fa && !fb) {
             if (depth < maxDepth) {
-                const xm = (xa + xb) / 2, ym = ev(xm);
-                if (fin(ym)) { interval(xa, ya, xm, ym, depth + 1); interval(xm, ym, xb, yb, depth + 1); }
+                const xm = (xa + xb) / 2,
+                    ym = ev(xm);
+                if (fin(ym)) {
+                    interval(xa, ya, xm, ym, depth + 1);
+                    interval(xm, ym, xb, yb, depth + 1);
+                }
             }
             return;
         }
@@ -86,19 +110,32 @@ export function sampleFunction(f, x0, x1, opts = {}) {
             if (fb) push(xb, yb);
             return;
         }
-        const xm = (xa + xb) / 2, ym = ev(xm);
+        const xm = (xa + xb) / 2,
+            ym = ev(xm);
         if (!fin(ym)) {
-            if (depth < maxDepth + 8) { interval(xa, ya, xm, ym, depth + 1); interval(xm, ym, xb, yb, depth + 1); }
-            else { brk(); push(xb, yb); }
+            if (depth < maxDepth + 8) {
+                interval(xa, ya, xm, ym, depth + 1);
+                interval(xm, ym, xb, yb, depth + 1);
+            } else {
+                brk();
+                push(xb, yb);
+            }
             return;
         }
-        if (opts.yRange && ((ya > hi && ym > hi && yb > hi) || (ya < lo && ym < lo && yb < lo))) { push(xb, yb); return; }
+        if (opts.yRange && ((ya > hi && ym > hi && yb > hi) || (ya < lo && ym < lo && yb < lo))) {
+            push(xb, yb);
+            return;
+        }
         let smooth = Math.abs(ym - (ya + yb) / 2) <= tolY;
         if (smooth && Math.abs(yb - ya) > jumpY) {
-            const q1 = ev(xa + (xb - xa) / 4), q3 = ev(xa + 3 * (xb - xa) / 4);
+            const q1 = ev(xa + (xb - xa) / 4),
+                q3 = ev(xa + (3 * (xb - xa)) / 4);
             smooth = fin(q1) && fin(q3) && Math.abs(q1 - (3 * ya + yb) / 4) <= tolY && Math.abs(q3 - (ya + 3 * yb) / 4) <= tolY;
         }
-        if (smooth || count > maxPoints) { push(xb, yb); return; }
+        if (smooth || count > maxPoints) {
+            push(xb, yb);
+            return;
+        }
         if (depth < maxDepth) {
             interval(xa, ya, xm, ym, depth + 1);
             interval(xm, ym, xb, yb, depth + 1);
@@ -106,8 +143,15 @@ export function sampleFunction(f, x0, x1, opts = {}) {
         }
         if (Math.abs(yb - ya) > jumpY && isJump(xa, ya, xb, yb)) {
             // which side is the jump on? keep the midpoint with the side it belongs to
-            if (Math.abs(ym - ya) <= Math.abs(yb - ym)) { push(xm, ym); brk(); push(xb, yb); }
-            else { brk(); push(xm, ym); push(xb, yb); }
+            if (Math.abs(ym - ya) <= Math.abs(yb - ym)) {
+                push(xm, ym);
+                brk();
+                push(xb, yb);
+            } else {
+                brk();
+                push(xm, ym);
+                push(xb, yb);
+            }
             return;
         }
         push(xm, ym);
