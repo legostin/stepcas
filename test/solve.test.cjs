@@ -1010,3 +1010,27 @@ test('trig equations with shifted arguments: the reduction formulas are a step o
     assert.equal(typeof t2 === 'string' ? t2 : t2.ru, '\\cos\\left(\\frac{\\pi}{2} - x\\right) = \\sin x,\\quad \\sin(\\pi - x) = \\sin x');
     assert.ok(!E.solveEquation('sin x = 1/2').steps.some((s) => s.rule === 'reduction'));
 });
+
+test('inequalities: log sums, a polynomial in a log, the generalised method of intervals', () => {
+    const I = (s) => E.solveInequality(s, 'x', { steps: true });
+    const txt = (r) => r.answer.text.en;
+    assert.equal(txt(I('log_2(x) + log_2(x - 2) > 3')), '(4, +∞)');
+    assert.equal(txt(I('log_3(x) - log_3(x - 1) <= 1')), '[3/2, +∞)');
+    const sub = I('lg(x)^2 - lg(x) - 2 <= 0');
+    assert.equal(txt(sub), '[1/10, 100]');
+    assert.ok(sub.steps.some((s) => /t = \\lg x/.test(s.title.ru)));
+    const g = I('(x - 6)^2 < sqrt(7)(x - 6)');
+    assert.equal(txt(g), '(6, 6 + sqrt(7))');
+    assert.ok(g.steps.some((s) => s.title.en === 'The generalised method of intervals'));
+    assert.equal(txt(I('sqrt(x) > x - 2')), '[0, 4)');
+    assert.equal(txt(I('(x - 1)sqrt(x + 2) >= 0')), '{-2} ∪ [1, +∞)');
+    assert.equal(txt(I('(x^2 - 1)/sqrt(x) >= 0')), '[1, +∞)');
+    assert.equal(txt(I('1/ln(x) > 1')), '(1, e)');
+});
+
+test('a fraction with a non-polynomial denominator equals zero', () => {
+    const r = E.solveEquation('(x^2 - 4)/ln(x) = 0', 'x', { steps: true });
+    assert.equal(r.answer.text, '2');
+    assert.equal(E.solveEquation('(x^2 - 1)/ln(x) = 0', 'x').kind, 'none');
+    assert.equal(E.solveEquation('1/ln(x) = 1', 'x').answer.text, 'e');
+});

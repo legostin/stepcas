@@ -3629,6 +3629,7 @@ function solveCore(lhs, rhs, ctx) {
             () => solveLogarithmic(lhs, rhs, E, ctx),
             () => solveTakeLog(lhs, rhs, E, ctx),
             () => solveNodePoly(E, ctx),
+            () => solveFractionZero(E, ctx),
         ];
         for (const t of tries) {
             const r = t();
@@ -3638,6 +3639,32 @@ function solveCore(lhs, rhs, ctx) {
         if (!(e instanceof MathError)) throw e;
     }
     return solveNumeric(E, ctx);
+}
+
+/** A fraction with a non-polynomial denominator equals zero: (x² − 1)/√x = 0, 1/ln x − 1 = 0 → the numerator is zero. */
+function solveFractionZero(E, ctx) {
+    const v = ctx.v;
+    let nd;
+    try {
+        nd = numDen(E);
+    } catch {
+        return null;
+    }
+    if (!nd || !containsVar(nd.den, v) || !containsVar(nd.num, v)) return null;
+    const r = solveCore(nd.num, N0, { ...ctx, depth: ctx.depth + 1 });
+    if (!r || (r.kind !== 'roots' && r.kind !== 'none') || r.families?.length || r.roots?.some((x) => x.approxOnly)) return null;
+    const dropped = [];
+    const roots = (r.roots ?? []).filter((x) => {
+        const d = approxOf(nd.den, { [v]: x.approx ?? approxOf(x.node) });
+        const ok = !(Math.abs(d) <= 1e-12); // NaN (outside the domain) is left to the domain check
+        if (!ok) dropped.push(x);
+        return ok;
+    });
+    const steps = [S(T('Дробь равна нулю, когда числитель равен нулю, а знаменатель — нет', 'A fraction is zero when its numerator is zero and its denominator is not'), {
+        tex: byLang((l) => `${tex(nd.num, l)} = 0,\\qquad ${tex(nd.den, l)} \\ne 0`),
+    }), ...r.steps];
+    if (dropped.length) steps.push(S(T('Отбрасываем корни, где знаменатель равен нулю', 'Drop the roots where the denominator is zero'), { tex: byLang((l) => dropped.map((x) => `${v} = ${tex(x.node, l)}`).join(',\\ ')) }));
+    return { kind: roots.length ? 'roots' : 'none', roots, steps, type: r.type ?? 'fraction' };
 }
 
 // ---------------------------------------------------------------- ОДЗ step
@@ -4324,6 +4351,7 @@ function ineqCore(lhs, op, rhs, ctx) {
         () => logIneq(lhs, op, rhs, E, ctx),
         () => (hasRadical(E, v) ? radIneq(E, op, ctx) : null),
         () => nodeLinearIneq(E, op, ctx),
+        () => rootsIneq(lhs, op, rhs, E, ctx),
     ];
     for (const t of tries) {
         const r = t();
@@ -4659,12 +4687,163 @@ function logIneq(lhs, op, rhs, E, ctx) {
         const op3 = mono.dec ? OP_FLIP[op] : op;
         steps.push(S(mono.step, { tex: byLang((l) => `${tex(pos.info.arg, l)} ${OP_TEX[op3]} ${tex(negT.info.arg, l)}`) }));
         res = sub(pos.info.arg, op3, negT.info.arg);
+    } else if (vt.length >= 2 && vt.every((x) => x.p === 1 && nodeKey(x.info.base) === nodeKey(vt[0].info.base) && numValue(x.coef)?.isInt())) {
+        // Σ cᵢ·log_b fᵢ + C op 0 → log_b(Π fᵢ^cᵢ) op −C: on the domain every fᵢ > 0, so the rules hold
+        const b = vt[0].info.base;
+        const up = [];
+        const down = [];
+        for (const x of vt) {
+            const c = numValue(x.coef);
+            (c.isNeg() ? down : up).push(c.abs().isOne() ? x.info.arg : pow(x.info.arg, num(c.abs())));
+        }
+        const prod = down.length ? div(up.length ? mul(up) : N1, mul(down)) : mul(up);
+        const R = simpOr(neg(C));
+        if (!isConstNode(R)) return null;
+        const val = simpOr(pow(b, R));
+        const mono = monotone(b);
+        const op3 = mono.dec ? OP_FLIP[op] : op;
+        steps.push(S(T('Записываем сумму логарифмов одним логарифмом', 'Write the sum of logarithms as one logarithm'), {
+            tex: ineqTexB(logNodeB(b, prod), op, R),
+            text: T('На ОДЗ все аргументы положительны, поэтому $\\log_a x + \\log_a y = \\log_a(xy)$, $\\log_a x - \\log_a y = \\log_a \\frac{x}{y}$, $k\\log_a x = \\log_a x^k$.', 'On the domain every argument is positive, so $\\log_a x + \\log_a y = \\log_a(xy)$, $\\log_a x - \\log_a y = \\log_a \\frac{x}{y}$, $k\\log_a x = \\log_a x^k$.'),
+        }));
+        steps.push(S(mono.step, { tex: byLang((l) => `${tex(prod, l)} ${OP_TEX[op3]} ${tex(val, l)}`), text: T(`Число $${tex(R)}$ записали как логарифм: $${tex(R)} = ${tex(logNodeB(b, val))}$.`, `We wrote $${tex(R, 'en')}$ as a logarithm: $${tex(R, 'en')} = ${tex(logNodeB(b, val), 'en')}$.`) }));
+        res = sub(prod, op3, val);
+    } else if (vt.every((x) => nodeKey(x.F) === nodeKey(vt[0].F)) && vt.some((x) => x.p >= 2)) {
+        // a polynomial in one logarithm: the substitution t = log_b f
+        const F = vt[0].F;
+        const tv = v === 't' ? 'u' : 't';
+        const T0 = sym(tv);
+        const poly = simpOr(add([...vt.map((x) => mul(x.coef, x.p === 1 ? T0 : pow(T0, num(x.p)))), ...constant]));
+        const rt = ineqCore(poly, op, N0, { ...ctx, v: tv, depth: ctx.depth + 1 });
+        if (!rt.set) return null;
+        steps.push(S(T(`Замена $${tv} = ${tex(F)}$`, `Substitute $${tv} = ${tex(F, 'en')}$`), { tex: ineqTexB(poly, op, N0) }));
+        steps.push(...rt.steps);
+        steps.push(S(T(`Получили $${tv} \\in ${intervalTex(rt.set, 'ru')}$`, `We got $${tv} \\in ${intervalTex(rt.set, 'en')}$`)));
+        let back = IntervalSet.empty();
+        const backSteps = [];
+        for (const part of rt.set.parts) {
+            let piece = IntervalSet.all();
+            const conds = [];
+            if (part.lo && part.hi && cmpEnd(part.lo, part.hi) === 0) conds.push(['=', part.lo.node]);
+            else {
+                if (part.lo) conds.push([part.loC ? '>=' : '>', part.lo.node]);
+                if (part.hi) conds.push([part.hiC ? '<=' : '<', part.hi.node]);
+            }
+            for (const [o, c] of conds) {
+                let r;
+                if (o === '=') {
+                    const e = solveEquation(rel('=', F, c), v, { steps: true });
+                    if (e.kind !== 'roots' || e.families?.length || e.roots.some((x) => x.approxOnly)) return null;
+                    r = { set: IntervalSet.points(e.roots.map((x) => x.node)), steps: e.steps.slice(0, -1) };
+                } else r = sub(F, o, c);
+                if (!r.set) return null;
+                piece = piece.intersect(r.set);
+                backSteps.push(S(byLang((l) => `$${tex(F, l)} ${OP_TEX[o]} ${tex(c, l)}$`), { tex: byLang((l) => `${v} \\in ${intervalTex(r.set, l)}`), sub: r.steps }));
+            }
+            back = back.union(piece);
+        }
+        steps.push(S(T(`Возвращаемся к $${v}$`, `Back to $${v}$`), { tex: byLang((l) => `${v} \\in ${intervalTex(back, l)}`), sub: backSteps }));
+        res = { set: back, steps: [] };
     } else return null;
     if (!res.set) return null;
     steps.push(...res.steps);
     const set = res.set.intersect(odz);
     steps.push(S(T('Учитываем ОДЗ', 'Take the domain into account'), { tex: byLang((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     return { set, steps, chart: res.chart, type: 'logarithmic' };
+}
+
+/**
+ * The generalised method of intervals: f(x) = lhs − rhs is continuous on the domain, so its sign can change only at
+ * its zeros and at the ends of the domain. The zeros come from solveEquation (exact, finite); the sign on every
+ * interval is checked at several points, and any disagreement (a zero the equation solver missed) refuses.
+ */
+function rootsIneq(lhs, op, rhs, E, ctx) {
+    const v = ctx.v;
+    const JUMPY = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'floor', 'ceil', 'frac', 'sign', 'round', 'mod']);
+    if (nodeSome(E, (n) => n.type === 'fn' && JUMPY.has(n.name))) return null;
+    const node = rel(op, lhs, rhs);
+    const conds = collectConds(node, v);
+    if (conds.some((c) => c.kind === 'cos' || c.kind === 'sin')) return null;
+    const odz = conds.length ? odzInfo(conds, v) : null;
+    // conditions that are not rational (√x ≠ 0, ln x ≠ 0) are solved here one by one
+    let D = IntervalSet.all();
+    for (const c of conds) {
+        let cs = signSet(c.expr, OP_OF[c.kind], v);
+        if (!cs && c.kind === 'ne0') {
+            const e = solveEquation(rel('=', c.expr, N0), v, { steps: false });
+            if (e.kind === 'none') cs = IntervalSet.all();
+            else if (e.kind === 'roots' && !e.families?.length && !e.roots.some((x) => x.approxOnly)) cs = IntervalSet.all().minus(IntervalSet.points(e.roots.map((x) => x.node)));
+        } else if (!cs) cs = ineqCore(c.expr, OP_OF[c.kind], N0, { ...ctx, depth: ctx.depth + 1 }).set;
+        if (!cs) return null;
+        D = D.intersect(cs);
+    }
+    const eq = solveEquation(rel('=', lhs, rhs), v, { steps: true });
+    let roots;
+    if (eq.kind === 'none') roots = [];
+    else if (eq.kind === 'roots' && !eq.families?.length && !eq.roots.some((x) => x.approxOnly)) roots = eq.roots.map((x) => x.node).filter((x) => D.contains(x));
+    else return null;
+    const f = (x) => approxOf(E, { [v]: x });
+    const ends = [];
+    const addEnd = (n) => {
+        const e = endOf(n);
+        if (Number.isFinite(e.x) && !ends.some((o) => cmpEnd(o, e) === 0)) ends.push(e);
+    };
+    roots.forEach(addEnd);
+    for (const p of D.parts) {
+        if (p.lo) addEnd(p.lo.node);
+        if (p.hi) addEnd(p.hi.node);
+    }
+    ends.sort((a, b) => cmpEnd(a, b));
+    const good = (y) => (op === '>' ? y > 0 : op === '>=' ? y >= 0 : op === '<' ? y < 0 : y <= 0);
+    const parts = [];
+    const signs = [];
+    for (let k = 0; k <= ends.length; k++) {
+        const a = k > 0 ? ends[k - 1] : null;
+        const b = k < ends.length ? ends[k] : null;
+        let xs;
+        if (a && b) xs = [1, 2, 3, 4, 5].map((j) => a.x + ((b.x - a.x) * j) / 6);
+        else if (b) xs = [0.05, 0.5, 2, 10, 100].map((d) => b.x - d * (1 + Math.abs(b.x)));
+        else if (a) xs = [0.05, 0.5, 2, 10, 100].map((d) => a.x + d * (1 + Math.abs(a.x)));
+        else xs = [-100, -3, 0.5, 3, 100];
+        const inside = xs.map((x) => D.contains(x));
+        if (inside.every((z) => !z)) continue;
+        if (!inside.every(Boolean)) return null;
+        const ys = xs.map(f);
+        if (ys.some((y) => !Number.isFinite(y))) return null;
+        const sg = ys.filter((y) => Math.abs(y) > 1e-12).map(Math.sign);
+        if (!sg.length || sg.some((z) => z !== sg[0])) return null;
+        signs.push({ a, b, sign: sg[0] });
+        if (good(sg[0])) parts.push({ lo: a, hi: b, loC: false, hiC: false });
+    }
+    for (const e of ends) {
+        if (!D.contains(e.node)) continue;
+        const isRoot = roots.some((r) => cmpEnd(endOf(r), e) === 0);
+        const y = isRoot ? 0 : f(e.x);
+        if (Number.isFinite(y) && (isRoot ? !strictOf(op) : good(y))) parts.push({ lo: e, hi: e, loC: true, hiC: true });
+    }
+    const set = new IntervalSet(parts).intersect(D);
+    const steps = [];
+    // solveInequality shows the domain itself unless there are logarithms
+    if (odz && (odz.partial || nodeSome(node, (n) => n.type === 'fn' && (n.name === 'log' || n.name === 'ln' || n.name === 'lg')))) {
+        steps.push(S(T('Область допустимых значений (ОДЗ)', 'The domain (admissible values)'), { tex: byLang((l) => `${odz.conds.map((c) => condTex(c, l)).join(',\\ ')} \\;\\Rightarrow\\; ${v} \\in ${intervalTex(D, l)}`), text: odz.text }));
+    }
+    const fNode = isZeroNode(simpOr(rhs)) ? lhs : add(lhs, neg(rhs));
+    steps.push(S(T('Обобщённый метод интервалов', 'The generalised method of intervals'), {
+        tex: byLang((l) => `f(${v}) = ${tex(fNode, l)}`),
+        text: T('Функция непрерывна на ОДЗ, поэтому знак она может сменить только в своих нулях и на границах ОДЗ.', 'The function is continuous on its domain, so it can change sign only at its zeros and at the ends of the domain.'),
+    }));
+    steps.push(S(T('Нули функции: решаем уравнение', 'The zeros: solve the equation'), { tex: eq.answer?.tex, sub: eq.steps.slice(0, -1) }));
+    const ivTex = (s, l) => {
+        const p = new IntervalSet([{ lo: s.a, hi: s.b, loC: false, hiC: false }]);
+        return `${intervalTex(p, l)}\\!:\\ ${s.sign > 0 ? '+' : '-'}`;
+    };
+    steps.push(S(T('Знаки на промежутках', 'The signs on the intervals'), {
+        tex: byLang((l) => signs.map((s) => ivTex(s, l)).join(';\\quad ')),
+        text: T('Знак на каждом промежутке проверяем подстановкой точек из него.', 'The sign on each interval is checked by substituting points from it.'),
+    }));
+    const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
+    steps.push(S(T(`Выбираем промежутки со знаком ${want.ru}`, `Take the intervals with ${want.en}`), { tex: byLang((l) => `${v} \\in ${intervalTex(set, l)}`) }));
+    return { set, steps, type: 'intervals' };
 }
 
 /**
