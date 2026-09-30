@@ -49,11 +49,11 @@ first-year university course, plus generated tasks. Every expected answer is che
 
 | | tasks | solved | wrong | with steps |
 |---|---:|---:|---:|---:|
-| ЕГЭ, профиль | 169 | 100% | 0 | 100% |
+| ЕГЭ, профиль | 212 | 100% | 0 | 100% |
 | ЕГЭ, база | 20 | 100% | 0 | 100% |
 | ОГЭ | 54 | 100% | 0 | 100% |
 | ЕНТ | 67 | 100% | 0 | 100% |
-| First-year course | 140 | 100% | 0 | 100% |
+| First-year course | 190 | 100% | 0 | 100% |
 | Generated | 936 | 100% | 0 | 100% |
 
 A wrong answer counts against the engine; a refusal only counts as unsolved. The engine prefers saying it
