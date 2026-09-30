@@ -21,3 +21,4 @@ export * from './limit.js';
 export * from './solve.js';
 export * from './extrema.js';
 export * from './evalsteps.js';
+export * from './ode.js';
