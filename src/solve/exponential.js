@@ -3,9 +3,8 @@
 import { sym, num, fn, containsVar, mul, add, nodeKey, pow, div, neg, numValue, summands } from '../core/ast.js';
 import { Q } from '../core/rational.js';
 import { linearForm, Poly } from '../core/poly.js';
-import { N1, S, approxOf, exactZero, isolated, qGcd, simpOr, tex } from './common.js';
-import { subSolve } from './equation.js';
-import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
+import { N1, S, approxOf, exactZero, isolated, qGcd, simpOr, tex, isZeroNode, sumNode } from './common.js';
+import { partStep, polyTex, pushPart, solveAnyPoly } from './polynomial.js';
 import { solveNodePoly } from './rational.js';
 import { mergeRoots } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
@@ -174,7 +173,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
                         text: msg('solve.exponential.bases_are_equal_so_exponents_are'),
                     }),
                 );
-                sub = subSolve(f, num(rOwn), ctx);
+                sub = ctx.solve(f, num(rOwn));
                 pushPart(steps, f, num(rOwn), sub, v);
             } else {
                 steps.push(
@@ -183,7 +182,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
                         text: msg('solve.exponential.bases_are_equal_so_we_equate'),
                     }),
                 );
-                sub = subSolve(g, num(rc), ctx);
+                sub = ctx.solve(g, num(rc));
                 pushPart(steps, g, num(rc), sub, v);
             }
         } else {
@@ -194,7 +193,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
                     text: msg('solve.exponential.by_definition_of_logarithm', { b: (lng) => tex(b, lng), p: (lng) => tex(logNodeB(b, sym('a')), lng) }),
                 }),
             );
-            sub = subSolve(f, Lg, ctx);
+            sub = ctx.solve(f, Lg);
             pushPart(steps, f, Lg, sub, v);
         }
         if (sub.kind === 'unsupported') return null;
@@ -215,7 +214,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
                     text: msg('solve.exponential.bases_are_equal_so_we_equate'),
                 }),
             );
-            const sub = subSolve(g1, g2, ctx);
+            const sub = ctx.solve(g1, g2);
             if (sub.kind === 'unsupported') return null;
             pushPart(steps, g1, g2, sub, v);
             return { ...sub, steps, type: 'exponential' };
@@ -227,7 +226,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
                 text: msg('solve.exponential.power_is_positive_so_division_is'),
             }),
         );
-        const sub = subSolve(pow(cN, g), K, ctx);
+        const sub = ctx.solve(pow(cN, g), K);
         if (sub.kind === 'unsupported') return null;
         steps.push(...sub.steps);
         return { ...sub, steps, type: 'exponential' };
@@ -307,7 +306,7 @@ export function solveExponential(lhs, rhs, E, ctx) {
     let roots = [];
     let numeric = !!tr.numeric;
     for (const r of good) {
-        const sub = subSolve(tNode, r.node, ctx);
+        const sub = ctx.solve(tNode, r.node);
         if (sub.kind === 'unsupported') return null;
         roots.push(...sub.roots);
         if (sub.numeric) numeric = true;

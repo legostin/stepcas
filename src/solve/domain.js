@@ -13,19 +13,20 @@ import {
     approxShowComplex,
     approxShowNode,
     approxTex,
-    close,
     exactZero,
     expd,
     simp,
     simpOr,
     termScale,
     tex,
+    relHoldsNum,
 } from './common.js';
 import { IntervalSet, intervalTex } from './intervals.js';
 import { complexApproxNode } from './polynomial.js';
 import { approxComplexTex } from './roots.js';
 import { signSet } from './signs.js';
-import { ZZ, basicTrig, mergeFamilies, mkFamily, periodN, plusTex } from './trig.js';
+import { basicTrig } from './trig.js';
+import { ZZ, mergeFamilies, mkFamily, periodN, plusTex } from './families.js';
 import { msg, eachLanguage, joined } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- ОДЗ (the domain of an equation)
@@ -175,26 +176,6 @@ function nodeSizeOf(n) {
 
 const REL_TEX = { '=': '=', '<': '<', '>': '>', '<=': '\\le', '>=': '\\ge', '!=': '\\ne' };
 const NOT_REL_TEX = { '=': '\\ne', '<': '\\ge', '>': '\\le', '<=': '>', '>=': '<', '!=': '=' };
-
-export function relHoldsNum(op, a, b) {
-    const eq = close(a, b, 1e-9);
-    switch (op) {
-        case '=':
-            return eq;
-        case '!=':
-            return !eq;
-        case '<':
-            return a < b && !eq;
-        case '<=':
-            return a < b || eq;
-        case '>':
-            return a > b && !eq;
-        case '>=':
-            return a > b || eq;
-        default:
-            return false;
-    }
-}
 
 /**
  * Substitution check of one value. → {ok, defined, exact, lhs, rhs (value nodes or null), lhsApprox, rhsApprox,

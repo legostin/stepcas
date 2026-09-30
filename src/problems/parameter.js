@@ -15,7 +15,7 @@ import { step } from '../core/steps.js';
 import { limit } from '../calculus/limit/index.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from '../solve/index.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { derivativeOf } from '../calculus/derivative/derivative.js';
+import { derivativeOf } from '../calculus/derivative/index.js';
 import { msg, eachLanguage, joined, DEFAULT_LANGUAGE, MACHINE } from '../i18n/index.js';
 
 const N0 = num(0);

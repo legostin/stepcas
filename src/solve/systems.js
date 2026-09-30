@@ -6,10 +6,10 @@ import { rel, num, substitute, add, neg, freeVars, sym, mul, div, nodeKey } from
 import { bigLcm, Q, MathError } from '../core/rational.js';
 import { toText } from '../core/print.js';
 import { matSolveCramer, Matrix, matSolve } from '../linalg/index.js';
-import { S, approxOf, close, exactZero, pick, simpOr, tex } from './common.js';
+import { S, approxOf, close, exactZero, pick, simpOr, tex, monoNode, sumNode } from './common.js';
 import { sideValue } from './domain.js';
 import { solveEquation } from './equation.js';
-import { monoNode, solveLinearSchool, sumNode } from './polynomial.js';
+import { solveLinearSchool } from './polynomial.js';
 import { rootsTex } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
 

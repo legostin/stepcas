@@ -6,10 +6,9 @@ import { numDen } from '../core/fractions.js';
 import { Poly } from '../core/poly.js';
 import { Q } from '../core/rational.js';
 import { N0, S, exactZero, isConstNode, simpOr, tex } from './common.js';
-import { reject } from './equation.js';
+import { reject, hasI, mergeRoots, mkRoot, mkRootC } from './roots.js';
 import { IntervalSet } from './intervals.js';
 import { multOf, nodeQuadRoots, partStep, polyTex, solveAnyPoly } from './polynomial.js';
-import { hasI, mergeRoots, mkRoot, mkRootC } from './roots.js';
 import { msg, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- rational equations

@@ -3,10 +3,9 @@
 import { containsVar, sym, div, neg, substitute, add, mul, mapNode } from '../core/ast.js';
 import { Poly } from '../core/poly.js';
 import { N0, N1, S, TMP, approxOf, exactZero, isolated, linearIn, orTex, outermost, replaceNode, simpOr, tex } from './common.js';
-import { reject, subSolve } from './equation.js';
+import { reject, mergeRoots, rootsTex } from './roots.js';
 import { IntervalSet } from './intervals.js';
 import { partStep, pushPart, solveAnyPoly } from './polynomial.js';
-import { mergeRoots, rootsTex } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- absolute value
@@ -32,7 +31,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
                     return { kind: 'none', roots: [], steps, type: 'abs' };
                 }
                 if (exactZero(g) === true) {
-                    const sub = subSolve(f, N0, ctx);
+                    const sub = ctx.solve(f, N0);
                     steps.push(
                         partStep(
                             eachLanguage((l) => `${tex(f, l)} = 0`),
@@ -50,7 +49,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
                 );
                 let roots = [];
                 for (const rhs2 of [g, simpOr(neg(g))]) {
-                    const sub = subSolve(f, rhs2, ctx);
+                    const sub = ctx.solve(f, rhs2);
                     if (sub.kind === 'unsupported') return null;
                     roots.push(...sub.roots);
                     pushPart(steps, f, rhs2, sub, v);
@@ -68,7 +67,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
             );
             let cands = [];
             for (const rhs2 of [g, simpOr(neg(g))]) {
-                const sub = subSolve(f, rhs2, ctx);
+                const sub = ctx.solve(f, rhs2);
                 if (sub.kind === 'unsupported') return null;
                 if (sub.kind === 'all' || sub.kind === 'set') return absIntervals(E, A, ctx);
                 cands.push(...sub.roots);
@@ -108,7 +107,7 @@ export function solveAbs(lhs, rhs, E, ctx) {
             let roots = [];
             let ok = true;
             for (const rhs2 of [g, simpOr(neg(g))]) {
-                const sub = subSolve(f, rhs2, ctx);
+                const sub = ctx.solve(f, rhs2);
                 if (sub.kind === 'unsupported' || sub.kind === 'all' || sub.kind === 'set') {
                     ok = false;
                     break;
@@ -174,7 +173,7 @@ function absIntervals(E, A, ctx) {
             const w = lo === null ? `${v} < ${b}` : hi === null ? `${v} \\ge ${a}` : `${a} \\le ${v} < ${b}`;
             return msg('solve.abs.for').in(l) + `$${w}$`;
         });
-        const sub = subSolve(Ei, N0, ctx);
+        const sub = ctx.solve(Ei, N0);
         if (sub.kind === 'unsupported') return null;
         const inside = (r) => typeof r.approx === 'number' && (lo === null || r.approx >= lo.approx - 1e-9) && (hi === null || r.approx <= hi.approx + 1e-9);
         let txt;

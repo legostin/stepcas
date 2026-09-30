@@ -6,7 +6,7 @@ import { Poly } from '../core/poly.js';
 import { toText } from '../core/print.js';
 import { approxC, approxOf, approxTex, close, exactZero, simpOr, tex } from './common.js';
 import { IntervalSet, intervalTex, intervalText, parseIntervalSet } from './intervals.js';
-import { N_SYM, familiesTex } from './trig.js';
+import { N_SYM, familiesTex } from './families.js';
 import { msg, notation, eachLanguage, decimalIn, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- roots and their TeX
@@ -166,4 +166,10 @@ export function rootsOnInterval(fams, set) {
         }
     }
     return mergeRoots(out);
+}
+
+/** Remember roots dropped by a sub-solver (they are reported as extraneous with the reason). */
+export function reject(ctx, roots, reason) {
+    if (!ctx.rejected) return;
+    for (const r of roots) if (!ctx.rejected.some((x) => sameRoot(x, r))) ctx.rejected.push({ node: r.node, approx: r.approx, reason });
 }

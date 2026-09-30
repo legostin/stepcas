@@ -7,13 +7,32 @@ import { Poly, linearForm } from '../core/poly.js';
 import { simplify, splitCoeff } from '../core/simplify.js';
 import { collectTerms } from '../core/expand.js';
 import { parse } from '../core/parse.js';
-import { N0, N1, S, TMP, approxOf, exactZero, isConstNode, linearIn, orTex, outermost, qGcd, replaceNode, simpOr, tex } from './common.js';
-import { OP_OF, collectConds, condTex, odzInfo, relHoldsNum } from './domain.js';
+import {
+    N0,
+    N1,
+    S,
+    TMP,
+    approxOf,
+    exactZero,
+    isConstNode,
+    linearIn,
+    orTex,
+    outermost,
+    qGcd,
+    replaceNode,
+    simpOr,
+    tex,
+    relHoldsNum,
+    isZeroNode,
+    monoNode,
+    sumNode,
+} from './common.js';
+import { OP_OF, collectConds, condTex, odzInfo } from './domain.js';
 import { pickVar, solveCore, solveEquation } from './equation.js';
 import { analyzeExp, baseInfo, baseNode, exactPower, logNode, logNodeB, sameBase } from './exponential.js';
 import { IntervalSet, cmpEnd, endOf, intervalTex, intervalText, relToSet } from './intervals.js';
 import { analyzeLog } from './logarithmic.js';
-import { isZeroNode, monoNode, polyTex, quadSolve, solveAnyPoly, sumNode } from './polynomial.js';
+import { polyTex, quadSolve, solveAnyPoly } from './polynomial.js';
 import { hasRadical, splitRadicalTerm } from './radical.js';
 import { factoredNode } from './rational.js';
 import { mergeRoots, rootsTex } from './roots.js';

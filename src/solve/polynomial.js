@@ -4,11 +4,10 @@ import { Q, rootExtract, bigGcd, bigLcm } from '../core/rational.js';
 import { Poly } from '../core/poly.js';
 import { num, sym, mul, div, neg, add, pow, numValue, containsVar, nodeSome, nodeKey } from '../core/ast.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
-import { N0, N1, S, approxC, approxNode, approxOf, exactZero, expd, parQ, pick, simp, simpOr, sq, tex } from './common.js';
-import { solveCore } from './equation.js';
+import { N0, N1, S, approxC, approxNode, approxOf, exactZero, expd, parQ, pick, simp, simpOr, sq, tex, isZeroNode, monoNode, sumNode } from './common.js';
 import { IntervalSet } from './intervals.js';
 import { approxComplexTex, cmpRoots, hasI, mergeRoots, mkRoot, mkRootC, qRoot, rootsTex, sameRoot } from './roots.js';
-import { familiesTex, familiesToRoots, mergeFamilies } from './trig.js';
+import { familiesTex, familiesToRoots, mergeFamilies } from './families.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- polynomials: helpers
@@ -749,10 +748,6 @@ export function nodeQuadRoots(aN, bN, cN, ctx) {
 
 // ---------------------------------------------------------------- linear equations (school style)
 
-export const isZeroNode = (n) => n.type === 'num' && n.value.isZero();
-export const monoNode = (c, v, k = 1) => simpOr(mul(num(c), k === 1 ? sym(v) : pow(sym(v), num(k))));
-export const sumNode = (terms) => (terms.length ? (terms.length === 1 ? terms[0] : add(terms)) : N0);
-
 /** a₁x + a₀ = b₁x + b₀ (both sides polynomials over Q, the difference of degree ≤ 1). */
 export function solveLinearSchool(lhs, rhs, A, B, ctx) {
     const v = ctx.v;
@@ -915,7 +910,7 @@ export function productSplit(lhs, rhs, ctx) {
     let set = null;
     const cplx = [];
     for (const b of bases) {
-        const sub = solveCore(b.node, N0, { ...ctx, depth: ctx.depth + 1 });
+        const sub = ctx.solve(b.node, N0);
         if (sub.kind === 'unsupported') return null;
         if (sub.kind === 'all') {
             kind = 'all';

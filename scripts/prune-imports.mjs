@@ -3,6 +3,7 @@
 //   node scripts/prune-imports.mjs [paths…]
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import * as acorn from 'acorn';
 
 const paths = process.argv.slice(2).length ? process.argv.slice(2) : ['src'];
 let out;
@@ -13,24 +14,23 @@ try {
 }
 let removed = 0;
 for (const f of JSON.parse(out)) {
-    const lines = fs.readFileSync(f.filePath, 'utf8').split('\n');
-    let changed = false;
-    for (const m of f.messages) {
-        if (m.ruleId !== 'no-unused-vars') continue;
-        const name = m.message.match(/'([^']+)'/)?.[1];
-        const i = m.line - 1;
-        const mm = lines[i]?.match(/^import \{([^}]*)\} from (.*)$/);
-        if (!name || !mm) continue;
-        const keep = mm[1]
-            .split(',')
-            .map((s) => s.trim())
-            .filter((s) => s && s.split(' as ').pop().trim() !== name);
-        lines[i] = keep.length ? `import { ${keep.join(', ')} } from ${mm[2]}` : null;
-        changed = true;
-        removed++;
+    const unused = new Set(f.messages.filter((m) => m.ruleId === 'no-unused-vars').map((m) => m.message.match(/'([^']+)'/)?.[1]));
+    if (!unused.size) continue;
+    let text = fs.readFileSync(f.filePath, 'utf8');
+    const ast = acorn.parse(text, { ecmaVersion: 'latest', sourceType: 'module' });
+    const edits = [];
+    for (const st of ast.body) {
+        if (st.type !== 'ImportDeclaration' || st.specifiers.some((sp) => sp.type !== 'ImportSpecifier')) continue;
+        const keep = st.specifiers.filter((sp) => !unused.has(sp.local.name));
+        if (keep.length === st.specifiers.length) continue;
+        removed += st.specifiers.length - keep.length;
+        const names = keep.map((sp) => (sp.imported.name === sp.local.name ? sp.local.name : `${sp.imported.name} as ${sp.local.name}`));
+        edits.push([st.start, st.end + (keep.length ? 0 : 1), keep.length ? `import { ${names.join(', ')} } from '${st.source.value}';` : '']);
     }
-    if (changed) fs.writeFileSync(f.filePath, lines.filter((l) => l !== null).join('\n'));
+    for (const [a, b, t] of edits.reverse()) text = text.slice(0, a) + t + text.slice(b);
+    fs.writeFileSync(f.filePath, text);
 }
+
 // one declaration per module: import { a } from './x.js'; import { b } from './x.js' → import { a, b } from './x.js'
 let merged = 0;
 const files = [];

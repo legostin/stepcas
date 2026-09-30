@@ -2,7 +2,7 @@
 
 import { toTex } from '../core/print.js';
 import { step as mkStep } from '../core/steps.js';
-import { num, sym, freeVars, neg, mul, add, fn, nodeKey, mapNode, nodeChildren, containsVar } from '../core/ast.js';
+import { num, sym, freeVars, neg, mul, add, fn, nodeKey, mapNode, nodeChildren, containsVar, pow } from '../core/ast.js';
 import { Q, bigGcd } from '../core/rational.js';
 import { simplify } from '../core/simplify.js';
 import { expand, collectTerms } from '../core/expand.js';
@@ -195,3 +195,29 @@ export function linearIn(E, name, v) {
 }
 
 export const orTex = (l) => msg('solve.common.or').in(l);
+
+export const isZeroNode = (n) => n.type === 'num' && n.value.isZero();
+
+export const monoNode = (c, v, k = 1) => simpOr(mul(num(c), k === 1 ? sym(v) : pow(sym(v), num(k))));
+
+export const sumNode = (terms) => (terms.length ? (terms.length === 1 ? terms[0] : add(terms)) : N0);
+
+export function relHoldsNum(op, a, b) {
+    const eq = close(a, b, 1e-9);
+    switch (op) {
+        case '=':
+            return eq;
+        case '!=':
+            return !eq;
+        case '<':
+            return a < b && !eq;
+        case '<=':
+            return a < b || eq;
+        case '>':
+            return a > b && !eq;
+        case '>=':
+            return a > b || eq;
+        default:
+            return false;
+    }
+}

@@ -3,10 +3,9 @@
 import { Q } from '../core/rational.js';
 import { num, containsVar, numValue, mul, pow, nodeSome, add, fn, div, neg, nodeKey, summands } from '../core/ast.js';
 import { Poly } from '../core/poly.js';
-import { N0, N1, S, approxOf, expd, isConstNode, isolated, outermost, simpOr, tex } from './common.js';
-import { subSolve } from './equation.js';
+import { N0, N1, S, approxOf, expd, isConstNode, isolated, outermost, simpOr, tex, isZeroNode, sumNode } from './common.js';
 import { E_SYM, baseInfo, baseNode, isE, logNode, sameBase } from './exponential.js';
-import { isZeroNode, partStep, polyTex, pushPart, solveAnyPoly, sumNode } from './polynomial.js';
+import { partStep, polyTex, pushPart, solveAnyPoly } from './polynomial.js';
 import {} from './rational.js';
 import { mergeRoots } from './roots.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
@@ -77,7 +76,7 @@ export function solveCommonExp(lhs, rhs, E, ctx) {
                 },
             ),
         ];
-        const sub = subSolve(rest, N0, ctx);
+        const sub = ctx.solve(rest, N0);
         if (sub.kind === 'unsupported' || sub.numeric) return null;
         steps.push(...sub.steps);
         return { ...sub, steps };
@@ -134,7 +133,7 @@ export function solveTakeLog(lhs, rhs, E, ctx) {
             text: msg('solve.logarithmic.base_of_power_with_variable_exponent', { p: (lng) => lt(lng) }),
         }),
     ];
-    const sub = subSolve(L1, L2, ctx);
+    const sub = ctx.solve(L1, L2);
     if (sub.kind === 'unsupported' || sub.numeric) return null;
     steps.push(...sub.steps);
     return { ...sub, steps, type: 'logarithmic' };
@@ -157,7 +156,7 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
         if (!isolated(lhs, rhs, F, R)) steps.push(S(msg('solve.logarithmic.isolate_logarithm'), { tex: eachLanguage((l) => `${tex(F, l)} = ${tex(R, l)}`) }));
         const l2 = expd(pow(info.base, R)) ?? pow(info.base, R);
         steps.push(S(msg('solve.logarithmic.rewrite_as_power'), { tex: eachLanguage((l) => `${tex(l2, l)} = ${tex(info.arg, l)}`), text: defText }));
-        const sub = subSolve(l2, info.arg, ctx);
+        const sub = ctx.solve(l2, info.arg);
         if (sub.kind === 'unsupported') return null;
         pushPart(steps, l2, info.arg, sub, v);
         return { ...sub, steps, type: 'logarithmic' };
@@ -185,7 +184,7 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
                     text: defText,
                 }),
             );
-            const sub = subSolve(u, val, ctx);
+            const sub = ctx.solve(u, val);
             if (sub.kind === 'unsupported') return null;
             pushPart(steps, u, val, sub, v);
             return { ...sub, steps, type: 'logarithmic' };
@@ -223,7 +222,7 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
         let roots = [];
         for (const r of tr.roots) {
             const val = simpOr(pow(cN, r.node));
-            const sub = subSolve(u, val, ctx);
+            const sub = ctx.solve(u, val);
             if (sub.kind === 'unsupported') return null;
             roots.push(...sub.roots);
             steps.push(
@@ -291,7 +290,7 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
                 text: msg('solve.logarithmic.logarithm_is_monotonic_this_step_ignores'),
             }),
         );
-        const sub = subSolve(ups[0], downs[0], ctx);
+        const sub = ctx.solve(ups[0], downs[0]);
         if (sub.kind === 'unsupported') return null;
         pushPart(steps, ups[0], downs[0], sub, v);
         return { ...sub, steps, type: 'logarithmic' };
@@ -310,7 +309,7 @@ export function solveLogarithmic(lhs, rhs, E, ctx) {
             text: defText,
         }),
     );
-    const sub = subSolve(F, K, ctx);
+    const sub = ctx.solve(F, K);
     if (sub.kind === 'unsupported') return null;
     pushPart(steps, F, K, sub, v);
     return { ...sub, steps, type: 'logarithmic' };

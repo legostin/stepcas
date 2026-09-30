@@ -18,7 +18,8 @@ import { productSplit, solveLinearSchool, solvePolyEquation } from './polynomial
 import { hasRadical, solveRadical } from './radical.js';
 import { solveNodePoly, solveRational } from './rational.js';
 import { answerOf, hasI, rootsOnInterval, rootsTex, sameRoot, toIntervalOpt } from './roots.js';
-import { TRIG_FN, familiesToRoots, familyTex, mergeFamilies, trigCore } from './trig.js';
+import { TRIG_FN, trigCore } from './trig.js';
+import { familiesToRoots, familyTex, mergeFamilies } from './families.js';
 import { msg, notation, eachLanguage } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- numeric fallback
@@ -90,7 +91,12 @@ function solveNumeric(E, ctx) {
 
 const UNSUP = (reason, steps = []) => ({ kind: 'unsupported', roots: [], steps, reason });
 
+/**
+ * Solve lhs = rhs in ctx: {v, domain: 'real' | 'complex', depth, rejected?: []}. A method solves the equations it
+ * makes with ctx.solve(lhs, rhs) — the dispatcher hands itself down, so the methods never import it.
+ */
 export function solveCore(lhs, rhs, ctx) {
+    ctx = { ...ctx, solve: (l, r) => solveCore(l, r, { ...ctx, depth: ctx.depth + 1 }) };
     const v = ctx.v;
     if (ctx.depth > 8) return UNSUP(msg('solve.equation.too_many_nested_transformations'));
     let E;
@@ -421,14 +427,4 @@ function reductionStep(node) {
  */
 export function solveTrig(input, v = 'x', opts = {}) {
     return solveEquation(input, v, { ...opts, onlyTrig: true });
-}
-
-/** Remember roots dropped by a sub-solver (they are reported as extraneous with the reason). */
-export function reject(ctx, roots, reason) {
-    if (!ctx.rejected) return;
-    for (const r of roots) if (!ctx.rejected.some((x) => sameRoot(x, r))) ctx.rejected.push({ node: r.node, approx: r.approx, reason });
-}
-
-export function subSolve(lhs, rhs, ctx) {
-    return solveCore(lhs, rhs, { ...ctx, depth: ctx.depth + 1 });
 }

@@ -1,4 +1,4 @@
-// diff — symbolic derivatives with a step tree that mirrors the expression («что делаем и почему»),
+// calculus/derivative — symbolic derivatives with a step tree that mirrors the expression («что делаем и почему»),
 // higher and partial derivatives, the gradient and the tangent line.
 //
 // derivative(f, 'x', {steps}) walks the tree as the person typed it (sum → sum rule, product → product
@@ -15,4 +15,4 @@
 export { calcTex, calcTexBoth, prettyForm } from './display.js';
 export { quickDerivative } from './quick.js';
 export { niceForm, ratFunctionOf } from './clean.js';
-export { derivative, derivativeN, gradientOf, partialDerivative, tangentLine } from './derivative.js';
+export { derivative, derivativeN, derivativeOf, gradientOf, partialDerivative, tangentLine } from './derivative.js';

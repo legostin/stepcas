@@ -1,9 +1,9 @@
 // solve/radical — irrational equations (roots of the unknown).
 
 import { containsVar, numValue, nodeSome, mul, nodeKey, div, neg, pow, num, substitute, summands } from '../core/ast.js';
-import { N0, N1, S, approxOf, exactZero, expd, isolated, simpOr, tex } from './common.js';
-import { reject, subSolve } from './equation.js';
-import { pushPart, sumNode } from './polynomial.js';
+import { N0, N1, S, approxOf, exactZero, expd, isolated, simpOr, tex, sumNode } from './common.js';
+import { reject } from './roots.js';
+import { pushPart } from './polynomial.js';
 import {} from './rational.js';
 import { msg, eachLanguage } from '../i18n/index.js';
 
@@ -72,7 +72,7 @@ export function solveRadical(lhs, rhs, E, ctx) {
                 : msg('solve.radical.odd_power_is_equivalent_transformation_no'),
         }),
     );
-    const sub = subSolve(lhs2, rhs2, ctx);
+    const sub = ctx.solve(lhs2, rhs2);
     if (sub.kind === 'unsupported' || sub.periodic) return null;
     pushPart(steps, lhs2, rhs2, sub, v);
     if (sub.kind === 'all' || sub.kind === 'set') return null;

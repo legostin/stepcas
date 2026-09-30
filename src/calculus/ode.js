@@ -16,7 +16,7 @@ import { integrate } from './integral/index.js';
 import { solveEquation } from '../solve/index.js';
 import { expand } from '../core/expand.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { derivativeOf } from './derivative/derivative.js';
+import { derivativeOf } from './derivative/index.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 const YP = 'yp';
