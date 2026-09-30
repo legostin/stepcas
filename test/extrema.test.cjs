@@ -29,7 +29,7 @@ test('monotonic: the answer is at an end; a corner counts as a critical point', 
 
 test('a function undefined on the segment is refused, not guessed', () => {
     assert.equal(E.extremeOnSegment('ln(x)', 'x', '-1', '2').kind, 'unsupported');
-    assert.throws(() => E.extremeOnSegment('x^2', 'x', '3', '1'));
+    assert.equal(E.extremeOnSegment('x^2', 'x', '3', '1').ok, false);
 });
 
 test('points of maximum and minimum', () => {

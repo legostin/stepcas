@@ -26,9 +26,11 @@ function table(rows, fn) {
 // ---------------------------------------------------------------- module hygiene
 
 test('every exported name is unique across all engine modules', async () => {
+    // index.js re-exports whole modules (export * from …) and chosen names; a star re-export drops names that
+    // collide silently, so every name must come from exactly one module
     const index = fs.readFileSync(path.join(ENGINE, 'index.js'), 'utf8');
     const files = [...index.matchAll(/export \* from '\.\/([\w/-]+\.js)'/g)].map((m) => m[1]);
-    assert.ok(files.length >= 19);
+    assert.ok(files.length >= 10);
     const seen = new Map();
     for (const f of files) {
         const mod = await import(path.join(ENGINE, f));
@@ -38,7 +40,15 @@ test('every exported name is unique across all engine modules', async () => {
             assert.ok(name in E, `${name} is missing from index.js`);
         }
     }
+    for (const m of index.matchAll(/export \{([^}]*)\} from '\.\/([\w/-]+\.js)'/g)) {
+        for (const name of m[1].split(',').map((x) => x.trim()).filter(Boolean)) {
+            assert.ok(!seen.has(name), `${name} is exported twice (${seen.get(name)} and ${m[2]})`);
+            seen.set(name, m[2]);
+            assert.ok(name in E, `${name} is missing from index.js`);
+        }
+    }
 });
+
 
 test('the core API is exported', () => {
     const names = ['MathError', 'Q', 'bigGcd', 'bigLcm', 'bigAbs', 'bigIsqrt', 'bigIroot', 'rootExtract', 'num', 'sym', 'add', 'mul', 'div',

@@ -9,6 +9,8 @@ let E;
 before(async () => {
     E = await import('../src/index.js');
 });
+// the solvers never throw on what a person types: a refusal is {ok: false} with the error's code and message
+const refused = (r, pred) => r.ok === false && pred({ ...r, msg: r.reason });
 
 // ---------------------------------------------------------------- helpers
 
@@ -239,13 +241,13 @@ test('derivative options: unsimplified result, partial, n-th, gradient, tangent'
     assert.equal(E.tangentLine('sin(x)', 'x', 'pi').tex, 'y = \\pi - x');
     assert.equal(E.tangentLine('ln(x)', 'x', 'e').tex, 'y = \\frac{x}{e}');
     assert.equal(E.tangentLine('e^x', 'x', 0).tex, 'y = x + 1');
-    assert.throws(() => E.tangentLine('sqrt(x)', 'x', 0), (e) => e.code === 'no-derivative');
-    assert.throws(() => E.tangentLine('ln(x)', 'x', -1), (e) => e.code === 'undefined');
+    assert.ok(refused(E.tangentLine('sqrt(x)', 'x', 0), (e) => e.code === 'no-derivative'));
+    assert.ok(refused(E.tangentLine('ln(x)', 'x', -1), (e) => e.code === 'undefined'));
 });
 
 test('derivative: refusals and helpers', () => {
-    assert.throws(() => E.derivative('x^2 = 1'), (e) => e.code === 'not-expr');
-    assert.throws(() => E.derivative('x!'), (e) => e.code === 'unsupported' && /Факториал/.test(e.msg.ru));
+    assert.ok(refused(E.derivative('x^2 = 1'), (e) => e.code === 'not-expr'));
+    assert.ok(refused(E.derivative('x!'), (e) => e.code === 'unsupported' && /Факториал/.test(e.msg.ru)));
     assert.equal(tex(E.derivative('sign(x)').result), '0');
     assert.equal(tex(E.derivative('floor(2x)').result), '0');
     assert.equal(tex(E.quickDerivative(E.parse('x^3'))), '3x^{2}');
@@ -415,7 +417,7 @@ test('integrals: honest refusals with a reason (and a hint for known non-element
         checkSteps(r.steps, s);
         assert.equal(r.steps.at(-1).rule, 'fail');
     }
-    assert.throws(() => E.integrate('x = 2'), (e) => e.code === 'not-expr');
+    assert.ok(refused(E.integrate('x = 2'), (e) => e.code === 'not-expr'));
 });
 
 // ---------------------------------------------------------------- definite integrals
@@ -484,7 +486,7 @@ test(`definite integrals: ${DEFINITE.length} cases — exact, improper, divergen
     const und = E.integrateDefinite('sqrt(x)', 'x', -1, 1, { steps: true });
     assert.equal(und.method, 'undefined');
     assert.equal(und.value, null);
-    assert.throws(() => E.integrateDefinite('a*x', 'x', 0, 1), (e) => e.code === 'unbound');
+    assert.ok(refused(E.integrateDefinite('a*x', 'x', 0, 1), (e) => e.code === 'unbound'));
 });
 
 test('area between curves', () => {
@@ -620,8 +622,8 @@ test('limits: parameters, other variables, L\'Hôpital only when it applies, num
         assert.match(n.tex.ru ?? n.tex, /\\approx/);
         assert.ok(n.steps.some((s) => s.rule === 'numeric'));
     } else assert.equal(tex(n.value), '-2');
-    assert.throws(() => E.limit('x = 1', 'x', 0), (e) => e.code === 'not-expr');
-    assert.throws(() => E.limit('x', 'x', 'y'), (e) => e.code === 'range' || e.code === 'unbound');
+    assert.ok(refused(E.limit('x = 1', 'x', 0), (e) => e.code === 'not-expr'));
+    assert.ok(refused(E.limit('x', 'x', 'y'), (e) => e.code === 'range' || e.code === 'unbound'));
 });
 
 // ---------------------------------------------------------------- Taylor polynomials
@@ -650,7 +652,7 @@ test('Taylor polynomials with exact coefficients', () => {
         const x = a + 0.1;
         assert.ok(Math.abs(E.evaluate(T.poly, { x }) - E.evaluate(E.parse(f), { x })) < 1e-7, `${f}: Taylor error`);
     }
-    assert.throws(() => E.taylorPolynomial('ln(x)', 'x', 0, 3), (err) => err.code === 'undefined');
+    assert.ok(refused(E.taylorPolynomial('ln(x)', 'x', 0, 3), (err) => err.code === 'undefined'));
     const b = E.taylorRemainderBound('e^x', 'x', 0, 4, 1);
     assert.ok(b.bound >= Math.E - (1 + 1 + 1 / 2 + 1 / 6 + 1 / 24) - 1e-12);
     assert.ok(b.bound < 0.03);

@@ -6,6 +6,8 @@ let E;
 before(async () => {
     E = await import('../src/index.js');
 });
+// the solvers never throw on what a person types: a refusal is {ok: false} with the error's code and message
+const refused = (r, pred) => r.ok === false && pred({ ...r, msg: r.reason });
 
 // ---------------------------------------------------------------- helpers
 
@@ -540,7 +542,7 @@ test('refusals are honest', () => {
     assert.match(p.reason.ru, /параметрами/);
     assert.equal(E.solveEquation('x^2 < 4').kind, 'unsupported');
     assert.equal(E.solveEquation('x + y = 1; x - y = 2').kind, 'unsupported');
-    assert.throws(() => E.solveEquation('x^2 = = 4'), (e) => e instanceof E.MathError);
+    assert.ok(refused(E.solveEquation('x^2 = = 4'), (e) => e.kind === 'invalid' && e.code === 'syntax'));
     const t = E.solveTrig('x^2 = 4');
     assert.equal(t.kind, 'unsupported');
 });
@@ -866,27 +868,27 @@ test('parseIntervalSet: errors and intervalEquals', () => {
 
 test('checkRoot: substitution with steps', () => {
     const a = E.checkRoot('sqrt(x+2) = x', 'x', -1);
-    assert.equal(a.ok, false);
-    assert.equal(a.reason, 'mismatch');
+    assert.equal(a.isRoot, false);
+    assert.equal(a.why, 'mismatch');
     assert.equal(a.tex, '\\sqrt{-1 + 2} = 1 \\,\\ne\\, -1');
     checkSteps(a.steps, 'checkRoot');
     const b = E.checkRoot('x^2 = 4', 'x', 2);
-    assert.ok(b.ok && b.exact);
+    assert.ok(b.isRoot && b.exact);
     assert.equal(b.tex, '2^{2} = 4\\ \\checkmark');
     const c = E.checkRoot('x^2 > 4', 'x', 3);
-    assert.ok(c.ok);
+    assert.ok(c.isRoot);
     const d = E.checkRoot('log_2(x) = 1', 'x', -2);
-    assert.equal(d.ok, false);
-    assert.equal(d.reason, 'odz');
+    assert.equal(d.isRoot, false);
+    assert.equal(d.why, 'odz');
     const e = E.checkRoot('x^2 - 2 = 0', 'x', 'sqrt(2)');
-    assert.ok(e.ok && e.exact);
+    assert.ok(e.isRoot && e.exact);
     const f = E.checkRoot('1/x = 1', 'x', 0);
-    assert.equal(f.ok, false);
+    assert.equal(f.isRoot, false);
     assert.equal(f.defined, false);
     const g = E.checkRoot('x^2 + 1 = 0', 'x', 'i', { complex: true });
-    assert.ok(g.ok);
+    assert.ok(g.isRoot);
     const h = E.checkRoot('sin(x) = 1/2', 'x', E.parse('pi/6'));
-    assert.ok(h.ok && h.exact);
+    assert.ok(h.isRoot && h.exact);
 });
 
 // ---------------------------------------------------------------- linear systems

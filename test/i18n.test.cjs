@@ -59,7 +59,7 @@ test('every key the code names exists, and every message is used', () => {
     const code = sources();
     const ru = flatten(RU);
     // a key is used when the code names it: msg('key', …) or a key chosen by a condition, msg(c ? 'a' : 'b')
-    const used = new Set([...code.matchAll(/'((?:core|algebra|solve|calculus|linalg|numbers|generate)\.[\w.]+)'/g)].map((m) => m[1]));
+    const used = new Set([...code.matchAll(/'((?:api|core|algebra|solve|calculus|linalg|numbers|generate)\.[\w.]+)'/g)].map((m) => m[1]));
     const prefixes = [...code.matchAll(/msg\(`([\w.]+)\.\$\{/g)].map((m) => `${m[1]}.`);
     const missing = [...used].filter((k) => !ru.has(k));
     assert.deepEqual(missing, [], 'keys used in the code but absent from the catalogs');

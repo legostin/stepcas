@@ -65,7 +65,7 @@ test('numeric roots print as decimals with ≈ in checks and answers', () => {
     assert.ok(!/\d{8}/.test(texOf(e.check[0].tex, 'ru')));
     assert.equal(E.toTex(e.roots[0].node), '0{,}79206');
     // a double given to checkRoot is an approximation: checked numerically
-    assert.equal(E.checkRoot('x^2 = 2', 'x', Math.SQRT2).ok, true);
+    assert.equal(E.checkRoot('x^2 = 2', 'x', Math.SQRT2).isRoot, true);
     // complex numeric roots too
     const c = E.solveEquation('x^3 - 2x - 5 = 0', 'x', { domain: 'complex' });
     assert.ok(c.check.every((x) => x.ok && !/\d{8}/.test(texOf(x.tex, 'ru'))));
@@ -103,9 +103,9 @@ test('trig: huge values, equal functions of different arguments, fractions', () 
     const big = E.solveTrig('tg x = 10^10');
     assert.equal(big.kind, 'roots');
     assert.ok(/arctg/.test(texOf(big.answer.tex)));
-    assert.equal(E.checkRoot('tg x = 10^10', 'x', 'arctg(10^10)').ok, true);
-    assert.equal(E.checkRoot('tg x = 10^10', 'x', E.parse('arctg(10^10) + pi')).ok, true);
-    assert.equal(E.checkRoot('tg x = 10^10', 'x', E.parse('pi/2')).ok, false);
+    assert.equal(E.checkRoot('tg x = 10^10', 'x', 'arctg(10^10)').isRoot, true);
+    assert.equal(E.checkRoot('tg x = 10^10', 'x', E.parse('arctg(10^10) + pi')).isRoot, true);
+    assert.equal(E.checkRoot('tg x = 10^10', 'x', E.parse('pi/2')).isRoot, false);
     assert.equal(texOf(E.solveEquation('tg x = 2 - sqrt(3)').answer.tex), 'x = \\frac{\\pi}{12} + \\pi n,\\ n \\in \\mathbb{Z}');
     const t3 = E.solveEquation('tg 3x = tg x');
     assert.ok(!t3.numeric);
