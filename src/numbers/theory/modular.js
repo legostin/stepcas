@@ -1,7 +1,7 @@
 // theory/modular — modular arithmetic: powers, inverses, congruences, the Chinese remainder theorem, orders,
 // primitive roots, RSA keys.
 
-import { G, L, S, big, bmod, coefX, fail, gcdCore, invCore, powmod, ruPl, sn, tn, tp } from './common.js';
+import { G, L, S, big, bmod, coefX, fail, gcdCore, invCore, powmod, sn, tn, tp } from './common.js';
 import { gcdSteps, ntEgcd } from './gcd.js';
 import { factorMap, isPrimeBig, ntPhi } from './primes.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
@@ -9,7 +9,7 @@ import { msg, eachLanguage } from '../../i18n/index.js';
 // ---------------------------------------------------------------- modular arithmetic
 
 function needModulus(m) {
-    const M = big(m, 'модуль');
+    const M = big(m, msg('numbers.theory.modular.modulus'));
     if (M <= 0n) throw fail(msg('numbers.theory.modular.modulus_must_be_positive_integer'), 'modulus');
     return M;
 }
@@ -54,7 +54,7 @@ export function ntModPow(a, e, m, opts = {}) {
     const sq = bits - 1;
     st.push(S(msg('numbers.theory.modular.write_exponent_in_binary'),
         `${tn(E)} = ${bin}_2${used.length > 1 && used.length <= 12 ? ` = ${[...used].reverse().map(P).join(' + ')}` : ''}`,
-        msg('numbers.theory.modular.then_is_product_of_powers_2', { A: sn(A), E: sn(E), sq, p: sq % 10 === 1 && sq % 100 !== 11 ? 'возведение' : sq % 10 >= 2 && sq % 10 <= 4 && (sq % 100 < 12 || sq % 100 > 14) ? 'возведения' : 'возведений', p2: sn(E - 1n), p3: sq === 1 ? '' : 's' }),
+        msg('numbers.theory.modular.then_is_product_of_powers_2', { A: sn(A), E: sn(E), sq, naive: sn(E - 1n) }),
         { rule: 'binary' }));
     let cur = base;
     for (let k = 0; k < bits; k++) {
@@ -205,9 +205,9 @@ export function ntSolveCongruence(a, b, m, opts = {}) {
             { rule: 'inverse', sub: iv.steps }));
     }
     if (d > 1n) {
-        st.push(S(msg('numbers.theory.modular.solutions_modulo', { d: sn(d), d2: ruPl(d, 'решение', 'решения', 'решений'), M: sn(M) }),
+        st.push(S(msg('numbers.theory.modular.solutions_modulo', { d: sn(d), n: d, M: sn(M) }),
             res.solutions && d <= 12n ? `x \\equiv ${res.solutions.map(tn).join(',\\ ')} ${eqv(M)}` : `x = ${tn(x0)} + ${tn(m2)}k`,
-            msg('numbers.theory.modular.all_solutions_are_x_k_modulo', { x0: sn(x0), m2: sn(m2), M: sn(M), d: sn(d), d2: ruPl(d, 'остаток', 'разных остатка', 'разных остатков') }), { rule: 'answer' }));
+            msg('numbers.theory.modular.all_solutions_are_x_k_modulo', { x0: sn(x0), m2: sn(m2), M: sn(M), d: sn(d), n: d }), { rule: 'answer' }));
     } else {
         st.push(S(msg('numbers.theory.modular.answer_and_check'), `x \\equiv ${tn(x0)} ${eqv(M)},\\quad ${tn(a1)} \\cdot ${tn(x0)} = ${tn(a1 * x0)} \\equiv ${tn(bmod(a1 * x0, M))} ${eqv(M)}`,
             msg('numbers.theory.modular.solution_is_unique_modulo_x_k', { M: sn(M), x0: sn(x0) }), { rule: 'answer' }));

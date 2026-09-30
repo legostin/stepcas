@@ -192,7 +192,7 @@ export function ntFromBase(str, base, opts = {}) {
     }
     if (per) {
         st.push(S(msg('numbers.theory.bases.repeating_fraction'), eachLanguage((l) => `${src(l)} = ${valTex(l)}`),
-            msg('numbers.theory.bases.period_has_digit_shifting_point_by', { length: per.length, p: per.length === 1 ? 'цифра' : per.length <= 4 ? 'цифры' : 'цифр', b, per, b2: subscript(b), p2: per.length === 1 ? '' : 's' }),
+            msg('numbers.theory.bases.period_has_digit_shifting_point_by', { length: per.length, b, per, b2: subscript(b) }),
             { rule: 'period' }));
     }
     st.push(S(msg('numbers.theory.bases.answer'), eachLanguage((l) => `${src(l)} = ${valTex(l)}`), null, { rule: 'answer' }));

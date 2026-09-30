@@ -309,7 +309,7 @@ export function ntDiophantine(a, b, c, opts = {}) {
     const part = (v0, dv) => `${tn(v0)} ${dv < 0n ? '-' : '+'} ${babs(dv) === 1n ? '' : tn(babs(dv))}k`;
     st.push(S(msg('numbers.theory.gcd.all_solutions'),
         `x = ${part(x0, dx)},\\quad y = ${part(y0, dy)},\\quad k \\in \\mathbb Z`,
-        msg('numbers.theory.gcd.adding_to_x_and_y_does', { p: dx < 0n ? `прибавить ${sn(dx)}` : `прибавить ${sn(dx)}`, p2: (lng) => dy < 0n ? msg('numbers.theory.gcd.subtracting_from_2', { p: sn(-dy) }).in(lng) : msg('numbers.theory.gcd.adding_to_2', { dy: sn(dy) }).in(lng), A: sn(A), dx: sn(dx), B: sn(B), dy: sn(dy), x0: sn(x0) }),
+        msg('numbers.theory.gcd.adding_to_x_and_y_does', { p2: (lng) => dy < 0n ? msg('numbers.theory.gcd.subtracting_from_2', { p: sn(-dy) }).in(lng) : msg('numbers.theory.gcd.adding_to_2', { dy: sn(dy) }).in(lng), A: sn(A), dx: sn(dx), B: sn(B), dy: sn(dy), x0: sn(x0) }),
         { rule: 'answer' }));
     res.steps = st;
     return res;

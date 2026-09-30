@@ -2,7 +2,7 @@
 
 import { bigIroot, bigIsqrt } from '../../core/rational.js';
 import { needBase } from './bases.js';
-import { L, S, SMALL, SMALL_BIG, TRIAL, babs, big, bmod, dec, fail, gcdCore, listText, powmod, sieveBytes, sn, tn } from './common.js';
+import { S, SMALL, SMALL_BIG, TRIAL, babs, big, bmod, dec, fail, gcdCore, listText, powmod, sieveBytes, sn, tn } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- primality
@@ -272,7 +272,7 @@ export function ntFactor(n, opts = {}) {
         const piece = (i) => `${i === 1 ? tn(gr.p) : `${tn(gr.p)}^{${i}}`} \\cdot ${tn(gr.before / gr.p ** BigInt(i))}`;
         const pieces = gr.e <= 5 ? Array.from({ length: gr.e }, (_, i) => piece(i + 1)) : [piece(1), '\\ldots', piece(gr.e)];
         const skipTxt = (l) => (gr.skipped.length ? (msg('numbers.theory.primes.it_is_not_divisible_by', { p: listText(gr.skipped, l) }).in(l)) : '');
-        const times = (l) => (msg('numbers.theory.primes.times', { e: gr.e, p: gr.e % 10 >= 2 && gr.e % 10 <= 4 && (gr.e % 100 < 12 || gr.e % 100 > 14) ? 'раза' : 'раз' }).in(l));
+        const times = (l) => msg('numbers.theory.primes.times', { e: gr.e }).in(l);
         st.push(S(msg('numbers.theory.primes.divide_by', { p: sn(gr.p) }),
             `${tn(gr.before)} = ${pieces.join(' = ')}`,
             eachLanguage((l) => (msg('numbers.theory.primes.is_divisible_by_is_left', { l: skipTxt(l), p: sn(gr.before), p2: sn(gr.p), p3: ruleHint(Number(gr.p), gr.before, l), p4: (lng) => gr.e > 1 ? msg('numbers.theory.primes.we_divide_while_we_can', { l: times(l) }).in(lng) : msg('numbers.theory.primes.we_divide').in(lng), p5: sn(gr.after) }).in(l))),
@@ -297,12 +297,12 @@ export function ntFactor(n, opts = {}) {
         const digits = m.toString().length;
         st.push(S(single ? msg('numbers.theory.primes.large_prime_cofactor') : msg('numbers.theory.primes.large_cofactor'),
             `${tn(m)} = ${ntFactorTex(ps.map(([p, e]) => ({ p, e })))}`,
-            L(`После простых до ${sn(TRIAL)} осталось ${digits}-значное число ${sn(m)}; перебирать дальше слишком долго. `
-                + (single ? `Тест Миллера — Рабина показывает, что оно простое${certain ? '' : ' (с вероятностью ошибки меньше 4⁻³⁷)'}.`
-                    : `Тест Миллера — Рабина показывает, что оно составное, а ρ-метод Полларда (псевдослучайное блуждание по остаткам: делитель p находится примерно за √p шагов) находит множители; каждый из них проверен тестом Миллера — Рабина${certain ? '' : ' (вероятностно)'}.`),
-                `After the primes up to ${sn(TRIAL)} a ${digits}-digit number ${sn(m)} is left, too big to keep trying divisors. `
-                + (single ? `The Miller–Rabin test shows it is prime${certain ? '' : ' (with error probability below 4⁻³⁷)'}.`
-                    : `The Miller–Rabin test shows it is composite, and Pollard's rho method (a pseudo-random walk over remainders that finds a divisor p in about √p steps) splits it; each factor is then checked by Miller–Rabin${certain ? '' : ' (probabilistically)'}.`)),
+            msg(single ? 'numbers.theory.primes.cofactor_is_prime' : 'numbers.theory.primes.cofactor_is_composite', {
+                trial: sn(TRIAL),
+                digits,
+                m: sn(m),
+                caveat: certain ? '' : msg(single ? 'numbers.theory.primes.error_probability' : 'numbers.theory.primes.probabilistically'),
+            }),
             { rule: single ? 'miller-rabin' : 'pollard-rho' }));
         for (const [p, e] of ps) {
             out.set(p, (out.get(p) ?? 0) + e);

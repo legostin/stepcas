@@ -22,19 +22,15 @@ const tex = (n, l = 'ru') => toTex(n, { lang: l });
 const exactRoots = (r) => r && (r.kind === 'none' || (r.kind === 'roots' && !r.families?.length && !r.roots.some((z) => z.approxOnly)));
 const rootNodes = (r) => (r.kind === 'none' ? [] : r.roots.map((z) => z.node));
 
+// what is asked, as a count of roots and the phrase (solve.parameter.want.*)
 const WANT = {
-    'two-roots': { n: 2, ru: 'ровно два корня', en: 'exactly two roots' },
-    'one-root': { n: 1, ru: 'ровно один корень', en: 'exactly one root' },
-    'no-roots': { n: 0, ru: 'нет корней', en: 'no roots' },
-    'has-roots': { min: 1, ru: 'есть хотя бы один корень', en: 'at least one root' },
+    'two-roots': { n: 2, phrase: msg('solve.parameter.want.two_roots') },
+    'one-root': { n: 1, phrase: msg('solve.parameter.want.one_root') },
+    'no-roots': { n: 0, phrase: msg('solve.parameter.want.no_roots') },
+    'has-roots': { min: 1, phrase: msg('solve.parameter.want.has_roots') },
 };
 function wantOf(w) {
-    if (typeof w === 'number') {
-        const m10 = w % 10;
-        const m100 = w % 100;
-        const word = m10 === 1 && m100 !== 11 ? 'корень' : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 'корня' : 'корней';
-        return { n: w, ru: `ровно ${w} ${word}`, en: `exactly ${w} root${w === 1 ? '' : 's'}` };
-    }
+    if (typeof w === 'number') return { n: w, phrase: msg('solve.parameter.want.exactly', { n: w }) };
     return WANT[w] ?? WANT['has-roots'];
 }
 const fits = (want, count) => (want.min !== undefined ? count >= want.min : count === want.n);
@@ -274,7 +270,7 @@ export function solveWithParameter(input, opts = {}) {
     for (const { set: s, n } of r.count.values()) if (fits(want, n)) set = set.union(s);
     const summary = [...r.count.values()].filter((z) => !z.set.isEmpty()).sort((u, v) => u.n - v.n);
     const steps = [
-        step({ title: msg('solve.parameter.problem'), tex: eachLanguage((l) => tex(node, l)), text: msg('solve.parameter.for_which_does_equation_have', { a, p: (lng) => want[lng] }) }),
+        step({ title: msg('solve.parameter.problem'), tex: eachLanguage((l) => tex(node, l)), text: msg('solve.parameter.for_which_does_equation_have', { a, want: want.phrase }) }),
         ...r.steps,
         step({
             title: msg('solve.parameter.number_of_roots_against_parameter'),

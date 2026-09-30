@@ -240,6 +240,13 @@ export default {
         pass_from_logarithms_to_their_arguments: "Переходим от логарифма к аргументам",
     },
     parameter: {
+        want: {
+            two_roots: "ровно два корня",
+            one_root: "ровно один корень",
+            no_roots: "нет корней",
+            has_roots: "есть хотя бы один корень",
+            exactly: "ровно %{n} %{n|корень|корня|корней}",
+        },
         one_root: "один корень",
         no_roots: "корней нет",
         every: "любое $x$",
@@ -261,7 +268,7 @@ export default {
         extra_letters: "Лишние буквы: %{p}.",
         this_parameter_problem_is_not_supported: "Такую задачу с параметром решатель пока не решает.",
         problem: "Задача",
-        for_which_does_equation_have: "При каких $%{a}$ у уравнения %{p}?",
+        for_which_does_equation_have: "При каких $%{a}$ у уравнения %{want}?",
         number_of_roots_against_parameter: "Число корней в зависимости от параметра",
         answer: "Ответ",
     },

@@ -240,6 +240,13 @@ export default {
         pass_from_logarithms_to_their_arguments: "Pass from the logarithms to their arguments",
     },
     parameter: {
+        want: {
+            two_roots: "exactly two roots",
+            one_root: "exactly one root",
+            no_roots: "no roots",
+            has_roots: "at least one root",
+            exactly: "exactly %{n} %{n|root|roots}",
+        },
         one_root: "one root",
         no_roots: "no roots",
         every: "every $x$",
@@ -261,7 +268,7 @@ export default {
         extra_letters: "Extra letters: %{p}.",
         this_parameter_problem_is_not_supported: "This parameter problem is not supported yet.",
         problem: "The problem",
-        for_which_does_equation_have: "For which $%{a}$ does the equation have %{p}?",
+        for_which_does_equation_have: "For which $%{a}$ does the equation have %{want}?",
         number_of_roots_against_parameter: "The number of roots against the parameter",
         answer: "Answer",
     },

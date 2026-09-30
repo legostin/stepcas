@@ -1,7 +1,7 @@
 // theory/common — tiny helpers: reading integers and fractions, bilingual steps.
 
 import { MathError, Q } from '../../core/rational.js';
-import { msg } from '../../i18n/index.js';
+import { msg, notation } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- tiny internal helpers
 
@@ -44,12 +44,6 @@ export function dec(x, digits, lang, tex = false) {
     if (lang === 'ru') s = s.replace('.', tex ? '{,}' : ',');
     return tex ? s : s.replace('-', '−');
 }
-/** Russian plural: ruPl(5, 'решение', 'решения', 'решений') → 'решений'. */
-export function ruPl(n, one, few, many) {
-    const a = Number(n < 0 ? -n : n) % 100, b = a % 10;
-    if (a >= 11 && a <= 14) return many;
-    return b === 1 ? one : b >= 2 && b <= 4 ? few : many;
-}
 const SUBS = '₀₁₂₃₄₅₆₇₈₉';
 export const subscript = (n) => String(n).split('').map((c) => SUBS[+c]).join('');
 /** k·x in TeX with the coefficient 1 / −1 hidden. */
@@ -72,7 +66,7 @@ export function big(x, what) {
     if (typeof x === 'bigint') return x;
     if (typeof x === 'number') {
         if (Number.isInteger(x)) return BigInt(x);
-        throw fail(msg('numbers.theory.common.integer_is_required_got', { p: what ? ` (${what})` : '', p2: String(x).replace('.', ','), x }), 'not-int');
+        throw fail(msg(what ? 'numbers.theory.common.integer_is_required_for' : 'numbers.theory.common.integer_is_required_got', { what, x: (lng) => String(x).replace('.', notation(lng).decimalText) }), 'not-int');
     }
     if (typeof x === 'string') {
         const s = x.replace(/[\s_\u00a0\u202f\u2009']/g, '').replace(/^[−–]/, '-');
