@@ -6,8 +6,9 @@ import { ratFunctionOf } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
 import { expand } from '../../core/expand.js';
 import { Poly } from '../../core/poly.js';
-import { plainish, HALF, N1, N2, NM1, coefTex, freshVar, iTex, isNum, isVar, linearParts, paren, simp, trySimp, tx, qn, substResult } from './common.js';
+import { plainish, coefTex, freshVar, iTex, isVar, linearParts, qn, substResult } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
+import { isNum, paren, simp, trySimp, N1, NM1, N2, HALF, calcTex } from '../display.js';
 
 // ---- trigonometric forms
 
@@ -84,7 +85,7 @@ export function mTrig(f, ctx) {
                 g: expandSafe(gt),
                 rule: 'trig-substitution',
                 title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('cos', L), lng) }),
-                dtTex: (Lg) => `d${t} = -${coefTex(k, Lg)}\\sin ${''}${paren(tx(L, Lg)).replace(/^\((.*)\)$/, L.type === 'sym' ? '$1' : '($1)')}\\,d${v}`,
+                dtTex: (Lg) => `d${t} = -${coefTex(k, Lg)}\\sin ${''}${paren(calcTex(L, Lg)).replace(/^\((.*)\)$/, L.type === 'sym' ? '$1' : '($1)')}\\,d${v}`,
                 text: msg('calculus.integral.trig.sine_has_odd_power_keep_one'),
             });
         }
@@ -96,7 +97,7 @@ export function mTrig(f, ctx) {
                 g: expandSafe(gt),
                 rule: 'trig-substitution',
                 title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('sin', L), lng) }),
-                dtTex: (Lg) => `d${t} = ${coefTex(k, Lg)}\\cos${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}\\,d${v}`,
+                dtTex: (Lg) => `d${t} = ${coefTex(k, Lg)}\\cos${L.type === 'sym' ? ' ' + calcTex(L, Lg) : paren(calcTex(L, Lg))}\\,d${v}`,
                 text: msg('calculus.integral.trig.cosine_has_odd_power_keep_one'),
             });
         }
@@ -110,7 +111,7 @@ export function mTrig(f, ctx) {
                 rule: 'trig-substitution',
                 title: msg('calculus.integral.trig.substitution', { t, p: (lng) => plainish(fn('tan', L), lng) }),
                 dtTex: (Lg) =>
-                    `d${t} = \\frac{${coefTex(k, Lg) ? coefTex(k, Lg) + '\\,' : ''}d${v}}{\\cos^{2}${L.type === 'sym' ? ' ' + tx(L, Lg) : paren(tx(L, Lg))}}`,
+                    `d${t} = \\frac{${coefTex(k, Lg) ? coefTex(k, Lg) + '\\,' : ''}d${v}}{\\cos^{2}${L.type === 'sym' ? ' ' + calcTex(L, Lg) : paren(calcTex(L, Lg))}}`,
                 text: msg('calculus.integral.trig.powers_of_sine_and_cosine_are'),
             });
         }
@@ -339,7 +340,7 @@ export function mTrigSub(f, ctx) {
             title: kind === 'sin' ? msg('calculus.integral.trig.substitution_sin', { v, t }) : msg('calculus.integral.trig.substitution_tan', { v, t }),
             tex: eachLanguage(
                 (L) =>
-                    `${iTex(f, v, L)} = \\left[${v} = ${tx(simp(xOfT), L)},\\ d${v} = ${tx(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(back, L)}`,
+                    `${iTex(f, v, L)} = \\left[${v} = ${calcTex(simp(xOfT), L)},\\ d${v} = ${calcTex(simp(dx), L)}\\,d${t}\\right] = ${iTex(g, t, L)} = ${calcTex(trySimp(r.F) ?? r.F, L)} = ${calcTex(back, L)}`,
             ),
             text:
                 kind === 'sin'
@@ -379,7 +380,7 @@ export function mCyclic(f, ctx) {
         method: 'parts-cyclic',
         step: step({
             title: msg('calculus.integral.trig.by_parts_twice_cyclic_integral'),
-            tex: eachLanguage((L) => `I = ${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `I = ${iTex(f, v, L)} = ${calcTex(trySimp(F) ?? F, L)}`),
             text: msg('calculus.integral.trig.integrate_by_parts_twice_both_times', { J }),
             rule: 'parts-cyclic',
         }),

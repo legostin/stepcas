@@ -35,7 +35,8 @@ export * from './linalg/index.js';
 
 // helpers of the domains (sets of answers, display forms)
 export { IntervalSet, intervalTex, intervalText, parseIntervalSet, intervalEquals, domainSet } from './solve/index.js';
-export { calcTex, calcTexBoth, prettyForm, niceForm, quickDerivative, ratFunctionOf } from './calculus/derivative/index.js';
+export { calcTex, calcTexBoth, prettyForm } from './calculus/display.js';
+export { niceForm, quickDerivative, ratFunctionOf } from './calculus/derivative/index.js';
 export { taylorRemainderBound } from './calculus/limit/index.js';
 export { exactGuess } from './calculus/extrema.js';
 

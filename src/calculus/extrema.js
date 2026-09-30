@@ -9,7 +9,7 @@
 // else numerically with an exact form recognised when there is one (rational, a rational multiple of π, √).
 import { MathError, Q } from '../core/rational.js';
 import { num, rel, substitute, freeVars, numValue } from '../core/ast.js';
-import { parse } from '../core/parse.js';
+import { parse, asNode } from '../core/parse.js';
 import { compile } from '../core/evaluate.js';
 import { toTex, toText } from '../core/print.js';
 import { derivative } from './derivative/index.js';
@@ -19,7 +19,6 @@ import { step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { msg, notation, eachLanguage, decimalIn } from '../i18n/index.js';
 
-const asNode = (x) => (typeof x === 'string' ? parse(x) : typeof x === 'number' ? num(x) : x);
 const texOf = (n, l) => toTex(n, { lang: l });
 const sepL = (l) => notation(l).listTex;
 const fmt = (x, l) => decimalIn(String(+x.toPrecision(6)), l);

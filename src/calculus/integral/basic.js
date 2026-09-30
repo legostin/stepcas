@@ -8,30 +8,9 @@ import { quickDerivative } from '../derivative/index.js';
 import { expand } from '../../core/expand.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
-import {
-    N1,
-    N2,
-    NM1,
-    PI,
-    coefTex,
-    dTex,
-    freshVar,
-    iTex,
-    isNum,
-    isVar,
-    isZero,
-    linearParts,
-    lnAbs,
-    negLeading,
-    q,
-    simp,
-    trySimp,
-    tx,
-    qn,
-    mapPre,
-    plainish,
-} from './common.js';
+import { PI, coefTex, dTex, freshVar, iTex, isVar, linearParts, lnAbs, q, qn, mapPre, plainish } from './common.js';
 import { msg, eachLanguage, notation } from '../../i18n/index.js';
+import { isNum, isZero, negLeading, simp, trySimp, N1, NM1, N2, calcTex } from '../display.js';
 
 // ---- constant and table
 
@@ -44,7 +23,7 @@ export function mConst(f, ctx) {
         method: 'constant',
         step: step({
             title: msg('calculus.integral.basic.integral_of_constant'),
-            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(simp(F), L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${calcTex(simp(F), L)}`),
             text: msg('calculus.integral.basic.integrand_does_not_depend_on_c', { v }),
             rule: 'const',
         }),
@@ -138,7 +117,7 @@ export function mTable(f, ctx) {
         method: 'table',
         step: step({
             title: msg('calculus.integral.basic.table_integral'),
-            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${calcTex(trySimp(F) ?? F, L)}`),
             text: t.note
                 ? msg('calculus.integral.basic.from_table_for_exponent_other_than', { p: t.law })
                 : msg('calculus.integral.basic.from_table_of_integrals', { p: t.law }),
@@ -165,7 +144,7 @@ export function mLinearity(f, ctx) {
             method: r.method,
             step: step({
                 title: msg('calculus.integral.basic.constant_factor'),
-                tex: eachLanguage((L) => `${iTex(f, v, L)} = ${coefTex(c, L)}${iTex(g, v, L)} = ${tx(simp(F), L)}`),
+                tex: eachLanguage((L) => `${iTex(f, v, L)} = ${coefTex(c, L)}${iTex(g, v, L)} = ${calcTex(simp(F), L)}`),
                 text: msg('calculus.integral.basic.constant_factor_comes_out_of_integral'),
                 rule: 'const-factor',
                 sub: [r.step],
@@ -194,7 +173,7 @@ export function mLinearity(f, ctx) {
                                 const s = iTex(p.t, v, L);
                                 return i === 0 ? s : ' + ' + s;
                             })
-                            .join('')} = ${tx(simp(F), L)}`,
+                            .join('')} = ${calcTex(simp(F), L)}`,
                 ),
                 text: msg('calculus.integral.basic.integral_of_sum_is_sum_of'),
                 rule: 'sum',
@@ -246,7 +225,7 @@ export function mLinearSub(f, ctx) {
                 title: msg('calculus.integral.basic.linear_substitution'),
                 tex: eachLanguage(
                     (L) =>
-                        `${iTex(f, v, L)} = \\left[${t} = ${tx(Lx, L)},\\ d${t} = ${dTex(k, v, L)}\\right] = ${coefTex(simp(div(N1, k)), L)}${iTex(g, t, L)} = ${tx(simp(F), L)}`,
+                        `${iTex(f, v, L)} = \\left[${t} = ${calcTex(Lx, L)},\\ d${t} = ${dTex(k, v, L)}\\right] = ${coefTex(simp(div(N1, k)), L)}${iTex(g, t, L)} = ${calcTex(simp(F), L)}`,
                 ),
                 text: msg('calculus.integral.basic.function_is_applied_to_linear_expression', { Lx: (lng) => plainish(Lx, lng) }),
                 rule: 'linear-substitution',
@@ -322,7 +301,7 @@ export function mDerivPattern(f, ctx) {
             method: 'substitution',
             step: step({
                 title: k.eq(-1) ? msg('calculus.integral.basic.derivative_of_denominator_on_top') : msg('calculus.integral.basic.inner_derivative_is_factor'),
-                tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[t = ${tx(h, L)},\\ dt = ${dTex(dh, v, L)}\\right] = ${tx(trySimp(F) ?? F, L)}`),
+                tex: eachLanguage((L) => `${iTex(f, v, L)} = \\left[t = ${calcTex(h, L)},\\ dt = ${dTex(dh, v, L)}\\right] = ${calcTex(trySimp(F) ?? F, L)}`),
                 text: law,
                 rule: 'substitution',
             }),

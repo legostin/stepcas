@@ -15,14 +15,13 @@
 // Relations: two equations are equivalent when lhs − rhs are proportional (nonzero constant factor);
 // inequalities also need a positive factor after turning > into <. Lists compare item by item in order.
 
-import { Q } from './rational.js';
-import { num, add, neg, freeVars, nodeSome, isConst } from './ast.js';
-import { parse } from './parse.js';
+import { add, neg, freeVars, nodeSome, isConst } from './ast.js';
 import { simplify } from './simplify.js';
 import { expand } from './expand.js';
 import { evaluate } from './evaluate.js';
 import { Complex } from './complex.js';
 import { rng } from './random.js';
+import { asNode } from './parse.js';
 
 const RANGES = [
     [0.1, 2],
@@ -34,13 +33,6 @@ const RANGES = [
     [-40, -10],
     [-0.9, -0.05],
 ];
-
-function asNode(x, opts) {
-    if (x && typeof x === 'object' && typeof x.type === 'string') return x;
-    if (typeof x === 'string') return parse(x, opts);
-    if (x instanceof Q || typeof x === 'number' || typeof x === 'bigint') return num(x);
-    throw new TypeError('expected a node, a string or a number');
-}
 
 const usesI = (n) => nodeSome(n, (m) => isConst(m) && m.name === 'i');
 

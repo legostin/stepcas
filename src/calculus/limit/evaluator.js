@@ -2,27 +2,9 @@
 
 import { containsVar, freeVars, neg, substitute, sym, add, pow, num, mul, div, fn } from '../../core/ast.js';
 import { Q } from '../../core/rational.js';
-import {
-    BND,
-    DNE,
-    N0,
-    N1,
-    PI,
-    fin,
-    infV,
-    isNum,
-    isOneV,
-    isZeroV,
-    needSign,
-    safeEval,
-    sideSign,
-    sideSignStrict,
-    simp,
-    trySimp,
-    asym,
-    splitNumDen,
-} from './common.js';
+import { BND, DNE, PI, fin, infV, isOneV, isZeroV, needSign, safeEval, sideSign, sideSignStrict, asym, splitNumDen } from './common.js';
 import { resolve } from './forms.js';
+import { isNum, simp, trySimp, N0, N1 } from '../display.js';
 
 // ---------------------------------------------------------------- the evaluator
 

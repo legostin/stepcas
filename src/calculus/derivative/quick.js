@@ -3,8 +3,9 @@
 import { num, containsVar } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';
 import { canonContext } from '../../core/simplify.js';
-import { E_, HALF, N0, N1, N2, NM1, asNode, checkExpr, isZero } from './display.js';
+import { E_, HALF, N0, N1, N2, NM1, checkExpr, isZero } from '../display.js';
 import { msg } from '../../i18n/index.js';
+import { asNode } from '../../core/parse.js';
 
 // ---------------------------------------------------------------- fast canonical derivative
 

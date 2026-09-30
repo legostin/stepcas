@@ -1,13 +1,13 @@
-// derivative/display — input, the display form and TeX of calculus answers (prettyForm, calcTex), numeric sampling.
+// calculus/display — what every calculus module shares: constants and small predicates, simplification to a fixed
+// point, the check that the input is a formula, the display form and TeX of answers (prettyForm, calcTex), sampling.
 
-import { num, sym, toNode, pow, add, nodeSome, freeVars, mul, div, withChildren, nodeChildren, isConst, neg } from '../../core/ast.js';
-import { Q, MathError, bigLcm } from '../../core/rational.js';
-import { parse } from '../../core/parse.js';
-import { canonContext } from '../../core/simplify.js';
-import { toTex, toText } from '../../core/print.js';
-import { rng } from '../../core/random.js';
-import { evaluate } from '../../core/evaluate.js';
-import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../../i18n/index.js';
+import { num, sym, pow, add, nodeSome, freeVars, mul, div, withChildren, nodeChildren, isConst, neg, nodeKey } from '../core/ast.js';
+import { Q, MathError, bigLcm } from '../core/rational.js';
+import { canonContext, simplify } from '../core/simplify.js';
+import { toTex, toText } from '../core/print.js';
+import { rng } from '../core/random.js';
+import { evaluate } from '../core/evaluate.js';
+import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 export const N0 = num(0);
 export const N1 = num(1);
@@ -20,17 +20,31 @@ export const isNum = (n) => n.type === 'num';
 export const isZero = (n) => isNum(n) && n.value.isZero();
 export const isOne = (n) => isNum(n) && n.value.isOne();
 
-// ---------------------------------------------------------------- input
-
-export function asNode(x) {
-    if (x && typeof x === 'object' && typeof x.type === 'string') return x;
-    if (typeof x === 'string') return parse(x);
-    return toNode(x);
+/** simplify until nothing changes (at most four passes: one rewrite can open the way for another). */
+export function simp(node) {
+    let s = simplify(node);
+    for (let i = 0; i < 3; i++) {
+        const t = simplify(s);
+        if (nodeKey(t) === nodeKey(s)) break;
+        s = t;
+    }
+    return s;
 }
+
+/** simp, or null when the expression cannot be simplified. */
+export function trySimp(node) {
+    try {
+        return simp(node);
+    } catch {
+        return null;
+    }
+}
+
+// ---------------------------------------------------------------- input
 
 export function checkExpr(node) {
     if (node.type === 'rel' || node.type === 'chain' || node.type === 'list') {
-        throw new MathError(msg('calculus.derivative.display.formula_is_needed_not_equation_or'), null, null, 'not-expr');
+        throw new MathError(msg('calculus.display.formula_is_needed_not_equation_or'), null, null, 'not-expr');
     }
 }
 
@@ -276,7 +290,7 @@ const tall = (s) => /\\frac|\\sqrt|\\left|\\dfrac|\^\{/.test(s);
 export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);
 
 const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '-': '⁻' };
-const supDigits = (d) => [...d].map((c) => SUP[c]).join('');
+export const supDigits = (d) => [...d].map((c) => SUP[c]).join('');
 
 /** Plain-text formula for step texts: x^2 → x², * → ·, sqrt( → √(. */
 export function plain(node, lang) {

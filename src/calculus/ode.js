@@ -18,12 +18,10 @@ import { expand } from '../core/expand.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from './derivative/index.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
+import { N0, N1, N2, E_ } from './display.js';
 
 const YP = 'yp';
 const YPP = 'ypp';
-const N0 = num(0);
-const N1 = num(1);
-const N2 = num(2);
 const free = (n, ...vs) => vs.every((v) => !containsVar(n, v));
 const isZ = (n) => n.type === 'num' && n.value.isZero();
 // the shorter of the simplified and the expanded forms: e^(−x)(e^x(x − 1) + 2) → x − 1 + 2e^(−x)
@@ -42,7 +40,6 @@ const dropAbsInLn = (n) =>
     mapNode(n, (m) =>
         m.type === 'fn' && m.name === 'ln' && m.args[0].type === 'fn' && m.args[0].name === 'abs' ? fn('ln', dropAbsInLn(m.args[0].args[0])) : undefined,
     );
-const E_ = sym('e');
 
 /** TeX with the primes shown as primes. */
 function tex(n, lang = DEFAULT_LANGUAGE) {

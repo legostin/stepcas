@@ -1,60 +1,22 @@
 // limit/common — helpers, the point a (finite, ±∞, one-sided) and limit values (finite, ±∞, does not exist).
 
-import { num, sym, neg, toNode, nodeKey, isConst, pow } from '../../core/ast.js';
+import { num, sym, neg, isConst, pow } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';
-import { parse } from '../../core/parse.js';
-import { simplify } from '../../core/simplify.js';
-import { calcTex } from '../derivative/index.js';
+
 import { evaluate } from '../../core/evaluate.js';
 import { msg } from '../../i18n/index.js';
+import { calcTex, isNum, paren, trySimp } from '../display.js';
 
-export const N0 = num(0);
-export const N1 = num(1);
-export const NM1 = num(-1);
-export const N2 = num(2);
-export const HALF = num(Q.HALF);
-const INF = sym('inf');
-export const E_ = sym('e');
 export const PI = sym('pi');
 
-export const isNum = (n) => n.type === 'num';
 export const qn2 = (q) => num(q);
 export const isZeroN = (n) => isNum(n) && n.value.isZero();
 
-export function asNode(x) {
-    if (x && typeof x === 'object' && typeof x.type === 'string') return x;
-    if (typeof x === 'string') return parse(x);
-    if (x === Infinity) return INF;
-    if (x === -Infinity) return neg(INF);
-    return toNode(x);
-}
-
-export function simp(n) {
-    let s = simplify(n);
-    for (let i = 0; i < 3; i++) {
-        const t = simplify(s);
-        if (nodeKey(t) === nodeKey(s)) break;
-        s = t;
-    }
-    return s;
-}
-
-export function trySimp(n) {
-    try {
-        return simp(n);
-    } catch {
-        return null;
-    }
-}
-
-export const tx = (n, L) => calcTex(n, L);
-const tall = (s) => /\\frac|\\sqrt|\\left|\^\{/.test(s);
-export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);
 export const paren2 = (s, n) => (n.type === 'add' ? paren(s) : s);
 /** "a = b = c" without repeating equal neighbours. */
 export const chainEq = (parts) => parts.filter((x, i, a) => x && (i === 0 || x !== a[i - 1])).join(' = ');
 /** An expression after \lim: a sum goes in brackets. */
-export const lt = (n, L) => (n.type === 'add' ? paren(tx(n, L)) : tx(n, L));
+export const lt = (n, L) => (n.type === 'add' ? paren(calcTex(n, L)) : calcTex(n, L));
 
 // ---------------------------------------------------------------- the point
 
@@ -80,7 +42,7 @@ function arrowTex(P, v, L) {
     void L;
     if (P.x === Infinity) return `${v} \\to +\\infty`;
     if (P.x === -Infinity) return `${v} \\to -\\infty`;
-    const a = tx(P.a, L);
+    const a = calcTex(P.a, L);
     const sup = P.side === 'left' ? '^{-}' : P.side === 'right' ? '^{+}' : '';
     return `${v} \\to ${sup ? `{${a}}${sup}` : a}`;
 }

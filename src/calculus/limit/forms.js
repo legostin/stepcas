@@ -1,7 +1,7 @@
 // limit/forms — indeterminate forms: rational functions, equivalents, the conjugate, leading terms, L'Hôpital,
 // dividing by the fastest-growing term, splitting a fraction, ∞ − ∞, 0·∞ and powers.
 
-import { prettyForm, ratFunctionOf, calcTex, niceForm, quickDerivative } from '../derivative/index.js';
+import { ratFunctionOf, niceForm, quickDerivative } from '../derivative/index.js';
 import { nodeKey, num, sym, div, mul, pow, add, neg, fn, containsVar, isConst, substitute } from '../../core/ast.js';
 import { step } from '../../core/steps.js';
 import { expand } from '../../core/expand.js';
@@ -10,31 +10,9 @@ import { Poly } from '../../core/poly.js';
 import { toText } from '../../core/print.js';
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';
-import {
-    E_,
-    HALF,
-    N0,
-    N1,
-    N2,
-    NM1,
-    chainEq,
-    fin,
-    infV,
-    isNum,
-    isZeroN,
-    isZeroV,
-    limTex,
-    lt,
-    negLeadNode,
-    paren,
-    paren2,
-    qn2,
-    simp,
-    trySimp,
-    tx,
-} from './common.js';
-import { splitNumDen, asym } from './common.js';
+import { chainEq, fin, infV, isZeroN, isZeroV, limTex, lt, negLeadNode, paren2, qn2, splitNumDen, asym } from './common.js';
 import { msg, eachLanguage, notation, joined, sameText, DEFAULT_LANGUAGE } from '../../i18n/index.js';
+import { calcTex, prettyForm, isNum, paren, simp, trySimp, N0, N1, NM1, N2, HALF, E_ } from '../display.js';
 
 // ---------------------------------------------------------------- indeterminate forms
 
@@ -54,7 +32,7 @@ export const FORM_NAME = { '0/0': '0/0', 'inf/inf': '∞/∞', 'inf-inf': '∞ �
 
 function vTex(L, Lg) {
     if (!L) return '?';
-    if (L.k === 'fin') return tx(prettyForm(L.node), Lg);
+    if (L.k === 'fin') return calcTex(prettyForm(L.node), Lg);
     if (L.k === 'inf') return L.s > 0 ? '+\\infty' : '-\\infty';
     return msg('calculus.limit.forms.does_not_exist').in(Lg);
 }
@@ -127,7 +105,7 @@ function mRational(n, C, form) {
                 val,
                 title: msg('calculus.limit.forms.take_out_highest_power'),
                 tex: eachLanguage((L) =>
-                    `${limTex(P, v, L)} ${lt(n, L)} = ${limTex(P, v, L)} ${dp === 1 && p.lead.div(q.lead).isOne() ? tx(X, L) : lt(lead, L)}${inner.type === 'add' ? paren(tx(inner, L)) : ''} = ${vTex(val, L)}`.replace(
+                    `${limTex(P, v, L)} ${lt(n, L)} = ${limTex(P, v, L)} ${dp === 1 && p.lead.div(q.lead).isOne() ? calcTex(X, L) : lt(lead, L)}${inner.type === 'add' ? paren(calcTex(inner, L)) : ''} = ${vTex(val, L)}`.replace(
                         /\\cdot\s*$/,
                         '',
                     ),
@@ -143,7 +121,7 @@ function mRational(n, C, form) {
                 chainEq([
                     `${limTex(P, v, L)} ${lt(n, L)}`,
                     `${limTex(P, v, L)} ${lt(q.degree > 0 ? div(p.toNode(v), q.toNode(v)) : p.toNode(v), L)}`,
-                    k > 0 ? `${limTex(P, v, L)} \\frac{${tx(dividedBy(p, k, v), L)}}{${tx(dividedBy(q, k, v), L)}}` : null,
+                    k > 0 ? `${limTex(P, v, L)} \\frac{${calcTex(dividedBy(p, k, v), L)}}{${calcTex(dividedBy(q, k, v), L)}}` : null,
                     vTex(val, L),
                 ]),
             ),
@@ -329,7 +307,7 @@ function mEquivalents(n, C) {
         title: msg('calculus.limit.forms.equivalent_infinitesimals'),
         tex: eachLanguage(
             (Lg) =>
-                `${used.map((u) => `${tx(u.from, Lg)} \\sim ${tx(u.to, Lg)}`).join(',\\quad ')};\\qquad ${limTex(P, v, Lg)} ${lt(n, Lg)} = ${containsVar(next, v) ? `${limTex(P, v, Lg)} ${paren2(tx(next, Lg), next)} = ` : ''}${vTex(L, Lg)}`,
+                `${used.map((u) => `${calcTex(u.from, Lg)} \\sim ${calcTex(u.to, Lg)}`).join(',\\quad ')};\\qquad ${limTex(P, v, Lg)} ${lt(n, Lg)} = ${containsVar(next, v) ? `${limTex(P, v, Lg)} ${paren2(calcTex(next, Lg), next)} = ` : ''}${vTex(L, Lg)}`,
         ),
         text: msg('calculus.limit.forms.replace_infinitesimal_factors_by_equivalent_ones', { laws: joined(laws, '; ') }),
         rule: 'equivalents',
@@ -375,7 +353,7 @@ function mConjugate(n, C) {
             title: msg('calculus.limit.forms.multiply_by_conjugate'),
             tex: eachLanguage(
                 (Lg) =>
-                    `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${paren(tx(base, Lg))}${paren(tx(conj, Lg))}}{${tx(conj, Lg)}}${e.isOne() ? '' : '^{-1}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)} = ${vTex(L, Lg)}`,
+                    `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${paren(calcTex(base, Lg))}${paren(calcTex(conj, Lg))}}{${calcTex(conj, Lg)}}${e.isOne() ? '' : '^{-1}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)} = ${vTex(L, Lg)}`,
             ),
             text: cube
                 ? msg('calculus.limit.forms.difference_of_cube_roots_is_indeterminate')
@@ -490,7 +468,7 @@ function mLHopital(n, C, form) {
         title: msg('calculus.limit.forms.l_h_pital_s_rule'),
         tex: eachLanguage(
             (Lg) =>
-                `${limTex(P, v, Lg)} \\frac{${tx(uS, Lg)}}{${tx(wS, Lg)}} = ${limTex(P, v, Lg)} \\frac{${paren(tx(uS, Lg))}'}{${paren(tx(wS, Lg))}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)}${tx(tidy, Lg) !== tx(next, Lg) ? ` = ${limTex(P, v, Lg)} ${paren2(tx(tidy, Lg), tidy)}` : ''} = ${vTex(L, Lg)}`,
+                `${limTex(P, v, Lg)} \\frac{${calcTex(uS, Lg)}}{${calcTex(wS, Lg)}} = ${limTex(P, v, Lg)} \\frac{${paren(calcTex(uS, Lg))}'}{${paren(calcTex(wS, Lg))}'} = ${limTex(P, v, Lg)} ${lt(next, Lg)}${calcTex(tidy, Lg) !== calcTex(next, Lg) ? ` = ${limTex(P, v, Lg)} ${paren2(calcTex(tidy, Lg), tidy)}` : ''} = ${vTex(L, Lg)}`,
         ),
         text: msg('calculus.limit.forms.form_numerator_and_denominator_are_differentiable', { p: FORM_NAME[form] }),
         rule: 'lhopital',
@@ -527,7 +505,7 @@ function mDivideDominant(n, C) {
         return {
             val,
             title: msg('calculus.limit.forms.divide_by_dominant_term'),
-            tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${tx(a, Lg)}}{${tx(b, Lg)}} = ${vTex(val, Lg)}`),
+            tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} \\frac{${calcTex(a, Lg)}}{${calcTex(b, Lg)}} = ${vTex(val, Lg)}`),
             text: msg('calculus.limit.forms.divide_numerator_and_denominator_by_fastest', { term: (lng) => toText(prettyForm(T), { lang: lng }) }),
             rule: 'divide-dominant',
             sub: C2.log,
@@ -554,7 +532,7 @@ function mSplitFraction(n, C) {
     return {
         val: L,
         title: msg('calculus.limit.forms.divide_term_by_term'),
-        tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} ${paren(tx(X, Lg))} = ${vTex(L, Lg)}`),
+        tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${lt(n, Lg)} = ${limTex(P, v, Lg)} ${paren(calcTex(X, Lg))} = ${vTex(L, Lg)}`),
         text: msg('calculus.limit.forms.divide_each_term_of_numerator_by'),
         rule: 'split-fraction',
     };
@@ -578,7 +556,7 @@ function mCommonDen(n, C) {
     return {
         val: L,
         title: msg('calculus.limit.forms.bring_to_common_denominator'),
-        tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${paren(tx(n, Lg))} = ${limTex(P, v, Lg)} ${lt(cf, Lg)} = ${vTex(L, Lg)}`),
+        tex: eachLanguage((Lg) => `${limTex(P, v, Lg)} ${paren(calcTex(n, Lg))} = ${limTex(P, v, Lg)} ${lt(cf, Lg)} = ${vTex(L, Lg)}`),
         text: msg('calculus.limit.forms.form_combine_fractions_into_one_which'),
         rule: 'common-denominator',
     };
@@ -605,7 +583,7 @@ function mDominant(n, C) {
             title: msg('calculus.limit.forms.take_out_dominant_term'),
             tex: eachLanguage(
                 (Lg) =>
-                    `${limTex(P, v, Lg)} ${paren(tx(n, Lg))} = ${limTex(P, v, Lg)} ${T.type === 'add' || T.type === 'mul' ? paren(tx(T, Lg)) : tx(T, Lg)}\\left(${tx(add(N1, rest), Lg)}\\right) = ${vTex(val, Lg)}`,
+                    `${limTex(P, v, Lg)} ${paren(calcTex(n, Lg))} = ${limTex(P, v, Lg)} ${T.type === 'add' || T.type === 'mul' ? paren(calcTex(T, Lg)) : calcTex(T, Lg)}\\left(${calcTex(add(N1, rest), Lg)}\\right) = ${vTex(val, Lg)}`,
             ),
             text: msg('calculus.limit.forms.take_out_fastest_growing_term_bracket'),
             rule: 'dominant-term',
@@ -667,11 +645,11 @@ function mSecondRemarkable(n, C) {
         title: msg('calculus.limit.forms.second_remarkable_limit'),
         tex: eachLanguage((Lg) => {
             const u = niceForm(add(B, NM1), v);
-            const uT = u.type === 'add' || negLeadNode(u) ? paren(tx(u, Lg)) : tx(u, Lg);
+            const uT = u.type === 'add' || negLeadNode(u) ? paren(calcTex(u, Lg)) : calcTex(u, Lg);
             const inv = niceForm(pow(u, NM1), v);
             const innerN = niceForm(inner, v);
-            const core = `\\left(1 + ${uT}\\right)^{${tx(inv, Lg)}}`;
-            const outer = isNum(innerN) && innerN.value.isOne() ? core : `\\left[${core}\\right]^{${tx(innerN, Lg)}}`;
+            const core = `\\left(1 + ${uT}\\right)^{${calcTex(inv, Lg)}}`;
+            const outer = isNum(innerN) && innerN.value.isOne() ? core : `\\left[${core}\\right]^{${calcTex(innerN, Lg)}}`;
             return chainEq([
                 `${limTex(P, v, Lg)} ${lt(n, Lg)}`,
                 `${limTex(P, v, Lg)} ${outer}`,

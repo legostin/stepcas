@@ -1,84 +1,23 @@
 // integral/common — what the methods share: constants, TeX, positivity (ln|u| or ln u), the check F′ = f, the answer
 // after a substitution and its cleaning. A leaf of integral/: it imports no method and not the engine.
 
-import {
-    num,
-    sym,
-    toNode,
-    nodeKey,
-    isConst,
-    freeVars,
-    containsVar,
-    add,
-    mul,
-    fn,
-    nodeSize,
-    neg,
-    nodeChildren,
-    div,
-    pow,
-    mapNode,
-    substitute,
-} from '../../core/ast.js';
+import { num, sym, isConst, freeVars, containsVar, add, mul, fn, nodeSize, neg, nodeChildren, div, pow, mapNode, substitute } from '../../core/ast.js';
 import { Q } from '../../core/rational.js';
-import { parse } from '../../core/parse.js';
-import { simplify, splitCoeff } from '../../core/simplify.js';
-import { calcTex, quickDerivative, prettyForm, niceForm, ratFunctionOf } from '../derivative/index.js';
+import { splitCoeff } from '../../core/simplify.js';
+import { quickDerivative, niceForm, ratFunctionOf } from '../derivative/index.js';
 import { Poly } from '../../core/poly.js';
 import { expand } from '../../core/expand.js';
 import { rng } from '../../core/random.js';
 import { evaluate } from '../../core/evaluate.js';
 import { step } from '../../core/steps.js';
 import { eachLanguage } from '../../i18n/index.js';
+import { calcTex, prettyForm, isNum, isZero, isOne, negLeading, paren, supDigits, simp, trySimp, NM1 } from '../display.js';
 
-export const N0 = num(0);
-export const N1 = num(1);
-export const NM1 = num(-1);
-export const N2 = num(2);
-export const HALF = num(Q.HALF);
 export const PI = sym('pi');
-export const E_ = sym('e');
 
-export const isNum = (n) => n.type === 'num';
-export const isZero = (n) => isNum(n) && n.value.isZero();
-export const isOne = (n) => isNum(n) && n.value.isOne();
 export const q = (a, b = 1n) => new Q(BigInt(a), BigInt(b));
 
 // ---------------------------------------------------------------- small helpers
-
-export function asNode(x) {
-    if (x && typeof x === 'object' && typeof x.type === 'string') return x;
-    if (typeof x === 'string') return parse(x);
-    return toNode(x);
-}
-
-export function simp(node) {
-    let s = simplify(node);
-    for (let i = 0; i < 3; i++) {
-        const t = simplify(s);
-        if (nodeKey(t) === nodeKey(s)) break;
-        s = t;
-    }
-    return s;
-}
-
-export function trySimp(node) {
-    try {
-        return simp(node);
-    } catch {
-        return null;
-    }
-}
-
-const tall = (s) => /\\frac|\\sqrt|\\left|\\dfrac|\^\{/.test(s);
-export const paren = (s) => (tall(s) ? `\\left(${s}\\right)` : `(${s})`);
-
-export function negLeading(n) {
-    if (isNum(n)) return n.value.isNeg();
-    if (n.type === 'neg') return true;
-    if (n.type === 'mul') return n.args.length > 0 && negLeading(n.args[0]);
-    return false;
-}
 
 export const isVar = (n, v) => n.type === 'sym' && n.name === v && !isConst(n);
 
@@ -90,7 +29,6 @@ export function iTex(f, v, L) {
 }
 
 /** TeX of a node for the right-hand side of a step. */
-export const tx = (n, L) => calcTex(n, L);
 
 /** A multiplier in front of something: 3, -\frac{1}{2}, (a + 1). */
 export function coefTex(c, L) {
@@ -348,7 +286,7 @@ export function substResult(f, ctx, { t, uNode, g, title, text, rule, dtTex }) {
             title,
             tex: eachLanguage(
                 (L) =>
-                    `${iTex(f, v, L)} = \\left[${t} = ${tx(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${tx(trySimp(r.F) ?? r.F, L)} = ${tx(trySimp(F) ?? F, L)}`,
+                    `${iTex(f, v, L)} = \\left[${t} = ${calcTex(uNode, L)},\\ ${dtTex(L)}\\right] = ${iTex(gs, t, L)} = ${calcTex(trySimp(r.F) ?? r.F, L)} = ${calcTex(trySimp(F) ?? F, L)}`,
             ),
             text,
             rule,
@@ -356,9 +294,5 @@ export function substResult(f, ctx, { t, uNode, g, title, text, rule, dtTex }) {
         }),
     };
 }
-
-const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '-': '⁻' };
-
-export const supDigits = (d) => [...d].map((c) => SUP[c]).join('');
 
 export const qn = (x) => num(x);

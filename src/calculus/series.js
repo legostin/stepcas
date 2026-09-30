@@ -17,10 +17,9 @@ import { limit } from './limit/index.js';
 import { numDen } from '../core/fractions.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE, wordsPattern } from '../i18n/index.js';
+import { N0, N1 } from './display.js';
 
 const tex = (n, l = DEFAULT_LANGUAGE) => toTex(n, { lang: l });
-const N0 = num(0);
-const N1 = num(1);
 const INF = sym('inf');
 const isInf = (n) => n.type === 'sym' && n.name === 'inf';
 

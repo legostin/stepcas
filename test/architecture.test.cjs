@@ -17,6 +17,7 @@ const LAYERS = [
     ['linalg'], //                                  matrices over Q (and floats)
     ['algebra'], //                                 values and transformations step by step
     ['solve'], //                                   equations, inequalities, systems
+    ['calculus/display'], //                        what every calculus module shares
     ['calculus/derivative'],
     ['calculus/limit'],
     ['calculus/integral', 'calculus/series'],

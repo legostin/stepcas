@@ -10,7 +10,6 @@
 // against the input polynomial.
 import { Q, MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, nodeKey, freeVars, containsVar, numValue } from '../core/ast.js';
-import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
 import { expand } from '../core/expand.js';
 import { numDen } from '../core/fractions.js';
@@ -18,9 +17,9 @@ import { step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { trySimplify } from '../core/safe.js';
 import { msg, eachLanguage, joined, sameText, DEFAULT_LANGUAGE } from '../i18n/index.js';
+import { asNode } from '../core/parse.js';
 
 const tex = (n, l = DEFAULT_LANGUAGE) => toTex(n, { lang: l });
-const asNode = (x) => (typeof x === 'string' ? parse(x) : x);
 const polyTex = (P, v, l) => tex(P.toNode(v), l);
 
 /* ------------------------------------------------------------------ factoring */

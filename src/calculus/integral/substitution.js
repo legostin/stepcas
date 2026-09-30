@@ -4,8 +4,9 @@ import { containsVar, nodeKey, pow, sym, num, nodeChildren, div, nodeSome, subst
 import { Poly } from '../../core/poly.js';
 import { quickDerivative, ratFunctionOf } from '../derivative/index.js';
 import { bigLcm } from '../../core/rational.js';
-import { mapPre, plainish, E_, NM1, freshVar, isNum, isOne, isVar, isZero, linearParts, paren, q, simp, trySimp, tx, qn, substResult } from './common.js';
+import { mapPre, plainish, freshVar, isVar, linearParts, q, qn, substResult } from './common.js';
 import { msg } from '../../i18n/index.js';
+import { isNum, isZero, isOne, paren, simp, trySimp, NM1, E_, calcTex } from '../display.js';
 
 // ---- u-substitution g(h(x))·h′(x)
 
@@ -114,7 +115,7 @@ export function mUSub(f, ctx) {
             g: c.g,
             rule: 'substitution',
             title: msg('calculus.integral.substitution.substitution'),
-            dtTex: (L) => `d${t} = ${isOne(c.du) ? '' : c.du.type === 'add' ? paren(tx(c.du, L)) : tx(c.du, L) + '\\,'}d${v}`,
+            dtTex: (L) => `d${t} = ${isOne(c.du) ? '' : c.du.type === 'add' ? paren(calcTex(c.du, L)) : calcTex(c.du, L) + '\\,'}d${v}`,
             text: msg('calculus.integral.substitution.derivative_of_is_up_to_constant', { p: (lng) => plainish(c.u, lng), t }),
         });
         if (res) return res;
@@ -156,7 +157,7 @@ export function mRationalizing(f, ctx) {
         g,
         rule: 'rationalizing',
         title: msg('calculus.integral.substitution.substitution_that_removes_root'),
-        dtTex: (L) => `${v} = ${tx(trySimp(xOfT) ?? xOfT, L)},\\ d${v} = ${tx(simp(div(mul(num(m), pow(T, num(m - 1))), lp.k)), L)}\\,d${t}`,
+        dtTex: (L) => `${v} = ${calcTex(trySimp(xOfT) ?? xOfT, L)},\\ d${v} = ${calcTex(simp(div(mul(num(m), pow(T, num(m - 1))), lp.k)), L)}\\,d${t}`,
         text: msg('calculus.integral.substitution.all_roots_are_of_same_linear', {
             base: (lng) => plainish(base, lng),
             p: (lng) => (m === 2 ? '√' : msg('calculus.integral.substitution.th_root_of', { m }).in(lng)),

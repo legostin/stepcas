@@ -16,7 +16,7 @@
 //   * parseFunctionInput reads f(x) = …, y = …, g(t) := … and bare expressions for solvers and plots
 
 import { Q, MathError } from './rational.js';
-import { num, sym, add, mul, div, neg, pow, fn, rel, chain, list } from './ast.js';
+import { num, sym, add, mul, div, neg, pow, fn, rel, chain, list, toNode } from './ast.js';
 import { msg, notation, resolveLanguage, lookalikes } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- vocabulary
@@ -1354,6 +1354,18 @@ export function tryParse(text, opts = {}) {
         if (e instanceof MathError) return { ok: false, error: e };
         return { ok: false, error: new MathError(msg('core.parse.could_not_read_input'), 0, 0, 'internal') };
     }
+}
+
+/**
+ * An expression as the engine's functions accept it: a node as it is, a string parsed (with opts), a number, bigint
+ * or Q as a number node, ±Infinity as ±∞.
+ */
+export function asNode(x, opts) {
+    if (x && typeof x === 'object' && typeof x.type === 'string') return x;
+    if (typeof x === 'string') return parse(x, opts);
+    if (x === Infinity) return sym('inf');
+    if (x === -Infinity) return neg(sym('inf'));
+    return toNode(x);
 }
 
 // ---------------------------------------------------------------- function inputs

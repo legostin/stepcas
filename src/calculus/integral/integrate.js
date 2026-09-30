@@ -3,12 +3,14 @@
 import { splitCoeff } from '../../core/simplify.js';
 import { containsVar, nodeKey, sym, isConst, pow, freeVars, nodeSome } from '../../core/ast.js';
 import { Poly } from '../../core/poly.js';
-import { prettyForm } from '../derivative/index.js';
+
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
-import { NM1, asNode, checkAnti, iTex, isNum, isVar, simp, trySimp, tx, cleanAnti } from './common.js';
+import { checkAnti, iTex, isVar, cleanAnti } from './common.js';
 import { I } from './engine.js';
 import { msg, eachLanguage, DEFAULT_LANGUAGE } from '../../i18n/index.js';
+import { asNode } from '../../core/parse.js';
+import { prettyForm, isNum, simp, trySimp, NM1, checkExpr, calcTex } from '../display.js';
 
 // ---------------------------------------------------------------- non-elementary integrals
 
@@ -60,12 +62,6 @@ function nonElementaryHint(f, v) {
 // ---------------------------------------------------------------- cleaning the answer
 
 // ---------------------------------------------------------------- public API
-
-export function checkExpr(node) {
-    if (node.type === 'rel' || node.type === 'chain' || node.type === 'list') {
-        throw new MathError(msg('calculus.integral.integrate.formula_is_needed_not_equation_or'), null, null, 'not-expr');
-    }
-}
 
 export function answerStep(title, tex) {
     const s = step({ title, tex, rule: 'answer' });
@@ -123,13 +119,13 @@ export function integrate(node, v = 'x', opts = {}) {
     if (!verified && checkAnti(F, f, v) === false) {
         return fail(msg('calculus.integral.integrate.candidate_failed_check_by_differentiation_so'));
     }
-    const tex = eachLanguage((L) => `${iTex(node, v, L)} = ${tx(F, L)} + C`);
+    const tex = eachLanguage((L) => `${iTex(node, v, L)} = ${calcTex(F, L)} + C`);
     const steps = [];
     if (opts.steps) {
         steps.push(start);
         steps.push(r.step);
-        const rawTex = (L) => tx(simp(r.F), L);
-        if (rawTex(DEFAULT_LANGUAGE) !== tx(F, DEFAULT_LANGUAGE)) {
+        const rawTex = (L) => calcTex(simp(r.F), L);
+        if (rawTex(DEFAULT_LANGUAGE) !== calcTex(F, DEFAULT_LANGUAGE)) {
             const raw = simp(r.F);
             const dropped = raw.type === 'add' && raw.args.some((t) => !containsVar(t, v));
             const atanTan = nodeSome(raw, (m) => m.type === 'fn' && m.name === 'atan' && m.args[0].type === 'fn' && m.args[0].name === 'tan');
@@ -140,7 +136,7 @@ export function integrate(node, v = 'x', opts = {}) {
             steps.push(
                 step({
                     title: msg('calculus.integral.integrate.simplify'),
-                    tex: eachLanguage((L) => `${rawTex(L)} = ${tx(F, L)}${dropped ? ' + \\mathrm{const}' : ''}`),
+                    tex: eachLanguage((L) => `${rawTex(L)} = ${calcTex(F, L)}${dropped ? ' + \\mathrm{const}' : ''}`),
                     text,
                     rule: 'simplify',
                 }),
@@ -149,7 +145,7 @@ export function integrate(node, v = 'x', opts = {}) {
         steps.push(
             step({
                 title: msg('calculus.integral.integrate.check'),
-                tex: eachLanguage((L) => `\\left(${tx(F, L)}\\right)' = ${tx(f, L)}`),
+                tex: eachLanguage((L) => `\\left(${calcTex(F, L)}\\right)' = ${calcTex(f, L)}`),
                 text: verified
                     ? msg('calculus.integral.integrate.differentiate_answer_and_compare_with_integrand')
                     : msg('calculus.integral.integrate.numeric_check_could_not_be_done'),

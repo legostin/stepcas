@@ -3,12 +3,13 @@
 import { nodeKey } from '../../core/ast.js';
 import { MathError } from '../../core/rational.js';
 import { mConst, mDerivPattern, mExpand, mLinearSub, mLinearity, mTable } from './basic.js';
-import { checkAnti, simp } from './common.js';
+import { checkAnti } from './common.js';
 import { mParts, mPolyTimes } from './parts.js';
 import { mQuadRoot, mRadicalPoly } from './radicals.js';
 import { mBiquadratic, mRational } from './rational.js';
 import { mRationalizing, mUSub } from './substitution.js';
 import { mCyclic, mTrig, mTrigLower, mTrigSub, mWeierstrass } from './trig.js';
+import { simp } from '../display.js';
 
 // ---------------------------------------------------------------- the recursive integrator
 

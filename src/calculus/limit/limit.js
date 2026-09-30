@@ -5,11 +5,13 @@ import { nodeChildren, neg, num, add, mul, div, pow, fn, substitute, freeVars, m
 import { evaluate } from '../../core/evaluate.js';
 import { MathError } from '../../core/rational.js';
 import { step } from '../../core/steps.js';
-import { DNE, Split, asNode, atPoint, evalAt, fin, infV, isOneV, isZeroV, limTex, lt, makePoint, sideSignStrict, simp, trySimp, tx } from './common.js';
+import { DNE, Split, atPoint, evalAt, fin, infV, isOneV, isZeroV, limTex, lt, makePoint, sideSignStrict } from './common.js';
 import { ev, limitContext } from './evaluator.js';
 import { FORM_NAME, FORM_TEX, plainNum, quotientParts } from './forms.js';
 import { crossCheck, fmtNum, numericEstimate, tableFor, tableStep } from './table.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
+import { asNode } from '../../core/parse.js';
+import { simp, trySimp, calcTex } from '../display.js';
 
 // ---------------------------------------------------------------- public API
 
@@ -25,7 +27,7 @@ function valueTex(val, L) {
     if (val === 'inf') return '+\\infty';
     if (val === '-inf') return '-\\infty';
     if (val === 'dne') return msg('calculus.limit.limit.does_not_exist').in(L);
-    if (val && typeof val === 'object') return tx(val, L);
+    if (val && typeof val === 'object') return calcTex(val, L);
     return '?';
 }
 
@@ -222,7 +224,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             steps.push(
                 step({
                     title: msg('calculus.limit.limit.limit_from_left'),
-                    tex: eachLanguage((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.left, L)}`),
+                    tex: eachLanguage((L) => `${limTex({ ...P, side: 'left' }, v, L)} ${calcTex(node, L)} = ${valueTex(sidesInfo.left, L)}`),
                     rule: 'left',
                     sub: l.C?.log ?? [],
                 }),
@@ -230,7 +232,7 @@ export function limit(node, v = 'x', a = 0, opts = {}) {
             steps.push(
                 step({
                     title: msg('calculus.limit.limit.limit_from_right'),
-                    tex: eachLanguage((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${tx(node, L)} = ${valueTex(sidesInfo.right, L)}`),
+                    tex: eachLanguage((L) => `${limTex({ ...P, side: 'right' }, v, L)} ${calcTex(node, L)} = ${valueTex(sidesInfo.right, L)}`),
                     rule: 'right',
                     sub: r.C?.log ?? [],
                 }),

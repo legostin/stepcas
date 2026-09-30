@@ -1,5 +1,8 @@
 // Russian messages of calculus/ (keys calculus.<module>.<message>).
 export default {
+    display: {
+        formula_is_needed_not_equation_or: 'Нужна формула функции, а не уравнение или список',
+    },
     derivative: {
         derivative: {
             what_we_differentiate: 'Что дифференцируем',
@@ -24,9 +27,6 @@ export default {
             slope: 'Угловой коэффициент',
             substitute_point_into_derivative_this_is: 'Подставляем точку в производную: это тангенс угла наклона касательной.',
             tangent_line: 'Касательная',
-        },
-        display: {
-            formula_is_needed_not_equation_or: 'Нужна формула функции, а не уравнение или список',
         },
         quick: {
             cannot_differentiate: 'Не умею дифференцировать функцию %{name}',
@@ -255,7 +255,6 @@ export default {
             dx_ln_x_has_no_elementary: '∫dx/ln x не берётся в элементарных функциях; это интегральный логарифм li x.',
             fresnel_integrals_sin_x_dx_and: 'Интегралы Френеля ∫sin(x²)dx и ∫cos(x²)dx не выражаются через элементарные функции.',
             x_dx_has_no_elementary_antiderivative: '∫xˣdx не выражается через элементарные функции.',
-            formula_is_needed_not_equation_or: 'Нужна формула функции, а не уравнение или список',
             could_not_process_expression: 'Не удалось разобрать выражение',
             what_we_integrate: 'Что интегрируем',
             we_integrate_with_respect_to_other: 'Интегрируем по %{v}; остальные буквы считаем постоянными.',

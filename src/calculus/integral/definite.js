@@ -8,10 +8,12 @@ import { Poly } from '../../core/poly.js';
 import { numFindRoots, numIntegrate } from '../../numbers/numeric/index.js';
 import { limit } from '../limit/index.js';
 import { step } from '../../core/steps.js';
-import { niceForm, prettyForm } from '../derivative/index.js';
-import { N0, PI, asNode, isNum, paren, simp, trySimp, tx } from './common.js';
-import { answerStep, checkExpr, integrate } from './integrate.js';
+import { niceForm } from '../derivative/index.js';
+import { PI } from './common.js';
+import { answerStep, integrate } from './integrate.js';
 import { msg, notation, eachLanguage, decimalIn } from '../../i18n/index.js';
+import { asNode } from '../../core/parse.js';
+import { prettyForm, isNum, paren, simp, trySimp, N0, checkExpr, calcTex } from '../display.js';
 
 // ---------------------------------------------------------------- definite integrals
 
@@ -31,7 +33,7 @@ function boundValue(n) {
     return { node: s, x };
 }
 
-const boundTex = (b, L) => (b.x === Infinity ? '+\\infty' : b.x === -Infinity ? '-\\infty' : tx(b.node, L));
+const boundTex = (b, L) => (b.x === Infinity ? '+\\infty' : b.x === -Infinity ? '-\\infty' : calcTex(b.node, L));
 
 /** Candidate singular points of g on [lo, hi]: zeros of denominators and of log arguments, poles of tg/ctg/sec/cosec. */
 function singularCandidates(g, v, lo, hi) {
@@ -241,7 +243,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
     const B = boundValue(boundNode(b));
     const steps = [];
     const wantSteps = !!opts.steps;
-    const head = (L) => `\\int_{${boundTex(A, L)}}^{${boundTex(B, L)}} ${f.type === 'add' ? paren(tx(node, L)) : tx(node, L)}\\,d${v}`;
+    const head = (L) => `\\int_{${boundTex(A, L)}}^{${boundTex(B, L)}} ${f.type === 'add' ? paren(calcTex(node, L)) : calcTex(node, L)}\\,d${v}`;
     if (wantSteps) {
         steps.push(
             step({
@@ -364,7 +366,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
             steps.push(
                 step({
                     title: msg('calculus.integral.definite.antiderivative'),
-                    tex: eachLanguage((L) => `F(${v}) = ${tx(F, L)}`),
+                    tex: eachLanguage((L) => `F(${v}) = ${calcTex(F, L)}`),
                     rule: 'antiderivative',
                     sub: anti.steps.filter((s) => s.rule !== 'answer' && s.rule !== 'start'),
                 }),
@@ -386,7 +388,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                         title: poles
                             ? msg('calculus.integral.definite.singular_points_inside_interval')
                             : msg('calculus.integral.definite.jump_of_antiderivative'),
-                        tex: eachLanguage((L) => `${v} = ${interior.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
+                        tex: eachLanguage((L) => `${v} = ${interior.map((p) => calcTex(p.node, L)).join(notation(L).listTex)}`),
                         text: poles
                             ? msg('calculus.integral.definite.function_blows_up_inside_interval_newton')
                             : msg('calculus.integral.definite.antiderivative_jumps_inside_interval_this_happens'),
@@ -396,19 +398,21 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
             }
             for (const x of parts) {
                 const lim = (e, pt, sideSign, L) =>
-                    e.how === 'limit' ? `\\lim_{${v} \\to ${Number.isFinite(pt.x) ? `{${tx(pt.node, L)}}^{${sideSign}}` : boundTex(pt, L)}} F(${v})` : null;
+                    e.how === 'limit'
+                        ? `\\lim_{${v} \\to ${Number.isFinite(pt.x) ? `{${calcTex(pt.node, L)}}^{${sideSign}}` : boundTex(pt, L)}} F(${v})`
+                        : null;
                 const val = (e) => (e.kind === 'fin' ? null : e.kind === 'inf' ? '+\\infty' : e.kind === '-inf' ? '-\\infty' : '?');
                 const isLim = x.top.how === 'limit' || x.bot.how === 'limit';
                 steps.push(
                     step({
                         title: isLim ? msg('calculus.integral.definite.improper_integral_limits') : msg('calculus.integral.definite.newton_leibniz_formula'),
                         tex: eachLanguage((L) => {
-                            const upper = x.top.kind === 'fin' ? tx(x.top.node, L) : val(x.top);
-                            const lower = x.bot.kind === 'fin' ? tx(x.bot.node, L) : val(x.bot);
+                            const upper = x.top.kind === 'fin' ? calcTex(x.top.node, L) : val(x.top);
+                            const lower = x.bot.kind === 'fin' ? calcTex(x.bot.node, L) : val(x.bot);
                             const lu = lim(x.top, x.r, '-', L) ?? `F\\left(${boundTex(x.r, L)}\\right)`;
                             const ll = lim(x.bot, x.p, '+', L) ?? `F\\left(${boundTex(x.p, L)}\\right)`;
                             const both = x.top.kind === 'fin' && x.bot.kind === 'fin' ? trySimp(add(x.top.node, neg(x.bot.node))) : null;
-                            return `\\int_{${boundTex(x.p, L)}}^{${boundTex(x.r, L)}} f\\,d${v} = ${lu} - ${ll} = ${upper} - ${/^-/.test(lower) ? `\\left(${lower}\\right)` : lower}${both ? ` = ${tx(niceForm(both), L)}` : ''}`;
+                            return `\\int_{${boundTex(x.p, L)}}^{${boundTex(x.r, L)}} f\\,d${v} = ${lu} - ${ll} = ${upper} - ${/^-/.test(lower) ? `\\left(${lower}\\right)` : lower}${both ? ` = ${calcTex(niceForm(both), L)}` : ''}`;
                         }),
                         text: isLim
                             ? msg('calculus.integral.definite.at_infinite_limit_at_point_where')
@@ -479,7 +483,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
             const value = niceForm(exactNode);
             const tex = eachLanguage(
                 (L) =>
-                    `${head(L)} = ${tx(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`,
+                    `${head(L)} = ${calcTex(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`,
             );
             if (wantSteps) steps.push(answerStep(msg('calculus.integral.definite.answer'), tex));
             return out({
@@ -592,13 +596,13 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
     const value = exact && total ? niceForm(total) : null;
     const tex = eachLanguage(
         (L) =>
-            `S = \\int_{${tx(lo.node, L)}}^{${tx(hi.node, L)}} \\left|${tx(prettyForm(d), L)}\\right|\\,d${v} ${value ? '= ' + tx(value, L) : '\\approx ' + fmtNum(numeric, L)}`,
+            `S = \\int_{${calcTex(lo.node, L)}}^{${calcTex(hi.node, L)}} \\left|${calcTex(prettyForm(d), L)}\\right|\\,d${v} ${value ? '= ' + calcTex(value, L) : '\\approx ' + fmtNum(numeric, L)}`,
     );
     if (opts.steps) {
         steps.push(
             step({
                 title: msg('calculus.integral.definite.difference_of_functions'),
-                tex: eachLanguage((L) => `f(${v}) - g(${v}) = ${tx(prettyForm(d), L)}`),
+                tex: eachLanguage((L) => `f(${v}) - g(${v}) = ${calcTex(prettyForm(d), L)}`),
                 text: msg('calculus.integral.definite.area_between_graphs_is_integral_of'),
                 rule: 'difference',
             }),
@@ -607,7 +611,7 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
             steps.push(
                 step({
                     title: msg('calculus.integral.definite.intersection_points'),
-                    tex: eachLanguage((L) => `${v} = ${pts.map((p) => tx(p.node, L)).join(notation(L).listTex)}`),
+                    tex: eachLanguage((L) => `${v} = ${pts.map((p) => calcTex(p.node, L)).join(notation(L).listTex)}`),
                     text: msg('calculus.integral.definite.between_intersection_points_difference_keeps_its'),
                     rule: 'intersections',
                 }),
@@ -619,7 +623,7 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
                     title: msg('calculus.integral.definite.piece'),
                     tex: eachLanguage(
                         (L) =>
-                            `\\int_{${tx(pc.from, L)}}^{${tx(pc.to, L)}} ${pc.upper === 'f' ? '(f - g)' : '(g - f)'}\\,d${v} = ${pc.value && typeof pc.value === 'object' ? tx(pc.value, L) : '\\approx ' + fmtNum(pc.numeric ?? NaN, L)}`,
+                            `\\int_{${calcTex(pc.from, L)}}^{${calcTex(pc.to, L)}} ${pc.upper === 'f' ? '(f - g)' : '(g - f)'}\\,d${v} = ${pc.value && typeof pc.value === 'object' ? calcTex(pc.value, L) : '\\approx ' + fmtNum(pc.numeric ?? NaN, L)}`,
                     ),
                     rule: 'piece',
                 }),

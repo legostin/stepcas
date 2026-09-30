@@ -5,7 +5,7 @@ import { Q, MathError } from '../../core/rational.js';
 import { simplify } from '../../core/simplify.js';
 import { step } from '../../core/steps.js';
 import { niceForm } from './clean.js';
-import { E_, N0, N1, N2, NM1, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from './display.js';
+import { E_, N0, N1, N2, NM1, calcTex, isNum, isOne, isZero, negLeading, paren, plain } from '../display.js';
 import { FACT_ERR } from './quick.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
 

@@ -1,5 +1,8 @@
 // English messages of calculus/ (keys calculus.<module>.<message>).
 export default {
+    display: {
+        formula_is_needed_not_equation_or: 'A formula is needed, not an equation or a list',
+    },
     derivative: {
         derivative: {
             what_we_differentiate: 'What we differentiate',
@@ -25,9 +28,6 @@ export default {
             slope: 'Slope',
             substitute_point_into_derivative_this_is: 'Substitute the point into the derivative: this is the slope of the tangent.',
             tangent_line: 'Tangent line',
-        },
-        display: {
-            formula_is_needed_not_equation_or: 'A formula is needed, not an equation or a list',
         },
         quick: {
             cannot_differentiate: 'Cannot differentiate %{name}',
@@ -257,7 +257,6 @@ export default {
             dx_ln_x_has_no_elementary: '∫dx/ln x has no elementary antiderivative; it is the logarithmic integral li x.',
             fresnel_integrals_sin_x_dx_and: 'The Fresnel integrals ∫sin(x²)dx and ∫cos(x²)dx have no elementary antiderivative.',
             x_dx_has_no_elementary_antiderivative: '∫xˣdx has no elementary antiderivative.',
-            formula_is_needed_not_equation_or: 'A formula is needed, not an equation or a list',
             could_not_process_expression: 'Could not process the expression',
             what_we_integrate: 'What we integrate',
             we_integrate_with_respect_to_other: 'We integrate with respect to %{v}; the other letters are constants.',

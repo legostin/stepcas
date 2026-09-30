@@ -7,7 +7,7 @@ import { Q, bigGcd, bigLcm, MathError } from '../../core/rational.js';
 import { Poly } from '../../core/poly.js';
 import { expand } from '../../core/expand.js';
 import { combineFractions } from '../../core/fractions.js';
-import { N0, N1, NM1, agree, calcTex, isNum, negLeading, prettyForm } from './display.js';
+import { N0, N1, NM1, agree, calcTex, isNum, negLeading, prettyForm, simp } from '../display.js';
 import { DEFAULT_LANGUAGE } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- the clean form
@@ -246,17 +246,6 @@ function fractionForms(S, v) {
         }
     }
     return tops.map((top) => (sign ? neg(div(top, D)) : div(top, D)));
-}
-
-/** simplify() repeated to a fixed point (a single pass can leave x·x^(−2) after |x|^(−2) → x^(−2)). */
-function simp(node) {
-    let s = simplify(node);
-    for (let i = 0; i < 3; i++) {
-        const t = simplify(s);
-        if (nodeKey(t) === nodeKey(s)) break;
-        s = t;
-    }
-    return s;
 }
 
 /** −c·(a − b)·… → c·(b − a)·…: the minus goes into a sum factor (1 − x² rather than −(x² − 1)). */

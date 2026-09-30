@@ -6,13 +6,12 @@
 // clean. The clean form is picked among equivalent candidates (canonical, one fraction, common factor
 // taken out, sin/cos → tg/ctg) by the length of its TeX, and every result is checked numerically
 // (against an independent fast derivative and against central differences of f).
-// Also exported for the other calculus modules: quickDerivative (fast canonical derivative), niceForm
-// (tidy equivalent form), prettyForm (display tweaks: 1 − x² rather than −x² + 1, ∛(x²) rather than x^(2/3)),
-// calcTex / calcTexBoth (TeX with |…| after ln instead of ln(|…|)).
+// Also exported for the other calculus modules: quickDerivative (fast canonical derivative), niceForm (tidy
+// equivalent form), derivativeOf (the simplified derivative without steps). The display form and TeX of calculus
+// answers live in calculus/display.js.
 //
-// Layout: display (input, display form and TeX, sampling), quick (the fast canonical derivative), clean (the clean
-// form), steps (the step tree and its lines), derivative (the numeric check and the public API).
-export { calcTex, calcTexBoth, prettyForm } from './display.js';
+// Layout: quick (the fast canonical derivative), clean (the clean form), steps (the step tree and its lines),
+// derivative (the numeric check and the public API).
 export { quickDerivative } from './quick.js';
 export { niceForm, ratFunctionOf } from './clean.js';
 export { derivative, derivativeN, derivativeOf, gradientOf, partialDerivative, tangentLine } from './derivative.js';

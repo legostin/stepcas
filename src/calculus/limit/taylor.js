@@ -6,10 +6,12 @@ import { quickDerivative } from '../derivative/index.js';
 import { evaluate } from '../../core/evaluate.js';
 import { canonContext } from '../../core/simplify.js';
 import { step } from '../../core/steps.js';
-import { N0, N1, asNode, evalAt, isNum, isZeroN, simp, tx } from './common.js';
+import { evalAt, isZeroN } from './common.js';
 import { limit } from './limit.js';
 import { fmtNum } from './table.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
+import { asNode } from '../../core/parse.js';
+import { isNum, simp, N0, N1, calcTex } from '../display.js';
 
 // ---------------------------------------------------------------- Taylor polynomials
 
@@ -69,7 +71,7 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
         return mul(t.coeff, pw);
     };
     const polyShown = terms.length ? (terms.length === 1 ? termNode(terms[0]) : add(terms.map(termNode))) : N0;
-    const tex = eachLanguage((L) => `T_{${n}}(${v}) = ${tx(polyShown, L)}`);
+    const tex = eachLanguage((L) => `T_{${n}}(${v}) = ${calcTex(polyShown, L)}`);
     const steps = [];
     if (opts.steps) {
         steps.push(
@@ -84,7 +86,7 @@ export function taylorPolynomial(node, v = 'x', a = 0, n = 5, opts = {}) {
             steps.push(
                 step({
                     title: msg('calculus.limit.taylor.coefficient_of_degree', { k }),
-                    tex: eachLanguage((L) => `\\frac{f^{(${k})}(${tx(A, L)})}{${k}!} = ${tx(coeffs[k], L)}`),
+                    tex: eachLanguage((L) => `\\frac{f^{(${k})}(${calcTex(A, L)})}{${k}!} = ${calcTex(coeffs[k], L)}`),
                     rule: 'coefficient',
                 }),
             );

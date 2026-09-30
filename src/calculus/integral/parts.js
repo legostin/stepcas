@@ -6,8 +6,9 @@ import { splitCoeff } from '../../core/simplify.js';
 import { MathError } from '../../core/rational.js';
 import { quickDerivative } from '../derivative/index.js';
 import { step } from '../../core/steps.js';
-import { plainish, N0, checkAnti, iTex, isNum, isOne, isVar, isZero, linearParts, simp, trySimp, tx, cleanAnti } from './common.js';
+import { plainish, checkAnti, iTex, isVar, linearParts, cleanAnti } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
+import { isNum, isZero, isOne, simp, trySimp, N0, calcTex } from '../display.js';
 
 // ---- integration by parts
 
@@ -87,7 +88,7 @@ export function mParts(f, ctx) {
     if (!rj) return null;
     const F = add(mul(u, V), neg(rj.F));
     const why = LIATE_WHY[kinds[pick]];
-    const dvT = (L) => (isOne(dvNode) ? `d${v}` : `${tx(dvNode, L)}\\,d${v}`);
+    const dvT = (L) => (isOne(dvNode) ? `d${v}` : `${calcTex(dvNode, L)}\\,d${v}`);
     const Vs = trySimp(V) ?? V;
     return {
         F,
@@ -96,7 +97,7 @@ export function mParts(f, ctx) {
             title: msg('calculus.integral.parts.integration_by_parts'),
             tex: eachLanguage(
                 (L) =>
-                    `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`,
+                    `\\left[u = ${calcTex(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : calcTex(du, L) + '\\,'}d${v},\\ v = ${calcTex(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${calcTex(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${calcTex(trySimp(F) ?? F, L)}`,
             ),
             text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', {
                 u: (lng) => plainish(u, lng),
@@ -159,7 +160,7 @@ export function mPolyTimes(f, ctx) {
         method: 'parts',
         step: step({
             title: msg('calculus.integral.parts.by_parts_times', { degree: P.degree }),
-            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
+            tex: eachLanguage((L) => `${iTex(f, v, L)} = ${calcTex(trySimp(F) ?? F, L)}`),
             text: msg('calculus.integral.parts.integrate_by_parts_times_each_time', { degree: P.degree }),
             rule: 'parts-tabular',
         }),
