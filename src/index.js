@@ -18,7 +18,7 @@ export * from './linalg/matrix.js';
 export * from './calculus/derivative.js';
 export * from './calculus/integral.js';
 export * from './calculus/limit.js';
-export * from './solve/solve.js';
+export * from './solve/index.js';
 export * from './calculus/extrema.js';
 export * from './algebra/values.js';
 export * from './calculus/ode.js';

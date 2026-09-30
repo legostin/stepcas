@@ -16,7 +16,7 @@ import { evaluate } from '../core/evaluate.js';
 import { L, step } from '../core/steps.js';
 import { derivative } from './derivative.js';
 import { integrate } from './integral.js';
-import { solveEquation } from '../solve/solve.js';
+import { solveEquation } from '../solve/index.js';
 import { expand } from '../core/expand.js';
 import { mapNode } from '../core/ast.js';
 

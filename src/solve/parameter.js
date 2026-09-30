@@ -15,7 +15,7 @@ import { evaluate } from '../core/evaluate.js';
 import { L, step } from '../core/steps.js';
 import { derivative } from '../calculus/derivative.js';
 import { limit } from '../calculus/limit.js';
-import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './solve.js';
+import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
 
 const N0 = num(0);
 const simpO = (n) => {

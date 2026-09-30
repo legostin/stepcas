@@ -14,7 +14,7 @@ import { simplify } from '../core/simplify.js';
 import { evaluate, compile } from '../core/evaluate.js';
 import { toTex, toText } from '../core/print.js';
 import { derivative } from './derivative.js';
-import { solveEquation } from '../solve/solve.js';
+import { solveEquation } from '../solve/index.js';
 import { numFindRoots } from '../numbers/numeric.js';
 import { L, step } from '../core/steps.js';
 
