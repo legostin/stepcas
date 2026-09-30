@@ -169,16 +169,25 @@ No module outside `src/i18n/` changes.
 | architecture | `test/architecture.test.cjs` | layers, no cycles, entries through `index.js`, message domains |
 | i18n | `test/i18n.test.cjs` | complete catalogs, used keys, no language in the code, a third language works |
 | contract | `test/contract.test.cjs` | the shape of every result and every step over the whole corpus |
-| golden record | `bench/snapshot.mjs` | every corpus answer and step, rendered in every language; a refactoring must leave it unchanged |
+| golden record | `bench/snapshot.mjs`, `bench/golden.json` | every corpus answer and step rendered in every language, and the extra API calls, one hash per record; a refactoring must leave them unchanged |
 | benchmark | `bench/run.mjs`, `bench/verify.py` | ~1480 exam and university tasks; the expected answers are checked by SymPy |
 | style | ESLint, Prettier | `npm run lint`, `npm run format:check` |
 
-`npm run check` runs lint, format and the tests. A refactoring is done when the golden record does not move:
+`npm run check` runs lint, formatting, the tests and the golden record, and CI (`.github/workflows/ci.yml`) runs
+it on Node 20, 22 and 24, followed by the benchmark in strict mode (no wrong answers, errors or timeouts).
+
+A refactoring is done when the golden record does not move. `npm run snapshot:verify` names the records that
+changed. For the details, write two full records and compare them:
 
 ```sh
-node bench/snapshot.mjs --out bench/out/now.json
-node bench/snapshot.mjs --compare bench/out/golden.json bench/out/now.json   # "0 of N tasks differ"
+node bench/snapshot.mjs --out bench/out/before.json      # on the old code
+node bench/snapshot.mjs --out bench/out/after.json       # on the new code
+node bench/snapshot.mjs --compare bench/out/before.json bench/out/after.json
 ```
+
+When the output changes on purpose, update the fingerprints with `npm run snapshot:update` and commit them
+together with the change. Floats in the record are rounded to 12 significant digits, so the fingerprints are the
+same on every platform.
 
 ## Tools for changing the structure
 

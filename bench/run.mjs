@@ -1,5 +1,6 @@
 // stepcas bench: run the task corpus through the engine and report by source and topic.
-//   node bench/run.mjs [--source ege-profile] [--topic log-eq] [--id ege-p-001] [--wrong] [--timeout 8000]
+//   node bench/run.mjs [--source ege-profile] [--topic log-eq] [--id ege-p-001] [--wrong] [--timeout 8000] [--strict]
+// --strict exits with 1 when any answer is wrong or any task errs or times out (for CI).
 // Writes bench/out/results.json and bench/REPORT.md (the report is committed: it is the engine's scoreboard).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -162,3 +163,4 @@ console.log(
     `solved ${all.correct}/${all.total} (${pct(all.correct, all.total)}) · wrong ${all.wrong} · refused ${all.refused} · no API ${all.noapi} · errors ${all.error} · timeouts ${all.timeout}`,
 );
 if (flag('wrong')) for (const r of wrong) console.log(`  ${r.id}: ${r.task} → ${r.result.got ?? ''} ${r.result.note ?? ''} (want ${JSON.stringify(r.answer)})`);
+if (flag('strict') && all.wrong + all.error + all.timeout > 0) process.exit(1);

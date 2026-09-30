@@ -2,8 +2,11 @@
 // A refactoring must leave it unchanged (or change it on purpose).
 //   node bench/snapshot.mjs [--out bench/out/snapshot.json]      write
 //   node bench/snapshot.mjs --compare a.json b.json               list the tasks that differ
+//   node bench/snapshot.mjs --fingerprints bench/golden.json      write one hash per task (committed: CI checks it)
+//   node bench/snapshot.mjs --verify bench/golden.json            fail when a task's record moved
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -75,7 +78,9 @@ for (const t of tasks) {
 const E = await import('../src/index.js');
 const ser = (x, depth = 0) => {
     if (depth > 14) return '…';
-    if (x == null || typeof x === 'number' || typeof x === 'boolean' || typeof x === 'string') return x;
+    // floats to 12 significant digits: libm differs in the last bit between platforms (10⁸ or 99999999.99999999)
+    if (typeof x === 'number') return Number.isFinite(x) && x !== 0 ? Number(x.toPrecision(12)) : x;
+    if (x == null || typeof x === 'boolean' || typeof x === 'string') return x;
     if (typeof x === 'bigint') return `${x}n`;
     if (typeof x === 'function') return undefined;
     if (x instanceof E.Q) return `q:${x.toString()}`;
@@ -248,7 +253,23 @@ for (const s of badInputs) {
         extras[`parse:${s}`] = { thrown: ser(e.msg ?? String(e.message)), pos: e.pos, code: e.code };
     }
 }
-record.__extras = extras;
-fs.mkdirSync(path.dirname(out), { recursive: true });
-fs.writeFileSync(out, JSON.stringify(record));
-console.log(`${tasks.length} tasks → ${path.relative(process.cwd(), out)}`);
+// the extras one by one, so that a change points at the call that moved
+for (const [k, v] of Object.entries(extras)) record[`__extras:${k}`] = v;
+const hash = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex').slice(0, 16);
+const prints = Object.fromEntries(Object.entries(record).map(([id, r]) => [id, hash(r)]));
+if (argv.includes('--fingerprints')) {
+    const f = argv[argv.indexOf('--fingerprints') + 1];
+    fs.writeFileSync(f, `${JSON.stringify(prints, null, 0).replace(/,"/g, ',\n"')}\n`);
+    console.log(`${Object.keys(prints).length} fingerprints → ${f}`);
+} else if (argv.includes('--verify')) {
+    const want = JSON.parse(fs.readFileSync(argv[argv.indexOf('--verify') + 1], 'utf8'));
+    const ids = [...new Set([...Object.keys(want), ...Object.keys(prints)])];
+    const moved = ids.filter((id) => want[id] !== prints[id]);
+    for (const id of moved.slice(0, 30)) console.log(`  ${id}: ${want[id] ? (prints[id] ? 'changed' : 'gone') : 'new'}`);
+    console.log(`${moved.length} of ${ids.length} records differ from the golden fingerprints`);
+    process.exit(moved.length ? 1 : 0);
+} else {
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.writeFileSync(out, JSON.stringify(record));
+    console.log(`${tasks.length} tasks → ${path.relative(process.cwd(), out)}`);
+}

@@ -68,7 +68,8 @@ answers by substituting them back.
 
 ```sh
 npm run check            # lint, formatting and 514 tests (architecture, i18n and the result contract included)
-npm run bench            # the corpus → bench/REPORT.md
+npm run bench            # the corpus → bench/REPORT.md (--strict fails on a wrong answer)
+npm run snapshot:verify  # every answer and step against the golden fingerprints
 node bench/gen.mjs       # rebuild the generated part from fixed seeds
 npm run bench:verify     # recheck the expected answers with SymPy (needs bench/.venv with sympy)
 ```
