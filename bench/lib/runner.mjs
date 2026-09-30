@@ -69,9 +69,11 @@ export function runTask(t) {
             return { status: ok ? 'correct' : 'wrong', got: JSON.stringify(got), steps: stepsOf(r) };
         }
         case 'value': {
-            const n = E.simplify(P(t.task));
-            const x = num(n);
-            return { status: close(x, num(t.answer.value)) ? 'correct' : 'wrong', got: text(n), exact: E.freeVars(n).length === 0, steps: 0 };
+            const r = E.evaluateSteps(P(t.task));
+            const x = num(r.value);
+            // the answer step alone is not an explanation
+            const explained = r.steps.filter((st) => st.rule === 'rule' || st.rule === 'arith').length;
+            return { status: close(x, num(t.answer.value)) ? 'correct' : 'wrong', got: text(r.value), exact: r.exact, steps: explained };
         }
         case 'simplify': case 'expand': case 'factor': {
             const n = t.op === 'expand' ? E.expand(P(t.task)) : t.op === 'factor' ? factorNode(t.task, v) : E.simplify(P(t.task));

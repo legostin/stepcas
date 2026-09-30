@@ -321,7 +321,9 @@ function texMul(n, o) {
             while (k < top.length - 1 && constFactor(top[k])) k++;
             const upper = cNum !== 1n || !k ? [num(cNum), ...top.slice(0, k)] : top.slice(0, k);
             const head = upper.length === 1 ? tex(upper[0], o) : texProduct(upper, o);
-            s = `\\frac{${head}}{${cDen}}` + texProduct(top.slice(k), o);
+            const rest = texProduct(top.slice(k), o);
+            // a number after the fraction needs a dot: \frac{1}{2} \cdot \frac{1}{2}
+            s = `\\frac{${head}}{${cDen}}` + (/^[\d.]|^\\[dt]?frac|^\\left\(-|^\(-/.test(rest) ? ' \\cdot ' : '') + rest;
         } else {
             const upper = cNum !== 1n || !top.length ? [num(cNum), ...top] : top;
             const lower = cDen !== 1n ? [num(cDen), ...bottom] : bottom;
