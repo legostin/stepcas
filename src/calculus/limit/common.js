@@ -1,4 +1,4 @@
-// limit/common — helpers, the point a (finite, ±∞, one-sided) and limit values (finite, ±∞, does not exist).
+// calculus/limit/common — helpers, the point a (finite, ±∞, one-sided) and limit values (finite, ±∞, does not exist).
 
 import { num, sym, neg, isConst, pow } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';

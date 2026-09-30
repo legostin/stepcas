@@ -1,4 +1,4 @@
-// numeric/sampling — sampling functions for plots (adaptive, with breaks at poles).
+// numbers/numeric/sampling — sampling functions for plots (adaptive, with breaks at poles).
 
 import { evalSafe, fin, needFn, needInterval, numLinspace } from './common.js';
 

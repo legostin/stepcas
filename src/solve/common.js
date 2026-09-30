@@ -1,4 +1,4 @@
-// solve/common — small helpers shared by the solvers: bilingual text, TeX, safe simplification, numbers, trees.
+// solve/common — small helpers shared by the solvers: TeX, safe simplification, numbers, trees.
 
 import { toTex } from '../core/print.js';
 import { num, sym, freeVars, neg, mul, add, fn, nodeKey, mapNode, nodeChildren, containsVar, pow } from '../core/ast.js';

@@ -1,4 +1,4 @@
-// random — deterministic seeded generator (mulberry32) for trainers and sampling.
+// core/random — deterministic seeded generator (mulberry32) for trainers and sampling.
 
 function hashString(s) {
     // xmur3-style string hash → 32-bit seed

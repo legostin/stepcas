@@ -1,4 +1,4 @@
-// limit/evaluator — limit arithmetic on the expression tree: substitution, infinities, where a form is indeterminate.
+// calculus/limit/evaluator — limit arithmetic on the expression tree: substitution, infinities, where a form is indeterminate.
 
 import { containsVar, freeVars, neg, substitute, sym, add, pow, num, mul, div, fn } from '../../core/ast.js';
 import { Q } from '../../core/rational.js';

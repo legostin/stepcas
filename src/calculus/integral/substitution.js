@@ -1,4 +1,4 @@
-// integral/substitution — u-substitution g(h(x))·h′(x) and the rationalising substitution t = ⁿ√(ax + b).
+// calculus/integral/substitution — u-substitution g(h(x))·h′(x) and the rationalising substitution t = ⁿ√(ax + b).
 
 import { containsVar, nodeKey, pow, sym, num, nodeChildren, div, nodeSome, substitute, add, mapNode, mul, nodeSize, neg } from '../../core/ast.js';
 import { Poly } from '../../core/poly.js';

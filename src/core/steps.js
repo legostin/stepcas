@@ -1,4 +1,4 @@
-// steps — the step object that solvers return and a page renders.
+// core/steps — the step object that solvers return and a page renders.
 //
 // Step = { title, tex?, text?, rule?, data?, sub?: Step[], final? } where title and text are messages (i18n), tex is a
 // TeX string or a {lang: string} object, rule a stable code of what the step does, and data the step's facts for a

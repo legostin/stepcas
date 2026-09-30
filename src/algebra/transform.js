@@ -1,4 +1,4 @@
-// algebra — school transformations step by step: factoring, expanding, reducing fractions (ОГЭ, ЕГЭ base).
+// algebra/transform — school transformations step by step: factoring, expanding, reducing fractions (ОГЭ, ЕГЭ base).
 //
 //   factorSteps("x^3 - x")              → {result, steps}   x(x − 1)(x + 1)
 //   expandSteps("(x + 1)^2 - (x - 1)^2") → {result, steps}   4x

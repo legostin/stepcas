@@ -1,4 +1,4 @@
-// integral/radicals — square roots of quadratics and ∫Pₙ(x)/√Q dx by undetermined coefficients.
+// calculus/integral/radicals — square roots of quadratics and ∫Pₙ(x)/√Q dx by undetermined coefficients.
 
 import { splitCoeff } from '../../core/simplify.js';
 import { Q } from '../../core/rational.js';

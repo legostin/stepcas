@@ -1,4 +1,4 @@
-// matrix — exact linear algebra over Q with step-by-step explanations, plus a float toolkit for widgets.
+// linalg — exact linear algebra over Q with step-by-step explanations, plus a float toolkit for widgets.
 //
 //   const A = Matrix.from([[2, 1], [1, 2]]);        entries: numbers, strings ('1/2', '0,5'), BigInt or Q
 //   matRref(A, {steps: true}) → {matrix, pivots, rank, ops, steps}

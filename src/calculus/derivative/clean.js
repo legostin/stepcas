@@ -1,4 +1,4 @@
-// derivative/clean — the clean form: equivalent candidates (canonical, one fraction, common factor, tg/ctg) ranked
+// calculus/derivative/clean — the clean form: equivalent candidates (canonical, one fraction, common factor, tg/ctg) ranked
 // by the length of their TeX (niceForm).
 
 import { nodeChildren, nodeKey, freeVars, num, mul, mapNode, sym, pow, isConst, neg, add, div } from '../../core/ast.js';

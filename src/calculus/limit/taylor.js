@@ -1,4 +1,4 @@
-// limit/taylor — Taylor polynomials with exact coefficients and the Lagrange bound of the remainder.
+// calculus/limit/taylor — Taylor polynomials with exact coefficients and the Lagrange bound of the remainder.
 
 import { MathError } from '../../core/rational.js';
 import { sym, substitute, freeVars, div, num, add, neg, pow, mul } from '../../core/ast.js';

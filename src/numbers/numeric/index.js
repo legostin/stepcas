@@ -1,8 +1,8 @@
-// numeric — floating-point numerical methods for widgets, simulators, plots and checks.
+// numbers/numeric — floating-point numerical methods for widgets, simulators, plots and checks.
 //
 // Everything works on doubles. Root finders return {root, iterations, converged, …}; integrals
 // and derivatives return a number (pass {info: true} for {value, error, …}). Invalid input throws
-// MathError with a bilingual message. See README.md for the full contract.
+// MathError with a message. docs/API.md has the full contract.
 //
 // Layout: common, roots (root finders, optimisation), calculus (derivatives, integrals), ode, sampling (plots),
 // signals (DFT/FFT, Fourier), statistics (with special functions and probability), interpolation.

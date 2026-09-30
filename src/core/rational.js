@@ -1,12 +1,13 @@
-import { msg, notation, DEFAULT_LANGUAGE, inLanguage, MACHINE } from '../i18n/index.js';
-// rational — exact rational numbers on BigInt, BigInt helpers, and MathError (used by the whole engine).
+// core/rational — exact rational numbers on BigInt, BigInt helpers, and MathError (used by the whole engine).
 //
 //   new Q(3n, 4n)            normalised: reduced, denominator > 0
 //   Q.of(0.1) → 1/10         numbers go through their shortest decimal string
 //   Q.of('2,5') → 5/2        strings: "3/4", "-2.5", "2,5", "1e-3", "0.(3)" (repeating), "1.5/2"
 //   q.add(1).mul('3/4')      arithmetic methods accept anything Q.of() accepts
 
-/** Error with a bilingual message and an optional position in the parsed text. */
+import { msg, notation, DEFAULT_LANGUAGE, inLanguage, MACHINE } from '../i18n/index.js';
+
+/** An error with a message (rendered in any language) and an optional position in the parsed text. */
 export class MathError extends Error {
     /**
      * @param {import('../i18n/index.js').Msg|string|Object<string, string>} msg  a message, a string or {lang: text}
@@ -15,7 +16,7 @@ export class MathError extends Error {
      * @param {string} [code]  short machine-readable id ('div0', 'syntax', 'too-big', …)
      */
     constructor(msg, pos = null, len = null, code = null) {
-        // a message (from i18n) stays language-neutral; strings and {ru, en} objects are taken as they are
+        // a message (from i18n) stays language-neutral; strings and {lang: text} objects are taken as they are
         // a message (i18n), a string (the same in every language) or a {lang: text} object is kept as it is;
         // Error.message is its machine (English) text
         const m = msg ?? '';

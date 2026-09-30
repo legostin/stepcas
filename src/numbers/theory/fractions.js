@@ -1,4 +1,4 @@
-// theory/fractions — continued fractions, convergents, best approximations, Egyptian fractions.
+// numbers/theory/fractions — continued fractions, convergents, best approximations, Egyptian fractions.
 
 import { Q, bigIsqrt } from '../../core/rational.js';
 import { babs, big, dec, doubleExact, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';

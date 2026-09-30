@@ -1,4 +1,4 @@
-// integral/rational — rational functions: division, partial fractions over Q, completing the square, and the even
+// calculus/integral/rational — rational functions: division, partial fractions over Q, completing the square, and the even
 // quartic x⁴ + px² + q through t = x ∓ √q/x.
 
 import { num, mul, pow, div, fn, add, sym, neg, nodeKey } from '../../core/ast.js';

@@ -1,4 +1,4 @@
-// Greatest and least values of a function on a segment — the school method, with steps.
+// calculus/extrema — greatest and least values of a function on a segment: the school method, with steps.
 //
 //   extremeOnSegment(f, v = 'x', a, b, {kind: 'max' | 'min' | 'both', steps = true})
 //     → {kind, value (node), at (node), approx, max?, min?, candidates: [{x, y, approx, why}], steps, tex, text}

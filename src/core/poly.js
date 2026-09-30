@@ -1,4 +1,4 @@
-// poly — univariate polynomials over Q (coefficients c[k] of x^k), and linear forms for systems.
+// core/poly — univariate polynomials over Q (coefficients c[k] of x^k), and linear forms for systems.
 
 import { Q, MathError, bigGcd, bigLcm, bigAbs, bigIsqrt, bigBitLength } from './rational.js';
 import { num, sym, add, mul, pow, isConst, numValue } from './ast.js';

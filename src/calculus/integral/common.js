@@ -1,4 +1,4 @@
-// integral/common — what the methods share: constants, TeX, positivity (ln|u| or ln u), the check F′ = f, the answer
+// calculus/integral/common — what the methods share: constants, TeX, positivity (ln|u| or ln u), the check F′ = f, the answer
 // after a substitution and its cleaning. A leaf of integral/: it imports no method and not the engine.
 
 import { num, sym, isConst, freeVars, containsVar, add, mul, fn, nodeSize, neg, nodeChildren, div, pow, mapNode, substitute } from '../../core/ast.js';

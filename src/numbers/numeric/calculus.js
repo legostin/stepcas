@@ -1,4 +1,4 @@
-// numeric/calculus — numerical derivatives and integrals (adaptive, with error estimates), Riemann sums.
+// numbers/numeric/calculus — numerical derivatives and integrals (adaptive, with error estimates), Riemann sums.
 
 import { EPS, evalSafe, fail, fin, needFn, needInterval } from './common.js';
 import { msg } from '../../i18n/index.js';

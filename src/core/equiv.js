@@ -1,4 +1,4 @@
-// equiv — are two answers the same? (expressions, numbers, sets of roots)
+// core/equiv — are two answers the same? (expressions, numbers, sets of roots)
 //
 // equivalent(a, b):
 //   1. exact: expand(simplify(a − b)) is 0 → yes; if that difference is a nonzero polynomial with rational

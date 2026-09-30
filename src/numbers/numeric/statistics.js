@@ -1,4 +1,4 @@
-// numeric/statistics — descriptive statistics, regression, special functions and probability distributions.
+// numbers/numeric/statistics — descriptive statistics, regression, special functions and probability distributions.
 
 import { fail, fin } from './common.js';
 import { numBrent } from './roots.js';

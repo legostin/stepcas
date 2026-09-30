@@ -1,4 +1,4 @@
-// derivative/steps — the step tree that mirrors the expression: rule lines, table formulas, names, tidy assembly.
+// calculus/derivative/steps — the step tree that mirrors the expression: rule lines, table formulas, names, tidy assembly.
 
 import { add, num, mul, neg, pow, fn, div, containsVar, freeVars, isConst, sym } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';

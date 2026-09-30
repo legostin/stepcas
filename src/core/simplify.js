@@ -1,4 +1,4 @@
-// simplify — canonical form and automatic simplification.
+// core/simplify — canonical form and automatic simplification.
 //
 // Canonical form (what simplify() returns and what canon* constructors keep):
 //   * num values are exact Q (no raw), negative numbers are allowed

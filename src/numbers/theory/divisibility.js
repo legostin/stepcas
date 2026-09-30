@@ -1,4 +1,4 @@
-// theory/divisibility — divisibility rules explained on the number.
+// numbers/theory/divisibility — divisibility rules explained on the number.
 
 import { babs, big, bmod, fail, sn, tn } from './common.js';
 import { msg } from '../../i18n/index.js';

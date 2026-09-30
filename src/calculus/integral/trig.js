@@ -1,4 +1,4 @@
-// integral/trig — trigonometric forms, trigonometric substitutions for square roots, the universal t = tg(x/2).
+// calculus/integral/trig — trigonometric forms, trigonometric substitutions for square roots, the universal t = tg(x/2).
 
 import { div, fn, mapNode, containsVar, nodeKey, mul, num, substitute, sym, add, neg, pow, nodeChildren } from '../../core/ast.js';
 import { splitCoeff } from '../../core/simplify.js';

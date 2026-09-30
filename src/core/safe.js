@@ -1,4 +1,4 @@
-// safe — total versions of the engine's operations for solver code: a stranger's input never makes them throw.
+// core/safe — total versions of the engine's operations for solver code: a stranger's input never makes them throw.
 import { simplify } from './simplify.js';
 import { evaluate } from './evaluate.js';
 

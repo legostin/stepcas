@@ -1,4 +1,4 @@
-// integral/parts — integration by parts (LIATE, repeated, cyclic) and the tabular way for P(x)·e^{kx}, P(x)·sin kx.
+// calculus/integral/parts — integration by parts (LIATE, repeated, cyclic) and the tabular way for P(x)·e^{kx}, P(x)·sin kx.
 
 import { Poly } from '../../core/poly.js';
 import { containsVar, mul, num, add, neg, sym, fn, pow } from '../../core/ast.js';

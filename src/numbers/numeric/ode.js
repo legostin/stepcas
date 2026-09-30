@@ -1,4 +1,4 @@
-// numeric/ode — Euler, Runge–Kutta, adaptive steps and ready-made systems (SIR, Lotka–Volterra, pendulum, Lorenz).
+// numbers/numeric/ode — Euler, Runge–Kutta, adaptive steps and ready-made systems (SIR, Lotka–Volterra, pendulum, Lorenz).
 
 import { fail, fin, needFn, numLinspace } from './common.js';
 import { msg } from '../../i18n/index.js';

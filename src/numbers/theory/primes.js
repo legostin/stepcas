@@ -1,4 +1,4 @@
-// theory/primes — primality (trial division, Miller–Rabin), factorisation, arithmetic functions, lists of primes.
+// numbers/theory/primes — primality (trial division, Miller–Rabin), factorisation, arithmetic functions, lists of primes.
 
 import { bigIroot, bigIsqrt } from '../../core/rational.js';
 import { needBase } from './bases.js';

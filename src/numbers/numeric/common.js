@@ -1,4 +1,4 @@
-// numeric/common — argument checks shared by the numerical methods.
+// numbers/numeric/common — argument checks shared by the numerical methods.
 
 import { MathError } from '../../core/rational.js';
 import { msg } from '../../i18n/index.js';

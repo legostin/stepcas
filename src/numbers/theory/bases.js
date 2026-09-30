@@ -1,4 +1,4 @@
-// theory/bases — positional number systems: conversions with steps.
+// numbers/theory/bases — positional number systems: conversions with steps.
 
 import { Q } from '../../core/rational.js';
 import { babs, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
@@ -45,7 +45,7 @@ const qText = (num, den, lang) =>
 /**
  * Convert to base 2–36: integers by repeated division, fractions by repeated multiplication with
  * period detection — ntToBase('0.1', 2) === '0.0(0011)'. {maxDigits} caps the fractional digits (60).
- * {steps: true} → {value, int, pre, period, truncated, negative, tex: {ru, en}, steps}.
+ * {steps: true} → {value, int, pre, period, truncated, negative, tex: {lang: tex}, steps}.
  */
 export function ntToBase(x, base, opts = {}) {
     const b = needBase(base),

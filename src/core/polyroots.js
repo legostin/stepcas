@@ -1,4 +1,4 @@
-// polyroots — all complex roots of a polynomial with double coefficients (Aberth–Ehrlich); used by exact code to
+// core/polyroots — all complex roots of a polynomial with double coefficients (Aberth–Ehrlich); used by exact code to
 // locate roots before it checks them exactly, and re-exported by numbers/numeric.
 
 /**

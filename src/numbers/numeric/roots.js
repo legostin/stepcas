@@ -1,4 +1,4 @@
-// numeric/roots — root finders (bisection, Brent, Newton, all roots on a segment) and one-dimensional optimisation.
+// numbers/numeric/roots — root finders (bisection, Brent, Newton, all roots on a segment) and one-dimensional optimisation.
 
 import { numDerivative } from './calculus.js';
 import { EPS, evalSafe, fail, fin, needFn, needInterval, numLinspace } from './common.js';

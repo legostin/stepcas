@@ -1,4 +1,4 @@
-// ode — ordinary differential equations of a first-year course, step by step.
+// calculus/ode — ordinary differential equations of a first-year course, step by step.
 //
 //   solveOde("y' + y = x; y(0) = 1") → {kind: 'solution' | 'general' | 'unsupported', expr, general, type, steps, tex, text}
 //

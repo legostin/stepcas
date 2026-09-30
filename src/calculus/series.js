@@ -1,4 +1,4 @@
-// series — sums of series, finite and infinite, step by step.
+// calculus/series — sums of series, finite and infinite, step by step.
 //
 //   sumSeries("sum(1/(k(k + 1)), k, 1, inf)") → {kind: 'value' | 'diverges' | 'approx' | 'unsupported', value, approx, type, steps, text}
 //

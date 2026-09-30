@@ -1,4 +1,4 @@
-// limit/table — the table of values approaching the point and the numeric cross-check.
+// calculus/limit/table — the table of values approaching the point and the numeric cross-check.
 
 import { step } from '../../core/steps.js';
 import { HS, atPoint, evalAt } from './common.js';

@@ -1,4 +1,4 @@
-// ast — immutable plain-object expression nodes, constructors and tree utilities.
+// core/ast — immutable plain-object expression nodes, constructors and tree utilities.
 //
 // Node shapes (all frozen):
 //   {type:'num', value: Q, raw?: '2,5'}      raw = the decimal exactly as typed (parser only)

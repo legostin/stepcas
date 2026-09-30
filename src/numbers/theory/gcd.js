@@ -1,4 +1,4 @@
-// theory/gcd — gcd and lcm (Euclid with steps), the extended Euclid algorithm and linear Diophantine equations.
+// numbers/theory/gcd — gcd and lcm (Euclid with steps), the extended Euclid algorithm and linear Diophantine equations.
 
 import { Q } from '../../core/rational.js';
 import { G, Lc, babs, big, bmod, fail, gT, gcdCore, sn, tn, tp } from './common.js';

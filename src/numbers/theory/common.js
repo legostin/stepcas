@@ -1,4 +1,4 @@
-// theory/common — tiny helpers: reading integers and fractions, bilingual steps.
+// numbers/theory/common — tiny helpers: reading integers and fractions, errors, numbers in TeX.
 
 import { MathError, Q } from '../../core/rational.js';
 import { msg, notation, decimalIn } from '../../i18n/index.js';

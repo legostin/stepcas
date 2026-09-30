@@ -1,4 +1,4 @@
-// limit/forms — indeterminate forms: rational functions, equivalents, the conjugate, leading terms, L'Hôpital,
+// calculus/limit/forms — indeterminate forms: rational functions, equivalents, the conjugate, leading terms, L'Hôpital,
 // dividing by the fastest-growing term, splitting a fraction, ∞ − ∞, 0·∞ and powers.
 
 import { ratFunctionOf, niceForm, quickDerivative } from '../derivative/index.js';

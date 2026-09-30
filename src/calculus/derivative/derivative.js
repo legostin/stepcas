@@ -1,4 +1,4 @@
-// derivative/derivative — the public API (derivative, partial and higher derivatives, gradient, tangent line) with
+// calculus/derivative/derivative — the public API (derivative, partial and higher derivatives, gradient, tangent line) with
 // the numeric check against central differences.
 
 import { rng } from '../../core/random.js';
@@ -84,7 +84,7 @@ function primeTex(v, order = 1, partial = false, name = 'f') {
 
 /**
  * Derivative of node (AST or string) by v. opts: {steps = false, simplify = true, partial = false}.
- * → {result (display node), steps (Step[], empty unless asked), verified, tex ("f'(x) = …", string | {ru, en})}.
+ * → {result (display node), steps (Step[], empty unless asked), verified, tex ("f'(x) = …", string | {lang: tex})}.
  * Other letters are constants (a partial derivative). Throws MathError for equations/lists and fact().
  */
 export function derivative(node, v = 'x', opts = {}) {

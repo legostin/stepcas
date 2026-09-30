@@ -1,4 +1,4 @@
-// evaluate — numeric value of an AST (real doubles or Complex), and compile() for fast plotting.
+// core/evaluate — numeric value of an AST (real doubles or Complex), and compile() for fast plotting.
 //
 // Real mode: every undefined real result is NaN (√−1, ln 0, 1/0, tan at π/2 is just a huge number),
 // inf evaluates to Infinity, the constant i to NaN. Odd roots of negatives are real: (−8)^(1/3) = −2

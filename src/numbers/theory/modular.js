@@ -1,4 +1,4 @@
-// theory/modular — modular arithmetic: powers, inverses, congruences, the Chinese remainder theorem, orders,
+// numbers/theory/modular — modular arithmetic: powers, inverses, congruences, the Chinese remainder theorem, orders,
 // primitive roots, RSA keys.
 
 import { G, big, bmod, coefX, fail, gcdCore, invCore, powmod, sn, tn, tp } from './common.js';

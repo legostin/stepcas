@@ -1,4 +1,4 @@
-// integral/engine — the recursive integrator: tries the cascade of methods, memoises, keeps only checked answers.
+// calculus/integral/engine — the recursive integrator: tries the cascade of methods, memoises, keeps only checked answers.
 
 import { nodeKey } from '../../core/ast.js';
 import { MathError } from '../../core/rational.js';

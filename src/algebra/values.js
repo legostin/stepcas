@@ -1,4 +1,4 @@
-// The value of a numeric expression step by step — the way a school solution goes (ЕГЭ task 7, ОГЭ, ЕНТ):
+// algebra/values — the value of a numeric expression step by step, the way a school solution goes (ЕГЭ task 7, ОГЭ, ЕНТ):
 // one named rule per step, each shown as «before = after» with the reason.
 //
 //   evaluateSteps(input, {lang, maxSteps = 40}) → {value (node), approx, exact, steps}

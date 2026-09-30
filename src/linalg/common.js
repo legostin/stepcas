@@ -1,4 +1,4 @@
-// linalg/common — tiny helpers: bilingual steps, row names, subscripts.
+// linalg/common — tiny helpers: errors, row names, subscripts, numbers in TeX.
 
 import { MathError } from '../core/rational.js';
 import { msg } from '../i18n/index.js';

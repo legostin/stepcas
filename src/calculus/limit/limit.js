@@ -1,4 +1,4 @@
-// limit/limit — the public API limit(): one-sided limits, the domain side, the steps and the check.
+// calculus/limit/limit — the public API limit(): one-sided limits, the domain side, the steps and the check.
 
 import { niceForm } from '../derivative/index.js';
 import { nodeChildren, neg, num, add, mul, div, pow, fn, substitute, freeVars, mapNode, containsVar } from '../../core/ast.js';

@@ -1,4 +1,4 @@
-// fractions — bring an expression to one fraction P/Q: the common denominator (polynomial denominators factored
+// core/fractions — bring an expression to one fraction P/Q: the common denominator (polynomial denominators factored
 // over Q first, so it is the least one), the numerator expanded, common factors cancelled.
 
 import { splitCoeff, canonContext } from './simplify.js';

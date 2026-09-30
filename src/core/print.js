@@ -1,4 +1,4 @@
-// print — AST → TeX (for KaTeX) and → plain text (that parse() reads back).
+// core/print — AST → TeX (for KaTeX) and → plain text (that parse() reads back).
 //
 // TeX conventions:
 //   * minimal brackets by precedence; a + (−b) prints as a − b, a + (−2)b as a − 2b

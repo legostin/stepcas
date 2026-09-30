@@ -281,7 +281,7 @@ export function calcTex(node, lang = DEFAULT_LANGUAGE) {
     return fixAbsInLog(toTex(prettyForm(node), { lang, roots: true }));
 }
 
-/** calcTex in both languages: a string when they agree, else {ru, en}. */
+/** calcTex in every language: a string when they agree, else {lang: tex}. */
 export function calcTexBoth(node) {
     return eachLanguage((lang) => calcTex(node, lang));
 }

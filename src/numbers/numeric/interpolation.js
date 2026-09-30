@@ -1,4 +1,4 @@
-// numeric/interpolation — interpolation and polynomial helpers on doubles.
+// numbers/numeric/interpolation — interpolation and polynomial helpers on doubles.
 
 import { fail } from './common.js';
 import { pointsOf } from './statistics.js';

@@ -1,4 +1,4 @@
-// derivative/quick — the fast canonical derivative (quickDerivative), used for checks and by other modules.
+// calculus/derivative/quick — the fast canonical derivative (quickDerivative), used for checks and by other modules.
 
 import { num, containsVar } from '../../core/ast.js';
 import { Q, MathError } from '../../core/rational.js';

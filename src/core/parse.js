@@ -1,4 +1,4 @@
-// parse — what people actually type → AST (ast.js). Errors are MathError with {ru, en}, pos, len.
+// core/parse — what people actually type → AST (ast.js). Errors are MathError with a message, pos, len.
 //
 // Conventions (see README.md for the full list):
 //   * implicit multiplication binds like * and /, left to right: 1/2x = (1/2)·x, 6/2(1+2) = 9
@@ -1314,7 +1314,7 @@ function expandPlusMinus(toks) {
 }
 
 /**
- * Parse user input into an AST node. Throws MathError (bilingual message, pos, len).
+ * Parse user input into an AST node. Throws MathError (a message, pos, len).
  * opts: { vars?: string[] — extra variable names (multi-letter, or constants like 'i'/'e' used as variables),
  *         foldCase?: boolean — read X as x, Sin as sin, maxLength?: number (default 2000),
  *         lang?: a registered language — in one whose notation has thousandsComma (English) a comma before exactly three

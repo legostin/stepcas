@@ -1,4 +1,4 @@
-// expand — multiply out and collect by powers of a variable (one fraction: fractions.js).
+// core/expand — multiply out and collect by powers of a variable (one fraction: fractions.js).
 //
 // expand(node) simplifies, then distributes products over sums and expands positive integer powers of sums
 // (binomial formula for two terms, repeated multiplication otherwise), collecting like terms as it goes.

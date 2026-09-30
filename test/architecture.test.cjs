@@ -126,6 +126,19 @@ test('a module speaks from its own catalog domain', () => {
     assert.deepEqual(bad, []);
 });
 
+test('every module opens with its path and what it holds', () => {
+    // «// solve/trig — trigonometric equations: …»; the catalogs of a language say whose messages they hold
+    const bad = [];
+    for (const f of files) {
+        let name = path.relative(SRC, f).replace(/\.js$/, '').split(path.sep).join('/');
+        if (name === 'index' || /^i18n\/[^/]+\//.test(name)) continue;
+        name = name.replace(/\/index$/, '');
+        const first = fs.readFileSync(f, 'utf8').split('\n', 1)[0];
+        if (!first.startsWith(`// ${name} — `)) bad.push(`${rel(f)}: ${first.slice(0, 60)}`);
+    }
+    assert.deepEqual(bad, []);
+});
+
 test('every module loads', async () => {
     for (const f of files) await import(f);
 });

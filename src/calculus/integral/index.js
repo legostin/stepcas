@@ -1,4 +1,4 @@
-// integral — antiderivatives with steps: a cascade of methods, each one explaining why it applies; definite integrals
+// calculus/integral — antiderivatives with steps: a cascade of methods, each one explaining why it applies; definite integrals
 // (Newton–Leibniz, improper integrals as limits, a numeric value marked ≈ otherwise) and the area between curves.
 //
 // Cascade (on the canonical form of simplify.js): constant → table → linearity → linear substitution f(kx + b) →

@@ -1,6 +1,6 @@
-// generate — tasks built backwards from their answers, for trainers and for the bench.
+// generate/tasks — tasks built backwards from their answers, for trainers and for the bench.
 //
-//   generateTask('quadratic-eq', {seed: 7, level: 2}) → {family, level, seed, op, task, prompt: {ru, en}, answer, …}
+//   generateTask('quadratic-eq', {seed: 7, level: 2}) → {family, level, seed, op, task, prompt (a message), answer, …}
 //   TASK_KINDS — the list of kinds; generateSet(kind, {count, seed, level}) — a reproducible batch.
 //
 // Every answer comes from the construction (roots → equation, solution → system, critical points → cubic),

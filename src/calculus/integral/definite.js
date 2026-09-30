@@ -1,4 +1,4 @@
-// integral/definite — definite integrals: Newton–Leibniz with jumps and singular points, improper integrals as
+// calculus/integral/definite — definite integrals: Newton–Leibniz with jumps and singular points, improper integrals as
 // limits, numeric values marked ≈, and the area between two curves.
 
 import { sym, neg, isConst, containsVar, fn, nodeChildren, num, mul, substitute, freeVars, add } from '../../core/ast.js';

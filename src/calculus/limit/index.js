@@ -1,4 +1,4 @@
-// limit — limits with steps in the style of a Russian university course: substitution, «limit
+// calculus/limit — limits with steps in the style of a Russian university course: substitution, «limit
 // arithmetic» with infinities, and for indeterminate forms: factor and cancel (rational functions),
 // divide by the highest power (x → ±∞), the conjugate for differences of roots, equivalent infinitesimals
 // (sin u ~ u, 1 − cos u ~ u²/2, eᵘ − 1 ~ u, ln(1 + u) ~ u, (1 + u)ᵃ − 1 ~ au, …), the second remarkable

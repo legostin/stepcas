@@ -1,4 +1,4 @@
-// numeric/signals — DFT, FFT and Fourier coefficients.
+// numbers/numeric/signals — DFT, FFT and Fourier coefficients.
 
 import { evalSafe, fin, needFn } from './common.js';
 

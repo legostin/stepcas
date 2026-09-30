@@ -1,4 +1,4 @@
-// integral/integrate — the public entry integrate(): the cascade, a clean answer, hints for non-elementary integrals.
+// calculus/integral/integrate — the public entry integrate(): the cascade, a clean answer, hints for non-elementary integrals.
 
 import { splitCoeff } from '../../core/simplify.js';
 import { containsVar, nodeKey, sym, isConst, pow, freeVars, nodeSome } from '../../core/ast.js';
@@ -64,7 +64,7 @@ function nonElementaryHint(f, v) {
 // ---------------------------------------------------------------- public API
 
 /**
- * Indefinite integral. → {result: node | null, method, steps, verified, reason?: {ru, en}, tex}.
+ * Indefinite integral. → {result: node | null, method, steps, verified, reason? (a message), tex}.
  * result is an antiderivative (the printed tex adds + C); verified means F′ = f was checked numerically on
  * the domain. When nothing works (or the only candidate fails the check), result is null and reason says
  * so honestly (with a hint for known non-elementary integrals).

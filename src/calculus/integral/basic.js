@@ -1,4 +1,4 @@
-// integral/basic — constants and the table, linearity, a linear substitution f(kx + b), expanding, and the inner
+// calculus/integral/basic — constants and the table, linearity, a linear substitution f(kx + b), expanding, and the inner
 // function's derivative as a factor (∫h′/h, ∫h′hᵏ).
 
 import { containsVar, mul, sym, div, pow, add, isConst, fn, neg, num, nodeKey, nodeChildren, substitute } from '../../core/ast.js';

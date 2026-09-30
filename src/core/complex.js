@@ -1,4 +1,4 @@
-// complex — complex numbers on doubles (principal branches everywhere).
+// core/complex — complex numbers on doubles (principal branches everywhere).
 
 import { Q } from './rational.js';
 import { DEFAULT_LANGUAGE, notation, MACHINE } from '../i18n/index.js';
