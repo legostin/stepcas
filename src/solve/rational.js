@@ -5,11 +5,12 @@ import { collectTerms } from '../core/expand.js';
 import { numDen } from '../core/fractions.js';
 import { Poly } from '../core/poly.js';
 import { Q } from '../core/rational.js';
-import { N0, S, exactZero, isConstNode, simpOr, tex } from './common.js';
+import { N0, exactZero, isConstNode, simpOr, tex } from './common.js';
 import { reject, hasI, mergeRoots, mkRoot, mkRootC } from './roots.js';
 import { IntervalSet } from './intervals.js';
 import { multOf, nodeQuadRoots, partStep, polyTex, solveAnyPoly } from './polynomial.js';
 import { msg, eachLanguage } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- rational equations
 
@@ -57,7 +58,8 @@ export function solveRational(lhs, rhs, E, ctx) {
     const steps = [];
     const Lnode = factoredNode(Lp, v);
     steps.push(
-        S(msg('solve.rational.move_everything_to_left_and_bring'), {
+        step({
+            title: msg('solve.rational.move_everything_to_left_and_bring'),
             tex: eachLanguage((l) => `\\frac{${polyTex(N, v, l)}}{${tex(Lnode, l)}} = 0`),
             text: msg('solve.rational.fraction_is_zero_when_its_numerator'),
         }),
@@ -84,7 +86,8 @@ export function solveRational(lhs, rhs, E, ctx) {
         reject(ctx, bad, 'pole');
         roots = roots.filter((r) => !bad.includes(r));
         steps.push(
-            S(msg('solve.rational.drop_roots_that_make_denominator_zero'), {
+            step({
+                title: msg('solve.rational.drop_roots_that_make_denominator_zero'),
                 tex: eachLanguage((l) => bad.map((r) => `${v} = ${tex(r.node, l)}`).join(',\\ ')),
                 text: msg('solve.rational.at_these_values_denominator_is_zero'),
             }),
@@ -93,10 +96,12 @@ export function solveRational(lhs, rhs, E, ctx) {
     if (N.degree < 1) {
         if (N.isZero()) {
             const set = IntervalSet.all().minus(IntervalSet.points(poles.map((p) => p.node)));
-            steps.push(S(msg('solve.rational.numerator_is_identically_zero'), { text: msg('solve.rational.equality_holds_for_all_admissible_values') }));
+            steps.push(
+                step({ title: msg('solve.rational.numerator_is_identically_zero'), text: msg('solve.rational.equality_holds_for_all_admissible_values') }),
+            );
             return { kind: 'all', roots: [], set, steps, type: 'rational' };
         }
-        steps.push(S(msg('solve.rational.numerator_is_non_zero_number'), { text: msg('solve.rational.fraction_with_non_zero_numerator_is') }));
+        steps.push(step({ title: msg('solve.rational.numerator_is_non_zero_number'), text: msg('solve.rational.fraction_with_non_zero_numerator_is') }));
         return { kind: 'none', roots: [], steps, type: 'rational' };
     }
     return { kind: roots.length ? 'roots' : 'none', roots, complexRoots: mergeRoots(res.cplx ?? []), steps, numeric: !!res.numeric, type: 'rational' };
@@ -119,7 +124,7 @@ export function solveNodePoly(E, ctx) {
     const c2 = ct.get(2) ?? N0;
     const c1 = ct.get(1) ?? N0;
     const c0 = ct.get(0) ?? N0;
-    const steps = [S(msg('solve.rational.move_everything_to_left'), { tex: eachLanguage((l) => `${tex(E, l)} = 0`) })];
+    const steps = [step({ title: msg('solve.rational.move_everything_to_left'), tex: eachLanguage((l) => `${tex(E, l)} = 0`) })];
     const cx = [c0, c1, c2].some(hasI);
     if (!ct.has(2)) {
         if (!ct.has(1)) return null;
@@ -127,14 +132,15 @@ export function solveNodePoly(E, ctx) {
         const r = simpOr(q, cx ? { complex: true } : undefined);
         const shown = cx && nodeKey(r) !== nodeKey(simpOr(q)) ? simpOr(q) : null;
         steps.push(
-            S(msg('solve.rational.solve_for', { v }), {
+            step({
+                title: msg('solve.rational.solve_for', { v }),
                 tex: eachLanguage((l) => `${v} = ${shown ? `${tex(shown, l)} = ` : ''}${tex(r, l)}`),
                 text: shown ? msg('solve.rational.to_divide_by_complex_number_multiply') : undefined,
             }),
         );
         const root = cx ? mkRootC(r) : mkRoot(r);
         if (root.complex && ctx.domain !== 'complex') {
-            steps.push(S(msg('solve.rational.root_is_not_real_no_real')));
+            steps.push(step({ title: msg('solve.rational.root_is_not_real_no_real') }));
             return { kind: 'none', roots: [], complexRoots: [root], steps, type: 'linear' };
         }
         return { kind: 'roots', roots: [root], steps, type: 'linear' };

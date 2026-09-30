@@ -6,7 +6,6 @@ import { Q, MathError } from '../core/rational.js';
 import { parse } from '../core/parse.js';
 import {
     N0,
-    S,
     approxC,
     approxNode,
     approxOf,
@@ -28,6 +27,7 @@ import { signSet } from './signs.js';
 import { basicTrig } from './trig.js';
 import { ZZ, mergeFamilies, mkFamily, periodN, plusTex } from './families.js';
 import { msg, eachLanguage, joined } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- ОДЗ (the domain of an equation)
 
@@ -291,7 +291,7 @@ export function checkRel(r, v, root, opts = {}) {
         rhsApprox: rr,
         tex: texOut,
         text: ineqText,
-        steps: [S(msg('solve.domain.substitute', { p: (lng) => valTex(lng) }), { tex: texOut, text: ineqText })],
+        steps: [step({ title: msg('solve.domain.substitute', { p: (lng) => valTex(lng) }), tex: texOut, text: ineqText })],
     };
 }
 
@@ -373,7 +373,7 @@ export function odzInfo(conds, v) {
         exclusions: excl,
         tex: tx,
         text,
-        step: S(msg('solve.domain.domain_admissible_values'), { tex: tx, text }),
+        step: step({ title: msg('solve.domain.domain_admissible_values'), tex: tx, text }),
     };
 }
 

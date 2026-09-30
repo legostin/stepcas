@@ -1,7 +1,8 @@
 // theory/divisibility — divisibility rules explained on the number.
 
-import { S, babs, big, bmod, fail, sn, tn } from './common.js';
+import { babs, big, bmod, fail, sn, tn } from './common.js';
 import { msg } from '../../i18n/index.js';
+import { step } from '../../core/steps.js';
 
 // ---------------------------------------------------------------- divisibility rules
 
@@ -123,8 +124,8 @@ export function ntDivisibilityRule(n, d) {
             divides: r.divides,
             remainder,
             steps: [
-                S(msg('numbers.theory.divisibility.test_for', { D }), r.tex, r.text, { rule: `div-${D}` }),
-                S(msg('numbers.theory.divisibility.why_it_works'), null, r.why, { rule: 'why' }),
+                step({ title: msg('numbers.theory.divisibility.test_for', { D }), tex: r.tex, text: r.text, rule: `div-${D}` }),
+                step({ title: msg('numbers.theory.divisibility.why_it_works'), text: r.why, rule: 'why' }),
             ],
         };
     }
@@ -137,28 +138,33 @@ export function ntDivisibilityRule(n, d) {
             divides: ok,
             remainder,
             steps: [
-                S(
-                    msg('numbers.theory.divisibility.divisible_by_means_divisible_by_and', { D, p, q }),
-                    `${D} = ${p} \\cdot ${q}`,
-                    msg('numbers.theory.divisibility.and_are_coprime_so_number_is', { p, q, D }),
-                    { rule: 'combo' },
-                ),
-                S(msg('numbers.theory.divisibility.test_for_2', { p }), a.tex, a.text, {
+                step({
+                    title: msg('numbers.theory.divisibility.divisible_by_means_divisible_by_and', { D, p, q }),
+                    tex: `${D} = ${p} \\cdot ${q}`,
+                    text: msg('numbers.theory.divisibility.and_are_coprime_so_number_is', { p, q, D }),
+                    rule: 'combo',
+                }),
+                step({
+                    title: msg('numbers.theory.divisibility.test_for_2', { p }),
+                    tex: a.tex,
+                    text: a.text,
                     rule: `div-${p}`,
-                    sub: [S(msg('numbers.theory.divisibility.why_it_works'), null, a.why)],
+                    sub: [step({ title: msg('numbers.theory.divisibility.why_it_works'), text: a.why })],
                 }),
-                S(msg('numbers.theory.divisibility.test_for_3', { q }), b.tex, b.text, {
+                step({
+                    title: msg('numbers.theory.divisibility.test_for_3', { q }),
+                    tex: b.tex,
+                    text: b.text,
                     rule: `div-${q}`,
-                    sub: [S(msg('numbers.theory.divisibility.why_it_works'), null, b.why)],
+                    sub: [step({ title: msg('numbers.theory.divisibility.why_it_works'), text: b.why })],
                 }),
-                S(
-                    msg('numbers.theory.divisibility.conclusion'),
-                    null,
-                    ok
+                step({
+                    title: msg('numbers.theory.divisibility.conclusion'),
+                    text: ok
                         ? msg('numbers.theory.divisibility.both_tests_pass_is_divisible_by', { N: sn(N), D })
                         : msg('numbers.theory.divisibility.at_least_one_test_fails_is', { N: sn(N), D }),
-                    { rule: 'answer' },
-                ),
+                    rule: 'answer',
+                }),
             ],
         };
     }

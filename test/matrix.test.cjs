@@ -251,20 +251,20 @@ test('RREF of a system: steps replay to the final matrix', () => {
     assert.equal(r.rank, 3);
     checkSteps(r.steps, 'rref');
     assert.ok(applyOps(A, r.ops).equals(r.matrix), 'ops replay');
-    const opSteps = r.steps.filter((s) => s.op);
+    const opSteps = r.steps.filter((s) => s.data?.op);
     assert.equal(opSteps.length, r.ops.length);
     let cur = A;
     opSteps.forEach((s, k) => {
         cur = applyOps(cur, [r.ops[k]]);
-        assert.equal(s.matrixTex, cur.toTex({ augmented: 1 }), `step ${k} shows the matrix after the operation`);
-        assert.ok(s.tex.endsWith(s.matrixTex));
+        assert.equal(s.data.matrixTex, cur.toTex({ augmented: 1 }), `step ${k} shows the matrix after the operation`);
+        assert.ok(s.tex.endsWith(s.data.matrixTex));
     });
     const first = opSteps[0];
-    assert.equal(first.opTex, 'R_{2} \\to R_{2} - 2\\,R_{1}');
+    assert.equal(first.data.opTex, 'R_{2} \\to R_{2} - 2\\,R_{1}');
     assert.equal(first.text.ru, 'Обнуляем элемент под ведущим: из второй строки вычитаем первую, умноженную на 2.');
     assert.equal(first.text.en, 'Clear the entry below the pivot: subtract 2 times row 1 from row 2.');
-    assert.ok(opSteps.some((s) => s.phase === 'backward'));
-    assert.ok(opSteps.every((s) => ['swap', 'scale', 'add'].includes(s.op)));
+    assert.ok(opSteps.some((s) => s.data.phase === 'backward'));
+    assert.ok(opSteps.every((s) => ['swap', 'scale', 'add'].includes(s.data.op)));
 });
 
 test('pivot strategy keeps numbers small', () => {
@@ -275,10 +275,10 @@ test('pivot strategy keeps numbers small', () => {
         ],
         { steps: true },
     );
-    const swap = r.steps.find((s) => s.op === 'swap');
+    const swap = r.steps.find((s) => s.data?.op === 'swap');
     assert.ok(swap, 'swaps to get the 1 on top');
     assert.match(swap.text.ru, /единица/);
-    assert.equal(swap.opTex, 'R_{1} \\leftrightarrow R_{2}');
+    assert.equal(swap.data.opTex, 'R_{1} \\leftrightarrow R_{2}');
     assert.equal(mstr(r.matrix), '[[1, 0], [0, 1]]');
     const neg = E.matRref(
         [
@@ -288,7 +288,7 @@ test('pivot strategy keeps numbers small', () => {
         { steps: true },
     );
     assert.equal(neg.ops[0].op, 'scale');
-    assert.equal(neg.steps.find((s) => s.op === 'scale').opTex, 'R_{1} \\to -R_{1}');
+    assert.equal(neg.steps.find((s) => s.data?.op === 'scale').data.opTex, 'R_{1} \\to -R_{1}');
     const div = E.matRref(
         [
             [3, 5],
@@ -304,7 +304,7 @@ test('pivot strategy keeps numbers small', () => {
                 [1, 0],
             ],
             { steps: true },
-        ).steps.find((s) => s.op === 'swap').text.ru,
+        ).steps.find((s) => s.data?.op === 'swap').text.ru,
         /стоит 0/,
     );
     const scale = E.matRref(
@@ -313,8 +313,8 @@ test('pivot strategy keeps numbers small', () => {
             [6, 3],
         ],
         { steps: true },
-    ).steps.find((s) => s.op === 'scale');
-    assert.match(scale.opTex, /\\frac\{1\}\{/);
+    ).steps.find((s) => s.data?.op === 'scale');
+    assert.match(scale.data.opTex, /\\frac\{1\}\{/);
 });
 
 test('rank, null space, random RREF properties', () => {
@@ -502,7 +502,7 @@ test('determinant steps for each method', () => {
         ).toString(),
     );
     checkSteps(g.steps, 'gauss det');
-    assert.ok(g.steps.some((s) => s.op === 'swap' && /меняет знак/.test(s.text.ru)));
+    assert.ok(g.steps.some((s) => s.data?.op === 'swap' && /меняет знак/.test(s.text.ru)));
     const c = E.matDet(
         [
             [1, 0, 2, 0],

@@ -1,8 +1,9 @@
 // theory/bases — positional number systems: conversions with steps.
 
 import { Q } from '../../core/rational.js';
-import { S, babs, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
+import { babs, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
 import { msg, notation, eachLanguage } from '../../i18n/index.js';
+import { step } from '../../core/steps.js';
 
 // ---------------------------------------------------------------- number bases
 
@@ -104,43 +105,43 @@ export function ntToBase(x, base, opts = {}) {
     const st = [];
     const isInt = den === 1n;
     st.push(
-        S(
-            msg('numbers.theory.bases.plan'),
-            null,
-            !isInt
+        step({
+            title: msg('numbers.theory.bases.plan'),
+            text: !isInt
                 ? msg('numbers.theory.bases.we_convert_to_base_integer_and', { num: (lng) => qText(num, den, lng), b })
                 : msg('numbers.theory.bases.we_convert_to_base_divide_by', { num: sn(num), b }),
-            { rule: 'base-plan' },
-        ),
+            rule: 'base-plan',
+        }),
     );
-    if (sign) st.push(S(msg('numbers.theory.bases.sign'), null, msg('numbers.theory.bases.we_convert_absolute_value_and_put')));
+    if (sign) st.push(step({ title: msg('numbers.theory.bases.sign'), text: msg('numbers.theory.bases.we_convert_absolute_value_and_put') }));
     if (divRows.length) {
         const shown = divRows.length <= 64;
         const head = (l) => msg('numbers.theory.bases.n_n_remainder', { b }).in(l);
         const cell = (r) => (b > 10 && r >= 10n ? `${tn(r)} = \\mathrm{${DIGITS[Number(r)]}}` : tn(r));
         st.push(
-            S(
-                msg('numbers.theory.bases.by', {
+            step({
+                title: msg('numbers.theory.bases.by', {
                     p: (lng) => (isInt ? msg('numbers.theory.bases.divide').in(lng) : msg('numbers.theory.bases.integer_part_divide').in(lng)),
                     b,
                 }),
-                shown
+                tex: shown
                     ? eachLanguage(
                           (l) =>
                               `\\begin{array}{r|r|c} ${head(l)} \\\\ \\hline ${divRows.map((r) => `${tn(r.n)} & ${tn(r.q)} & ${cell(r.r)}`).join(' \\\\ ')} \\end{array}`,
                       )
                     : null,
-                msg('numbers.theory.bases.read_from_bottom_to_top_remainders', {
+                text: msg('numbers.theory.bases.read_from_bottom_to_top_remainders', {
                     p: (lng) => (isInt ? '' : msg('numbers.theory.bases.of_integer_part').in(lng)),
                     intStr,
                     b: subscript(b),
                     p2: (lng) => (b > 10 ? msg('numbers.theory.bases.remainders_of_10_and_more_are').in(lng) : ''),
                 }),
-                { rule: 'repeated-division', rows: divRows },
-            ),
+                rule: 'repeated-division',
+                data: { rows: divRows },
+            }),
         );
     } else if (!isInt) {
-        st.push(S(msg('numbers.theory.bases.integer_part'), null, msg('numbers.theory.bases.integer_part_is_zero')));
+        st.push(step({ title: msg('numbers.theory.bases.integer_part'), text: msg('numbers.theory.bases.integer_part_is_zero') }));
     }
     if (fracRows.length) {
         const shown = fracRows.slice(0, 40);
@@ -150,24 +151,25 @@ export function ntToBase(x, base, opts = {}) {
               ? msg('numbers.theory.bases.expansion_has_not_ended_after_digits', { maxDigits })
               : msg('numbers.theory.bases.fractional_part_became_zero_so_we');
         st.push(
-            S(
-                msg('numbers.theory.bases.fractional_part_multiply_by', { b }),
-                eachLanguage(
+            step({
+                title: msg('numbers.theory.bases.fractional_part_multiply_by', { b }),
+                tex: eachLanguage(
                     (l) =>
                         `\\begin{array}{l|c} ${shown.map((r) => `${qTex(r.num, r.den, l)} \\cdot ${b} = ${qTex(r.prod, r.den, l)} & ${DIGITS[r.digit]}`).join(' \\\\ ')}${fracRows.length > shown.length ? ' \\\\ \\ldots &' : ''} \\end{array}`,
                 ),
-                msg('numbers.theory.bases.each_time_integer_part_of_product', { b, p: tail }),
-                { rule: 'repeated-multiplication', rows: fracRows },
-            ),
+                text: msg('numbers.theory.bases.each_time_integer_part_of_product', { b, p: tail }),
+                rule: 'repeated-multiplication',
+                data: { rows: fracRows },
+            }),
         );
     }
     st.push(
-        S(
-            msg('numbers.theory.bases.answer'),
-            eachLanguage((l) => `${qTex(num, den, l)} = ${texOf(l)}`),
-            period ? msg('numbers.theory.bases.digits_in_brackets_repeat_forever') : null,
-            { rule: 'answer' },
-        ),
+        step({
+            title: msg('numbers.theory.bases.answer'),
+            tex: eachLanguage((l) => `${qTex(num, den, l)} = ${texOf(l)}`),
+            text: period ? msg('numbers.theory.bases.digits_in_brackets_repeat_forever') : null,
+            rule: 'answer',
+        }),
     );
     return { value, int: intStr, pre, period, truncated, negative: !!sign, tex: eachLanguage(texOf, { compact: false }), steps: st };
 }
@@ -227,15 +229,15 @@ export function ntFromBase(str, base, opts = {}) {
     const src = (l) => `${neg ? '-' : ''}${ip || '0'}${fp || per ? notation(l).decimalTex + fp : ''}${per ? `(${per})` : ''}_{${b}}`;
     if (!per && terms.length && terms.length <= 24) {
         st.push(
-            S(
-                msg('numbers.theory.bases.expand_by_place_value'),
-                eachLanguage((l) => {
+            step({
+                title: msg('numbers.theory.bases.expand_by_place_value'),
+                tex: eachLanguage((l) => {
                     const wrap = (x) => (neg ? `-(${x})` : x);
                     const sum = nz.map((t) => `${tn(t.d)} \\cdot ${b}^{${t.k}}`).join(' + ') || '0';
                     const vals = nz.map((t) => (t.k >= 0 ? tn(t.d * B ** BigInt(t.k)) : qTex(t.d, B ** BigInt(-t.k), l))).join(' + ') || '0';
                     return `${src(l)} = ${wrap(sum)} = ${wrap(vals)} = ${valTex(l)}`;
                 }),
-                msg('numbers.theory.bases.digit_in_place_k_counting_from', {
+                text: msg('numbers.theory.bases.digit_in_place_k_counting_from', {
                     b,
                     p: (lng) =>
                         letters.length
@@ -244,8 +246,8 @@ export function ntFromBase(str, base, opts = {}) {
                               )
                             : '',
                 }),
-                { rule: 'positional' },
-            ),
+                rule: 'positional',
+            }),
         );
     }
     if (ip.length >= 4 && ip.length <= 40) {
@@ -256,31 +258,24 @@ export function ntFromBase(str, base, opts = {}) {
             parts.push(acc);
         }
         st.push(
-            S(
-                msg('numbers.theory.bases.faster_horner_s_scheme'),
-                parts.map((p, i) => (i === 0 ? tn(p) : `${tn(parts[i - 1])} \\cdot ${b} + ${tn(val(ip[i]))} = ${tn(p)}`)).join(',\\quad '),
-                msg('numbers.theory.bases.go_through_digits_from_left_to', { b }),
-                { rule: 'horner' },
-            ),
+            step({
+                title: msg('numbers.theory.bases.faster_horner_s_scheme'),
+                tex: parts.map((p, i) => (i === 0 ? tn(p) : `${tn(parts[i - 1])} \\cdot ${b} + ${tn(val(ip[i]))} = ${tn(p)}`)).join(',\\quad '),
+                text: msg('numbers.theory.bases.go_through_digits_from_left_to', { b }),
+                rule: 'horner',
+            }),
         );
     }
     if (per) {
         st.push(
-            S(
-                msg('numbers.theory.bases.repeating_fraction'),
-                eachLanguage((l) => `${src(l)} = ${valTex(l)}`),
-                msg('numbers.theory.bases.period_has_digit_shifting_point_by', { length: per.length, b, per, b2: subscript(b) }),
-                { rule: 'period' },
-            ),
+            step({
+                title: msg('numbers.theory.bases.repeating_fraction'),
+                tex: eachLanguage((l) => `${src(l)} = ${valTex(l)}`),
+                text: msg('numbers.theory.bases.period_has_digit_shifting_point_by', { length: per.length, b, per, b2: subscript(b) }),
+                rule: 'period',
+            }),
         );
     }
-    st.push(
-        S(
-            msg('numbers.theory.bases.answer'),
-            eachLanguage((l) => `${src(l)} = ${valTex(l)}`),
-            null,
-            { rule: 'answer' },
-        ),
-    );
+    st.push(step({ title: msg('numbers.theory.bases.answer'), tex: eachLanguage((l) => `${src(l)} = ${valTex(l)}`), rule: 'answer' }));
     return { value, steps: st };
 }

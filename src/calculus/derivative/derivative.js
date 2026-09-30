@@ -82,12 +82,6 @@ function primeTex(v, order = 1, partial = false, name = 'f') {
     return `${name}${marks}(${v})`;
 }
 
-function answerStep(title, tex) {
-    const s = step({ title, tex, rule: 'answer' });
-    s.final = true;
-    return s;
-}
-
 /**
  * Derivative of node (AST or string) by v. opts: {steps = false, simplify = true, partial = false}.
  * → {result (display node), steps (Step[], empty unless asked), verified, tex ("f'(x) = …", string | {ru, en})}.
@@ -147,7 +141,7 @@ export function derivative(node, v = 'x', opts = {}) {
     }
     if (numericCheck(node, result, v) === false) verified = false;
     const tex = eachLanguage((L) => `${primeTex(v, 1, partial)} = ${calcTex(result, L)}`);
-    if (wantSteps) steps.push(answerStep(msg('calculus.derivative.derivative.answer'), tex));
+    if (wantSteps) steps.push(step({ title: msg('calculus.derivative.derivative.answer'), tex: tex, rule: 'answer', final: true }));
     return { result, steps, verified, tex };
 }
 
@@ -194,7 +188,7 @@ export function derivativeN(node, v = 'x', n = 2, opts = {}) {
     }
     const result = list[n - 1];
     const tex = eachLanguage((L) => `${primeTex(v, n)} = ${calcTex(result, L)}`);
-    if (opts.steps) steps.push(answerStep(msg('calculus.derivative.derivative.answer'), tex));
+    if (opts.steps) steps.push(step({ title: msg('calculus.derivative.derivative.answer'), tex: tex, rule: 'answer', final: true }));
     return { result, list, steps, verified, tex };
 }
 
@@ -226,7 +220,7 @@ export function gradientOf(node, vars = null, opts = {}) {
         const sep = notation(L).listTex;
         return `\\nabla f = \\left(${vs.map((w) => primeTex(w, 1, true)).join(sep)}\\right) = \\left(${vs.map((w) => calcTex(components[w], L)).join(sep)}\\right)`;
     });
-    if (opts.steps) steps.push(answerStep(msg('calculus.derivative.derivative.gradient'), tex));
+    if (opts.steps) steps.push(step({ title: msg('calculus.derivative.derivative.gradient'), tex: tex, rule: 'answer', final: true }));
     return { result, components, vars: vs, steps, tex };
 }
 
@@ -299,7 +293,7 @@ export function tangentLine(node, v = 'x', a = 0, opts = {}) {
                 rule: 'slope',
             }),
         );
-        steps.push(answerStep(msg('calculus.derivative.derivative.tangent_line'), tex));
+        steps.push(step({ title: msg('calculus.derivative.derivative.tangent_line'), tex: tex, rule: 'answer', final: true }));
     }
     return { k, b, point: { x: A, y: fa }, line, tex, steps };
 }

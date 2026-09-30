@@ -2,7 +2,7 @@
 
 import { Q } from '../core/rational.js';
 import { numPolyRoots } from '../numbers/numeric/index.js';
-import { E_, S, fail, qs, qt, qtp, shiftTex } from './common.js';
+import { E_, fail, qs, qt, qtp, shiftTex } from './common.js';
 import { M, Matrix, needSquare, vecTex } from './core.js';
 import { matDet } from './det.js';
 import { fmatSvd } from './float.js';
@@ -10,6 +10,7 @@ import { intPrimitive, padd, pdeg, pdiv, pmul, psub, ptex, ptrim, quadFactor, qu
 import { nullspaceFrom, reduce } from './reduce.js';
 import { PARAMS, matInverse } from './systems.js';
 import { msg, eachLanguage, decimalIn } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- characteristic polynomial and eigenvalues
 
@@ -70,22 +71,22 @@ export function matCharPoly(A, opts = {}) {
     const P = A.a.map((r, i) => r.map((v, j) => (i === j ? [v, Q.MINUS_ONE] : [v])));
     const shifted = `\\begin{vmatrix} ${P.map((r) => r.map(entryPolyTex).join(' & ')).join(' \\\\ ')} \\end{vmatrix}`;
     st.push(
-        S(
-            msg('linalg.eigen.what_we_look_for'),
-            eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${shifted}`),
-            eachLanguage((l) => msg('linalg.eigen.eigenvalue_is_number_with_v_v').in(l)),
-            { rule: 'charpoly-def' },
-        ),
+        step({
+            title: msg('linalg.eigen.what_we_look_for'),
+            tex: eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${shifted}`),
+            text: eachLanguage((l) => msg('linalg.eigen.eigenvalue_is_number_with_v_v').in(l)),
+            rule: 'charpoly-def',
+        }),
     );
     if (n === 2) {
         const [[a, b], [c, d]] = A.a;
         st.push(
-            S(
-                msg('linalg.eigen.expand_2_2_determinant'),
-                `(${entryPolyTex(P[0][0])})(${entryPolyTex(P[1][1])}) - ${qtp(b)} \\cdot ${qtp(c)} = ${tex}`,
-                msg('linalg.eigen.check_coefficient_of_is_minus_trace', { p: qs(a.add(d)), p2: qs(a.mul(d).sub(b.mul(c))) }),
-                { rule: 'charpoly-2x2' },
-            ),
+            step({
+                title: msg('linalg.eigen.expand_2_2_determinant'),
+                tex: `(${entryPolyTex(P[0][0])})(${entryPolyTex(P[1][1])}) - ${qtp(b)} \\cdot ${qtp(c)} = ${tex}`,
+                text: msg('linalg.eigen.check_coefficient_of_is_minus_trace', { p: qs(a.add(d)), p2: qs(a.mul(d).sub(b.mul(c))) }),
+                rule: 'charpoly-2x2',
+            }),
         );
     } else if (n === 3) {
         const terms = [0, 1, 2]
@@ -107,33 +108,28 @@ export function matCharPoly(A, opts = {}) {
                 return `${lead(t, k)} ${mt}`;
             })
             .join(' ');
-        st.push(S(msg('linalg.eigen.expand_along_first_row'), expTex, msg('linalg.eigen.each_entry_of_first_row_is'), { rule: 'cofactor' }));
         st.push(
-            S(
-                msg('linalg.eigen.multiply_out'),
-                terms.map((t, k) => `${lead(t, k)}\\left(${ptex(t.det)}\\right)`).join(' ') + ` = ${tex}`,
-                msg('linalg.eigen.check_coefficient_of_is_trace_constant', { p: qs(A.trace()), p2: qs(coefs[0]) }),
-                { rule: 'charpoly-3x3' },
-            ),
+            step({ title: msg('linalg.eigen.expand_along_first_row'), tex: expTex, text: msg('linalg.eigen.each_entry_of_first_row_is'), rule: 'cofactor' }),
+        );
+        st.push(
+            step({
+                title: msg('linalg.eigen.multiply_out'),
+                tex: terms.map((t, k) => `${lead(t, k)}\\left(${ptex(t.det)}\\right)`).join(' ') + ` = ${tex}`,
+                text: msg('linalg.eigen.check_coefficient_of_is_trace_constant', { p: qs(A.trace()), p2: qs(coefs[0]) }),
+                rule: 'charpoly-3x3',
+            }),
         );
     } else {
         st.push(
-            S(
-                msg('linalg.eigen.faddeev_leverrier_method'),
-                eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`),
-                msg('linalg.eigen.for_bigger_matrices_expanding_determinant_is'),
-                { rule: 'faddeev-leverrier' },
-            ),
+            step({
+                title: msg('linalg.eigen.faddeev_leverrier_method'),
+                tex: eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`),
+                text: msg('linalg.eigen.for_bigger_matrices_expanding_determinant_is'),
+                rule: 'faddeev-leverrier',
+            }),
         );
     }
-    st.push(
-        S(
-            msg('linalg.eigen.characteristic_polynomial'),
-            eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`),
-            null,
-            { rule: 'answer' },
-        ),
-    );
+    st.push(step({ title: msg('linalg.eigen.characteristic_polynomial'), tex: eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${tex}`), rule: 'answer' }));
     return { value, coefs, tex, steps: st };
 }
 
@@ -185,10 +181,12 @@ export function matEigen(A, opts = {}) {
                     ? `\\mathbf v = t${vecTex(vectors[0])}`
                     : `\\mathbf v = ${vectors.map((v, k) => `${PARAMS[k] ?? `t_{${k + 1}}`}${vecTex(v)}`).join(' + ')}`;
             vecSteps.push(
-                S(
-                    msg('linalg.eigen.eigenvectors_for', { root: qs(root) }),
-                    eachLanguage((l) => `${root.isZero() ? 'A' : `(${shiftTex(root, l)})`}\\mathbf v = 0:\\quad ${B.toTex()} \\;\\Rightarrow\\; ${general}`),
-                    msg('linalg.eigen.we_solve_homogeneous_system_i_v', {
+                step({
+                    title: msg('linalg.eigen.eigenvectors_for', { root: qs(root) }),
+                    tex: eachLanguage(
+                        (l) => `${root.isZero() ? 'A' : `(${shiftTex(root, l)})`}\\mathbf v = 0:\\quad ${B.toTex()} \\;\\Rightarrow\\; ${general}`,
+                    ),
+                    text: msg('linalg.eigen.we_solve_homogeneous_system_i_v', {
                         p: (lng) =>
                             vectors.length === 1
                                 ? msg('linalg.eigen.one_free_unknown_eigenvectors_lie_on').in(lng)
@@ -196,8 +194,9 @@ export function matEigen(A, opts = {}) {
                         p2: (lng) =>
                             vectors.length < mult ? msg('linalg.eigen.root_has_multiplicity_but_there_are', { mult, length: vectors.length }).in(lng) : '',
                     }),
-                    { rule: 'eigenvectors', sub: red.steps },
-                ),
+                    rule: 'eigenvectors',
+                    sub: red.steps,
+                }),
             );
         }
     }
@@ -265,12 +264,13 @@ export function matEigen(A, opts = {}) {
     const st = [];
     const cp = matCharPoly(A, { steps: true });
     st.push(
-        S(
-            msg('linalg.eigen.characteristic_polynomial'),
-            eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${cp.tex}`),
-            msg('linalg.eigen.eigenvalues_are_roots_of_det_i'),
-            { rule: 'charpoly', sub: cp.steps },
-        ),
+        step({
+            title: msg('linalg.eigen.characteristic_polynomial'),
+            tex: eachLanguage((l) => `\\det(A - \\lambda ${E_(l)}) = ${cp.tex}`),
+            text: msg('linalg.eigen.eigenvalues_are_roots_of_det_i'),
+            rule: 'charpoly',
+            sub: cp.steps,
+        }),
     );
     // factorised form
     const lead = ptrim(coefs)[ptrim(coefs).length - 1];
@@ -286,34 +286,34 @@ export function matEigen(A, opts = {}) {
               p: (lng) => roots.map((r) => `${qs(r.root)}${r.mult > 1 ? msg('linalg.eigen.multiplicity', { mult: r.mult }).in(lng) : ''}`).join(', '),
           })
         : msg('linalg.eigen.there_are_no_rational_roots_all');
-    st.push(S(msg('linalg.eigen.factor'), `${lcTex}${factors.join('') || '1'} = 0`, rootsText, { rule: 'factor' }));
+    st.push(step({ title: msg('linalg.eigen.factor'), tex: `${lcTex}${factors.join('') || '1'} = 0`, text: rootsText, rule: 'factor' }));
     for (const [qi, { f }] of quads.entries()) {
         const { D } = quadRoots(f);
         const entries = quadEntries[qi];
         st.push(
-            S(
-                msg('linalg.eigen.quadratic_factor'),
-                `${ptex(f)} = 0:\\quad D = ${qt(D)},\\quad \\lambda = ${entries.map((e) => e.tex).join(',\\ ')}`,
-                D.isNeg() ? msg('linalg.eigen.discriminant_is_negative_these_eigenvalues_are') : msg('linalg.eigen.roots_of_this_factor_are_irrational'),
-                { rule: 'quadratic' },
-            ),
+            step({
+                title: msg('linalg.eigen.quadratic_factor'),
+                tex: `${ptex(f)} = 0:\\quad D = ${qt(D)},\\quad \\lambda = ${entries.map((e) => e.tex).join(',\\ ')}`,
+                text: D.isNeg() ? msg('linalg.eigen.discriminant_is_negative_these_eigenvalues_are') : msg('linalg.eigen.roots_of_this_factor_are_irrational'),
+                rule: 'quadratic',
+            }),
         );
     }
     if (approxVals.length) {
         st.push(
-            S(
-                msg('linalg.eigen.approximate_roots'),
-                eachLanguage((l) => approxVals.map((v) => `\\lambda ${pickTex(v.tex, l)}`).join(',\\quad ')),
-                msg('linalg.eigen.remaining_factor_of_degree_does_not', { R: pdeg(R) }),
-                { rule: 'numeric-roots' },
-            ),
+            step({
+                title: msg('linalg.eigen.approximate_roots'),
+                tex: eachLanguage((l) => approxVals.map((v) => `\\lambda ${pickTex(v.tex, l)}`).join(',\\quad ')),
+                text: msg('linalg.eigen.remaining_factor_of_degree_does_not', { R: pdeg(R) }),
+                rule: 'numeric-roots',
+            }),
         );
     }
     st.push(...vecSteps);
     st.push(
-        S(
-            msg('linalg.eigen.answer'),
-            eachLanguage((l) =>
+        step({
+            title: msg('linalg.eigen.answer'),
+            tex: eachLanguage((l) =>
                 values
                     .map(
                         (v, k) =>
@@ -321,9 +321,9 @@ export function matEigen(A, opts = {}) {
                     )
                     .join(',\\quad '),
             ),
-            msg('linalg.eigen.eigenvalues_with_multiplicity_add_up_to', { p: qs(A.trace()), p2: qs(matDet(A)) }),
-            { rule: 'answer' },
-        ),
+            text: msg('linalg.eigen.eigenvalues_with_multiplicity_add_up_to', { p: qs(A.trace()), p2: qs(matDet(A)) }),
+            rule: 'answer',
+        }),
     );
     out.steps = st;
     return out;
@@ -339,7 +339,7 @@ export function matDiagonalize(A, opts = {}) {
     needSquare(A, msg('linalg.eigen.diagonalisation'));
     const n = A.rows;
     const e = matEigen(A, { steps: !!opts.steps });
-    const st = opts.steps ? [S(msg('linalg.eigen.eigenvalues_and_eigenvectors'), null, null, { rule: 'eigen', sub: e.steps })] : [];
+    const st = opts.steps ? [step({ title: msg('linalg.eigen.eigenvalues_and_eigenvectors'), rule: 'eigen', sub: e.steps })] : [];
     const fin = (res) => {
         if (opts.steps) res.steps = st;
         return res;
@@ -349,17 +349,16 @@ export function matDiagonalize(A, opts = {}) {
         const distinct = e.values.every((v) => v.multiplicity === 1);
         if (opts.steps) {
             st.push(
-                S(
-                    msg('linalg.eigen.not_diagonalisable_over'),
-                    null,
-                    distinct
+                step({
+                    title: msg('linalg.eigen.not_diagonalisable_over'),
+                    text: distinct
                         ? msg('linalg.eigen.not_all_eigenvalues_are_rational_they', {
                               p: allReal ? 'ℝ' : 'ℂ',
                               p2: (lng) => (allReal ? '' : msg('linalg.eigen.or_complex').in(lng)),
                           })
                         : msg('linalg.eigen.not_all_eigenvalues_are_rational'),
-                    { rule: 'answer' },
-                ),
+                    rule: 'answer',
+                }),
             );
         }
         return fin({ diagonalizable: false, reason: 'irrational', overReals: allReal && distinct, overComplex: distinct, eigen: e });
@@ -369,18 +368,17 @@ export function matDiagonalize(A, opts = {}) {
         const bad = e.values.find((v) => v.geometric < v.multiplicity);
         if (opts.steps) {
             st.push(
-                S(
-                    msg('linalg.eigen.not_enough_eigenvectors'),
-                    null,
-                    msg('linalg.eigen.has_multiplicity_but_only_independent_eigenvector', {
+                step({
+                    title: msg('linalg.eigen.not_enough_eigenvectors'),
+                    text: msg('linalg.eigen.has_multiplicity_but_only_independent_eigenvector', {
                         p: qs(bad.value),
                         multiplicity: bad.multiplicity,
                         geometric: bad.geometric,
                         total,
                         n,
                     }),
-                    { rule: 'answer' },
-                ),
+                    rule: 'answer',
+                }),
             );
         }
         return fin({ diagonalizable: false, reason: 'defective', eigen: e });
@@ -397,14 +395,14 @@ export function matDiagonalize(A, opts = {}) {
         Pinv = matInverse(P);
     if (opts.steps) {
         st.push(
-            S(
-                msg('linalg.eigen.matrices_p_and_d'),
-                `P = ${P.toTex()},\\quad D = ${D.toTex()},\\quad A = P D P^{-1}`,
-                msg('linalg.eigen.columns_of_p_are_eigenvectors_and'),
-                { rule: 'answer' },
-            ),
+            step({
+                title: msg('linalg.eigen.matrices_p_and_d'),
+                tex: `P = ${P.toTex()},\\quad D = ${D.toTex()},\\quad A = P D P^{-1}`,
+                text: msg('linalg.eigen.columns_of_p_are_eigenvectors_and'),
+                rule: 'answer',
+            }),
         );
-        st.push(S(msg('linalg.eigen.check'), `P^{-1} A P = ${Pinv.mul(A).mul(P).toTex()} = D`, null, { rule: 'check' }));
+        st.push(step({ title: msg('linalg.eigen.check'), tex: `P^{-1} A P = ${Pinv.mul(A).mul(P).toTex()} = D`, rule: 'check' }));
     }
     return fin({ diagonalizable: true, P, D, Pinv, eigen: e });
 }

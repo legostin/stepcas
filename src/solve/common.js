@@ -1,7 +1,6 @@
 // solve/common — small helpers shared by the solvers: bilingual text, TeX, safe simplification, numbers, trees.
 
 import { toTex } from '../core/print.js';
-import { step as mkStep } from '../core/steps.js';
 import { num, sym, freeVars, neg, mul, add, fn, nodeKey, mapNode, nodeChildren, containsVar, pow } from '../core/ast.js';
 import { Q, bigGcd } from '../core/rational.js';
 import { simplify } from '../core/simplify.js';
@@ -11,15 +10,8 @@ import { msg, eachLanguage, decimalIn, DEFAULT_LANGUAGE } from '../i18n/index.js
 
 // ---------------------------------------------------------------- small helpers
 
-export const pick = (x, lang) => (typeof x === 'string' ? x : (x?.[lang] ?? ''));
 export const tex = (node, lang = DEFAULT_LANGUAGE, o = {}) => toTex(node, { ...o, lang });
 export const texB = (node, o = {}) => eachLanguage((l) => tex(node, l, o));
-
-export function S(title, o = {}) {
-    const s = mkStep({ title, tex: o.tex, text: o.text, rule: o.rule, sub: o.sub });
-    if (o.final) s.final = true;
-    return s;
-}
 
 export const N0 = num(0);
 export const N1 = num(1);

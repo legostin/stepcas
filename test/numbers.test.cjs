@@ -508,7 +508,7 @@ test('bases: integers, fractions with periods, letters, signs', () => {
     const t = E.ntToBase(25, 2, { steps: true });
     checkSteps(t.steps, 'toBase 25');
     assert.deepEqual(
-        t.steps.find((s) => s.rule === 'repeated-division').rows.map((x) => x.r),
+        t.steps.find((s) => s.rule === 'repeated-division').data.rows.map((x) => x.r),
         [1n, 0n, 0n, 1n, 1n],
     );
     checkSteps(E.ntToBase(-2748, 16, { steps: true }).steps, 'toBase hex');

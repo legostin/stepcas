@@ -1,10 +1,11 @@
 // linalg/det — determinants: small formulas, cofactor expansion, elimination.
 
 import { Q } from '../core/rational.js';
-import { R, S, fail, qs, qt, qtp, sub } from './common.js';
+import { R, fail, qs, qt, qtp, sub } from './common.js';
 import { M, Matrix, needSquare } from './core.js';
 import { arrowLabel, opText } from './reduce.js';
 import { msg } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- determinants
 
@@ -20,7 +21,10 @@ function detGauss(A, withSteps) {
     const st = [];
     if (withSteps) {
         st.push(
-            S(msg('linalg.det.gaussian_elimination'), `\\det A = ${A.toTex({ env: 'vmatrix' })}`, msg('linalg.det.we_bring_matrix_to_triangular_form'), {
+            step({
+                title: msg('linalg.det.gaussian_elimination'),
+                tex: `\\det A = ${A.toTex({ env: 'vmatrix' })}`,
+                text: msg('linalg.det.we_bring_matrix_to_triangular_form'),
                 rule: 'det-gauss',
             }),
         );
@@ -40,12 +44,12 @@ function detGauss(A, withSteps) {
         if (p < 0) {
             if (withSteps) {
                 st.push(
-                    S(
-                        msg('linalg.det.column_is_zero_below_diagonal', { p: c + 1 }),
-                        `\\det A = 0`,
-                        msg('linalg.det.column_has_only_zeros_on_and', { p: c + 1 }),
-                        { rule: 'answer' },
-                    ),
+                    step({
+                        title: msg('linalg.det.column_is_zero_below_diagonal', { p: c + 1 }),
+                        tex: `\\det A = 0`,
+                        text: msg('linalg.det.column_has_only_zeros_on_and', { p: c + 1 }),
+                        rule: 'answer',
+                    }),
                 );
             }
             return { value: Q.ZERO, steps: st };
@@ -56,12 +60,13 @@ function detGauss(A, withSteps) {
             if (withSteps) {
                 const mt = new Matrix(W).toTex({ env: 'vmatrix' });
                 st.push(
-                    S(
-                        msg('linalg.det.swap_rows'),
-                        `\\xrightarrow{${R(c)} \\leftrightarrow ${R(p)}} -${mt}`,
-                        msg('linalg.det.pivot_is_handier_swap_rows_and', { pivot: qs(W[c][c]), a: c + 1, b: p + 1 }),
-                        { rule: 'row-swap', op: 'swap', i: c, j: p },
-                    ),
+                    step({
+                        title: msg('linalg.det.swap_rows'),
+                        tex: `\\xrightarrow{${R(c)} \\leftrightarrow ${R(p)}} -${mt}`,
+                        text: msg('linalg.det.pivot_is_handier_swap_rows_and', { pivot: qs(W[c][c]), a: c + 1, b: p + 1 }),
+                        rule: 'row-swap',
+                        data: { op: 'swap', i: c, j: p },
+                    }),
                 );
             }
         }
@@ -73,12 +78,12 @@ function detGauss(A, withSteps) {
                 const op = { op: 'add', i, j: c, k };
                 const mt = new Matrix(W).toTex({ env: 'vmatrix' });
                 st.push(
-                    S(msg('linalg.det.clear_below_diagonal'), `\\xrightarrow{${arrowLabel(op)}} ${sign < 0 ? '-' : ''}${mt}`, opText(op, 'forward'), {
+                    step({
+                        title: msg('linalg.det.clear_below_diagonal'),
+                        tex: `\\xrightarrow{${arrowLabel(op)}} ${sign < 0 ? '-' : ''}${mt}`,
+                        text: opText(op, 'forward'),
                         rule: 'row-add',
-                        op: 'add',
-                        i,
-                        j: c,
-                        k,
+                        data: { op: 'add', i, j: c, k },
                     }),
                 );
             }
@@ -88,12 +93,12 @@ function detGauss(A, withSteps) {
     for (let i = 0; i < n; i++) value = value.mul(W[i][i]);
     if (withSteps) {
         st.push(
-            S(
-                msg('linalg.det.multiply_diagonal'),
-                `\\det A = ${sign < 0 ? '-' : ''}${W.map((r, i) => qtp(r[i])).join(' \\cdot ')} = ${qt(value)}`,
-                sign < 0 ? msg('linalg.det.we_swapped_rows_odd_number_of') : null,
-                { rule: 'answer' },
-            ),
+            step({
+                title: msg('linalg.det.multiply_diagonal'),
+                tex: `\\det A = ${sign < 0 ? '-' : ''}${W.map((r, i) => qtp(r[i])).join(' \\cdot ')} = ${qt(value)}`,
+                text: sign < 0 ? msg('linalg.det.we_swapped_rows_odd_number_of') : null,
+                rule: 'answer',
+            }),
         );
     }
     return { value, steps: st };
@@ -122,23 +127,25 @@ function detSarrus(A, withSteps) {
     return {
         value,
         steps: [
-            S(
-                msg('linalg.det.rule_of_sarrus'),
-                `\\det A = ${plus.map(sym).join(' + ')} - ${minus.map(sym).join(' - ')}`,
-                msg('linalg.det.three_products_along_main_diagonal_and'),
-                { rule: 'sarrus' },
-            ),
-            S(msg('linalg.det.substitute_numbers'), `\\det A = ${plus.map(tt).join(' + ')} - ${minus.map((t) => `${tt(t)}`).join(' - ')}`, null, {
+            step({
+                title: msg('linalg.det.rule_of_sarrus'),
+                tex: `\\det A = ${plus.map(sym).join(' + ')} - ${minus.map(sym).join(' - ')}`,
+                text: msg('linalg.det.three_products_along_main_diagonal_and'),
+                rule: 'sarrus',
+            }),
+            step({
+                title: msg('linalg.det.substitute_numbers'),
+                tex: `\\det A = ${plus.map(tt).join(' + ')} - ${minus.map((t) => `${tt(t)}`).join(' - ')}`,
                 rule: 'substitute',
             }),
-            S(msg('linalg.det.compute'), `\\det A = (${signed(pv)}) - (${signed(mv)}) = ${qt(value)}`, null, { rule: 'answer' }),
+            step({ title: msg('linalg.det.compute'), tex: `\\det A = (${signed(pv)}) - (${signed(mv)}) = ${qt(value)}`, rule: 'answer' }),
         ],
     };
 }
 
 function detCofactor(A, withSteps, depth = 0, label = '\\det A') {
     const n = A.rows;
-    if (n === 1) return { value: A.a[0][0], steps: withSteps ? [S(msg('linalg.det.1_1_matrix'), `${label} = ${qt(A.a[0][0])}`, null)] : [] };
+    if (n === 1) return { value: A.a[0][0], steps: withSteps ? [step({ title: msg('linalg.det.1_1_matrix'), tex: `${label} = ${qt(A.a[0][0])}` })] : [] };
     if (n === 2) {
         const [[a, b], [c, d]] = A.a;
         const value = a.mul(d).sub(b.mul(c));
@@ -146,12 +153,12 @@ function detCofactor(A, withSteps, depth = 0, label = '\\det A') {
             value,
             steps: withSteps
                 ? [
-                      S(
-                          msg('linalg.det.2_2_determinant'),
-                          `${depth ? `${label} = ` : ''}${A.toTex({ env: 'vmatrix' })} = ${det2Tex(A)} = ${qt(value)}`,
-                          depth === 0 ? msg('linalg.det.product_of_main_diagonal_minus_product') : null,
-                          { rule: 'det2' },
-                      ),
+                      step({
+                          title: msg('linalg.det.2_2_determinant'),
+                          tex: `${depth ? `${label} = ` : ''}${A.toTex({ env: 'vmatrix' })} = ${det2Tex(A)} = ${qt(value)}`,
+                          text: depth === 0 ? msg('linalg.det.product_of_main_diagonal_minus_product') : null,
+                          rule: 'det2',
+                      }),
                   ]
                 : [],
         };
@@ -203,10 +210,12 @@ function detCofactor(A, withSteps, depth = 0, label = '\\det A') {
             : best.zeros
               ? msg('linalg.det.it_has_most_zeros', { zeros: best.zeros })
               : null;
-    const st = [S(msg('linalg.det.expand', { p: lineWord, p2: which }), `${label} = ${expansion}`, why, { rule: 'cofactor' })];
+    const st = [step({ title: msg('linalg.det.expand', { p: lineWord, p2: which }), tex: `${label} = ${expansion}`, text: why, rule: 'cofactor' })];
     for (const t of terms) {
         st.push(
-            S(msg('linalg.det.minor_m', { p: sub(t.i + 1), p2: sub(t.j + 1) }), `M_{${t.i + 1}${t.j + 1}} = ${qt(t.md.value)}`, null, {
+            step({
+                title: msg('linalg.det.minor_m', { p: sub(t.i + 1), p2: sub(t.j + 1) }),
+                tex: `M_{${t.i + 1}${t.j + 1}} = ${qt(t.md.value)}`,
                 rule: 'minor',
                 sub: t.md.steps,
             }),
@@ -219,7 +228,7 @@ function detCofactor(A, withSteps, depth = 0, label = '\\det A') {
             return `${s} ${qt(coef.abs())} \\cdot ${qtp(t.md.value)}`;
         })
         .join(' ');
-    st.push(S(msg('linalg.det.put_it_together'), `${label} = ${nums || '0'} = ${qt(value)}`, null, { rule: 'answer' }));
+    st.push(step({ title: msg('linalg.det.put_it_together'), tex: `${label} = ${nums || '0'} = ${qt(value)}`, rule: 'answer' }));
     return { value, steps: st };
 }
 

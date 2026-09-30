@@ -1,10 +1,11 @@
 // linalg/orthogonal — Gram–Schmidt, projections and least squares.
 
 import { Q } from '../core/rational.js';
-import { S, fail, qt, sub } from './common.js';
+import { fail, qt, sub } from './common.js';
 import { M, Matrix, toQ, vecTex } from './core.js';
 import { matSolve } from './systems.js';
 import { msg } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- orthogonality
 
@@ -32,12 +33,11 @@ export function matGramSchmidt(vectors, opts = {}) {
             dropped.push(k);
             if (opts.steps) {
                 st.push(
-                    S(
-                        msg('linalg.orthogonal.vector_is_dependent', { p: k + 1 }),
-                        null,
-                        msg('linalg.orthogonal.subtracting_projections_leaves_zero_vector_v', { p: sub(k + 1) }),
-                        { rule: 'dependent' },
-                    ),
+                    step({
+                        title: msg('linalg.orthogonal.vector_is_dependent', { p: k + 1 }),
+                        text: msg('linalg.orthogonal.subtracting_projections_leaves_zero_vector_v', { p: sub(k + 1) }),
+                        rule: 'dependent',
+                    }),
                 );
             }
             return;
@@ -47,14 +47,14 @@ export function matGramSchmidt(vectors, opts = {}) {
             const j = us.length;
             const proj = parts.map(({ c }, i) => `${c.isNeg() ? '+' : '-'} ${c.abs().isOne() ? '' : qt(c.abs())}\\mathbf u_{${i + 1}}`).join(' ');
             st.push(
-                S(
-                    msg('linalg.orthogonal.vector_u', { j: sub(j) }),
-                    `\\mathbf u_{${j}} = \\mathbf v_{${k + 1}} ${parts.length ? proj : ''} = ${vt(u)}`,
-                    parts.length
+                step({
+                    title: msg('linalg.orthogonal.vector_u', { j: sub(j) }),
+                    tex: `\\mathbf u_{${j}} = \\mathbf v_{${k + 1}} ${parts.length ? proj : ''} = ${vt(u)}`,
+                    text: parts.length
                         ? msg('linalg.orthogonal.from_v_we_subtract_its_projections', { p: sub(k + 1) })
                         : msg('linalg.orthogonal.first_vector_is_taken_as_it'),
-                    { rule: 'gram-schmidt' },
-                ),
+                    rule: 'gram-schmidt',
+                }),
             );
         }
     });
@@ -66,12 +66,12 @@ export function matGramSchmidt(vectors, opts = {}) {
     const res = { orthogonal: us, normalized, dropped };
     if (opts.steps) {
         st.push(
-            S(
-                msg('linalg.orthogonal.normalise'),
-                us.map((u, i) => `\\|\\mathbf u_{${i + 1}}\\| = \\sqrt{${qt(dot(u, u))}}`).join(',\\quad '),
-                msg('linalg.orthogonal.for_orthonormal_basis_divide_each_vector'),
-                { rule: 'normalize' },
-            ),
+            step({
+                title: msg('linalg.orthogonal.normalise'),
+                tex: us.map((u, i) => `\\|\\mathbf u_{${i + 1}}\\| = \\sqrt{${qt(dot(u, u))}}`).join(',\\quad '),
+                text: msg('linalg.orthogonal.for_orthonormal_basis_divide_each_vector'),
+                rule: 'normalize',
+            }),
         );
         res.steps = st;
     }
@@ -105,13 +105,13 @@ export function matLeastSquares(A, b, opts = {}) {
     if (sol.x) res.residual = A.mul(sol.x).map((v, i) => bv[i].sub(v));
     if (opts.steps) {
         res.steps = [
-            S(
-                msg('linalg.orthogonal.normal_equations'),
-                `A^{\\mathsf T}A\\,\\mathbf x = A^{\\mathsf T}\\mathbf b:\\quad ${N.toTex()}\\mathbf x = ${vecTex(rhs)}`,
-                msg('linalg.orthogonal.there_is_no_exact_solution_more'),
-                { rule: 'normal-equations' },
-            ),
-            S(msg('linalg.orthogonal.solve'), sol.tex, null, { rule: 'answer', sub: sol.steps }),
+            step({
+                title: msg('linalg.orthogonal.normal_equations'),
+                tex: `A^{\\mathsf T}A\\,\\mathbf x = A^{\\mathsf T}\\mathbf b:\\quad ${N.toTex()}\\mathbf x = ${vecTex(rhs)}`,
+                text: msg('linalg.orthogonal.there_is_no_exact_solution_more'),
+                rule: 'normal-equations',
+            }),
+            step({ title: msg('linalg.orthogonal.solve'), tex: sol.tex, rule: 'answer', sub: sol.steps }),
         ];
     }
     return res;

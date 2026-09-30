@@ -63,12 +63,6 @@ function nonElementaryHint(f, v) {
 
 // ---------------------------------------------------------------- public API
 
-export function answerStep(title, tex) {
-    const s = step({ title, tex, rule: 'answer' });
-    s.final = true;
-    return s;
-}
-
 /**
  * Indefinite integral. → {result: node | null, method, steps, verified, reason?: {ru, en}, tex}.
  * result is an antiderivative (the printed tex adds + C); verified means F′ = f was checked numerically on
@@ -152,7 +146,7 @@ export function integrate(node, v = 'x', opts = {}) {
                 rule: 'check',
             }),
         );
-        steps.push(answerStep(msg('calculus.integral.integrate.answer'), tex));
+        steps.push(step({ title: msg('calculus.integral.integrate.answer'), tex: tex, rule: 'answer', final: true }));
     }
     return { result: F, method: r.method, steps, verified, tex };
 }

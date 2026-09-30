@@ -6,14 +6,6 @@ import { msg } from '../i18n/index.js';
 // ---------------------------------------------------------------- tiny internal helpers
 
 export const fail = (msg, code = null) => new MathError(msg, null, null, code);
-export function S(title, tex, text, extra) {
-    const s = { title };
-    if (tex != null) s.tex = tex;
-    if (text != null) s.text = text;
-    if (extra) Object.assign(s, extra);
-    if (Array.isArray(s.sub) && !s.sub.length) delete s.sub;
-    return s;
-}
 export const qs = (x) => x.toString().replace('-', '\u2212');
 export const qt = (x) => x.toTex();
 /** Q as a TeX factor: parenthesised when negative. */

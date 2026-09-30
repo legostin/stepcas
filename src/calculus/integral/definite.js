@@ -10,7 +10,7 @@ import { limit } from '../limit/index.js';
 import { step } from '../../core/steps.js';
 import { niceForm } from '../derivative/index.js';
 import { PI } from './common.js';
-import { answerStep, integrate } from './integrate.js';
+import { integrate } from './integrate.js';
 import { msg, notation, eachLanguage, decimalIn } from '../../i18n/index.js';
 import { asNode } from '../../core/parse.js';
 import { prettyForm, isNum, paren, simp, trySimp, N0, checkExpr, calcTex } from '../display.js';
@@ -430,7 +430,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         const val = same ? ((flip ? -1 : 1) * Math.sign(contributions[0]) > 0 ? 'inf' : '-inf') : null;
         const tex = eachLanguage((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
         if (wantSteps) {
-            const s = answerStep(msg('calculus.integral.definite.integral_diverges'), tex);
+            const s = step({ title: msg('calculus.integral.definite.integral_diverges'), tex: tex, rule: 'answer', final: true });
             s.text = msg('calculus.integral.definite.limit_of_antiderivative_is_infinite_so');
             steps.push(s);
         }
@@ -460,7 +460,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
         const val = s ? ((flip ? -s : s) > 0 ? 'inf' : '-inf') : null;
         const tex = eachLanguage((L) => `${head(L)}\\ ${msg('calculus.integral.definite.diverges').in(L)}`);
         if (wantSteps) {
-            const st = answerStep(msg('calculus.integral.definite.integral_diverges'), tex);
+            const st = step({ title: msg('calculus.integral.definite.integral_diverges'), tex: tex, rule: 'answer', final: true });
             st.text =
                 numDiverges.reason === 'pole'
                     ? msg('calculus.integral.definite.function_grows_so_fast_near_singular')
@@ -485,7 +485,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                 (L) =>
                     `${head(L)} = ${calcTex(value, L)}${isNum(trySimp(value) ?? value) && (trySimp(value) ?? value).value.isInt() ? '' : ` \\approx ${fmtNum(ex, L)}`}`,
             );
-            if (wantSteps) steps.push(answerStep(msg('calculus.integral.definite.answer'), tex));
+            if (wantSteps) steps.push(step({ title: msg('calculus.integral.definite.answer'), tex: tex, rule: 'answer', final: true }));
             return out({
                 value,
                 numeric: ex,
@@ -528,7 +528,7 @@ export function integrateDefinite(node, v = 'x', a = 0, b = 1, opts = {}) {
                 rule: 'numeric',
             }),
         );
-        steps.push(answerStep(msg('calculus.integral.definite.answer_approximate'), tex));
+        steps.push(step({ title: msg('calculus.integral.definite.answer_approximate'), tex: tex, rule: 'answer', final: true }));
     }
     return out({ numeric, approx: true, converges: true, improper, antiderivative: anti.result, method: 'numeric', tex });
 }
@@ -629,7 +629,7 @@ export function areaBetween(f, g, v = 'x', a = null, b = null, opts = {}) {
                 }),
             );
         }
-        steps.push(answerStep(msg('calculus.integral.definite.area'), tex));
+        steps.push(step({ title: msg('calculus.integral.definite.area'), tex: tex, rule: 'answer', final: true }));
     }
     return { value, numeric, exact: !!value, approx: !value, points: pts.map((p) => p.node), pieces, steps, tex };
 }

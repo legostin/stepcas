@@ -7,15 +7,6 @@ import { msg, notation, decimalIn } from '../../i18n/index.js';
 
 export const fail = (msg, code = null) => new MathError(msg, null, null, code);
 
-export function S(title, tex, text, extra) {
-    const s = { title };
-    if (tex != null) s.tex = tex;
-    if (text != null) s.text = text;
-    if (extra) Object.assign(s, extra);
-    if (Array.isArray(s.sub) && !s.sub.length) delete s.sub;
-    return s;
-}
-
 export const babs = (a) => (a < 0n ? -a : a);
 export const bmod = (a, m) => ((a % m) + m) % m;
 

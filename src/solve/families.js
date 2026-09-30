@@ -2,8 +2,8 @@
 // two halves of one), printing in the school form, listing as roots.
 
 import { sym, add, mul, div, num } from '../core/ast.js';
-import { msg, notation } from '../i18n/index.js';
-import { simpOr, approxOf, isZeroNode, tex, pick } from './common.js';
+import { msg, notation, inLanguage } from '../i18n/index.js';
+import { simpOr, approxOf, isZeroNode, tex } from './common.js';
 
 export const N_SYM = sym('n');
 
@@ -39,7 +39,7 @@ export function familiesTex(fams, v, lang, sep) {
         if (f.group && !done.has(f.group)) {
             const members = fams.filter((g) => g.group === f.group);
             if (members.length === f.group.size) {
-                lines.push(pick(f.group.tex, lang));
+                lines.push(inLanguage(f.group.tex, lang));
                 done.add(f.group);
                 continue;
             }

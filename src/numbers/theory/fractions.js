@@ -1,8 +1,9 @@
 // theory/fractions — continued fractions, convergents, best approximations, Egyptian fractions.
 
 import { Q, bigIsqrt } from '../../core/rational.js';
-import { S, babs, big, dec, doubleExact, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
+import { babs, big, dec, doubleExact, fail, gcdCore, ratOf, sn, subscript, tn } from './common.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
+import { step } from '../../core/steps.js';
 
 // ---------------------------------------------------------------- continued fractions
 
@@ -35,7 +36,10 @@ export function ntContinuedFraction(x, opts = {}) {
             const res = { terms: [a0], a0, period: [], exact: true, periodic: false, tex: `\\sqrt{${tn(n)}} = ${tn(a0)}` };
             if (opts.steps)
                 res.steps = [
-                    S(msg('numbers.theory.fractions.perfect_square'), res.tex, msg('numbers.theory.fractions.root_is_integer_so_continued_fraction'), {
+                    step({
+                        title: msg('numbers.theory.fractions.perfect_square'),
+                        tex: res.tex,
+                        text: msg('numbers.theory.fractions.root_is_integer_so_continued_fraction'),
                         rule: 'answer',
                     }),
                 ];
@@ -57,28 +61,31 @@ export function ntContinuedFraction(x, opts = {}) {
         const res = { terms: [a0, ...period], a0, period, exact: true, periodic: true, tex: `\\sqrt{${tn(n)}} = ${cfTex([a0], period)}` };
         if (opts.steps) {
             const st = [
-                S(
-                    msg('numbers.theory.fractions.integer_part'),
-                    `${tn(a0)}^2 = ${tn(a0 * a0)} < ${tn(n)} < ${tn((a0 + 1n) ** 2n)} = ${tn(a0 + 1n)}^2 \\;\\Rightarrow\\; a_0 = ${tn(a0)}`,
-                    msg('numbers.theory.fractions.lies_between_and_so_its_integer', { n: sn(n), a0: sn(a0), p: sn(a0 + 1n) }),
-                    { rule: 'cf-int' },
-                ),
+                step({
+                    title: msg('numbers.theory.fractions.integer_part'),
+                    tex: `${tn(a0)}^2 = ${tn(a0 * a0)} < ${tn(n)} < ${tn((a0 + 1n) ** 2n)} = ${tn(a0 + 1n)}^2 \\;\\Rightarrow\\; a_0 = ${tn(a0)}`,
+                    text: msg('numbers.theory.fractions.lies_between_and_so_its_integer', { n: sn(n), a0: sn(a0), p: sn(a0 + 1n) }),
+                    rule: 'cf-int',
+                }),
             ];
             const sq = Math.sqrt(Number(n));
             rows.slice(0, 20).forEach((r, i) => {
                 const xv = (sq + Number(r.m)) / Number(r.d);
                 const xt = r.d === 1n ? `\\sqrt{${tn(n)}} + ${tn(r.m)}` : `\\frac{\\sqrt{${tn(n)}} + ${tn(r.m)}}{${tn(r.d)}}`;
                 st.push(
-                    S(
-                        msg('numbers.theory.fractions.term', { p: subscript(i + 1) }),
-                        eachLanguage((l) => `x_{${i + 1}} = ${xt} \\approx ${dec(xv, 3, l, true)} \\;\\Rightarrow\\; a_{${i + 1}} = ${tn(r.a)}`),
-                        i === 0 ? msg('numbers.theory.fractions.flip_fractional_part_x_1_and', { n: sn(n), a0: sn(a0) }) : null,
-                        { rule: 'cf-term' },
-                    ),
+                    step({
+                        title: msg('numbers.theory.fractions.term', { p: subscript(i + 1) }),
+                        tex: eachLanguage((l) => `x_{${i + 1}} = ${xt} \\approx ${dec(xv, 3, l, true)} \\;\\Rightarrow\\; a_{${i + 1}} = ${tn(r.a)}`),
+                        text: i === 0 ? msg('numbers.theory.fractions.flip_fractional_part_x_1_and', { n: sn(n), a0: sn(a0) }) : null,
+                        rule: 'cf-term',
+                    }),
                 );
             });
             st.push(
-                S(msg('numbers.theory.fractions.period'), res.tex, msg('numbers.theory.fractions.once_term_equals_2a_everything_repeats', { p: sn(2n * a0) }), {
+                step({
+                    title: msg('numbers.theory.fractions.period'),
+                    tex: res.tex,
+                    text: msg('numbers.theory.fractions.once_term_equals_2a_everything_repeats', { p: sn(2n * a0) }),
                     rule: 'answer',
                 }),
             );
@@ -118,25 +125,30 @@ export function ntContinuedFraction(x, opts = {}) {
     const res = { terms, exact: true, tex: cfTex(terms) };
     if (opts.steps) {
         const st = [
-            S(msg('numbers.theory.fractions.idea'), null, msg('numbers.theory.fractions.take_integer_part_flip_remaining_proper'), { rule: 'cf-idea' }),
+            step({
+                title: msg('numbers.theory.fractions.idea'),
+                text: msg('numbers.theory.fractions.take_integer_part_flip_remaining_proper'),
+                rule: 'cf-idea',
+            }),
         ];
         rows.forEach((r, i) => {
             st.push(
-                S(
-                    i === 0 ? msg('numbers.theory.fractions.integer_part') : msg('numbers.theory.fractions.flip', { p: sn(r.a), p2: sn(r.b) }),
-                    r.r === 0n ? `\\frac{${tn(r.a)}}{${tn(r.b)}} = ${tn(r.q)}` : `\\frac{${tn(r.a)}}{${tn(r.b)}} = ${tn(r.q)} + \\frac{${tn(r.r)}}{${tn(r.b)}}`,
-                    null,
-                    { rule: 'cf-term' },
-                ),
+                step({
+                    title: i === 0 ? msg('numbers.theory.fractions.integer_part') : msg('numbers.theory.fractions.flip', { p: sn(r.a), p2: sn(r.b) }),
+                    tex:
+                        r.r === 0n
+                            ? `\\frac{${tn(r.a)}}{${tn(r.b)}} = ${tn(r.q)}`
+                            : `\\frac{${tn(r.a)}}{${tn(r.b)}} = ${tn(r.q)} + \\frac{${tn(r.r)}}{${tn(r.b)}}`,
+                    rule: 'cf-term',
+                }),
             );
         });
         st.push(
-            S(
-                msg('numbers.theory.fractions.answer'),
-                `\\frac{${tn(num)}}{${tn(den)}} = ${terms.length <= 12 && terms.length > 1 ? nestedTex(terms) + ' = ' : ''}${cfTex(terms)}`,
-                null,
-                { rule: 'answer' },
-            ),
+            step({
+                title: msg('numbers.theory.fractions.answer'),
+                tex: `\\frac{${tn(num)}}{${tn(den)}} = ${terms.length <= 12 && terms.length > 1 ? nestedTex(terms) + ' = ' : ''}${cfTex(terms)}`,
+                rule: 'answer',
+            }),
         );
         res.steps = st;
     }
@@ -212,14 +224,15 @@ export function ntEgyptian(x, opts = {}) {
         const g = gcdCore(nn, nd) || 1n;
         if (opts.steps) {
             st.push(
-                S(
-                    msg('numbers.theory.fractions.take_1', { n: sn(n) }),
-                    `\\frac{${tn(num)}}{${tn(den)}} - \\frac{1}{${tn(n)}} = ${nn === 0n ? '0' : `\\frac{${tn(nn / g)}}{${tn(nd / g)}}`}`,
-                    num === 1n
-                        ? msg('numbers.theory.fractions.what_is_left_has_numerator_1')
-                        : msg('numbers.theory.fractions.largest_fraction_1_n_not_exceeding', { num: sn(num), den: sn(den), n: sn(n) }),
-                    { rule: 'greedy' },
-                ),
+                step({
+                    title: msg('numbers.theory.fractions.take_1', { n: sn(n) }),
+                    tex: `\\frac{${tn(num)}}{${tn(den)}} - \\frac{1}{${tn(n)}} = ${nn === 0n ? '0' : `\\frac{${tn(nn / g)}}{${tn(nd / g)}}`}`,
+                    text:
+                        num === 1n
+                            ? msg('numbers.theory.fractions.what_is_left_has_numerator_1')
+                            : msg('numbers.theory.fractions.largest_fraction_1_n_not_exceeding', { num: sn(num), den: sn(den), n: sn(n) }),
+                    rule: 'greedy',
+                }),
             );
         }
         num = nn / g;
@@ -228,12 +241,12 @@ export function ntEgyptian(x, opts = {}) {
     }
     if (!opts.steps) return out;
     st.push(
-        S(
-            msg('numbers.theory.fractions.answer'),
-            `\\frac{${tn(r0.num)}}{${tn(r0.den)}} = ${out.map((n) => `\\frac{1}{${tn(n)}}`).join(' + ')}`,
-            msg('numbers.theory.fractions.fibonacci_s_greedy_algorithm_always_stops'),
-            { rule: 'answer' },
-        ),
+        step({
+            title: msg('numbers.theory.fractions.answer'),
+            tex: `\\frac{${tn(r0.num)}}{${tn(r0.den)}} = ${out.map((n) => `\\frac{1}{${tn(n)}}`).join(' + ')}`,
+            text: msg('numbers.theory.fractions.fibonacci_s_greedy_algorithm_always_stops'),
+            rule: 'answer',
+        }),
     );
     return { value: out, steps: st };
 }

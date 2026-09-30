@@ -1,9 +1,10 @@
 // linalg/reduce — row reduction (Gauss–Jordan) with every elementary operation explained; rank and null space.
 
 import { Q, bigGcd } from '../core/rational.js';
-import { R, S, qs, qt } from './common.js';
+import { R, qs, qt } from './common.js';
 import { M, Matrix } from './core.js';
 import { msg } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- row reduction
 
@@ -87,15 +88,12 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
         if (steps) {
             const mt = tex();
             st.push(
-                S(title, `\\xrightarrow{${arrowLabel(op)}} ${mt}`, opText(op, phase, why), {
+                step({
+                    title: title,
+                    tex: `\\xrightarrow{${arrowLabel(op)}} ${mt}`,
+                    text: opText(op, phase, why),
                     rule: `row-${op.op}`,
-                    op: op.op,
-                    i: op.i,
-                    j: op.j,
-                    k: op.k,
-                    phase,
-                    opTex: opTex(op),
-                    matrixTex: mt,
+                    data: { op: op.op, i: op.i, j: op.j, k: op.k, phase, opTex: opTex(op), matrixTex: mt },
                 }),
             );
         }
@@ -112,9 +110,11 @@ export function reduce(W0, { augmented = 0, steps = false, jordan = true, stopOn
             }
             if (steps && W.some((row, i) => i >= r && !row[c].isZero()) === false && r > 0) {
                 st.push(
-                    S(msg('linalg.reduce.column_no_pivot', { p: c + 1 }), null, msg('linalg.reduce.below_pivots_found_so_far_column', { p: c + 1 }), {
+                    step({
+                        title: msg('linalg.reduce.column_no_pivot', { p: c + 1 }),
+                        text: msg('linalg.reduce.below_pivots_found_so_far_column', { p: c + 1 }),
                         rule: 'no-pivot',
-                        col: c,
+                        data: { col: c },
                     }),
                 );
             }
@@ -163,24 +163,27 @@ export function matRref(A, opts = {}) {
     const out = { matrix: new Matrix(res.W), pivots: res.pivots, rank: res.pivots.length, ops: res.ops };
     if (opts.steps) {
         const st = [
-            S(msg('linalg.reduce.row_reduce'), A.toTex({ augmented }), msg('linalg.reduce.forward_pass_go_through_columns_left', { p: STRATEGY }), {
+            step({
+                title: msg('linalg.reduce.row_reduce'),
+                tex: A.toTex({ augmented }),
+                text: msg('linalg.reduce.forward_pass_go_through_columns_left', { p: STRATEGY }),
                 rule: 'rref-plan',
             }),
             ...res.steps,
         ];
         st.push(
-            S(
-                msg('linalg.reduce.reduced_row_echelon_form'),
-                out.matrix.toTex({ augmented }),
-                res.pivots.length
+            step({
+                title: msg('linalg.reduce.reduced_row_echelon_form'),
+                tex: out.matrix.toTex({ augmented }),
+                text: res.pivots.length
                     ? msg('linalg.reduce.leading_ones_sit_in_column_their', {
                           p: (lng) => (res.pivots.length === 1 ? msg('linalg.reduce.formula').in(lng) : msg('linalg.reduce.s').in(lng)),
                           p2: res.pivots.map((c) => c + 1).join(', '),
                           length: res.pivots.length,
                       })
                     : msg('linalg.reduce.matrix_is_zero_its_rank_is'),
-                { rule: 'answer' },
-            ),
+                rule: 'answer',
+            }),
         );
         out.steps = st;
     }

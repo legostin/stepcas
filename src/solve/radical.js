@@ -1,11 +1,12 @@
 // solve/radical — irrational equations (roots of the unknown).
 
 import { containsVar, numValue, nodeSome, mul, nodeKey, div, neg, pow, num, substitute, summands } from '../core/ast.js';
-import { N0, N1, S, approxOf, exactZero, expd, isolated, simpOr, tex, sumNode } from './common.js';
+import { N0, N1, approxOf, exactZero, expd, isolated, simpOr, tex, sumNode } from './common.js';
 import { reject } from './roots.js';
 import { pushPart } from './polynomial.js';
 import {} from './rational.js';
 import { msg, eachLanguage } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- radicals (irrational equations)
 
@@ -50,11 +51,11 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const f = R.base;
     const steps = [];
     const eqRT = eachLanguage((l) => `${tex(R, l)} = ${tex(g, l)}`);
-    if (!isolated(lhs, rhs, R, g)) steps.push(S(msg('solve.radical.isolate_root'), { tex: eqRT }));
+    if (!isolated(lhs, rhs, R, g)) steps.push(step({ title: msg('solve.radical.isolate_root'), tex: eqRT }));
     const even = q % 2n === 0n;
     const gConst = !containsVar(g, v);
     if (even && gConst && approxOf(g) < 0 && exactZero(g) !== true) {
-        steps.push(S(msg('solve.radical.even_root_is_never_negative_no')));
+        steps.push(step({ title: msg('solve.radical.even_root_is_never_negative_no') }));
         return { kind: 'none', roots: [], steps, type: 'radical' };
     }
     const qn2 = Number(q);
@@ -63,7 +64,8 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const gNonNeg = !gConst && hasRadical(g, v) && summands(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
     const powWord = qn2 === 2 ? msg('solve.radical.squared') : qn2 === 3 ? msg('solve.radical.cubed') : msg('solve.radical.to_power', { qn2 });
     steps.push(
-        S(msg('solve.radical.raise_both_sides', { p: powWord }), {
+        step({
+            title: msg('solve.radical.raise_both_sides', { p: powWord }),
             tex: eachLanguage((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
             text: even
                 ? gConst || gNonNeg
@@ -88,7 +90,8 @@ export function solveRadical(lhs, rhs, E, ctx) {
         if (bad.length) {
             reject(ctx, bad, 'sign');
             steps.push(
-                S(msg('solve.radical.drop_roots_where', { g: (lng) => tex(g, lng) }), {
+                step({
+                    title: msg('solve.radical.drop_roots_where', { g: (lng) => tex(g, lng) }),
                     tex: eachLanguage((l) =>
                         bad
                             .map(

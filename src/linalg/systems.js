@@ -1,11 +1,12 @@
 // linalg/systems — the inverse and linear systems (Gauss, Cramer), with steps.
 
 import { Q } from '../core/rational.js';
-import { E_, S, fail, qs, qt, qtp, sub } from './common.js';
+import { E_, fail, qs, qt, qtp, sub } from './common.js';
 import { M, Matrix, needSquare, toQ, vecTex } from './core.js';
 import { matDet } from './det.js';
 import { STRATEGY, nullspaceFrom, reduce } from './reduce.js';
 import { msg, eachLanguage } from '../i18n/index.js';
+import { step } from '../core/steps.js';
 
 // ---------------------------------------------------------------- inverse and linear systems
 
@@ -21,53 +22,49 @@ export function matInverse(A, opts = {}) {
     if (!opts.steps) return value;
     const st = [];
     st.push(
-        S(
-            eachLanguage((l) => msg('linalg.systems.append_identity_matrix').in(l)),
-            eachLanguage((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
-            msg('linalg.systems.using_row_operations_we_turn_left', { p: STRATEGY }),
-            { rule: 'inverse-plan' },
-        ),
+        step({
+            title: eachLanguage((l) => msg('linalg.systems.append_identity_matrix').in(l)),
+            tex: eachLanguage((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
+            text: msg('linalg.systems.using_row_operations_we_turn_left', { p: STRATEGY }),
+            rule: 'inverse-plan',
+        }),
     );
     if (n === 2 && !singular) {
         const [[a, b], [c, d]] = A.a;
         const det = a.mul(d).sub(b.mul(c));
         st.push(
-            S(
-                msg('linalg.systems.for_2_2_there_is_ready'),
-                `A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} = \\frac{1}{${qt(det)}}${new Matrix([
+            step({
+                title: msg('linalg.systems.for_2_2_there_is_ready'),
+                tex: `A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} = \\frac{1}{${qt(det)}}${new Matrix([
                     [d, b.neg()],
                     [c.neg(), a],
                 ]).toTex()}`,
-                msg('linalg.systems.swap_entries_on_main_diagonal_negate'),
-                { rule: 'inverse-2x2' },
-            ),
+                text: msg('linalg.systems.swap_entries_on_main_diagonal_negate'),
+                rule: 'inverse-2x2',
+            }),
         );
     }
     st.push(...res.steps);
     if (singular) {
         st.push(
-            S(msg('linalg.systems.there_is_no_inverse'), '\\det A = 0', msg('linalg.systems.column_has_only_zeros_at_and', { p: res.singularAt + 1, n }), {
+            step({
+                title: msg('linalg.systems.there_is_no_inverse'),
+                tex: '\\det A = 0',
+                text: msg('linalg.systems.column_has_only_zeros_at_and', { p: res.singularAt + 1, n }),
                 rule: 'answer',
             }),
         );
         return { value: null, steps: st };
     }
     st.push(
-        S(
-            msg('linalg.systems.answer'),
-            `A^{-1} = ${value.toTex()}`,
-            eachLanguage((l) => msg('linalg.systems.left_half_is_now_identity_so').in(l)),
-            { rule: 'answer' },
-        ),
+        step({
+            title: msg('linalg.systems.answer'),
+            tex: `A^{-1} = ${value.toTex()}`,
+            text: eachLanguage((l) => msg('linalg.systems.left_half_is_now_identity_so').in(l)),
+            rule: 'answer',
+        }),
     );
-    st.push(
-        S(
-            msg('linalg.systems.check'),
-            eachLanguage((l) => `A \\cdot A^{-1} = ${A.mul(value).toTex()} = ${E_(l)}`),
-            null,
-            { rule: 'check' },
-        ),
-    );
+    st.push(step({ title: msg('linalg.systems.check'), tex: eachLanguage((l) => `A \\cdot A^{-1} = ${A.mul(value).toTex()} = ${E_(l)}`), rule: 'check' }));
     return { value, steps: st };
 }
 
@@ -152,33 +149,40 @@ export function matSolve(A, b, opts = {}) {
         )
         .join(' \\\\ ')} \\end{cases}`;
     st.push(
-        S(
-            msg('linalg.systems.augmented_matrix'),
-            `${sysTex} \\quad\\Longrightarrow\\quad ${Aug.toTex({ augmented: 1 })}`,
-            msg('linalg.systems.write_coefficients_and_after_bar_right', { p: STRATEGY }),
-            { rule: 'augmented' },
-        ),
+        step({
+            title: msg('linalg.systems.augmented_matrix'),
+            tex: `${sysTex} \\quad\\Longrightarrow\\quad ${Aug.toTex({ augmented: 1 })}`,
+            text: msg('linalg.systems.write_coefficients_and_after_bar_right', { p: STRATEGY }),
+            rule: 'augmented',
+        }),
     );
     st.push(...res.steps);
     if (out.kind === 'none') {
         st.push(
-            S(
-                msg('linalg.systems.contradiction'),
-                `0 = ${qt(W[badRow][n])}`,
-                msg('linalg.systems.row_has_zeros_on_left_and', { p: badRow + 1, p2: qs(W[badRow][n]), rank, p3: rank + 1 }),
-                { rule: 'answer' },
-            ),
+            step({
+                title: msg('linalg.systems.contradiction'),
+                tex: `0 = ${qt(W[badRow][n])}`,
+                text: msg('linalg.systems.row_has_zeros_on_left_and', { p: badRow + 1, p2: qs(W[badRow][n]), rank, p3: rank + 1 }),
+                rule: 'answer',
+            }),
         );
     } else if (out.kind === 'unique') {
-        st.push(S(msg('linalg.systems.read_off_answer'), out.tex, msg('linalg.systems.left_part_is_identity_each_row', { n }), { rule: 'answer' }));
+        st.push(
+            step({
+                title: msg('linalg.systems.read_off_answer'),
+                tex: out.tex,
+                text: msg('linalg.systems.left_part_is_identity_each_row', { n }),
+                rule: 'answer',
+            }),
+        );
         const checks = A.a.map((r, i) => `${r.map((k, j) => `${qtp(k)} \\cdot ${qtp(out.x[j])}`).join(' + ')} = ${qt(bv[i])}`);
         st.push(
-            S(
-                msg('linalg.systems.check'),
-                checks.length <= 4 ? `\\begin{aligned} ${checks.map((c) => `& ${c}`).join(' \\\\ ')} \\end{aligned}` : null,
-                msg('linalg.systems.substitute_values_into_every_equation_all'),
-                { rule: 'check' },
-            ),
+            step({
+                title: msg('linalg.systems.check'),
+                tex: checks.length <= 4 ? `\\begin{aligned} ${checks.map((c) => `& ${c}`).join(' \\\\ ')} \\end{aligned}` : null,
+                text: msg('linalg.systems.substitute_values_into_every_equation_all'),
+                rule: 'check',
+            }),
         );
     } else {
         const freeNames = out.params.map((p) => varTex(names, p.index));
@@ -186,10 +190,10 @@ export function matSolve(A, b, opts = {}) {
         const pn = out.params.map((p) => p.name).join(', ');
         const one = out.params.length === 1;
         st.push(
-            S(
-                msg('linalg.systems.free_unknowns'),
-                out.params.map((p, k) => `${freeNames[k]} = ${p.name}`).join(',\\quad '),
-                msg('linalg.systems.there_are_leading_ones_but_unknowns', {
+            step({
+                title: msg('linalg.systems.free_unknowns'),
+                tex: out.params.map((p, k) => `${freeNames[k]} = ${p.name}`).join(',\\quad '),
+                text: msg('linalg.systems.there_are_leading_ones_but_unknowns', {
                     rank,
                     n,
                     p: (lng) =>
@@ -198,16 +202,17 @@ export function matSolve(A, b, opts = {}) {
                             : msg('linalg.systems.unknowns_got_no_pivots_they_are', { fn, pn }).in(lng),
                     p2: (lng) => (one ? msg('linalg.systems.it').in(lng) : msg('linalg.systems.them').in(lng)),
                 }),
-                { rule: 'free-vars' },
-            ),
+                rule: 'free-vars',
+            }),
         );
         st.push(
-            S(
-                msg('linalg.systems.general_solution'),
-                out.tex,
-                msg('linalg.systems.infinitely_many_solutions_one_for_every', { p: out.params.map((p) => p.name).join(', ') }),
-                { rule: 'answer', vectorTex: out.vectorTex },
-            ),
+            step({
+                title: msg('linalg.systems.general_solution'),
+                tex: out.tex,
+                text: msg('linalg.systems.infinitely_many_solutions_one_for_every', { p: out.params.map((p) => p.name).join(', ') }),
+                rule: 'answer',
+                data: { vectorTex: out.vectorTex },
+            }),
         );
     }
     out.steps = st;
@@ -228,7 +233,10 @@ export function matSolveCramer(A, b, opts = {}) {
     const names = opts.vars ?? null;
     if (opts.steps) {
         st.push(
-            S(msg('linalg.systems.main_determinant'), `\\Delta = \\det A = ${qt(D)}`, msg('linalg.systems.cramer_s_rule_works_when_main'), {
+            step({
+                title: msg('linalg.systems.main_determinant'),
+                tex: `\\Delta = \\det A = ${qt(D)}`,
+                text: msg('linalg.systems.cramer_s_rule_works_when_main'),
                 rule: 'cramer-main',
                 sub: d.steps,
             }),
@@ -238,7 +246,10 @@ export function matSolveCramer(A, b, opts = {}) {
         const res = { kind: 'singular', x: null, dets: { main: D } };
         if (opts.steps) {
             st.push(
-                S(msg('linalg.systems.cramer_s_rule_does_not_apply'), '\\Delta = 0', msg('linalg.systems.main_determinant_is_zero_system_has'), {
+                step({
+                    title: msg('linalg.systems.cramer_s_rule_does_not_apply'),
+                    tex: '\\Delta = 0',
+                    text: msg('linalg.systems.main_determinant_is_zero_system_has'),
                     rule: 'answer',
                 }),
             );
@@ -253,12 +264,13 @@ export function matSolveCramer(A, b, opts = {}) {
         dets.push(v);
         if (opts.steps) {
             st.push(
-                S(
-                    msg('linalg.systems.determinant', { p: sub(i + 1) }),
-                    `\\Delta_{${i + 1}} = ${Ai(i).toTex({ env: 'vmatrix' })} = ${qt(v)}`,
-                    i === 0 ? msg('linalg.systems.replace_column_of_this_unknown_by') : null,
-                    { rule: 'cramer-minor', sub: di.steps },
-                ),
+                step({
+                    title: msg('linalg.systems.determinant', { p: sub(i + 1) }),
+                    tex: `\\Delta_{${i + 1}} = ${Ai(i).toTex({ env: 'vmatrix' })} = ${qt(v)}`,
+                    text: i === 0 ? msg('linalg.systems.replace_column_of_this_unknown_by') : null,
+                    rule: 'cramer-minor',
+                    sub: di.steps,
+                }),
             );
         }
     }
@@ -270,12 +282,12 @@ export function matSolveCramer(A, b, opts = {}) {
             return f === qt(x[i]) ? f : `${f} = ${qt(x[i])}`;
         };
         st.push(
-            S(
-                msg('linalg.systems.answer'),
-                x.map((v, i) => `${varTex(names, i)} = \\frac{\\Delta_{${i + 1}}}{\\Delta} = ${fr(i)}`).join(',\\quad '),
-                msg('linalg.systems.each_unknown_is_its_determinant_divided'),
-                { rule: 'answer' },
-            ),
+            step({
+                title: msg('linalg.systems.answer'),
+                tex: x.map((v, i) => `${varTex(names, i)} = \\frac{\\Delta_{${i + 1}}}{\\Delta} = ${fr(i)}`).join(',\\quad '),
+                text: msg('linalg.systems.each_unknown_is_its_determinant_divided'),
+                rule: 'answer',
+            }),
         );
         res.steps = st;
     }
