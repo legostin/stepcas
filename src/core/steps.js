@@ -2,10 +2,11 @@
 //
 // Step = { title, tex?, text?, rule?, data?, sub?: Step[], final? } where title and text are messages (i18n), tex is a
 // TeX string or a {lang: string} object, rule a stable code of what the step does, and data the step's facts for a
-// program (a row operation {op, i, j, k}, a table of rows, …). step() accepts plain strings (the same in every language) and {lang: string}
-// objects for title and text and makes them messages, and an AST node for tex (printed per language). Nothing is
-// rendered here: a step stays language-neutral until someone reads it — step.title.ru, step.title.in('kk'), or
-// localize(result, lang) for the whole tree.
+// program (a row operation {op, i, j, k}, a table of rows, …). step() makes messages of plain strings (the same in
+// every language) and {lang: string} objects given as title or text, and renders an AST node or a message given as
+// tex per language. Nothing else is rendered here: a step stays language-neutral until someone reads it —
+// step.title.ru, step.title.in('kk'), or localize(result, lang) for the whole tree. test/contract.test.cjs checks
+// every step of the benchmark corpus against this shape.
 
 import { toTex } from './print.js';
 import { eachLanguage, inLanguage, perLanguage, verbatim, Msg, DEFAULT_LANGUAGE } from '../i18n/index.js';
@@ -21,7 +22,7 @@ export function texBoth(node, opts = {}) {
 /** A step; `sub` holds nested steps (plain objects are made steps too). */
 export function step({ title, tex, text, rule, data, sub, final } = {}) {
     const s = { title: asMessage(title ?? '') };
-    if (tex !== undefined && tex !== null) s.tex = isNode(tex) ? texBoth(tex) : tex;
+    if (tex !== undefined && tex !== null) s.tex = isNode(tex) ? texBoth(tex) : tex instanceof Msg ? eachLanguage((lang) => tex.in(lang)) : tex;
     if (text !== undefined && text !== null) s.text = asMessage(text);
     if (rule) s.rule = String(rule);
     if (data && Object.keys(data).length) s.data = data;

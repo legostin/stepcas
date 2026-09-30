@@ -16,7 +16,7 @@ import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
 import { step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { msg, eachLanguage, inLanguage, joined, sameText, notation } from '../i18n/index.js';
+import { msg, eachLanguage, inLanguage, joined, sameText, notation, perLanguage } from '../i18n/index.js';
 
 const TRIG = new Set(['sin', 'cos', 'tan', 'cot']);
 const qv = (n) => numValue(n);
@@ -461,13 +461,10 @@ function degNode(q) {
 const DEG_RE = /\\frac\{([0-9]+)\\pi\}\{180\}/g;
 const degTex = (s) => (typeof s === 'string' ? s.replace(DEG_RE, '$1^\\circ') : s);
 function degSteps(steps) {
-    const fix = (v) => (typeof v === 'string' ? degTex(v) : v && typeof v === 'object' ? eachLanguage((l) => degTex(inLanguage(v, l)), { compact: false }) : v);
-    return steps.map((st) => ({
-        ...st,
-        title: fix(st.title),
-        ...(st.tex !== undefined ? { tex: fix(st.tex) } : {}),
-        ...(st.text ? { text: fix(st.text) } : {}),
-    }));
+    const fix = (v) => v && perLanguage((l) => degTex(inLanguage(v, l)));
+    return steps.map((st) =>
+        step({ ...st, title: fix(st.title), tex: st.tex === undefined ? undefined : eachLanguage((l) => degTex(inLanguage(st.tex, l))), text: fix(st.text) }),
+    );
 }
 // 2u for an angle u, kept in degrees in degree mode
 function double(u, ctx) {
