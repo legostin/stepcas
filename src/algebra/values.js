@@ -406,10 +406,9 @@ function ruleDenest(n) {
 
 // a trigonometric function's TeX name in a language's notation (\\operatorname{tg} or \\tan)
 const fnTex = (name, lang) => notation(lang).fnTex?.[name] ?? `\\${name}`;
-// In degree mode (the input wrote 135°) angles stay k·π/180, printed back as k°.
-let DEG = false;
+// In degree mode (the input wrote 135°, ctx.deg) angles stay k·π/180, printed back as k°.
 const isDegNode = (n) => n.type === 'div' && n.den.type === 'num' && n.den.value.eq(180) && n.num.type === 'mul' && n.num.args.length === 2 && n.num.args[0].type === 'num' && n.num.args[1].type === 'sym' && n.num.args[1].name === 'pi';
-const piNode = (q) => (DEG && q.mul(180).isInt() && !q.isZero() ? degNode(q) : trySimplify(mul(num(q), sym('pi'))));
+const piNode = (q, ctx) => (ctx.deg && q.mul(180).isInt() && !q.isZero() ? degNode(q) : trySimplify(mul(num(q), sym('pi'))));
 function degNode(q) {
     const k = q.mul(180);
     const d = div(mul(num(k.abs()), sym('pi')), num(180));
@@ -422,15 +421,15 @@ function degSteps(steps) {
     return steps.map((st) => ({ ...st, title: fix(st.title), ...(st.tex !== undefined ? { tex: fix(st.tex) } : {}), ...(st.text ? { text: fix(st.text) } : {}) }));
 }
 // 2u for an angle u, kept in degrees in degree mode
-function double(u) {
+function double(u, ctx) {
     const q = piMultiple(u);
-    return q ? piNode(q.mul(2)) : trySimplify(mul(num(2), u));
+    return q ? piNode(q.mul(2), ctx) : trySimplify(mul(num(2), u));
 }
 // the angle as a rational multiple of π, or null
 const piMultiple = (angle) => qv(trySimplify(div(angle, sym('pi'))));
 
 // f(qπ) → the chain of reduction formulas down to the table value
-function trigChain(name, q) {
+function trigChain(name, q, ctx) {
     const odd = name !== 'cos';
     const chain = [];
     const notes = [];
@@ -440,16 +439,16 @@ function trigChain(name, q) {
     if (a.isNeg()) {
         a = a.neg();
         if (odd) sign = -sign;
-        chain.push(at(piNode(a)));
+        chain.push(at(piNode(a, ctx)));
         notes.push(odd ? msg('algebra.values.oddness', { f: (lng) => fnTex(name, lng) }) : msg('algebra.values.evenness'));
     }
     const period = name === 'tan' || name === 'cot' ? Q.ONE : new Q(2n);
     if (a.ge(period)) {
         const k = a.div(period).floor();
         const r = a.sub(period.mul(k));
-        chain.push(at(add(piNode(period.mul(k)), piNode(r))));
+        chain.push(at(add(piNode(period.mul(k), ctx), piNode(r, ctx))));
         a = r;
-        chain.push(at(piNode(a)));
+        chain.push(at(piNode(a, ctx)));
         notes.push(msg('algebra.values.period', { p: period.eq(1) ? '$\\pi$' : '$2\\pi$' }));
     }
     if (a.gt(new Q(1n, 2n))) {
@@ -458,40 +457,40 @@ function trigChain(name, q) {
         let flip;
         if (period.eq(1)) {
             beta = Q.ONE.sub(a);
-            form = add(piNode(Q.ONE), neg(piNode(beta)));
+            form = add(piNode(Q.ONE, ctx), neg(piNode(beta, ctx)));
             flip = true;
         } else if (a.le(Q.ONE)) {
             beta = Q.ONE.sub(a);
-            form = add(piNode(Q.ONE), neg(piNode(beta)));
+            form = add(piNode(Q.ONE, ctx), neg(piNode(beta, ctx)));
             flip = name === 'cos';
         } else if (a.le(new Q(3n, 2n))) {
             beta = a.sub(Q.ONE);
-            form = add(piNode(Q.ONE), piNode(beta));
+            form = add(piNode(Q.ONE, ctx), piNode(beta, ctx));
             flip = true;
         } else {
             beta = new Q(2n).sub(a);
-            form = add(piNode(new Q(2n)), neg(piNode(beta)));
+            form = add(piNode(new Q(2n), ctx), neg(piNode(beta, ctx)));
             flip = name === 'sin';
         }
         chain.push(at(form));
         if (flip) sign = -sign;
         a = beta;
-        chain.push(at(piNode(a)));
+        chain.push(at(piNode(a, ctx)));
         notes.push(msg('algebra.values.reduction_formula'));
     }
-    const val = trySimplify(at(piNode(a)));
+    const val = trySimplify(at(piNode(a, ctx)));
     if (nodeSome(val, (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
     chain.push(val);
     return { chain, notes, value: val };
 }
 
-function ruleTrigValue(n) {
+function ruleTrigValue(n, ctx) {
     if (n.type !== 'fn' || !TRIG.has(n.name) || freeVars(n).length) return null;
     const q = piMultiple(n.args[0]);
     if (!q) return null;
-    const r = trigChain(n.name, q);
+    const r = trigChain(n.name, q, ctx);
     if (!r) return null;
-    const texChain = (lang) => [fn(n.name, piNode(q)), ...r.chain].map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
+    const texChain = (lang) => [fn(n.name, piNode(q, ctx)), ...r.chain].map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
     if (!r.notes.length) return { node: r.value, title: msg('algebra.values.table_value'), text: eachLanguage((l) => `$${texChain(l)}$.`) };
     return {
         node: r.value,
@@ -501,7 +500,7 @@ function ruleTrigValue(n) {
 }
 
 // sin u · sin v with u + v = π/2 → sin u · cos u (sin 41° = sin(90° − 49°) = cos 49°); the same for cos · cos
-function ruleCofunction(n) {
+function ruleCofunction(n, ctx) {
     const fs = n.type === 'mul' ? n.args : null;
     if (!fs) return null;
     const trig = fs.filter((f) => f.type === 'fn' && (f.name === 'sin' || f.name === 'cos') && piMultiple(f.args[0]));
@@ -515,7 +514,7 @@ function ruleCofunction(n) {
             if (!qf.add(qg).eq(new Q(1n, 2n))) continue;
             const other = g.name === 'sin' ? 'cos' : 'sin';
             const repl = fn(other, f.args[0]);
-            const via = fn(g.name, add(piNode(new Q(1n, 2n)), neg(f.args[0])));
+            const via = fn(g.name, add(piNode(new Q(1n, 2n), ctx), neg(f.args[0])));
             const texOf = (lang) => `${toTex(g, { lang })} = ${toTex(via, { lang })} = ${toTex(repl, { lang })}`;
             return {
                 node: mul(fs.map((x) => (x === g ? repl : x))),
@@ -528,7 +527,7 @@ function ruleCofunction(n) {
 }
 
 // k·sin u·cos u → (k/2)·sin 2u ;  cos²u − sin²u → cos 2u
-function ruleDoubleAngle(n) {
+function ruleDoubleAngle(n, ctx) {
     if (n.type === 'mul') {
         const s = n.args.find((f) => f.type === 'fn' && f.name === 'sin');
         const c = s && n.args.find((f) => f.type === 'fn' && f.name === 'cos' && same(f.args[0], s.args[0]));
@@ -537,7 +536,7 @@ function ruleDoubleAngle(n) {
         const k = rest.length === 0 ? Q.ONE : rest.length === 1 ? qv(rest[0]) : null;
         if (!k) return null;
         const half = k.div(2);
-        const s2 = fn('sin', double(s.args[0]));
+        const s2 = fn('sin', double(s.args[0], ctx));
         return { node: half.isOne() ? s2 : mul(num(half), s2), title: msg('algebra.values.double_angle_sine'), text: '$2\\sin u \\cos u = \\sin 2u$.' };
     }
     if (n.type === 'add' && n.args.length === 2) {
@@ -545,17 +544,17 @@ function ruleDoubleAngle(n) {
         const [p, q] = n.args;
         const u = sq(p, 'cos');
         const w = q.type === 'neg' ? sq(q.arg, 'sin') : null;
-        if (u && w && same(u, w)) return { node: fn('cos', double(u)), title: msg('algebra.values.double_angle_cosine'), text: '$\\cos^2 u - \\sin^2 u = \\cos 2u$.' };
+        if (u && w && same(u, w)) return { node: fn('cos', double(u, ctx)), title: msg('algebra.values.double_angle_cosine'), text: '$\\cos^2 u - \\sin^2 u = \\cos 2u$.' };
     }
     return null;
 }
 
 // cos²u, sin²u when u has no table value but 2u does → (1 ± cos 2u)/2
-function ruleLowerPower(n) {
+function ruleLowerPower(n, ctx) {
     if (n.type !== 'pow' || !qv(n.exp)?.eq(2) || n.base.type !== 'fn' || (n.base.name !== 'cos' && n.base.name !== 'sin')) return null;
     const u = n.base.args[0];
     if (freeVars(u).length || !nodeSome(trySimplify(n.base), (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
-    const c2 = fn('cos', double(u));
+    const c2 = fn('cos', double(u, ctx));
     if (nodeSome(trySimplify(c2), (m) => m.type === 'fn' && TRIG.has(m.name))) return null;
     const cos = n.base.name === 'cos';
     return {
@@ -602,8 +601,8 @@ function ruleArith(n) {
 }
 
 // a numeric subterm without logs and trigonometry that the engine makes shorter: exponents, roots
-function ruleSimplifyPart(n) {
-    if (atomic(n) || freeVars(n).length || hasTrigOrLog(n) || (DEG && isDegNode(n))) return null;
+function ruleSimplifyPart(n, ctx) {
+    if (atomic(n) || freeVars(n).length || hasTrigOrLog(n) || (ctx.deg && isDegNode(n))) return null;
     const v = trySimplify(n);
     if (nodeKey(v) === nodeKey(n) || tx(v).length >= tx(n).length) return null;
     return { node: v, quiet: true };
@@ -611,17 +610,17 @@ function ruleSimplifyPart(n) {
 
 const RULES = [ruleLogSum, ruleChangeBase, ruleLogIdentity, ruleLogOfPower, ruleDiffSquares, ruleFactorSquares, ruleSquareSum, rulePowers, rulePowPow, rulePowProduct, ruleRationalPower, ruleSqrtProduct, ruleSqrtValue, ruleDenest, ruleCofunction, ruleDoubleAngle, ruleLowerPower, ruleTrigValue];
 
-// the first rewrite, outermost first; a whole arithmetic subtree goes one layer at a time
-function rewriteOnce(n) {
+// the first rewrite, outermost first; a whole arithmetic subtree goes one layer at a time. ctx: {deg}
+function rewriteOnce(n, ctx) {
     for (const rule of RULES) {
-        const r = rule(n);
+        const r = rule(n, ctx);
         if (r && nodeKey(r.node) !== nodeKey(n)) return r;
     }
     const a = ruleArith(n);
     if (a) return a;
     const kids = nodeChildren(n);
     for (let i = 0; i < kids.length; i++) {
-        const r = rewriteOnce(kids[i]);
+        const r = rewriteOnce(kids[i], ctx);
         if (r) {
             const next = kids.slice();
             next[i] = r.node;
@@ -629,7 +628,7 @@ function rewriteOnce(n) {
             return { ...r, node };
         }
     }
-    const s = ruleSimplifyPart(n);
+    const s = ruleSimplifyPart(n, ctx);
     return s && nodeKey(s.node) !== nodeKey(n) ? s : null;
 }
 
@@ -644,22 +643,17 @@ export function evaluateSteps(input, opts = {}) {
     const maxSteps = opts.maxSteps ?? 40;
     const start = typeof input === 'string' ? parse(input, { lang: opts.lang }) : input;
     const want = approx(start);
-    DEG = nodeSome(start, isDegNode);
-    try {
-        return run(start, want, maxSteps);
-    } finally {
-        DEG = false;
-    }
+    return run(start, want, maxSteps, { deg: nodeSome(start, isDegNode) });
 }
 
-function run(start, want, maxSteps) {
+function run(start, want, maxSteps, ctx) {
     const entries = []; // {title, named, texts, chain: nodes, quiet, rule}
     let cur = start;
     const seen = new Set([nodeKey(cur)]);
     for (let i = 0; i < maxSteps && !atomic(cur); i++) {
         let r = null;
         try {
-            r = rewriteOnce(cur);
+            r = rewriteOnce(cur, ctx);
         } catch {
             r = null;
         }
@@ -688,5 +682,5 @@ function run(start, want, maxSteps) {
     });
     steps.push(step({ title: msg('algebra.values.answer'), tex: eachLanguage((lang) => `${toTex(start, { lang })} = ${toTex(value, { lang })}`), rule: 'answer' }));
     steps[steps.length - 1].final = true;
-    return { value, approx: want, exact: freeVars(value).length === 0, steps: DEG ? degSteps(steps) : steps };
+    return { value, approx: want, exact: freeVars(value).length === 0, steps: ctx.deg ? degSteps(steps) : steps };
 }
