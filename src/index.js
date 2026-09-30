@@ -1,4 +1,4 @@
-// «Царица наук» — the maths engine. Pure ES modules, no DOM; runs in the browser and in node.
+// stepcas — the maths engine. Pure ES modules, no DOM; runs in the browser and in node.
 // Every module exports uniquely named symbols (a test checks), so star re-exports never collide.
 export * from './core/rational.js';
 export * from './core/ast.js';
@@ -12,6 +12,7 @@ export * from './core/evaluate.js';
 export * from './core/complex.js';
 export * from './core/random.js';
 export * from './core/steps.js';
+export * from './i18n/index.js';
 export * from './numbers/theory/index.js';
 export * from './numbers/numeric/index.js';
 export * from './linalg/index.js';

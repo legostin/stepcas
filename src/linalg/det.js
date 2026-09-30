@@ -139,7 +139,7 @@ function detCofactor(A, withSteps, depth = 0, label = '\\det A') {
     const why = depth === 0
         ? msg('linalg.det.cofactor_expansion_each_entry_is_multiplied', { p: (lng) => best.zeros ? msg('linalg.det.we_take_with_most_zeros_zero', { p: (lng) => best.kind === 'row' ? msg('linalg.det.row_2').in(lng) : msg('linalg.det.column_2').in(lng), zeros: best.zeros }).in(lng) : '' })
         : best.zeros ? msg('linalg.det.it_has_most_zeros', { zeros: best.zeros }) : null;
-    const st = [S(msg('linalg.det.expand', { p: (lng) => lineWord[lng], p2: (lng) => which[lng] }),
+    const st = [S(msg('linalg.det.expand', { p: lineWord, p2: which }),
         `${label} = ${expansion}`, why, { rule: 'cofactor' })];
     for (const t of terms) {
         st.push(S(msg('linalg.det.minor_m', { p: sub(t.i + 1), p2: sub(t.j + 1) }), `M_{${t.i + 1}${t.j + 1}} = ${qt(t.md.value)}`, null,

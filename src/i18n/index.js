@@ -214,6 +214,16 @@ export function eachLanguage(fn, { compact = true } = {}) {
     return Object.fromEntries(LANGUAGES.map((l, i) => [l, values[i]]));
 }
 
+/** Messages (or strings, {lang: …} objects) joined with a separator, as one message in every language. */
+export function joined(list, sep = ' ') {
+    return perLanguage((lang) => list.map((x) => inLanguage(x, lang)).join(sep));
+}
+
+/** Do two texts read the same in every registered language? */
+export function sameText(a, b) {
+    return LANGUAGES.every((l) => inLanguage(a, l) === inLanguage(b, l));
+}
+
 /** Any bilingual value → a plain {lang: text} object for every registered language. */
 export function allLanguages(value) {
     return Object.fromEntries(LANGUAGES.map((l) => [l, inLanguage(value, l)]));

@@ -144,7 +144,7 @@ export function integrate(node, v = 'x', opts = {}) {
                 ? msg('calculus.integral.integrate.tidy_up_answer_constant_terms_go')
                 : msg('calculus.integral.integrate.tidy_up_answer');
             if (atanTan) {
-                text = msg('calculus.integral.integrate.arctan_tan_u_differs_from_u', { p: (lng) => text[lng] });
+                text = msg('calculus.integral.integrate.arctan_tan_u_differs_from_u', { p: text });
             }
             steps.push(step({
                 title: msg('calculus.integral.integrate.simplify'),

@@ -22,7 +22,7 @@ export function matInverse(A, opts = {}) {
     const st = [];
     st.push(S(eachLanguage((l) => (msg('linalg.systems.append_identity_matrix').in(l))),
         eachLanguage((l) => `(A \\mid ${E_(l)}) = ${A.augment(Matrix.identity(n)).toTex({ augmented: n })}`),
-        eachLanguage((l) => (msg('linalg.systems.using_row_operations_we_turn_left', { p: (lng) => STRATEGY[lng] }).in(l))),
+        msg('linalg.systems.using_row_operations_we_turn_left', { p: STRATEGY }),
         { rule: 'inverse-plan' }));
     if (n === 2 && !singular) {
         const [[a, b], [c, d]] = A.a;
@@ -112,7 +112,7 @@ export function matSolve(A, b, opts = {}) {
     const st = [];
     const sysTex = `\\begin{cases} ${A.a.map((r, i) => `${linComb(Q.ZERO, r.map((k, j) => [k, varTex(names, j)]))} = ${qt(bv[i])}`).join(' \\\\ ')} \\end{cases}`;
     st.push(S(msg('linalg.systems.augmented_matrix'), `${sysTex} \\quad\\Longrightarrow\\quad ${Aug.toTex({ augmented: 1 })}`,
-        msg('linalg.systems.write_coefficients_and_after_bar_right', { p: (lng) => STRATEGY[lng] }),
+        msg('linalg.systems.write_coefficients_and_after_bar_right', { p: STRATEGY }),
         { rule: 'augmented' }));
     st.push(...res.steps);
     if (out.kind === 'none') {

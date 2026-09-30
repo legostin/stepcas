@@ -14,16 +14,16 @@ import { Q } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, fn, nodeKey, freeVars, numValue, withChildren, nodeChildren, nodeSome } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
-import { L, step } from '../core/steps.js';
+import { step } from '../core/steps.js';
 import { trySimplify, approx } from '../core/safe.js';
-import { msg } from '../i18n/index.js';
+import { msg, eachLanguage, inLanguage, joined, sameText } from '../i18n/index.js';
 
 const TRIG = new Set(['sin', 'cos', 'tan', 'cot']);
 const qv = (n) => numValue(n);
 const isE = (n) => n?.type === 'sym' && n.name === 'e' && !n.var;
 const same = (a, b) => nodeKey(trySimplify(a)) === nodeKey(trySimplify(b));
 const tx = (n) => toTex(n);
-const qt = (q) => q.toTex('ru');
+const qt = (q) => q.toTex();
 const hasTrigOrLog = (n) => nodeSome(n, (m) => m.type === 'fn' && (TRIG.has(m.name) || m.name === 'log' || m.name === 'ln' || m.name === 'lg'));
 
 /* ------------------------------------------------------------------ exact powers of rationals */
@@ -117,7 +117,7 @@ function scaledLog(t) {
     return lp ? { k: sign < 0 ? k.neg() : k, lp } : null;
 }
 
-const LOG_RULES = L('$\\log_a x + \\log_a y = \\log_a(xy)$, $\\log_a x - \\log_a y = \\log_a \\dfrac{x}{y}$, $k\\log_a x = \\log_a x^k$.');
+const LOG_RULES = '$\\log_a x + \\log_a y = \\log_a(xy)$, $\\log_a x - \\log_a y = \\log_a \\dfrac{x}{y}$, $k\\log_a x = \\log_a x^k$.';
 
 // log_a x ± log_a y (± k log_a z) → log_a(x·y/z^k)
 function ruleLogSum(n) {
@@ -148,7 +148,7 @@ function ruleChangeBase(n) {
     const p = logParts(n.num);
     const q = logParts(n.den);
     if (!p || !q || !same(p.base, q.base)) return null;
-    return { node: mkLog(q.arg, p.arg), title: msg('algebra.values.change_of_base'), text: L('$\\dfrac{\\log_c b}{\\log_c a} = \\log_a b$.') };
+    return { node: mkLog(q.arg, p.arg), title: msg('algebra.values.change_of_base'), text: '$\\dfrac{\\log_c b}{\\log_c a} = \\log_a b$.' };
 }
 
 // B^(k·log_c b + r), B = c^m → b^(km) · B^r
@@ -179,7 +179,7 @@ function ruleLogIdentity(n) {
     if (!found.m.isOne()) lines.push(msg('algebra.values.base_of_power_is_power_of', { p: tx(n.base), c, p2: qt(found.m) }));
     lines.push(msg('algebra.values.so'));
     if (rest.length) lines.push(msg('algebra.values.sum_in_exponent'));
-    return { node, title: msg('algebra.values.basic_logarithmic_identity'), text: L(lines.map((l) => l.ru).join(' '), lines.map((l) => l.en).join(' ')) };
+    return { node, title: msg('algebra.values.basic_logarithmic_identity'), text: joined(lines) };
 }
 
 // log_a(a^k) → k: log_2 8 = 3, lg 0.001 = −3, log_{1/4} 8 = −3/2, log_2 √8 = 3/2, ln e³ = 3
@@ -187,8 +187,8 @@ function ruleLogOfPower(n) {
     const lp = logParts(n);
     if (!lp) return null;
     if (isE(lp.base)) {
-        if (isE(lp.arg)) return { node: num(1), title: msg('algebra.values.log_of_base'), text: L('$\\ln e = 1$.') };
-        if (lp.arg.type === 'pow' && isE(lp.arg.base)) return { node: lp.arg.exp, title: msg('algebra.values.log_of_power_of_base'), text: L('$\\ln e^k = k$.') };
+        if (isE(lp.arg)) return { node: num(1), title: msg('algebra.values.log_of_base'), text: '$\\ln e = 1$.' };
+        if (lp.arg.type === 'pow' && isE(lp.arg.base)) return { node: lp.arg.exp, title: msg('algebra.values.log_of_power_of_base'), text: '$\\ln e^k = k$.' };
         return null;
     }
     const b = qv(lp.base);
@@ -200,8 +200,8 @@ function ruleLogOfPower(n) {
     const k0 = logExact(b, a.q);
     if (!k0) return null;
     const k = k0.mul(a.e);
-    if (k.isOne()) return { node: num(1), title: msg('algebra.values.log_of_base'), text: L('$\\log_a a = 1$.') };
-    if (k.isZero()) return { node: num(0), title: msg('algebra.values.log_of_one'), text: L('$\\log_a 1 = 0$.') };
+    if (k.isOne()) return { node: num(1), title: msg('algebra.values.log_of_base'), text: '$\\log_a a = 1$.' };
+    if (k.isZero()) return { node: num(0), title: msg('algebra.values.log_of_one'), text: '$\\log_a 1 = 0$.' };
     return {
         node: num(k),
         title: msg('algebra.values.log_of_power_of_base'),
@@ -267,14 +267,14 @@ function rulePowers(n) {
 // (a^m)^n → a^(mn)
 function rulePowPow(n) {
     if (n.type !== 'pow' || n.base.type !== 'pow') return null;
-    return { node: pow(n.base.base, mul(n.base.exp, n.exp)), title: msg('algebra.values.power_of_power'), text: L('$(a^m)^n = a^{mn}$.') };
+    return { node: pow(n.base.base, mul(n.base.exp, n.exp)), title: msg('algebra.values.power_of_power'), text: '$(a^m)^n = a^{mn}$.' };
 }
 
 // (a·b)^k → a^k·b^k when some factor is a root: (2√7)² = 2²·(√7)²
 function rulePowProduct(n) {
     if (n.type !== 'pow' || n.base.type !== 'mul' || !qv(n.exp)?.isInt()) return null;
     if (!n.base.args.some((f) => f.type === 'fn' && f.name === 'sqrt')) return null;
-    return { node: mul(n.base.args.map((f) => pow(f, n.exp))), title: msg('algebra.values.power_of_product'), text: L('$(ab)^n = a^n b^n$.') };
+    return { node: mul(n.base.args.map((f) => pow(f, n.exp))), title: msg('algebra.values.power_of_product'), text: '$(ab)^n = a^n b^n$.' };
 }
 
 // q^(m/n) with an exact root: 27^(2/3) = 3² ; (√a)^k = a^(k/2)
@@ -284,14 +284,14 @@ function ruleRationalPower(n) {
     if (!e) return null;
     if (n.base.type === 'fn' && n.base.name === 'sqrt' && e.isInt()) {
         const half = e.div(2);
-        return { node: half.isOne() ? n.base.args[0] : pow(n.base.args[0], num(half)), title: msg('algebra.values.square_of_root'), text: L('$\\left(\\sqrt{a}\\right)^2 = a$.'), quiet: true };
+        return { node: half.isOne() ? n.base.args[0] : pow(n.base.args[0], num(half)), title: msg('algebra.values.square_of_root'), text: '$\\left(\\sqrt{a}\\right)^2 = a$.', quiet: true };
     }
     const b = qv(n.base);
     if (!b || e.isInt() || !b.isPos()) return null;
     const r = b.exactRoot(Number(e.d));
     if (!r) return null;
     const res = e.n === 1n ? num(r) : pow(num(r), num(new Q(e.n)));
-    return { node: res, title: msg('algebra.values.fractional_power'), text: L(`$a^{\\frac{m}{n}} = \\left(\\sqrt[n]{a}\\right)^m$, $\\sqrt[${e.d}]{${qt(b)}} = ${qt(r)}$.`) };
+    return { node: res, title: msg('algebra.values.fractional_power'), text: `$a^{\\frac{m}{n}} = \\left(\\sqrt[n]{a}\\right)^m$, $\\sqrt[${e.d}]{${qt(b)}} = ${qt(r)}$.` };
 }
 
 // √a · √b → √(ab)
@@ -301,7 +301,7 @@ function ruleSqrtProduct(n) {
     if (roots.length < 2) return null;
     const rest = n.args.filter((f) => !roots.includes(f));
     const r = fn('sqrt', mul(roots.map((f) => f.args[0])));
-    return { node: rest.length ? mul([...rest, r]) : r, title: msg('algebra.values.product_of_roots'), text: L('$\\sqrt{a}\\cdot\\sqrt{b} = \\sqrt{ab}$.') };
+    return { node: rest.length ? mul([...rest, r]) : r, title: msg('algebra.values.product_of_roots'), text: '$\\sqrt{a}\\cdot\\sqrt{b} = \\sqrt{ab}$.' };
 }
 
 // √q: an exact root, or a square factor taken out (√18 = 3√2)
@@ -310,7 +310,7 @@ function ruleSqrtValue(n) {
     const v = n.args[0].value;
     if (v.isNeg()) return null;
     const r = v.exactRoot(2);
-    if (r) return { node: num(r), title: msg('algebra.values.take_root'), text: L(`$${qt(r)}^2 = ${qt(v)}$.`), quiet: true };
+    if (r) return { node: num(r), title: msg('algebra.values.take_root'), text: `$${qt(r)}^2 = ${qt(v)}$.`, quiet: true };
     if (!v.isInt()) return null;
     let out = 1n;
     let inner = v.n;
@@ -321,7 +321,7 @@ function ruleSqrtValue(n) {
         }
     }
     if (out === 1n) return null;
-    return { node: mul(num(new Q(out)), fn('sqrt', num(new Q(inner)))), title: msg('algebra.values.take_factor_out_of_root'), text: L(`$${v.n} = ${out * out} \\cdot ${inner}$, $\\sqrt{a^2 b} = a\\sqrt{b}$.`) };
+    return { node: mul(num(new Q(out)), fn('sqrt', num(new Q(inner)))), title: msg('algebra.values.take_factor_out_of_root'), text: `$${v.n} = ${out * out} \\cdot ${inner}$, $\\sqrt{a^2 b} = a\\sqrt{b}$.` };
 }
 
 // (a − b)(a + b) → a² − b²
@@ -333,7 +333,7 @@ function ruleDiffSquares(n) {
     for (const [[a1, b1], [a2, b2]] of [[u.args, w.args], [w.args, u.args]]) {
         if (same(a1, a2) && same(b1, neg(b2))) {
             const pos = b1.type === 'neg' ? b1.arg : b1;
-            return { node: add(pow(a1, num(2)), neg(pow(pos, num(2)))), title: msg('algebra.values.difference_of_squares'), text: L('$(a - b)(a + b) = a^2 - b^2$.') };
+            return { node: add(pow(a1, num(2)), neg(pow(pos, num(2)))), title: msg('algebra.values.difference_of_squares'), text: '$(a - b)(a + b) = a^2 - b^2$.' };
         }
     }
     return null;
@@ -361,7 +361,7 @@ function ruleSquareSum(n) {
     return {
         node: add(pow(a, num(2)), minus ? neg(mid) : mid, pow(b, num(2))),
         title: minus ? msg('algebra.values.square_of_difference') : msg('algebra.values.square_of_sum'),
-        text: minus ? L('$(a - b)^2 = a^2 - 2ab + b^2$.') : L('$(a + b)^2 = a^2 + 2ab + b^2$.'),
+        text: minus ? '$(a - b)^2 = a^2 - 2ab + b^2$.' : '$(a + b)^2 = a^2 + 2ab + b^2$.',
     };
 }
 
@@ -418,7 +418,7 @@ function degNode(q) {
 const DEG_RE = /\\frac\{([0-9]+)\\pi\}\{180\}/g;
 const degTex = (s) => (typeof s === 'string' ? s.replace(DEG_RE, '$1^\\circ') : s);
 function degSteps(steps) {
-    const fix = (v) => (typeof v === 'string' ? degTex(v) : v && typeof v === 'object' ? { ru: degTex(v.ru), en: degTex(v.en) } : v);
+    const fix = (v) => (typeof v === 'string' ? degTex(v) : v && typeof v === 'object' ? eachLanguage((l) => degTex(inLanguage(v, l)), { compact: false }) : v);
     return steps.map((st) => ({ ...st, title: fix(st.title), ...(st.tex !== undefined ? { tex: fix(st.tex) } : {}), ...(st.text ? { text: fix(st.text) } : {}) }));
 }
 // 2u for an angle u, kept in degrees in degree mode
@@ -492,11 +492,11 @@ function ruleTrigValue(n) {
     const r = trigChain(n.name, q);
     if (!r) return null;
     const texChain = (lang) => [fn(n.name, piNode(q)), ...r.chain].map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
-    if (!r.notes.length) return { node: r.value, title: msg('algebra.values.table_value'), text: L(`$${texChain('ru')}$.`, `$${texChain('en')}$.`) };
+    if (!r.notes.length) return { node: r.value, title: msg('algebra.values.table_value'), text: eachLanguage((l) => `$${texChain(l)}$.`) };
     return {
         node: r.value,
         title: msg('algebra.values.reduction_formulas'),
-        text: L(`$${texChain('ru')}$ (${r.notes.map((x) => x.ru).join(', ')}).`, `$${texChain('en')}$ (${r.notes.map((x) => x.en).join(', ')}).`),
+        text: eachLanguage((l) => `$${texChain(l)}$ (${r.notes.map((x) => inLanguage(x, l)).join(', ')}).`),
     };
 }
 
@@ -538,14 +538,14 @@ function ruleDoubleAngle(n) {
         if (!k) return null;
         const half = k.div(2);
         const s2 = fn('sin', double(s.args[0]));
-        return { node: half.isOne() ? s2 : mul(num(half), s2), title: msg('algebra.values.double_angle_sine'), text: L('$2\\sin u \\cos u = \\sin 2u$.') };
+        return { node: half.isOne() ? s2 : mul(num(half), s2), title: msg('algebra.values.double_angle_sine'), text: '$2\\sin u \\cos u = \\sin 2u$.' };
     }
     if (n.type === 'add' && n.args.length === 2) {
         const sq = (f, name) => (f.type === 'pow' && qv(f.exp)?.eq(2) && f.base.type === 'fn' && f.base.name === name ? f.base.args[0] : null);
         const [p, q] = n.args;
         const u = sq(p, 'cos');
         const w = q.type === 'neg' ? sq(q.arg, 'sin') : null;
-        if (u && w && same(u, w)) return { node: fn('cos', double(u)), title: msg('algebra.values.double_angle_cosine'), text: L('$\\cos^2 u - \\sin^2 u = \\cos 2u$.') };
+        if (u && w && same(u, w)) return { node: fn('cos', double(u)), title: msg('algebra.values.double_angle_cosine'), text: '$\\cos^2 u - \\sin^2 u = \\cos 2u$.' };
     }
     return null;
 }
@@ -561,7 +561,7 @@ function ruleLowerPower(n) {
     return {
         node: div(add(num(1), cos ? c2 : neg(c2)), num(2)),
         title: msg('algebra.values.lowering_power'),
-        text: cos ? L('$\\cos^2 u = \\dfrac{1 + \\cos 2u}{2}$.') : L('$\\sin^2 u = \\dfrac{1 - \\cos 2u}{2}$.'),
+        text: cos ? '$\\cos^2 u = \\dfrac{1 + \\cos 2u}{2}$.' : '$\\sin^2 u = \\dfrac{1 - \\cos 2u}{2}$.',
     };
 }
 
@@ -642,7 +642,7 @@ const COMPUTE = msg('algebra.values.compute');
  */
 export function evaluateSteps(input, opts = {}) {
     const maxSteps = opts.maxSteps ?? 40;
-    const start = typeof input === 'string' ? parse(input, { lang: opts.lang === 'en' ? 'en' : 'ru' }) : input;
+    const start = typeof input === 'string' ? parse(input, { lang: opts.lang }) : input;
     const want = approx(start);
     DEG = nodeSome(start, isDegNode);
     try {
@@ -670,7 +670,7 @@ function run(start, want, maxSteps) {
         const last = entries[entries.length - 1];
         if (r.quiet && last?.quiet) {
             last.chain.push(r.node);
-            if (r.text && !last.texts.some((t) => t.ru === r.text.ru)) last.texts.push(r.text);
+            if (r.text && !last.texts.some((t) => sameText(t, r.text))) last.texts.push(r.text);
         } else {
             entries.push({ title: r.title ?? COMPUTE, texts: r.text ? [r.text] : [], chain: [cur, r.node], quiet: !!r.quiet });
         }
@@ -682,11 +682,11 @@ function run(start, want, maxSteps) {
     if (tx(value) !== tx(cur)) entries.push({ title: msg('algebra.values.simplify'), texts: [], chain: [cur, value], rule: 'simplify' });
     const steps = entries.map((e) => {
         const title = e.quiet && e.chain.length > 2 ? COMPUTE : e.title;
-        const text = e.texts.length ? L(e.texts.map((t) => t.ru).join(' '), e.texts.map((t) => t.en).join(' ')) : undefined;
+        const text = e.texts.length ? joined(e.texts) : undefined;
         const chain = (lang) => e.chain.map((x) => toTex(x, { lang })).filter((t, i, all) => i === 0 || t !== all[i - 1]).join(' = ');
-        return step({ title, tex: L(chain('ru'), chain('en')), text, rule: e.rule ?? (e.quiet ? 'arith' : 'rule') });
+        return step({ title, tex: eachLanguage((l) => chain(l)), text, rule: e.rule ?? (e.quiet ? 'arith' : 'rule') });
     });
-    steps.push(step({ title: msg('algebra.values.answer'), tex: L(`${toTex(start, { lang: 'ru' })} = ${toTex(value, { lang: 'ru' })}`, `${toTex(start, { lang: 'en' })} = ${toTex(value, { lang: 'en' })}`), rule: 'answer' }));
+    steps.push(step({ title: msg('algebra.values.answer'), tex: eachLanguage((lang) => `${toTex(start, { lang })} = ${toTex(value, { lang })}`), rule: 'answer' }));
     steps[steps.length - 1].final = true;
     return { value, approx: want, exact: freeVars(value).length === 0, steps: DEG ? degSteps(steps) : steps };
 }

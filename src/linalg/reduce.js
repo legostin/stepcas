@@ -135,7 +135,7 @@ export function matRref(A, opts = {}) {
     const out = { matrix: new Matrix(res.W), pivots: res.pivots, rank: res.pivots.length, ops: res.ops };
     if (opts.steps) {
         const st = [S(msg('linalg.reduce.row_reduce'), A.toTex({ augmented }),
-            msg('linalg.reduce.forward_pass_go_through_columns_left', { p: (lng) => STRATEGY[lng] }),
+            msg('linalg.reduce.forward_pass_go_through_columns_left', { p: STRATEGY }),
             { rule: 'rref-plan' }), ...res.steps];
         st.push(S(msg('linalg.reduce.reduced_row_echelon_form'), out.matrix.toTex({ augmented }),
             res.pivots.length

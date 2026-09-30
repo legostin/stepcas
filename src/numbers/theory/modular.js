@@ -1,7 +1,7 @@
 // theory/modular — modular arithmetic: powers, inverses, congruences, the Chinese remainder theorem, orders,
 // primitive roots, RSA keys.
 
-import { G, L, S, big, bmod, coefX, fail, gcdCore, invCore, powmod, sn, tn, tp } from './common.js';
+import { G, S, big, bmod, coefX, fail, gcdCore, invCore, powmod, sn, tn, tp } from './common.js';
 import { gcdSteps, ntEgcd } from './gcd.js';
 import { factorMap, isPrimeBig, ntPhi } from './primes.js';
 import { msg, eachLanguage } from '../../i18n/index.js';
@@ -258,19 +258,19 @@ export function ntCrt(residues, moduli, opts = {}) {
         if (opts.steps) {
             const trivial = a === 1n && g === 1n;
             let how, sub;
-            if (trivial) how = L('', '');
+            if (trivial) how = '';
             else if (m2 <= 12n) {
                 const at = (a / g) * t0;
                 const range = (l) => (m2 === 2n ? (msg('numbers.theory.modular.0_and_1').in(l)) : m2 <= 4n ? [...Array(Number(m2)).keys()].join(', ') : `0, 1, …, ${sn(m2 - 1n)}`);
-                const red = g > 1n ? msg('numbers.theory.modular.divide_congruence_and_modulus_by_gcd', { g: sn(g), p: sn(a / g), v, p2: sn(diff / g), m2: sn(m2) }) : L('', '');
-                how = msg('numbers.theory.modular.try_works_since', { p: (lng) => red[lng], v, p2: (lng) => range(lng), t0: sn(t0), p3: sn(a / g), at: sn(at), p4: at !== bmod(at, m2) ? ` ≡ ${sn(bmod(at, m2))}` : '' });
+                const red = g > 1n ? msg('numbers.theory.modular.divide_congruence_and_modulus_by_gcd', { g: sn(g), p: sn(a / g), v, p2: sn(diff / g), m2: sn(m2) }) : '';
+                how = msg('numbers.theory.modular.try_works_since', { p: red, v, p2: (lng) => range(lng), t0: sn(t0), p3: sn(a / g), at: sn(at), p4: at !== bmod(at, m2) ? ` ≡ ${sn(bmod(at, m2))}` : '' });
             } else {
                 how = msg('numbers.theory.modular.we_solve_it_with_modular_inverse');
                 sub = ntSolveCongruence(a, diff, m, { steps: true }).steps;
             }
             st.push(S(msg('numbers.theory.modular.substitute_into_congruence', { p: i + 1 }),
                 `${lin(X, Mx, v)} \\equiv ${tn(r)} ${eqv(m)} \\;\\Rightarrow\\; ${coefX(a, v)} \\equiv ${tn(diff)} ${eqv(m)}${trivial ? '' : ` \\;\\Rightarrow\\; ${v} \\equiv ${tn(t0)} ${eqv(m2)}`}`,
-                msg('numbers.theory.modular.move_to_right_and_reduce_modulo', { X: sn(X), m: sn(m), v, p: (lng) => how[lng] }),
+                msg('numbers.theory.modular.move_to_right_and_reduce_modulo', { X: sn(X), m: sn(m), v, p: how }),
                 { rule: 'substitute', ...(sub ? { sub } : {}) }));
             st.push(S(msg('numbers.theory.modular.combined_condition'),
                 `${v} = ${lin(t0, m2, vn)} \\;\\Rightarrow\\; x = ${tn(X)} + ${tn(Mx)}(${lin(t0, m2, vn)}) = ${lin(newX, newM, vn)}`,

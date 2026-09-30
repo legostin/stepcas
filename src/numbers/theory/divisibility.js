@@ -1,6 +1,6 @@
 // theory/divisibility — divisibility rules explained on the number.
 
-import { L, S, babs, big, bmod, fail, sn, tn } from './common.js';
+import { S, babs, big, bmod, fail, sn, tn } from './common.js';
 import { msg } from '../../i18n/index.js';
 
 // ---------------------------------------------------------------- divisibility rules
@@ -13,11 +13,11 @@ function ruleFor(s, d) {
     const last = s[s.length - 1];
     if (d === 2 || d === 5 || d === 10) {
         const ok = d === 2 ? '02468'.includes(last) : d === 5 ? '05'.includes(last) : last === '0';
-        const need = d === 2 ? msg('numbers.theory.divisibility.even_0_2_4_6_or') : d === 5 ? msg('numbers.theory.divisibility.0_or_5') : L('0', '0');
+        const need = d === 2 ? msg('numbers.theory.divisibility.even_0_2_4_6_or') : d === 5 ? msg('numbers.theory.divisibility.0_or_5') : '0';
         return {
             divides: ok,
             tex: s.length > 1 ? `\\ldots${last}` : last,
-            text: msg('numbers.theory.divisibility.last_digit_is_number_is_divisible', { last, d, p: (lng) => need[lng], p2: (lng) => ok ? msg('numbers.theory.divisibility.it_is_divisible').in(lng) : msg('numbers.theory.divisibility.it_is_not_divisible').in(lng) }),
+            text: msg('numbers.theory.divisibility.last_digit_is_number_is_divisible', { last, d, p: need, p2: (lng) => ok ? msg('numbers.theory.divisibility.it_is_divisible').in(lng) : msg('numbers.theory.divisibility.it_is_not_divisible').in(lng) }),
             why: msg('numbers.theory.divisibility.number_number_of_tens_10_last', { d }),
         };
     }

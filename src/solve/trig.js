@@ -188,7 +188,7 @@ export function basicTrig(F, u, a, ctx) {
     }
     if (recognized) {
         const f = recognized;
-        rule = msg('solve.trig.here', { p: (lng) => rule[lng], p2: (lng) => tex(f.from, lng), p3: (lng) => tex(f.to, lng) });
+        rule = msg('solve.trig.here', { p: rule, p2: (lng) => tex(f.from, lng), p3: (lng) => tex(f.to, lng) });
     }
     const k = la.k;
     const s = la.s;
@@ -620,7 +620,7 @@ function sumToProduct(E, ctx) {
     const name = A.F === 'sin' ? (plus ? msg('solve.trig.sum_of_sines') : msg('solve.trig.difference_of_sines')) : plus ? msg('solve.trig.sum_of_cosines') : msg('solve.trig.difference_of_cosines');
     const lhsT = (l) => `${tex(fn(A.F, A.u), l)} ${plus ? '+' : '-'} ${tex(fn(B.F, B.u), l)}`;
     const prodT = (l) => `${A.F === 'cos' && !plus ? '-' : ''}2${tex(fn(G1, sum), l)}${tex(fn(G2, dif), l)}`;
-    const steps = [S(msg('solve.trig.turn_it_into_product', { p: (lng) => name[lng] }), {
+    const steps = [S(msg('solve.trig.turn_it_into_product', { p: name }), {
         tex: eachLanguage((l) => `${lhsT(l)} = ${prodT(l)} = 0`),
         text: msg('solve.trig.product_is_zero_when_one_of'),
     })];

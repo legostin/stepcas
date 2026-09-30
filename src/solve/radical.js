@@ -59,7 +59,7 @@ export function solveRadical(lhs, rhs, E, ctx) {
     const rhs2 = expd(pow(g, num(q))) ?? pow(g, num(q));
     const gNonNeg = !gConst && hasRadical(g, v) && termsOfSum(simpOr(g)).every((t) => isRadical(t, v) && numValue(t.exp).d % 2n === 0n);
     const powWord = qn2 === 2 ? msg('solve.radical.squared') : qn2 === 3 ? msg('solve.radical.cubed') : msg('solve.radical.to_power', { qn2 });
-    steps.push(S(msg('solve.radical.raise_both_sides', { p: (lng) => powWord[lng] }), {
+    steps.push(S(msg('solve.radical.raise_both_sides', { p: powWord }), {
         tex: eachLanguage((l) => `${tex(lhs2, l)} = ${tex(rhs2, l)}`),
         text: even
             ? (gConst || gNonNeg

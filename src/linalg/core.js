@@ -197,6 +197,6 @@ export function M(x) {
     return Matrix.from(x);
 }
 export function needSquare(A, what) {
-    if (!A.isSquare()) throw fail(msg('linalg.core.is_defined_for_square_matrices_only', { p: (lng) => what[lng] }), 'shape');
+    if (!A.isSquare()) throw fail(msg('linalg.core.is_defined_for_square_matrices_only', { p: what }), 'shape');
 }
 export const vecTex = (v) => `\\begin{pmatrix} ${v.map(qt).join(' \\\\ ')} \\end{pmatrix}`;

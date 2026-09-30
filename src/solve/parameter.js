@@ -10,12 +10,12 @@ import { MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, rel, containsVar, substitute, numValue, nodeSome, freeVars } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
-import { L, step } from '../core/steps.js';
+import { step } from '../core/steps.js';
 import { limit } from '../calculus/limit/index.js';
 import { solveEquation, solveInequality, IntervalSet, intervalTex, domainSet } from './index.js';
 import { trySimplify, approx } from '../core/safe.js';
 import { derivativeOf } from '../calculus/derivative/derivative.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, joined } from '../i18n/index.js';
 
 const N0 = num(0);
 const tex = (n, l = 'ru') => toTex(n, { lang: l });
@@ -76,7 +76,7 @@ function quadratic(E, x, a, want) {
         steps.push(step({
             title: msg('solve.parameter.leading_coefficient_is_zero'),
             tex: eachLanguage((l) => (A.type === 'sym' ? `${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}` : `${tex(A, l)} = 0 \\;\\Rightarrow\\; ${a} = ${zeroA.map((z) => tex(z, l)).join(',\\ ')}`)),
-            text: msg('solve.parameter.then_equation_is_linear', { p: (lng) => lines.map((z) => z[lng]).join('; ') }),
+            text: msg('solve.parameter.then_equation_is_linear', { p: joined(lines, '; ') }),
         }));
     }
     const notZero = IntervalSet.all().minus(IntervalSet.points(zeroA));
@@ -93,8 +93,8 @@ function quadratic(E, x, a, want) {
     addPiece(pos.set.intersect(notZero), 2);
     addPiece(zeroSet.intersect(notZero), 1);
     addPiece(IntervalSet.all().minus(pos.set).minus(zeroSet).intersect(notZero), 0);
-    steps.push(step({ title: L('$D > 0$', '$D > 0$'), tex: eachLanguage((l) => `${a} \\in ${intervalTex(pos.set, l)}`), sub: pos.steps.slice(0, -1) }));
-    steps.push(step({ title: L('$D = 0$', '$D = 0$'), tex: eachLanguage((l) => (zer.kind === 'none' ? '\\varnothing' : `${a} = ${rootNodes(zer).map((z) => tex(z, l)).join(',\\ ')}`)) }));
+    steps.push(step({ title: '$D > 0$', tex: eachLanguage((l) => `${a} \\in ${intervalTex(pos.set, l)}`), sub: pos.steps.slice(0, -1) }));
+    steps.push(step({ title: '$D = 0$', tex: eachLanguage((l) => (zer.kind === 'none' ? '\\varnothing' : `${a} = ${rootNodes(zer).map((z) => tex(z, l)).join(',\\ ')}`)) }));
     return { count, steps, method: 'quadratic' };
 }
 

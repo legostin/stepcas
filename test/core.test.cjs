@@ -44,7 +44,7 @@ test('the core API is exported', () => {
     const names = ['MathError', 'Q', 'bigGcd', 'bigLcm', 'bigAbs', 'bigIsqrt', 'bigIroot', 'rootExtract', 'num', 'sym', 'add', 'mul', 'div',
         'neg', 'pow', 'fn', 'rel', 'chain', 'list', 'isConst', 'nodeEquals', 'freeVars', 'containsVar', 'substitute', 'mapNode', 'nodeSize',
         'isNumber', 'numValue', 'parse', 'tryParse', 'parseFunctionInput', 'toTex', 'toText', 'texNumber', 'simplify', 'expand', 'collectTerms', 'combineFractions',
-        'rationalize', 'Poly', 'linearForm', 'equivalent', 'sameValue', 'sameSet', 'evaluate', 'compile', 'Complex', 'rng', 'L', 'step'];
+        'rationalize', 'Poly', 'linearForm', 'equivalent', 'sameValue', 'sameSet', 'evaluate', 'compile', 'Complex', 'rng', 'step', 'msg', 'Msg', 'LANGUAGES', 'registerLanguage', 'localize', 'notation', 'eachLanguage', 'pickLang'];
     for (const n of names) assert.ok(n in E, n);
 });
 
@@ -911,33 +911,34 @@ test('rng is deterministic and respects ranges', () => {
     assert.equal(E.rng(5).seed, 5);
 });
 
-test('steps: bilingual strings and normalised step objects', () => {
-    assert.deepEqual(E.L('да', 'yes'), { ru: 'да', en: 'yes' });
-    assert.deepEqual(E.L('x'), { ru: 'x', en: 'x' });
+test('steps: language-neutral step objects read per language', () => {
     const s = E.step({
-        title: E.L('Дискриминант', 'Discriminant'),
+        title: E.msg('i18n.value', { value: (l) => (l === 'ru' ? 'Дискриминант' : 'Discriminant') }),
         tex: 'D = b^2 - 4ac',
-        text: E.L('Считаем D', 'Compute D'),
+        text: { ru: 'Считаем D', en: 'Compute D' },
         rule: 'discriminant',
         sub: [{ title: 'D = 1', tex: P('tg x') }],
     });
-    assert.deepEqual(s.title, { ru: 'Дискриминант', en: 'Discriminant' });
+    assert.equal(s.title.ru, 'Дискриминант');
+    assert.equal(s.title.en, 'Discriminant');
     assert.equal(s.tex, 'D = b^2 - 4ac');
     assert.deepEqual(s.text, { ru: 'Считаем D', en: 'Compute D' });
     assert.equal(s.rule, 'discriminant');
-    assert.deepEqual(s.sub[0].title, { ru: 'D = 1', en: 'D = 1' });
+    assert.equal(s.sub[0].title, 'D = 1');
     assert.deepEqual(s.sub[0].tex, { ru: '\\operatorname{tg} x', en: '\\tan x' });
     assert.equal(E.step({ title: 'x', tex: P('x^2') }).tex, 'x^{2}');
-    assert.deepEqual(E.step({ title: 'x', tex: { ru: 'a', en: 'a' } }).tex, 'a');
     assert.equal(E.step({ title: 't' }).tex, undefined);
     assert.equal(E.step({ title: 't', sub: [] }).sub, undefined);
+    assert.equal(E.step({ title: 't', final: true }).final, true);
     assert.deepEqual(E.texBoth(P('lg x')), { ru: '\\lg x', en: '\\log_{10} x' });
     assert.equal(E.texBoth(P('x+1')), 'x + 1');
-    assert.equal(E.pickLang(E.L('а', 'b'), 'en'), 'b');
+    assert.equal(E.pickLang({ ru: 'а', en: 'b' }, 'en'), 'b');
     assert.equal(E.pickLang('plain', 'en'), 'plain');
     assert.equal(E.pickLang(null), '');
     assert.equal(E.pickLang({ ru: 'только' }, 'en'), 'только');
+    assert.equal(E.pickLang(s.title, 'en'), 'Discriminant');
 });
+
 
 // ---------------------------------------------------------------- robustness and speed
 

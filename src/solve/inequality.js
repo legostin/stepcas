@@ -72,7 +72,7 @@ function intervalMethod(N, L, op, ctx, pre = []) {
             : msg('solve.inequality.check_sign_by_substituting_point_from_2'),
     }));
     const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
-    steps.push(S(msg('solve.inequality.take_intervals_with', { p: (lng) => want[lng] }), {
+    steps.push(S(msg('solve.inequality.take_intervals_with', { p: want }), {
         tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`),
         text: !strictOf(op) && zeros.some((p) => set.contains(p.node) && !set.parts.some((q) => q.lo && q.hi && cmpEnd(q.lo, q.hi) !== 0 && (q.lo && cmpEnd(q.lo, endOf(p.node)) === 0 || q.hi && cmpEnd(q.hi, endOf(p.node)) === 0)))
             ? msg('solve.inequality.zeros_of_numerator_are_added_since')
@@ -148,9 +148,9 @@ function quadIneq(P0, op0, ctx, pre) {
     const set = setFromChart(chart, op);
     const up = msg('solve.inequality.opening_upwards');
     let text;
-    if (roots.length === 2) text = msg('solve.inequality.parabola_is_it_is_below_axis', { P: (lng) => polyTex(P, v, lng), p: (lng) => up[lng], v });
-    else if (roots.length === 1) text = msg('solve.inequality.parabola_touches_axis_at_one_point', { P: (lng) => polyTex(P, v, lng), p: (lng) => up[lng] });
-    else text = msg('solve.inequality.no_roots_parabola_lies_entirely_above', { P: (lng) => polyTex(P, v, lng), p: (lng) => up[lng], v });
+    if (roots.length === 2) text = msg('solve.inequality.parabola_is_it_is_below_axis', { P: (lng) => polyTex(P, v, lng), p: up, v });
+    else if (roots.length === 1) text = msg('solve.inequality.parabola_touches_axis_at_one_point', { P: (lng) => polyTex(P, v, lng), p: up });
+    else text = msg('solve.inequality.no_roots_parabola_lies_entirely_above', { P: (lng) => polyTex(P, v, lng), p: up, v });
     steps.push(S(msg('solve.inequality.look_at_parabola'), { text, tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     return { set, steps, chart: chartOut(chart), type: 'quadratic' };
 }
@@ -748,7 +748,7 @@ function rootsIneq(lhs, op, rhs, E, ctx) {
         text: msg('solve.inequality.sign_on_each_interval_is_checked'),
     }));
     const want = op === '>' || op === '>=' ? T('«+»', '“+”') : T('«−»', '“−”');
-    steps.push(S(msg('solve.inequality.take_intervals_with', { p: (lng) => want[lng] }), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
+    steps.push(S(msg('solve.inequality.take_intervals_with', { p: want }), { tex: eachLanguage((l) => `${v} \\in ${intervalTex(set, l)}`) }));
     return { set, steps, type: 'intervals' };
 }
 

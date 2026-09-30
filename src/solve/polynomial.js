@@ -377,7 +377,7 @@ function highSolve(P, ctx) {
         const Tq = new Poly([P.coeff(0), P.coeff(m), P.coeff(2 * m)]);
         const xm = X_POW(v, m);
         const name = m === 2 ? msg('solve.polynomial.biquadratic') : msg('solve.polynomial.trinomial');
-        steps.push(S(msg('solve.polynomial.this_is_equation_substitute', { p: (lng) => name[lng], xm }), {
+        steps.push(S(msg('solve.polynomial.this_is_equation_substitute', { p: name, xm }), {
             tex: eachLanguage((l) => `${polyTex(Tq, 't', l)} = 0`),
             text: m % 2 === 0
                 ? msg('solve.polynomial.since_only_will_do', { xm })

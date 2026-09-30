@@ -10,7 +10,7 @@ import { complexApproxNode } from './polynomial.js';
 import { approxComplexTex } from './roots.js';
 import { signSet } from './signs.js';
 import { ZZ, basicTrig, mergeFamilies, mkFamily, periodN, plusTex } from './trig.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, joined } from '../i18n/index.js';
 
 // ---------------------------------------------------------------- ОДЗ (the domain of an equation)
 
@@ -352,7 +352,7 @@ export function odzInfo(conds, v) {
         return t;
     };
     const tx = eachLanguage(texOf);
-    const text = msg('solve.domain.conditions', { p: (lng) => whys.map((w) => WHY[w][lng]).join('; ') });
+    const text = msg('solve.domain.conditions', { p: joined(whys.map((w) => WHY[w]), '; ') });
     return {
         conds,
         set: partial && set.isAll() ? null : set,

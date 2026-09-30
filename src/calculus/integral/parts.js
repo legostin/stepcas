@@ -98,7 +98,7 @@ export function mParts(f, ctx) {
         step: step({
             title: msg('calculus.integral.parts.integration_by_parts'),
             tex: eachLanguage((L) => `\\left[u = ${tx(u, L)},\\ dv = ${dvT(L)};\\ du = ${isOne(du) ? '' : tx(du, L) + '\\,'}d${v},\\ v = ${tx(Vs, L)}\\right],\\quad ${iTex(f, v, L)} = ${tx(simp(mul(u, Vs)), L)} - ${iTex(inner, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
-            text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', { u: (lng) => plainish(u, lng), p: (lng) => why ? why[lng] : msg('calculus.integral.parts.this_makes_integral_simpler').in(lng), Vs: (lng) => plainish(Vs, lng) }),
+            text: msg('calculus.integral.parts.formula_u_dv_uv_v_du', { u: (lng) => plainish(u, lng), p: why ?? msg('calculus.integral.parts.this_makes_integral_simpler'), Vs: (lng) => plainish(Vs, lng) }),
             rule: 'parts',
             sub: [rv.step, rj.step].filter(Boolean),
         }),

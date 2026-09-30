@@ -102,8 +102,8 @@ export function mTable(f, ctx) {
             title: msg('calculus.integral.basic.table_integral'),
             tex: eachLanguage((L) => `${iTex(f, v, L)} = ${tx(trySimp(F) ?? F, L)}`),
             text: t.note
-                ? msg('calculus.integral.basic.from_table_for_exponent_other_than', { p: (lng) => t.law[lng] })
-                : msg('calculus.integral.basic.from_table_of_integrals', { p: (lng) => t.law[lng] }),
+                ? msg('calculus.integral.basic.from_table_for_exponent_other_than', { p: t.law })
+                : msg('calculus.integral.basic.from_table_of_integrals', { p: t.law }),
             rule: 'table',
         }),
     };

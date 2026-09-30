@@ -13,12 +13,12 @@ import { num, sym, add, mul, div, neg, pow, nodeKey, freeVars, containsVar, numV
 import { parse } from '../core/parse.js';
 import { toTex } from '../core/print.js';
 import { expand, numDen } from '../core/expand.js';
-import { L, step } from '../core/steps.js';
+import { step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { trySimplify } from '../core/safe.js';
-import { msg, eachLanguage } from '../i18n/index.js';
+import { msg, eachLanguage, joined, sameText, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
-const tex = (n, l = 'ru') => toTex(n, { lang: l });
+const tex = (n, l = DEFAULT_LANGUAGE) => toTex(n, { lang: l });
 const asNode = (x) => (typeof x === 'string' ? parse(x) : x);
 const polyTex = (P, v, l) => tex(P.toNode(v), l);
 
@@ -85,7 +85,7 @@ function factorPoly(P, v) {
                     const pT = pb.type === 'sym' ? tex(pb, l) : `\\left(${tex(pb, l)}\\right)`;
                     return `${polyTex(F, v, l)} = ${pT}^2 - ${q.toTex(l)}^2 = \\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`;
                 }),
-                text: L('$a^2 - b^2 = (a - b)(a + b)$.'),
+                text: '$a^2 - b^2 = (a - b)(a + b)$.',
             }));
             queue.push(f1, f2);
             continue;
@@ -100,7 +100,7 @@ function factorPoly(P, v) {
             steps.push(step({
                 title: plus ? msg('algebra.transform.sum_of_cubes') : msg('algebra.transform.difference_of_cubes'),
                 tex: eachLanguage((l) => `${polyTex(F, v, l)} = \\left(${polyTex(lin, v, l)}\\right)\\left(${polyTex(quad, v, l)}\\right)`),
-                text: plus ? L('$a^3 + b^3 = (a + b)(a^2 - ab + b^2)$.') : L('$a^3 - b^3 = (a - b)(a^2 + ab + b^2)$.'),
+                text: plus ? '$a^3 + b^3 = (a + b)(a^2 - ab + b^2)$.' : '$a^3 - b^3 = (a - b)(a^2 + ab + b^2)$.',
             }));
             queue.push(lin, quad);
             continue;
@@ -143,7 +143,7 @@ function factorPoly(P, v) {
                 title: msg('algebra.transform.factor_quadratic_through_its_roots'),
                 tex: eachLanguage((l) => `D = ${D.toTex(l)},\\ ${v}_1 = ${x1.toTex(l)},\\ ${v}_2 = ${x2.toTex(l)} \\;\\Rightarrow\\; ${polyTex(F, v, l)} = ${k.isOne() ? '' : k.eq(-1) ? '-' : k.toTex(l)}\\left(${polyTex(f1, v, l)}\\right)\\left(${polyTex(f2, v, l)}\\right)`),
                 text: x1.isInt() && x2.isInt()
-                    ? L(`$a${v}^2 + b${v} + c = a(${v} - ${v}_1)(${v} - ${v}_2)$.`)
+                    ? `$a${v}^2 + b${v} + c = a(${v} - ${v}_1)(${v} - ${v}_2)$.`
                     : msg('algebra.transform.fractional_root_goes_into_its_bracket', { v, p: (lng) => [x1, x2].filter((z) => !z.isInt()).map((z) => `$${v} - ${z.toTex(lng)} \\to ${polyTex(linFromRoot(z), v, lng)}$`).join(', ') }),
             }));
             continue;
@@ -261,7 +261,7 @@ export function expandSteps(input) {
         const r = expandOne(core);
         if (!r) return t;
         changed = true;
-        if (!rules.some((x) => x.ru === r.rule.ru)) rules.push(r.rule);
+        if (!rules.some((x) => sameText(x, r.rule))) rules.push(r.rule);
         return negT ? neg(r.node) : r.node;
     });
     let result;
@@ -276,7 +276,7 @@ export function expandSteps(input) {
         steps.push(step({
             title: msg('algebra.transform.open_brackets'),
             tex: eachLanguage((l) => `${tex(node, l)} = ${tex(mid, l)}`),
-            text: msg('algebra.transform.by_formulas', { p: (lng) => rules.map((r) => r[lng]).join('; ') }),
+            text: msg('algebra.transform.by_formulas', { p: joined(rules, '; ') }),
         }));
     }
     if (tex(mid) !== tex(result)) steps.push(step({ title: msg('algebra.transform.collect_like_terms'), tex: eachLanguage((l) => `${tex(mid, l)} = ${tex(result, l)}`) }));

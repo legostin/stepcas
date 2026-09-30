@@ -1,53 +1,32 @@
-// steps — bilingual strings and the step object that solvers return and kit/steps.js renders.
+// steps — the step object that solvers return and a page renders.
 //
-// Step = { title: {ru, en}, tex?: string | {ru, en}, text?: {ru, en}, rule?: string, sub?: Step[] }
+// Step = { title, tex?, text?, rule?, sub?: Step[], final? } where title and text are messages (i18n), plain strings
+// (the same in every language) or {lang: string} objects, and tex is a TeX string, a {lang: string} object or an AST
+// node (printed per language). Nothing is rendered here: a step stays language-neutral until someone reads it —
+// step.title.ru, step.title.in('kk'), or localize(result, lang) for the whole tree.
 
 import { toTex } from './print.js';
-import { eachLanguage } from '../i18n/index.js';
-
-/** Bilingual string; en defaults to ru (for formulas and names that do not change). */
-export function L(ru, en = ru) {
-    return { ru, en };
-}
-
-function bi(x) {
-    if (x === null || x === undefined) return undefined;
-    if (typeof x === 'string') return { ru: x, en: x };
-    if (typeof x === 'object' && ('ru' in x || 'en' in x)) return { ru: x.ru ?? x.en ?? '', en: x.en ?? x.ru ?? '' };
-    return { ru: String(x), en: String(x) };
-}
+import { eachLanguage, inLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
 const isNode = (x) => x && typeof x === 'object' && typeof x.type === 'string';
 
-/** TeX of a node in both languages: a plain string when they agree, else {ru, en}. */
+/** TeX of a node in every language: a plain string when they agree, else {lang: tex}. */
 export function texBoth(node, opts = {}) {
     return eachLanguage((lang) => toTex(node, { ...opts, lang }));
 }
 
-/**
- * Normalised step. `tex` may be a TeX string, {ru, en}, or an AST node (printed for both languages);
- * `title`/`text` may be strings or {ru, en}; `sub` holds nested steps (plain objects are normalised too).
- */
-export function step({ title, tex, text, rule, sub } = {}) {
-    const s = { title: bi(title) ?? '' };
-    if (tex !== undefined && tex !== null) {
-        if (typeof tex === 'string') s.tex = tex;
-        else if (isNode(tex)) s.tex = texBoth(tex);
-        else {
-            const t = bi(tex);
-            s.tex = t.ru === t.en ? t.ru : t;
-        }
-    }
-    const tx = bi(text);
-    if (tx) s.text = tx;
+/** A step; `sub` holds nested steps (plain objects are made steps too). */
+export function step({ title, tex, text, rule, sub, final } = {}) {
+    const s = { title: title ?? '' };
+    if (tex !== undefined && tex !== null) s.tex = isNode(tex) ? texBoth(tex) : tex;
+    if (text !== undefined && text !== null) s.text = text;
     if (rule) s.rule = String(rule);
     if (Array.isArray(sub) && sub.length) s.sub = sub.map((x) => step(x));
+    if (final) s.final = true;
     return s;
 }
 
-/** Pick one language from a string or {ru, en}. */
-export function pickLang(value, lang = 'ru') {
-    if (value === null || value === undefined) return '';
-    if (typeof value === 'string') return value;
-    return value[lang] ?? value.en ?? value.ru ?? '';
+/** The text of a message, a string or a {lang: …} object in one language. */
+export function pickLang(value, lang = DEFAULT_LANGUAGE) {
+    return inLanguage(value, lang);
 }

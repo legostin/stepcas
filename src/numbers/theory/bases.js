@@ -114,7 +114,7 @@ export function ntToBase(x, base, opts = {}) {
                 : msg('numbers.theory.bases.fractional_part_became_zero_so_we');
         st.push(S(msg('numbers.theory.bases.fractional_part_multiply_by', { b }),
             eachLanguage((l) => `\\begin{array}{l|c} ${shown.map((r) => `${qTex(r.num, r.den, l)} \\cdot ${b} = ${qTex(r.prod, r.den, l)} & ${DIGITS[r.digit]}`).join(' \\\\ ')}${fracRows.length > shown.length ? ' \\\\ \\ldots &' : ''} \\end{array}`),
-            msg('numbers.theory.bases.each_time_integer_part_of_product', { b, p: (lng) => tail[lng] }),
+            msg('numbers.theory.bases.each_time_integer_part_of_product', { b, p: tail }),
             { rule: 'repeated-multiplication', rows: fracRows }));
     }
     st.push(S(msg('numbers.theory.bases.answer'), eachLanguage((l) => `${qTex(num, den, l)} = ${texOf(l)}`),

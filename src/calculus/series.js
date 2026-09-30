@@ -11,7 +11,7 @@ import { Q, MathError } from '../core/rational.js';
 import { num, sym, add, mul, div, neg, pow, containsVar, substitute, numValue, freeVars } from '../core/ast.js';
 import { parse } from '../core/parse.js';
 import { toTex, toText } from '../core/print.js';
-import { L, step } from '../core/steps.js';
+import { step } from '../core/steps.js';
 import { Poly } from '../core/poly.js';
 import { limit } from './limit/index.js';
 import { numDen } from '../core/expand.js';
@@ -211,7 +211,7 @@ function arithGeoInfinite(term, k, lo) {
     const steps = [
         step({
             title: msg('calculus.series.arithmetico_geometric_series'),
-            tex: L(`\\sum_{k=0}^{\\infty} q^k = \\frac{1}{1-q},\\quad \\sum_{k=0}^{\\infty} k q^k = \\frac{q}{(1-q)^2},\\quad \\sum_{k=0}^{\\infty} k^2 q^k = \\frac{q(1+q)}{(1-q)^3}`),
+            tex: `\\sum_{k=0}^{\\infty} q^k = \\frac{1}{1-q},\\quad \\sum_{k=0}^{\\infty} k q^k = \\frac{q}{(1-q)^2},\\quad \\sum_{k=0}^{\\infty} k^2 q^k = \\frac{q(1+q)}{(1-q)^3}`,
             text: msg('calculus.series.term_is_polynomial_in_times_with', { q: (lng) => tex(q, lng) }),
         }),
         step({ title: msg('calculus.series.substitute'), tex: eachLanguage((l) => `${sumTex(term, k, lo, null, l)} = ${tex(value, l)}`) }),

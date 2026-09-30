@@ -17,36 +17,33 @@
 
 import { Q } from './rational.js';
 import { mul, num, pow, isConst, freeVars, nodeSome } from './ast.js';
-import { notation } from '../i18n/index.js';
+import { notation, resolveLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
 
+// TeX of the functions: the neutral defaults; a language overrides some in its notation (tg for tan in Russian)
 const FN_TEX = {
-    sin: ['\\sin', '\\sin'],
-    cos: ['\\cos', '\\cos'],
-    tan: ['\\operatorname{tg}', '\\tan'],
-    cot: ['\\operatorname{ctg}', '\\cot'],
-    sec: ['\\sec', '\\sec'],
-    csc: ['\\operatorname{cosec}', '\\csc'],
-    asin: ['\\arcsin', '\\arcsin'],
-    acos: ['\\arccos', '\\arccos'],
-    atan: ['\\operatorname{arctg}', '\\arctan'],
-    acot: ['\\operatorname{arcctg}', '\\operatorname{arccot}'],
-    sinh: ['\\operatorname{sh}', '\\sinh'],
-    cosh: ['\\operatorname{ch}', '\\cosh'],
-    tanh: ['\\operatorname{th}', '\\tanh'],
-    coth: ['\\operatorname{cth}', '\\coth'],
-    asinh: ['\\operatorname{arsh}', '\\operatorname{arsinh}'],
-    acosh: ['\\operatorname{arch}', '\\operatorname{arcosh}'],
-    atanh: ['\\operatorname{arth}', '\\operatorname{artanh}'],
-    ln: ['\\ln', '\\ln'],
-    lg: ['\\lg', '\\log_{10}'],
-    exp: ['\\exp', '\\exp'],
-    sign: ['\\operatorname{sgn}', '\\operatorname{sgn}'],
+    sin: '\\sin',
+    cos: '\\cos',
+    tan: '\\tan',
+    cot: '\\cot',
+    sec: '\\sec',
+    csc: '\\csc',
+    asin: '\\arcsin',
+    acos: '\\arccos',
+    atan: '\\arctan',
+    acot: '\\operatorname{arccot}',
+    sinh: '\\sinh',
+    cosh: '\\cosh',
+    tanh: '\\tanh',
+    coth: '\\coth',
+    asinh: '\\operatorname{arsinh}',
+    acosh: '\\operatorname{arcosh}',
+    atanh: '\\operatorname{artanh}',
+    ln: '\\ln',
+    lg: '\\log_{10}',
+    exp: '\\exp',
+    sign: '\\operatorname{sgn}',
 };
 
-const FN_TEXT = {
-    ru: { tan: 'tg', cot: 'ctg', asin: 'arcsin', acos: 'arccos', atan: 'arctg', acot: 'arcctg', sinh: 'sh', cosh: 'ch', tanh: 'th', coth: 'cth', asinh: 'arsh', acosh: 'arch', atanh: 'arth' },
-    en: { asin: 'arcsin', acos: 'arccos', atan: 'arctan', acot: 'arccot', asinh: 'arsinh', acosh: 'arcosh', atanh: 'artanh' },
-};
 
 const GREEK = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
     'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda', 'Xi', 'Pi', 'Sigma', 'Phi', 'Psi', 'Omega']);
@@ -180,13 +177,12 @@ function texNum(n, o) {
         // a decimal as typed (or an approximate value built with a raw string; those may carry a minus)
         const m = /^(-?)(\d*)[.,](\d*)(?:\((\d+)\))?$/.exec(n.raw);
         if (m && (m[1] === '-') === q.isNeg()) {
-            const sep = o.lang === 'ru' ? '{,}' : '.';
+            const sep = o.n.decimalTex;
             return `${m[1]}${m[2] || '0'}${sep}${m[3]}${m[4] ? `(${m[4]})` : ''}`;
         }
     }
     if (o.decimals && !q.isInt() && q.isFiniteDecimal()) {
-        const s = q.toDecimalString(40, 'en');
-        return o.lang === 'ru' ? s.replace('.', '{,}') : s;
+        return q.toDecimalString(40, 'en').replace('.', o.n.decimalTex);
     }
     return q.toTex(o.lang);
 }
@@ -263,11 +259,11 @@ function texFn(n, o, power = null) {
     if (n.name === 'log') {
         const b = a[0];
         arg = a[1];
-        if (isPlainNum(b) && b.value.eq(10)) head = o.lang === 'ru' ? '\\lg' : '\\log_{10}';
+        if (isPlainNum(b) && b.value.eq(10)) head = o.n.log10Tex;
         else if (isConst(b) && b.name === 'e') head = '\\ln';
         else head = `\\log_{${t(b)}}`;
     } else {
-        head = FN_TEX[n.name][o.lang === 'ru' ? 0 : 1];
+        head = o.n.fnTex?.[n.name] ?? FN_TEX[n.name];
         arg = a[0];
     }
     if (power !== null) head += `^{${power}}`;
@@ -435,7 +431,7 @@ function tex(n, o) {
         case 'chain':
             return n.items.map((x, k) => (k ? ` ${REL_TEX[n.ops[k - 1]]} ` : '') + tex(x, o)).join('');
         case 'list':
-            return n.items.map((x) => tex(x, o)).join(o.lang === 'ru' ? ';\\ ' : ',\\ ');
+            return n.items.map((x) => tex(x, o)).join(o.n.listTex);
         default:
             throw new TypeError(`toTex: unknown node ${n?.type}`);
     }
@@ -448,7 +444,8 @@ function tex(n, o) {
  * (x + 1)^{3/2} → \sqrt{(x + 1)^{3}}, x^{-3/2} → \frac{1}{x\sqrt{x}}}.
  */
 export function toTex(node, opts = {}) {
-    const o = { lang: opts.lang === 'en' ? 'en' : 'ru', mulDot: !!opts.mulDot, decimals: !!opts.decimals, roots: !!opts.roots };
+    const lang = resolveLanguage(opts.lang);
+    const o = { lang, n: notation(lang), mulDot: !!opts.mulDot, decimals: !!opts.decimals, roots: !!opts.roots };
     return tex(node, o);
 }
 
@@ -458,7 +455,7 @@ function textNum(n, o) {
     const q = n.value;
     if (n.raw) {
         const m = /^(-?)(\d*)[.,](\d*)(?:\((\d+)\))?$/.exec(n.raw);
-        if (m && (m[1] === '-') === q.isNeg()) return `${m[1]}${m[2] || '0'}${o.lang === 'ru' ? ',' : '.'}${m[3]}${m[4] ? `(${m[4]})` : ''}`;
+        if (m && (m[1] === '-') === q.isNeg()) return `${m[1]}${m[2] || '0'}${o.n.decimalText}${m[3]}${m[4] ? `(${m[4]})` : ''}`;
     }
     return q.toString();
 }
@@ -515,7 +512,7 @@ function textMul(n, o) {
 }
 
 function textFnName(name, o) {
-    return FN_TEXT[o.lang][name] ?? name;
+    return o.n.fnText?.[name] ?? name;
 }
 
 function textFn(n, o) {
@@ -600,7 +597,7 @@ function text(n, o) {
         case 'chain':
             return n.items.map((x, k) => (k ? ` ${REL_TEXT[n.ops[k - 1]]} ` : '') + text(x, o)).join('');
         case 'list':
-            return n.items.map((x) => text(x, o)).join(o.lang === 'ru' ? '; ' : ', ');
+            return n.items.map((x) => text(x, o)).join(o.n.listText);
         default:
             throw new TypeError(`toText: unknown node ${n?.type}`);
     }
@@ -611,7 +608,8 @@ function text(n, o) {
  * RU uses a decimal comma and "; " between list items, EN a point and ", ".
  */
 export function toText(node, opts = {}) {
-    return text(node, { lang: opts.lang === 'en' ? 'en' : 'ru' });
+    const lang = resolveLanguage(opts.lang);
+    return text(node, { lang, n: notation(lang) });
 }
 
 // ---------------------------------------------------------------- numbers for widgets
@@ -627,7 +625,7 @@ function groupDigits(int) {
  * tiny values in scientific form. RU uses a decimal comma {,}. opts: {digits, group (thin-space thousands),
  * decimal}.
  */
-export function texNumber(value, lang = 'ru', opts = {}) {
+export function texNumber(value, lang = DEFAULT_LANGUAGE, opts = {}) {
     const digits = opts.digits ?? 6;
     const comma = notation(lang).decimalTex;
     const fix = (s) => {

@@ -17,20 +17,16 @@ const PI = Math.PI;
 function checkSteps(steps, where = '') {
     assert.ok(Array.isArray(steps) && steps.length > 0, `${where}: steps must be a non-empty array`);
     for (const s of steps) {
-        assert.equal(typeof s.title?.ru, 'string', `${where}: title.ru`);
-        assert.equal(typeof s.title?.en, 'string', `${where}: title.en`);
-        assert.ok(s.title.ru.length && s.title.en.length, `${where}: empty title`);
-        const texts = [];
-        if (s.tex !== undefined) {
-            assert.ok(typeof s.tex === 'string' || (typeof s.tex.ru === 'string' && typeof s.tex.en === 'string'), `${where}: tex shape`);
-            texts.push(...(typeof s.tex === 'string' ? [s.tex] : [s.tex.ru, s.tex.en]));
-        }
+        // a title, tex or text is a message, a string (the same in every language) or {lang: text}: read it per language
+        const [titleRu, titleEn] = [E.pickLang(s.title, 'ru'), E.pickLang(s.title, 'en')];
+        assert.ok(titleRu.length && titleEn.length, `${where}: empty title`);
+        const texts = [titleRu, titleEn];
+        if (s.tex !== undefined) texts.push(E.pickLang(s.tex, 'ru'), E.pickLang(s.tex, 'en'));
         if (s.text !== undefined) {
-            assert.equal(typeof s.text.ru, 'string', `${where}: text.ru`);
-            assert.equal(typeof s.text.en, 'string', `${where}: text.en`);
-            assert.ok(/[а-яё]/i.test(s.text.ru) || !/[a-z]{4}/i.test(s.text.ru.replace(/\$[^$]*\$/g, '')), `${where}: RU text looks English: ${s.text.ru}`);
+            const ru = E.pickLang(s.text, 'ru');
+            texts.push(ru, E.pickLang(s.text, 'en'));
+            assert.ok(/[а-яё]/i.test(ru) || !/[a-z]{4}/i.test(ru.replace(/\$[^$]*\$/g, '')), `${where}: RU text looks English: ${ru}`);
         }
-        texts.push(s.title.ru, s.title.en);
         for (const t of texts) {
             assert.ok(!/undefined|NaN|\[object|Infinity(?!\})/.test(t), `${where}: bad text ${t}`);
             let depth = 0;
@@ -42,7 +38,7 @@ function checkSteps(steps, where = '') {
             assert.equal(depth, 0, `${where}: unbalanced braces in ${t}`);
             assert.equal((t.match(/\$/g) || []).length % 2, 0, `${where}: unbalanced $ in ${t}`);
         }
-        if (s.sub) checkSteps(s.sub, where + ' > ' + s.title.en);
+        if (s.sub) checkSteps(s.sub, where + ' > ' + titleEn);
     }
 }
 
