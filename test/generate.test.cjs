@@ -55,3 +55,13 @@ test('linear inequalities and derivatives: the engine agrees with the constructi
         }
     }
 });
+
+test('an antiderivative task comes with its antiderivative', () => {
+    for (let seed = 1; seed <= 150; seed++) {
+        for (const level of [1, 2, 3]) {
+            const t = E.generateTask('antiderivative', { seed, level });
+            const d = E.derivative(t.answer.expr, 'x');
+            assert.ok(d.ok && E.equivalent(d.result, E.parse(t.task)), `(${t.answer.expr})' vs ${t.task}`);
+        }
+    }
+});

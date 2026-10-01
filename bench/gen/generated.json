@@ -12575,7 +12575,9 @@
   "seed": 26100,
   "op": "integrate",
   "task": "-4/(-4x + 1)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(-4x + 1))"
+  }
  },
  {
   "id": "gen-antiderivative-1-02",
@@ -12585,7 +12587,9 @@
   "seed": 26101,
   "op": "integrate",
   "task": "(1 + 3x)e^(3x)",
-  "answer": {}
+  "answer": {
+   "expr": "x e^(3x)"
+  }
  },
  {
   "id": "gen-antiderivative-1-03",
@@ -12594,8 +12598,10 @@
   "level": 1,
   "seed": 26102,
   "op": "integrate",
-  "task": "(1 + -1x)e^(-1x)",
-  "answer": {}
+  "task": "(1 + -1x)e^(-x)",
+  "answer": {
+   "expr": "x e^(-x)"
+  }
  },
  {
   "id": "gen-antiderivative-1-04",
@@ -12605,7 +12611,9 @@
   "seed": 26103,
   "op": "integrate",
   "task": "2/(2x)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(2x))"
+  }
  },
  {
   "id": "gen-antiderivative-1-05",
@@ -12615,7 +12623,9 @@
   "seed": 26104,
   "op": "integrate",
   "task": "-1cos(-x + 2)",
-  "answer": {}
+  "answer": {
+   "expr": "sin(-x + 2)"
+  }
  },
  {
   "id": "gen-antiderivative-1-06",
@@ -12625,7 +12635,9 @@
   "seed": 26105,
   "op": "integrate",
   "task": "2/(2x - 4)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(2x - 4))"
+  }
  },
  {
   "id": "gen-antiderivative-1-07",
@@ -12635,7 +12647,9 @@
   "seed": 26106,
   "op": "integrate",
   "task": "9(3x + 5)^2",
-  "answer": {}
+  "answer": {
+   "expr": "(3x + 5)^3"
+  }
  },
  {
   "id": "gen-antiderivative-1-08",
@@ -12645,7 +12659,9 @@
   "seed": 26107,
   "op": "integrate",
   "task": "(1 + 2x)e^(2x)",
-  "answer": {}
+  "answer": {
+   "expr": "x e^(2x)"
+  }
  },
  {
   "id": "gen-antiderivative-1-09",
@@ -12655,7 +12671,9 @@
   "seed": 26111,
   "op": "integrate",
   "task": "4(x + 5)^3",
-  "answer": {}
+  "answer": {
+   "expr": "(x + 5)^4"
+  }
  },
  {
   "id": "gen-antiderivative-1-10",
@@ -12665,7 +12683,9 @@
   "seed": 26112,
   "op": "integrate",
   "task": "4/(4x - 4)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(4x - 4))"
+  }
  },
  {
   "id": "gen-antiderivative-1-11",
@@ -12675,7 +12695,9 @@
   "seed": 26113,
   "op": "integrate",
   "task": "-4/(-4x + 3)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(-4x + 3))"
+  }
  },
  {
   "id": "gen-antiderivative-1-12",
@@ -12685,7 +12707,9 @@
   "seed": 26114,
   "op": "integrate",
   "task": "2/(2x - 1)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(2x - 1))"
+  }
  },
  {
   "id": "gen-antiderivative-2-01",
@@ -12695,7 +12719,9 @@
   "seed": 26200,
   "op": "integrate",
   "task": "ln(x)",
-  "answer": {}
+  "answer": {
+   "expr": "x ln(x) - x"
+  }
  },
  {
   "id": "gen-antiderivative-2-02",
@@ -12705,7 +12731,9 @@
   "seed": 26201,
   "op": "integrate",
   "task": "sin(-3x) + -3x cos(-3x)",
-  "answer": {}
+  "answer": {
+   "expr": "x sin(-3x)"
+  }
  },
  {
   "id": "gen-antiderivative-2-03",
@@ -12715,7 +12743,9 @@
   "seed": 26202,
   "op": "integrate",
   "task": "x e^(x^2)",
-  "answer": {}
+  "answer": {
+   "expr": "e^(x^2)/2"
+  }
  },
  {
   "id": "gen-antiderivative-2-04",
@@ -12725,7 +12755,9 @@
   "seed": 26203,
   "op": "integrate",
   "task": "1/(2sqrt(x + 4))",
-  "answer": {}
+  "answer": {
+   "expr": "sqrt(x + 4)"
+  }
  },
  {
   "id": "gen-antiderivative-2-05",
@@ -12734,8 +12766,10 @@
   "level": 2,
   "seed": 26204,
   "op": "integrate",
-  "task": "sin(1x) + 1x cos(1x)",
-  "answer": {}
+  "task": "sin(x) + 1x cos(x)",
+  "answer": {
+   "expr": "x sin(x)"
+  }
  },
  {
   "id": "gen-antiderivative-2-06",
@@ -12745,7 +12779,9 @@
   "seed": 26205,
   "op": "integrate",
   "task": "3/(3x + 4)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(3x + 4))"
+  }
  },
  {
   "id": "gen-antiderivative-2-07",
@@ -12755,7 +12791,9 @@
   "seed": 26206,
   "op": "integrate",
   "task": "1/(x^2 + 25)",
-  "answer": {}
+  "answer": {
+   "expr": "atan(x/5)/5"
+  }
  },
  {
   "id": "gen-antiderivative-2-08",
@@ -12765,7 +12803,9 @@
   "seed": 26207,
   "op": "integrate",
   "task": "(1 + 2x)e^(2x)",
-  "answer": {}
+  "answer": {
+   "expr": "x e^(2x)"
+  }
  },
  {
   "id": "gen-antiderivative-2-09",
@@ -12775,7 +12815,9 @@
   "seed": 26208,
   "op": "integrate",
   "task": "-1/(2sqrt(-x + 6))",
-  "answer": {}
+  "answer": {
+   "expr": "sqrt(-x + 6)"
+  }
  },
  {
   "id": "gen-antiderivative-2-10",
@@ -12785,7 +12827,9 @@
   "seed": 26210,
   "op": "integrate",
   "task": "sin(-4x) + -4x cos(-4x)",
-  "answer": {}
+  "answer": {
+   "expr": "x sin(-4x)"
+  }
  },
  {
   "id": "gen-antiderivative-2-11",
@@ -12795,7 +12839,9 @@
   "seed": 26211,
   "op": "integrate",
   "task": "-12(-3x - 2)^3",
-  "answer": {}
+  "answer": {
+   "expr": "(-3x - 2)^4"
+  }
  },
  {
   "id": "gen-antiderivative-2-12",
@@ -12805,7 +12851,9 @@
   "seed": 26212,
   "op": "integrate",
   "task": "-5(-x + 5)^4",
-  "answer": {}
+  "answer": {
+   "expr": "(-x + 5)^5"
+  }
  },
  {
   "id": "gen-antiderivative-3-01",
@@ -12815,7 +12863,9 @@
   "seed": 26300,
   "op": "integrate",
   "task": "x^2 sin(x^3)",
-  "answer": {}
+  "answer": {
+   "expr": "-cos(x^3)/3"
+  }
  },
  {
   "id": "gen-antiderivative-3-02",
@@ -12825,7 +12875,9 @@
   "seed": 26301,
   "op": "integrate",
   "task": "ln(x)",
-  "answer": {}
+  "answer": {
+   "expr": "x ln(x) - x"
+  }
  },
  {
   "id": "gen-antiderivative-3-03",
@@ -12835,7 +12887,9 @@
   "seed": 26303,
   "op": "integrate",
   "task": "(1 + 4x)e^(4x)",
-  "answer": {}
+  "answer": {
+   "expr": "x e^(4x)"
+  }
  },
  {
   "id": "gen-antiderivative-3-04",
@@ -12845,7 +12899,9 @@
   "seed": 26305,
   "op": "integrate",
   "task": "4/(2sqrt(4x + 3))",
-  "answer": {}
+  "answer": {
+   "expr": "sqrt(4x + 3)"
+  }
  },
  {
   "id": "gen-antiderivative-3-05",
@@ -12855,7 +12911,9 @@
   "seed": 26306,
   "op": "integrate",
   "task": "(1 + -2x)e^(-2x)",
-  "answer": {}
+  "answer": {
+   "expr": "x e^(-2x)"
+  }
  },
  {
   "id": "gen-antiderivative-3-06",
@@ -12865,7 +12923,9 @@
   "seed": 26307,
   "op": "integrate",
   "task": "sin(3x) + 3x cos(3x)",
-  "answer": {}
+  "answer": {
+   "expr": "x sin(3x)"
+  }
  },
  {
   "id": "gen-antiderivative-3-07",
@@ -12875,7 +12935,9 @@
   "seed": 26308,
   "op": "integrate",
   "task": "-10(-2x - 3)^4",
-  "answer": {}
+  "answer": {
+   "expr": "(-2x - 3)^5"
+  }
  },
  {
   "id": "gen-antiderivative-3-08",
@@ -12885,7 +12947,9 @@
   "seed": 26309,
   "op": "integrate",
   "task": "-3/(-3x + 4)",
-  "answer": {}
+  "answer": {
+   "expr": "ln(abs(-3x + 4))"
+  }
  },
  {
   "id": "gen-antiderivative-3-09",
@@ -12895,7 +12959,9 @@
   "seed": 26310,
   "op": "integrate",
   "task": "3/(2sqrt(3x + 4))",
-  "answer": {}
+  "answer": {
+   "expr": "sqrt(3x + 4)"
+  }
  },
  {
   "id": "gen-antiderivative-3-10",
@@ -12905,7 +12971,9 @@
   "seed": 26311,
   "op": "integrate",
   "task": "1/(x^2 + 4)",
-  "answer": {}
+  "answer": {
+   "expr": "atan(x/2)/2"
+  }
  },
  {
   "id": "gen-antiderivative-3-11",
@@ -12915,7 +12983,9 @@
   "seed": 26313,
   "op": "integrate",
   "task": "9(3x)^2",
-  "answer": {}
+  "answer": {
+   "expr": "(3x)^3"
+  }
  },
  {
   "id": "gen-antiderivative-3-12",
@@ -12925,7 +12995,9 @@
   "seed": 26314,
   "op": "integrate",
   "task": "x e^(x^2)",
-  "answer": {}
+  "answer": {
+   "expr": "e^(x^2)/2"
+  }
  },
  {
   "id": "gen-linear-ineq-1-01",

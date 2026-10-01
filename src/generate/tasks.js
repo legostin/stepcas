@@ -589,24 +589,27 @@ const GEN = {
         };
     },
     antiderivative(g, level) {
-        // f = F' for a random F from a few shapes; the check differentiates the answer
+        // f = F′ for a random F from a few shapes; F comes with the task (the check differentiates the answer)
         const a = g.nz(-4, 4);
         const b = g.int(-5, 5);
         const n = g.int(2, 5);
+        const L = poly([a, b]);
+        const R = poly([a, Math.abs(b) + 1]);
+        const ax = kx(a);
         const shapes = [
-            `${a * n}(${poly([a, b])})^${n - 1}`, // (ax + b)^n
-            `${a}cos(${poly([a, b])})`, // sin(ax + b)
-            `(1 + ${a}x)e^(${a}x)`, // x·e^(ax)
-            `${a}/(${poly([a, b])})`, // ln|ax + b|
-            `sin(${a}x) + ${a}x cos(${a}x)`, // x·sin(ax)
-            `${a}/(2sqrt(${poly([a, Math.abs(b) + 1])}))`, // √(ax + |b| + 1)
-            `x e^(x^2)`, // e^(x²)/2
-            `1/(x^2 + ${n * n})`, // arctg(x/n)/n
-            `x^2 sin(x^3)`, // −cos(x³)/3
-            `ln(x)`, // x ln x − x
+            [`${a * n}(${L})^${n - 1}`, `(${L})^${n}`],
+            [`${a}cos(${L})`, `sin(${L})`],
+            [`(1 + ${a}x)e^(${ax})`, `x e^(${ax})`],
+            [`${a}/(${L})`, `ln(abs(${L}))`],
+            [`sin(${ax}) + ${a}x cos(${ax})`, `x sin(${ax})`],
+            [`${a}/(2sqrt(${R}))`, `sqrt(${R})`],
+            [`x e^(x^2)`, `e^(x^2)/2`],
+            [`1/(x^2 + ${n * n})`, `atan(x/${n})/${n}`],
+            [`x^2 sin(x^3)`, `-cos(x^3)/3`],
+            [`ln(x)`, `x ln(x) - x`],
         ];
-        const f = g.pick(level >= 2 ? shapes : shapes.slice(0, 4));
-        return { op: 'integrate', task: f, answer: {}, prompt: msg('generate.tasks.find_antiderivative') };
+        const [f, F] = g.pick(level >= 2 ? shapes : shapes.slice(0, 4));
+        return { op: 'integrate', task: f, answer: { expr: F }, prompt: msg('generate.tasks.find_antiderivative') };
     },
     'linear-ineq'(g, level) {
         // a·x + b op c·x + d with the boundary r: (a − c)·r + b = d
