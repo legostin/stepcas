@@ -65,3 +65,18 @@ test('an antiderivative task comes with its antiderivative', () => {
         }
     }
 });
+
+test('fractional exponents are in lowest terms, never a whole number in disguise (3/3, 14/7, 0/7)', () => {
+    const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
+    for (const kind of E.TASK_KINDS) {
+        for (let seed = 1; seed <= 150; seed++) {
+            for (const level of [1, 2, 3]) {
+                const t = E.generateTask(kind, { seed, level });
+                for (const m of t.task.matchAll(/\^\((-?\d+)\/(\d+)\)/g)) {
+                    const [p, n] = [Number(m[1]), Number(m[2])];
+                    assert.ok(gcd(p, n) === 1 && p % n !== 0, `${kind} level ${level} seed ${seed}: ${t.task}`);
+                }
+            }
+        }
+    }
+});

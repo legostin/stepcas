@@ -10,6 +10,8 @@
 import { Q } from '../core/rational.js';
 import { msg } from '../i18n/index.js';
 
+const gcdInt = (a, b) => (b ? gcdInt(b, a % b) : Math.abs(a));
+
 /* ------------------------------------------------------------------ randomness */
 
 function mulberry32(seed) {
@@ -226,10 +228,12 @@ const GEN = {
         const a = g.pick([2, 3, 5]);
         const kind = g.int(0, 2);
         if (kind === 0) {
-            // a^(m/n)·a^(p/n) with an integer total
+            // a^(m/n)·a^(p/n) with an integer total; both exponents positive fractions in lowest terms (no 3/3, 14/7, 0/7)
             const n = g.pick([3, 4, 5, 7]);
-            const m = g.int(1, 2 * n - 1);
             const total = g.int(1, 3);
+            const coprime = [];
+            for (let m = 1; m < total * n; m++) if (gcdInt(m, n) === 1) coprime.push(m);
+            const m = g.pick(coprime);
             const p = total * n - m;
             return {
                 op: 'value',
@@ -239,9 +243,9 @@ const GEN = {
             };
         }
         if (kind === 1) {
-            // (a^k)^(m/n) with k·m/n integer: 8^(2/3), 27^(4/3)
+            // (a^k)^(m/k), m/k in lowest terms: 8^(2/3), 27^(4/3), 9^(3/2) — not 9^(2/2)
             const k = g.pick([2, 3]);
-            const m = g.int(1, 3);
+            const m = g.pick(k === 2 ? [1, 3] : [1, 2, 4]);
             return { op: 'value', task: `${a ** k}^(${m}/${k})`, answer: { value: String(a ** m) }, prompt: msg('generate.tasks.find_value') };
         }
         // a^(u)·(a^2)^(v)/a^(w)
