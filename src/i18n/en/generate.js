@@ -17,6 +17,7 @@ export default {
         find_limit_as_x_2: 'Find the limit as x → ∞',
         find_limit_as_x_0: 'Find the limit as x → 0',
         solve_and_find_roots_on: 'Solve and find the roots on [%{lo}; %{hi}]',
+        find_derivative: 'Find the derivative',
         find_antiderivative: 'Find an antiderivative',
     },
 };

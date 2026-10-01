@@ -92,6 +92,23 @@ function fromRoots(roots, k = 1) {
 const setText = (parts) => parts.join(' U ');
 const iv = (a, b, lc, hc) => `${lc ? '[' : '('}${a === null ? '-inf' : qs(a)}; ${b === null ? '+inf' : qs(b)}${hc ? ']' : ')'}`;
 const SOLVE = msg('generate.tasks.solve_equation');
+// k·x as an exponent or an argument: x, -x, 3x
+const kx = (k, v = 'x') => (k === 1 ? v : k === -1 ? `-${v}` : `${k}${v}`);
+// c·e^(kx) as a term: e^(x), -e^(-x), 3e^(2x); a constant when k = 0
+const expTerm = (c, k) => (k === 0 ? String(c) : `${c === 1 ? '' : c === -1 ? '-' : c}e^(${kx(k)})`);
+// a sum of terms c·rest with tidy signs: [[3, 'x^2'], [-2, 'x'], [5, '']] → "3x^2 - 2x + 5"
+function sum(terms) {
+    let out = '';
+    for (const [c0, rest] of terms) {
+        const c = q(c0);
+        if (c.isZero()) continue;
+        const a = c.abs();
+        const coef = rest && a.isOne() ? '' : a.isInt() ? a.toString() : `(${a.toString()})`;
+        const term = `${coef}${rest}`;
+        out += out ? (c.isNeg() ? ` - ${term}` : ` + ${term}`) : c.isNeg() ? `-${term}` : term;
+    }
+    return out || '0';
+}
 
 /* ------------------------------------------------------------------ generators */
 
@@ -353,7 +370,7 @@ const GEN = {
             return {
                 op: 'ode',
                 task: `y' = ${k === 1 ? '' : k === -1 ? '-' : k}y; y(0) = ${c}`,
-                answer: { expr: `${c}e^(${k}x)` },
+                answer: { expr: expTerm(c, k) },
                 prompt: msg('generate.tasks.solve_initial_value_problem'),
             };
         }
@@ -366,7 +383,12 @@ const GEN = {
         return {
             op: 'ode',
             task: `${lhs} = 0; y(0) = ${A + B}; y'(0) = ${A * r1 + B * r2}`,
-            answer: { expr: `${A}e^(${r1}x) + ${B}e^(${r2}x)` },
+            answer: {
+                expr: sum([
+                    [A, r1 === 0 ? '' : `e^(${kx(r1)})`],
+                    [B, r2 === 0 ? '' : `e^(${kx(r2)})`],
+                ]),
+            },
             prompt: msg('generate.tasks.solve_initial_value_problem'),
         };
     },
@@ -585,6 +607,117 @@ const GEN = {
         ];
         const f = g.pick(level >= 2 ? shapes : shapes.slice(0, 4));
         return { op: 'integrate', task: f, answer: {}, prompt: msg('generate.tasks.find_antiderivative') };
+    },
+    'linear-ineq'(g, level) {
+        // a·x + b op c·x + d with the boundary r: (a − c)·r + b = d
+        const r = level >= 3 ? q(g.nz(-9, 9)).div(q(g.pick([2, 3, 4]))) : q(g.int(-9, 9));
+        const a = g.nz(-6, 6);
+        let c = level >= 2 ? g.int(-6, 6) : 0;
+        if (c === a) c = a > 0 ? a - 1 : a + 1;
+        const b = g.int(-12, 12);
+        const d = q(a - c)
+            .mul(r)
+            .add(q(b));
+        const op = g.pick(['<', '<=', '>', '>=']);
+        // the inequality holds where (a − c)(x − r) op 0
+        const closed = op.length === 2;
+        const rightSide = (op[0] === '>') === a - c > 0;
+        const set = rightSide ? iv(r, null, closed, false) : iv(null, r, false, closed);
+        return { op: 'ineq', task: `${poly([a, b])} ${op} ${poly([c, d])}`, answer: { set }, prompt: msg('generate.tasks.solve_inequality') };
+    },
+    derivative(g, level) {
+        // f and f′ written from the construction (the sum, product, quotient and chain rules by hand)
+        const prompt = msg('generate.tasks.find_derivative');
+        if (level === 1) {
+            const n = g.int(2, 5);
+            const m = g.int(1, n - 1);
+            const a = g.nz(-6, 6);
+            const b = g.nz(-9, 9);
+            const c = g.int(-9, 9);
+            const pw = (k) => (k === 0 ? '' : k === 1 ? 'x' : `x^${k}`);
+            return {
+                op: 'diff',
+                task: sum([
+                    [a, pw(n)],
+                    [b, pw(m)],
+                    [c, ''],
+                ]),
+                answer: {
+                    expr: sum([
+                        [a * n, pw(n - 1)],
+                        [b * m, pw(m - 1)],
+                    ]),
+                },
+                prompt,
+            };
+        }
+        const k = g.nz(-3, 3);
+        const n = g.int(level >= 3 ? 2 : 1, 4);
+        const xn = (p) => (p === 0 ? '' : p === 1 ? 'x' : `x^${p}`);
+        if (level === 2) {
+            const kind = g.int(0, 2);
+            if (kind === 0) {
+                // (xⁿ e^(kx))′ = n xⁿ⁻¹ e^(kx) + k xⁿ e^(kx)
+                const E_ = `e^(${kx(k)})`;
+                return {
+                    op: 'diff',
+                    task: `${xn(n)} ${E_}`,
+                    answer: {
+                        expr: sum([
+                            [n, `${xn(n - 1)} ${E_}`.trim()],
+                            [k, `${xn(n)} ${E_}`],
+                        ]),
+                    },
+                    prompt,
+                };
+            }
+            if (kind === 1) {
+                // (xⁿ sin kx)′ = n xⁿ⁻¹ sin kx + k xⁿ cos kx (k > 0: a school argument)
+                const p = Math.abs(k);
+                const S = `sin(${kx(p)})`;
+                const C = `cos(${kx(p)})`;
+                return {
+                    op: 'diff',
+                    task: `${xn(n)} ${S}`,
+                    answer: {
+                        expr: sum([
+                            [n, `${xn(n - 1)} ${S}`.trim()],
+                            [p, `${xn(n)} ${C}`],
+                        ]),
+                    },
+                    prompt,
+                };
+            }
+            // ((ax + b)/(cx + d))′ = (ad − bc)/(cx + d)²
+            const [a, c] = [g.nz(-5, 5), g.int(1, 4)];
+            let b = g.int(-6, 6);
+            const d = g.nz(-6, 6);
+            if (a * d - b * c === 0) b += 1;
+            return { op: 'diff', task: `(${poly([a, b])})/(${poly([c, d])})`, answer: { expr: `${a * d - b * c}/(${poly([c, d])})^2` }, prompt };
+        }
+        const kind = g.int(0, 3);
+        if (kind === 0) {
+            // ((ax + b)ⁿ)′ = n·a·(ax + b)ⁿ⁻¹
+            const a = g.nz(-4, 4);
+            const b = g.nz(-6, 6);
+            const m = n + 1;
+            return { op: 'diff', task: `(${poly([a, b])})^${m}`, answer: { expr: `${m * a}(${poly([a, b])})^${m - 1}` }, prompt };
+        }
+        if (kind === 1) {
+            // (ln(ax² + b))′ = 2ax/(ax² + b), a, b > 0
+            const a = g.int(1, 5);
+            const b = g.int(1, 9);
+            return { op: 'diff', task: `ln(${poly([a, 0, b])})`, answer: { expr: `${2 * a}x/(${poly([a, 0, b])})` }, prompt };
+        }
+        if (kind === 2) {
+            // (√(ax + b))′ = a/(2√(ax + b)), a, b > 0
+            const a = g.int(1, 6);
+            const b = g.int(1, 9);
+            const root = `sqrt(${poly([a, b])})`;
+            return { op: 'diff', task: root, answer: { expr: a % 2 === 0 ? `${a / 2 === 1 ? 1 : a / 2}/${root}` : `${a}/(2${root})` }, prompt };
+        }
+        // (e^(kx²))′ = 2k·x·e^(kx²)
+        return { op: 'diff', task: `e^(${kx(k, 'x^2')})`, answer: { expr: `${2 * k}x e^(${kx(k, 'x^2')})` }, prompt };
     },
 };
 

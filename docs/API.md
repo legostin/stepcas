@@ -873,10 +873,10 @@ estimate only with a convergence argument (Leibniz, or |t| ≤ c/kᵖ with p > 1
 
 ## generate/tasks.js — task generators
 
-- `TASK_KINDS` — 26 families: linear/quadratic/exponential/logarithmic/radical/rational/abs equations,
+- `TASK_KINDS` — 28 families: linear/quadratic/exponential/logarithmic/radical/rational/abs equations, linear inequalities,
   trigonometric equations with roots on a segment, quadratic/rational/log/exp inequalities, values (logs,
   powers, trigonometry), extrema, definite integrals, antiderivatives, linear and nonlinear systems, factoring,
-  reducing fractions, ODEs, geometric series, parameters, limits.
+  reducing fractions, ODEs, geometric series, parameters, limits, derivatives.
 - `generateTask(kind, {seed, level})` → `{family, level, seed, op, task, prompt (a message), answer, …}` — built
   backwards from the answer (roots → equation), never through the solver; the same seed gives the same task.
   Level 1: small integers; 2: wider ranges and the usual traps; 3: fractions.

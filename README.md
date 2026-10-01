@@ -42,7 +42,7 @@ and English are built in. A new language is one catalog and one call, `registerL
 - **Linear algebra**: exact matrices over Q, Gauss–Jordan with every row operation, determinants, inverses,
   eigenvalues, least squares.
 - **Number theory**: gcd/lcm, primes and factorisation, congruences.
-- **Task generators**: 26 families of exam-style tasks built backwards from their answers, with a seed, a level
+- **Task generators**: 28 families of exam-style tasks built backwards from their answers, with a seed, a level
   (1–3) and wording in every language. They are meant for trainers and tests.
 
 The full API is in [docs/API.md](docs/API.md). How the engine is built — its layers, the result contract, the
@@ -62,7 +62,7 @@ first-year university course, plus generated tasks. Every expected answer is che
 | ОГЭ | 54 | 100% | 0 | 100% |
 | ЕНТ | 67 | 100% | 0 | 100% |
 | First-year course | 190 | 100% | 0 | 100% |
-| Generated | 936 | 100% | 0 | 100% |
+| Generated | 1008 | 100% | 0 | 100% |
 
 A wrong answer counts against the engine; a refusal only counts as unsolved. The engine prefers saying it
 cannot solve something to guessing: numeric fallbacks are labelled as such, and new methods check their

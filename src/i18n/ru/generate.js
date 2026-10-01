@@ -17,6 +17,7 @@ export default {
         find_limit_as_x_2: 'Найдите предел при x → ∞',
         find_limit_as_x_0: 'Найдите предел при x → 0',
         solve_and_find_roots_on: 'Решите уравнение и найдите корни на отрезке [%{lo}; %{hi}]',
+        find_derivative: 'Найдите производную',
         find_antiderivative: 'Найдите первообразную',
     },
 };

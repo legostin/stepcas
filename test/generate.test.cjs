@@ -40,3 +40,18 @@ test('generated equations and values are solved with the constructed answer', ()
         }
     }
 });
+
+test('linear inequalities and derivatives: the engine agrees with the construction; ODE answers read well', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+        for (const level of [1, 2, 3]) {
+            const li = E.generateTask('linear-ineq', { seed, level });
+            const r = E.solveInequality(li.task, 'x');
+            assert.ok(r.ok && r.set.equals(E.parseIntervalSet(li.answer.set)), `${li.task}: ${r.set?.toText('en')} vs ${li.answer.set}`);
+            const d = E.generateTask('derivative', { seed, level });
+            const dr = E.derivative(d.task, 'x');
+            assert.ok(dr.ok && E.equivalent(dr.result, E.parse(d.answer.expr)), `${d.task}: ${dr.ok && E.toText(dr.result)} vs ${d.answer.expr}`);
+            const o = E.generateTask('ode', { seed, level });
+            assert.ok(!/e\^\(-?1x\)|(^|[^\d])1e\^|e\^\(0x\)/.test(o.answer.expr), `ode answer ${o.answer.expr}`);
+        }
+    }
+});

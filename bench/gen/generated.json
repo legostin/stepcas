@@ -7406,7 +7406,7 @@
   "op": "ode",
   "task": "y' = -y; y(0) = -4",
   "answer": {
-   "expr": "-4e^(-1x)"
+   "expr": "-4e^(-x)"
   }
  },
  {
@@ -7442,7 +7442,7 @@
   "op": "ode",
   "task": "y' = -y; y(0) = -5",
   "answer": {
-   "expr": "-5e^(-1x)"
+   "expr": "-5e^(-x)"
   }
  },
  {
@@ -7490,7 +7490,7 @@
   "op": "ode",
   "task": "y' = -3y; y(0) = 1",
   "answer": {
-   "expr": "1e^(-3x)"
+   "expr": "e^(-3x)"
   }
  },
  {
@@ -7502,7 +7502,7 @@
   "op": "ode",
   "task": "y' = y; y(0) = 4",
   "answer": {
-   "expr": "4e^(1x)"
+   "expr": "4e^(x)"
   }
  },
  {
@@ -7526,7 +7526,7 @@
   "op": "ode",
   "task": "y'' + 2y' - 3y = 0; y(0) = 6; y'(0) = -6",
   "answer": {
-   "expr": "3e^(-3x) + 3e^(1x)"
+   "expr": "3e^(-3x) + 3e^(x)"
   }
  },
  {
@@ -7538,7 +7538,7 @@
   "op": "ode",
   "task": "y'' - y' - 2y = 0; y(0) = 1; y'(0) = 8",
   "answer": {
-   "expr": "3e^(2x) + -2e^(-1x)"
+   "expr": "3e^(2x) - 2e^(-x)"
   }
  },
  {
@@ -7550,7 +7550,7 @@
   "op": "ode",
   "task": "y'' - 4y' + 3y = 0; y(0) = 0; y'(0) = -2",
   "answer": {
-   "expr": "1e^(1x) + -1e^(3x)"
+   "expr": "e^(x) - e^(3x)"
   }
  },
  {
@@ -7562,7 +7562,7 @@
   "op": "ode",
   "task": "y'' + 5y' + 6y = 0; y(0) = -5; y'(0) = 13",
   "answer": {
-   "expr": "-2e^(-2x) + -3e^(-3x)"
+   "expr": "-2e^(-2x) - 3e^(-3x)"
   }
  },
  {
@@ -7574,7 +7574,7 @@
   "op": "ode",
   "task": "y'' - 4y' + 3y = 0; y(0) = -1; y'(0) = -7",
   "answer": {
-   "expr": "-3e^(3x) + 2e^(1x)"
+   "expr": "-3e^(3x) + 2e^(x)"
   }
  },
  {
@@ -7586,7 +7586,7 @@
   "op": "ode",
   "task": "y'' - 5y' + 6y = 0; y(0) = -5; y'(0) = -13",
   "answer": {
-   "expr": "-2e^(2x) + -3e^(3x)"
+   "expr": "-2e^(2x) - 3e^(3x)"
   }
  },
  {
@@ -7598,7 +7598,7 @@
   "op": "ode",
   "task": "y'' - y' - 2y = 0; y(0) = 6; y'(0) = 3",
   "answer": {
-   "expr": "3e^(-1x) + 3e^(2x)"
+   "expr": "3e^(-x) + 3e^(2x)"
   }
  },
  {
@@ -7610,7 +7610,7 @@
   "op": "ode",
   "task": "y'' + 3y' + 2y = 0; y(0) = 0; y'(0) = 1",
   "answer": {
-   "expr": "1e^(-1x) + -1e^(-2x)"
+   "expr": "e^(-x) - e^(-2x)"
   }
  },
  {
@@ -7622,7 +7622,7 @@
   "op": "ode",
   "task": "y'' + y' - 6y = 0; y(0) = 1; y'(0) = 12",
   "answer": {
-   "expr": "3e^(2x) + -2e^(-3x)"
+   "expr": "3e^(2x) - 2e^(-3x)"
   }
  },
  {
@@ -7634,7 +7634,7 @@
   "op": "ode",
   "task": "y'' + 2y' = 0; y(0) = 1; y'(0) = 4",
   "answer": {
-   "expr": "3e^(0x) + -2e^(-2x)"
+   "expr": "3 - 2e^(-2x)"
   }
  },
  {
@@ -7646,7 +7646,7 @@
   "op": "ode",
   "task": "y'' - 4y = 0; y(0) = -1; y'(0) = -10",
   "answer": {
-   "expr": "2e^(-2x) + -3e^(2x)"
+   "expr": "2e^(-2x) - 3e^(2x)"
   }
  },
  {
@@ -7658,7 +7658,7 @@
   "op": "ode",
   "task": "y'' - y = 0; y(0) = 1; y'(0) = 3",
   "answer": {
-   "expr": "2e^(1x) + -1e^(-1x)"
+   "expr": "2e^(x) - e^(-x)"
   }
  },
  {
@@ -7670,7 +7670,7 @@
   "op": "ode",
   "task": "y'' + y' = 0; y(0) = -5; y'(0) = 2",
   "answer": {
-   "expr": "-3e^(0x) + -2e^(-1x)"
+   "expr": "-3 - 2e^(-x)"
   }
  },
  {
@@ -7682,7 +7682,7 @@
   "op": "ode",
   "task": "y'' - y' - 2y = 0; y(0) = 0; y'(0) = -3",
   "answer": {
-   "expr": "1e^(-1x) + -1e^(2x)"
+   "expr": "e^(-x) - e^(2x)"
   }
  },
  {
@@ -7694,7 +7694,7 @@
   "op": "ode",
   "task": "y'' - 4y' + 3y = 0; y(0) = -2; y'(0) = -4",
   "answer": {
-   "expr": "-1e^(1x) + -1e^(3x)"
+   "expr": "-e^(x) - e^(3x)"
   }
  },
  {
@@ -7706,7 +7706,7 @@
   "op": "ode",
   "task": "y'' + 5y' + 6y = 0; y(0) = 2; y'(0) = -7",
   "answer": {
-   "expr": "3e^(-3x) + -1e^(-2x)"
+   "expr": "3e^(-3x) - e^(-2x)"
   }
  },
  {
@@ -7718,7 +7718,7 @@
   "op": "ode",
   "task": "y'' + 3y' + 2y = 0; y(0) = 4; y'(0) = -6",
   "answer": {
-   "expr": "2e^(-2x) + 2e^(-1x)"
+   "expr": "2e^(-2x) + 2e^(-x)"
   }
  },
  {
@@ -7730,7 +7730,7 @@
   "op": "ode",
   "task": "y'' - 3y' + 2y = 0; y(0) = 4; y'(0) = 7",
   "answer": {
-   "expr": "3e^(2x) + 1e^(1x)"
+   "expr": "3e^(2x) + e^(x)"
   }
  },
  {
@@ -7742,7 +7742,7 @@
   "op": "ode",
   "task": "y'' + 2y' - 3y = 0; y(0) = 0; y'(0) = -4",
   "answer": {
-   "expr": "1e^(-3x) + -1e^(1x)"
+   "expr": "e^(-3x) - e^(x)"
   }
  },
  {
@@ -7766,7 +7766,7 @@
   "op": "ode",
   "task": "y'' - 5y' + 6y = 0; y(0) = -5; y'(0) = -12",
   "answer": {
-   "expr": "-3e^(2x) + -2e^(3x)"
+   "expr": "-3e^(2x) - 2e^(3x)"
   }
  },
  {
@@ -7778,7 +7778,7 @@
   "op": "ode",
   "task": "y'' + 2y' - 3y = 0; y(0) = 1; y'(0) = 5",
   "answer": {
-   "expr": "2e^(1x) + -1e^(-3x)"
+   "expr": "2e^(x) - e^(-3x)"
   }
  },
  {
@@ -7790,7 +7790,7 @@
   "op": "ode",
   "task": "y'' + y' - 2y = 0; y(0) = -4; y'(0) = 5",
   "answer": {
-   "expr": "-1e^(1x) + -3e^(-2x)"
+   "expr": "-e^(x) - 3e^(-2x)"
   }
  },
  {
@@ -7802,7 +7802,7 @@
   "op": "ode",
   "task": "y'' - y' = 0; y(0) = -1; y'(0) = 2",
   "answer": {
-   "expr": "-3e^(0x) + 2e^(1x)"
+   "expr": "-3 + 2e^(x)"
   }
  },
  {
@@ -12926,5 +12926,869 @@
   "op": "integrate",
   "task": "x e^(x^2)",
   "answer": {}
+ },
+ {
+  "id": "gen-linear-ineq-1-01",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27100,
+  "op": "ineq",
+  "task": "6x - 8 >= -14",
+  "answer": {
+   "set": "[-1; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-02",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27101,
+  "op": "ineq",
+  "task": "4x + 4 >= 36",
+  "answer": {
+   "set": "[8; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-03",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27102,
+  "op": "ineq",
+  "task": "x - 11 > -5",
+  "answer": {
+   "set": "(6; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-04",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27103,
+  "op": "ineq",
+  "task": "5x + 12 > 2",
+  "answer": {
+   "set": "(-2; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-05",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27104,
+  "op": "ineq",
+  "task": "6x + 8 >= 56",
+  "answer": {
+   "set": "[8; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-06",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27105,
+  "op": "ineq",
+  "task": "2x + 3 < -5",
+  "answer": {
+   "set": "(-inf; -4)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-07",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27106,
+  "op": "ineq",
+  "task": "4x + 2 < 6",
+  "answer": {
+   "set": "(-inf; 1)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-08",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27107,
+  "op": "ineq",
+  "task": "x + 10 > 4",
+  "answer": {
+   "set": "(-6; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-09",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27108,
+  "op": "ineq",
+  "task": "x + 2 >= 6",
+  "answer": {
+   "set": "[4; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-10",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27109,
+  "op": "ineq",
+  "task": "6x - 2 <= -38",
+  "answer": {
+   "set": "(-inf; -6]"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-11",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27110,
+  "op": "ineq",
+  "task": "5x + 11 >= 21",
+  "answer": {
+   "set": "[2; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-1-12",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 1,
+  "seed": 27111,
+  "op": "ineq",
+  "task": "-4x - 2 <= -34",
+  "answer": {
+   "set": "[8; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-01",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27200,
+  "op": "ineq",
+  "task": "4x - 6 <= 3x - 7",
+  "answer": {
+   "set": "(-inf; -1]"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-02",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27201,
+  "op": "ineq",
+  "task": "-5x - 1 < -2x + 5",
+  "answer": {
+   "set": "(-2; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-03",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27202,
+  "op": "ineq",
+  "task": "-3x + 5 <= -x + 3",
+  "answer": {
+   "set": "[1; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-04",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27203,
+  "op": "ineq",
+  "task": "-5x - 4 > -2x - 31",
+  "answer": {
+   "set": "(-inf; 9)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-05",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27204,
+  "op": "ineq",
+  "task": "-3x + 5 > 29",
+  "answer": {
+   "set": "(-inf; -8)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-06",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27205,
+  "op": "ineq",
+  "task": "2x + 6 <= -6x + 30",
+  "answer": {
+   "set": "(-inf; 3]"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-07",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27206,
+  "op": "ineq",
+  "task": "-4x - 9 > 2x - 9",
+  "answer": {
+   "set": "(-inf; 0)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-08",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27207,
+  "op": "ineq",
+  "task": "4x + 3 < -x - 42",
+  "answer": {
+   "set": "(-inf; -9)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-09",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27208,
+  "op": "ineq",
+  "task": "-2x - 1 < 6x - 57",
+  "answer": {
+   "set": "(7; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-10",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27209,
+  "op": "ineq",
+  "task": "-x + 3 > -4",
+  "answer": {
+   "set": "(-inf; 7)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-11",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27210,
+  "op": "ineq",
+  "task": "-3x + 2 <= 3x - 40",
+  "answer": {
+   "set": "[7; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-2-12",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 2,
+  "seed": 27211,
+  "op": "ineq",
+  "task": "-4x + 3 < -3x + 4",
+  "answer": {
+   "set": "(-1; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-01",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27300,
+  "op": "ineq",
+  "task": "3x - 6 > -5x + 38/3",
+  "answer": {
+   "set": "(7/3; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-02",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27301,
+  "op": "ineq",
+  "task": "-4x + 4 <= -6x + 20/3",
+  "answer": {
+   "set": "(-inf; 4/3]"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-03",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27302,
+  "op": "ineq",
+  "task": "3x + 5 < -4x + 69/4",
+  "answer": {
+   "set": "(-inf; 7/4)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-04",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27303,
+  "op": "ineq",
+  "task": "-4x - 7 >= 6x + 19/3",
+  "answer": {
+   "set": "(-inf; -4/3]"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-05",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27304,
+  "op": "ineq",
+  "task": "-4x - 8 >= -5x - 9",
+  "answer": {
+   "set": "[-1; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-06",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27305,
+  "op": "ineq",
+  "task": "-4x + 3 > -x + 9",
+  "answer": {
+   "set": "(-inf; -2)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-07",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27306,
+  "op": "ineq",
+  "task": "x - 11 <= 5x - 15",
+  "answer": {
+   "set": "[1; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-08",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27307,
+  "op": "ineq",
+  "task": "-3x - 7 >= -6x + 13/2",
+  "answer": {
+   "set": "[9/2; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-09",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27308,
+  "op": "ineq",
+  "task": "x + 4 >= -5x - 2",
+  "answer": {
+   "set": "[-1; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-10",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27309,
+  "op": "ineq",
+  "task": "x - 7 <= -27/4",
+  "answer": {
+   "set": "(-inf; 1/4]"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-11",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27310,
+  "op": "ineq",
+  "task": "5x + 11 >= 2x + 31/2",
+  "answer": {
+   "set": "[3/2; +inf)"
+  }
+ },
+ {
+  "id": "gen-linear-ineq-3-12",
+  "source": "generated",
+  "topic": "linear-ineq",
+  "level": 3,
+  "seed": 27311,
+  "op": "ineq",
+  "task": "-x < -2x - 3",
+  "answer": {
+   "set": "(-inf; -3)"
+  }
+ },
+ {
+  "id": "gen-derivative-1-01",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28100,
+  "op": "diff",
+  "task": "4x^5 - 4x + 3",
+  "answer": {
+   "expr": "20x^4 - 4"
+  }
+ },
+ {
+  "id": "gen-derivative-1-02",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28101,
+  "op": "diff",
+  "task": "-2x^2 + 6x + 4",
+  "answer": {
+   "expr": "-4x + 6"
+  }
+ },
+ {
+  "id": "gen-derivative-1-03",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28102,
+  "op": "diff",
+  "task": "-3x^2 + 5x - 3",
+  "answer": {
+   "expr": "-6x + 5"
+  }
+ },
+ {
+  "id": "gen-derivative-1-04",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28103,
+  "op": "diff",
+  "task": "x^3 - 2x + 2",
+  "answer": {
+   "expr": "3x^2 - 2"
+  }
+ },
+ {
+  "id": "gen-derivative-1-05",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28104,
+  "op": "diff",
+  "task": "x^2 - 5x + 2",
+  "answer": {
+   "expr": "2x - 5"
+  }
+ },
+ {
+  "id": "gen-derivative-1-06",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28105,
+  "op": "diff",
+  "task": "6x^2 - 3x + 6",
+  "answer": {
+   "expr": "12x - 3"
+  }
+ },
+ {
+  "id": "gen-derivative-1-07",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28106,
+  "op": "diff",
+  "task": "4x^4 - 5x^2 - 2",
+  "answer": {
+   "expr": "16x^3 - 10x"
+  }
+ },
+ {
+  "id": "gen-derivative-1-08",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28107,
+  "op": "diff",
+  "task": "-3x^2 + 6x - 5",
+  "answer": {
+   "expr": "-6x + 6"
+  }
+ },
+ {
+  "id": "gen-derivative-1-09",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28108,
+  "op": "diff",
+  "task": "5x^2 + 6x - 6",
+  "answer": {
+   "expr": "10x + 6"
+  }
+ },
+ {
+  "id": "gen-derivative-1-10",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28109,
+  "op": "diff",
+  "task": "2x^4 + 4x + 1",
+  "answer": {
+   "expr": "8x^3 + 4"
+  }
+ },
+ {
+  "id": "gen-derivative-1-11",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28110,
+  "op": "diff",
+  "task": "2x^4 - 6x^3",
+  "answer": {
+   "expr": "8x^3 - 18x^2"
+  }
+ },
+ {
+  "id": "gen-derivative-1-12",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 1,
+  "seed": 28111,
+  "op": "diff",
+  "task": "-6x^2 + 9x + 8",
+  "answer": {
+   "expr": "-12x + 9"
+  }
+ },
+ {
+  "id": "gen-derivative-2-01",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28200,
+  "op": "diff",
+  "task": "x^3 e^(-3x)",
+  "answer": {
+   "expr": "3x^2 e^(-3x) - 3x^3 e^(-3x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-02",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28201,
+  "op": "diff",
+  "task": "x^3 sin(x)",
+  "answer": {
+   "expr": "3x^2 sin(x) + x^3 cos(x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-03",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28202,
+  "op": "diff",
+  "task": "x^2 sin(2x)",
+  "answer": {
+   "expr": "2x sin(2x) + 2x^2 cos(2x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-04",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28203,
+  "op": "diff",
+  "task": "x sin(3x)",
+  "answer": {
+   "expr": "sin(3x) + 3x cos(3x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-05",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28204,
+  "op": "diff",
+  "task": "x^4 e^(2x)",
+  "answer": {
+   "expr": "4x^3 e^(2x) + 2x^4 e^(2x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-06",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28205,
+  "op": "diff",
+  "task": "(-3x + 2)/(x - 5)",
+  "answer": {
+   "expr": "13/(x - 5)^2"
+  }
+ },
+ {
+  "id": "gen-derivative-2-07",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28206,
+  "op": "diff",
+  "task": "(-3x + 4)/(4x + 3)",
+  "answer": {
+   "expr": "-25/(4x + 3)^2"
+  }
+ },
+ {
+  "id": "gen-derivative-2-08",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28207,
+  "op": "diff",
+  "task": "x^2 sin(x)",
+  "answer": {
+   "expr": "2x sin(x) + x^2 cos(x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-09",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28208,
+  "op": "diff",
+  "task": "(-x + 3)/(3x + 1)",
+  "answer": {
+   "expr": "-10/(3x + 1)^2"
+  }
+ },
+ {
+  "id": "gen-derivative-2-10",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28209,
+  "op": "diff",
+  "task": "x e^(-x)",
+  "answer": {
+   "expr": "e^(-x) - x e^(-x)"
+  }
+ },
+ {
+  "id": "gen-derivative-2-11",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28210,
+  "op": "diff",
+  "task": "(x + 3)/(x - 1)",
+  "answer": {
+   "expr": "-4/(x - 1)^2"
+  }
+ },
+ {
+  "id": "gen-derivative-2-12",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 2,
+  "seed": 28211,
+  "op": "diff",
+  "task": "x e^(2x)",
+  "answer": {
+   "expr": "e^(2x) + 2x e^(2x)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-01",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28300,
+  "op": "diff",
+  "task": "ln(5x^2 + 6)",
+  "answer": {
+   "expr": "10x/(5x^2 + 6)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-02",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28301,
+  "op": "diff",
+  "task": "sqrt(2x + 4)",
+  "answer": {
+   "expr": "1/sqrt(2x + 4)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-03",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28302,
+  "op": "diff",
+  "task": "ln(x^2 + 4)",
+  "answer": {
+   "expr": "2x/(x^2 + 4)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-04",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28303,
+  "op": "diff",
+  "task": "ln(2x^2 + 9)",
+  "answer": {
+   "expr": "4x/(2x^2 + 9)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-05",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28304,
+  "op": "diff",
+  "task": "e^(x^2)",
+  "answer": {
+   "expr": "2x e^(x^2)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-06",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28305,
+  "op": "diff",
+  "task": "ln(x^2 + 8)",
+  "answer": {
+   "expr": "2x/(x^2 + 8)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-07",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28306,
+  "op": "diff",
+  "task": "ln(x^2 + 2)",
+  "answer": {
+   "expr": "2x/(x^2 + 2)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-08",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28307,
+  "op": "diff",
+  "task": "sqrt(x + 1)",
+  "answer": {
+   "expr": "1/(2sqrt(x + 1))"
+  }
+ },
+ {
+  "id": "gen-derivative-3-09",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28308,
+  "op": "diff",
+  "task": "(3x + 6)^4",
+  "answer": {
+   "expr": "12(3x + 6)^3"
+  }
+ },
+ {
+  "id": "gen-derivative-3-10",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28310,
+  "op": "diff",
+  "task": "e^(-x^2)",
+  "answer": {
+   "expr": "-2x e^(-x^2)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-11",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28311,
+  "op": "diff",
+  "task": "e^(3x^2)",
+  "answer": {
+   "expr": "6x e^(3x^2)"
+  }
+ },
+ {
+  "id": "gen-derivative-3-12",
+  "source": "generated",
+  "topic": "derivative",
+  "level": 3,
+  "seed": 28312,
+  "op": "diff",
+  "task": "ln(x^2 + 3)",
+  "answer": {
+   "expr": "2x/(x^2 + 3)"
+  }
  }
 ]
