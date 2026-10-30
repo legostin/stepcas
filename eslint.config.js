@@ -18,4 +18,5 @@ export default [
     },
     { files: ['bench/**/*.mjs', 'scripts/**/*.mjs', 'eslint.config.js'], languageOptions: { globals: { ...globals.node } } },
     { files: ['test/**/*.cjs'], languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } } },
+    { files: ['demo/**/*.js'], languageOptions: { globals: { ...globals.browser, ...globals.worker } } },
 ];

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>stepcas: a CAS that shows its work</title>
+        <meta
+            name="description"
+            content="Try stepcas in the browser: equations, inequalities, systems, derivatives, integrals, limits, ODEs, series, number theory and matrices, with exact answers and step-by-step solutions."
+        />
+        <meta name="color-scheme" content="light dark" />
+        <link
+            rel="icon"
+            href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f55d4'/%3E%3Cpath d='M8 21l5-10 4 7 3-4 4 7' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+        <link rel="stylesheet" href="./style.css" />
+        <script type="module" src="./app.js"></script>
+    </head>
+    <body>
+        <header class="top">
+            <a class="brand" href="./"><span class="logo">stepcas</span><span class="tagline">a CAS that shows its work</span></a>
+            <nav>
+                <a href="https://github.com/legostin/stepcas#readme">Docs</a>
+                <a href="https://github.com/legostin/stepcas">GitHub</a>
+            </nav>
+        </header>
+
+        <section class="intro">
+            <p>
+                Type a task and get the exact answer with the whole solution, step by step, the way a teacher writes it on the board. The engine is plain
+                JavaScript with no dependencies, and it runs right here in your browser.
+            </p>
+            <div class="install">
+                <code id="install">npm install github:legostin/stepcas</code>
+                <button type="button" class="copy" data-copy="#install">Copy</button>
+            </div>
+        </section>
+
+        <main class="layout">
+            <section class="panel ask" aria-label="Task">
+                <div class="tabs" role="tablist" id="tabs"></div>
+                <form id="form" class="form" autocomplete="off" spellcheck="false"></form>
+                <p class="note" id="note" hidden></p>
+                <div class="read" id="read" hidden><span class="read-label">Read as</span><span id="read-tex"></span></div>
+                <div class="actions">
+                    <button type="submit" form="form" class="solve">Solve</button>
+                    <button type="button" id="random" class="ghost">Random task</button>
+                    <span class="status" id="status" role="status"></span>
+                </div>
+                <div class="examples">
+                    <h2>Examples</h2>
+                    <div id="examples" class="chips"></div>
+                </div>
+            </section>
+
+            <section class="panel answer-panel" aria-label="Solution" id="output">
+                <div class="out-head">
+                    <h2>Solution</h2>
+                    <div class="lang" role="group" aria-label="Language of the solution">
+                        <button type="button" data-lang="en" aria-pressed="true">English</button>
+                        <button type="button" data-lang="ru" aria-pressed="false">Русский</button>
+                    </div>
+                </div>
+                <div id="result" class="result"><p class="muted">Loading the engine…</p></div>
+            </section>
+        </main>
+
+        <footer class="foot">
+            <p>
+                stepcas is the maths engine of the course «Математика — царица наук» on <a href="https://legost.in/utilities/math">legost.in</a>. Every answer
+                here is computed in your browser; nothing is sent anywhere.
+            </p>
+            <p>
+                <a href="https://github.com/legostin/stepcas">Source on GitHub</a> ·
+                <a href="https://github.com/legostin/stepcas/blob/main/docs/API.md">API</a> · MIT
+            </p>
+        </footer>
+        <noscript><p class="noscript">The demo needs JavaScript: the engine runs in your browser.</p></noscript>
+    </body>
+</html>

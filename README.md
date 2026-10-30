@@ -3,6 +3,9 @@
 A computer algebra system that shows its work. Exact answers with school-style step-by-step solutions in
 Russian and English, in plain JavaScript with no dependencies. Runs in the browser and in Node.
 
+**[Try it in the browser](https://legostin.github.io/stepcas/)**: 15 kinds of tasks and 174 examples, from
+quadratic equations to ODEs and matrices.
+
 ```js
 import { solveEquation, localize } from 'stepcas';
 
@@ -341,7 +344,11 @@ npm run snapshot:verify  # every answer and step against bench/golden.json
 npm run snapshot:update  # after an intended change of output; commit golden.json with it
 node bench/gen.mjs       # rebuild the generated part from fixed seeds
 npm run bench:verify     # recheck the expected answers with SymPy (needs bench/.venv with sympy)
+python3 -m http.server   # then open http://localhost:8000/demo/ for the demo page
 ```
+
+The demo lives in [demo/](demo/). Its examples are in `demo/examples.js`, and a test runs every one of them.
+Each push to `main` publishes the demo to GitHub Pages.
 
 The engine is built in layers, from messages and core expressions up to the solvers, with no import cycles. A
 test enforces this. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) describes the layers, the result contract, the
