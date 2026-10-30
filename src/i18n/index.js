@@ -283,17 +283,23 @@ export function allLanguages(value) {
  * @param {string} [lang]
  * @returns {any}
  */
-export function localize(value, lang = DEFAULT_LANGUAGE, seen = new WeakSet()) {
+export function localize(value, lang = DEFAULT_LANGUAGE, done = new WeakMap()) {
     if (value == null || typeof value !== 'object') return value;
     if (value instanceof Msg) return value.in(lang);
-    if (seen.has(value)) return value;
-    seen.add(value);
-    if (Array.isArray(value)) return value.map((v) => localize(v, lang, seen));
+    // a value the tree holds twice (the answer step and r.answer) is rendered once and reused; a cycle stays a cycle
+    if (done.has(value)) return done.get(value);
+    if (Array.isArray(value)) {
+        const out = [];
+        done.set(value, out);
+        for (const v of value) out.push(localize(v, lang, done));
+        return out;
+    }
     if (Object.getPrototypeOf(value) !== Object.prototype) return value; // nodes, Q, sets keep their own form
     const keys = Object.keys(value);
     if (keys.length && keys.every((k) => LANGUAGES.includes(k))) return inLanguage(value, lang);
     const out = {};
-    for (const k of keys) out[k] = localize(value[k], lang, seen);
+    done.set(value, out);
+    for (const k of keys) out[k] = localize(value[k], lang, done);
     return out;
 }
 

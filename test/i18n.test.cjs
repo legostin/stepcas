@@ -104,6 +104,20 @@ test('messages render lazily, stringify in the default language and serialise in
     assert.equal(E.localize(r, 'ru').answer.text, '-2; 2');
 });
 
+test('localize renders a value the tree holds twice in both places', () => {
+    // the answer step and r.answer share one {ru, en} object
+    const r = E.solveEquation('|2x - 3| = 5');
+    assert.equal(r.steps.at(-1).tex, r.answer.tex);
+    const en = E.localize(r, 'en');
+    assert.equal(en.steps.at(-1).tex, 'x_{1} = -1,\\quad x_{2} = 4');
+    assert.equal(en.answer.tex, 'x_{1} = -1,\\quad x_{2} = 4');
+    const loop = { title: E.msg('api.diverges') };
+    loop.self = loop;
+    const out = E.localize(loop, 'en');
+    assert.equal(typeof out.title, 'string');
+    assert.equal(out.self, out);
+});
+
 test('a third language joins with one call: its own words, the rest from its base', () => {
     E.registerLanguage(
         'xx',
