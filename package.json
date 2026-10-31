@@ -9,7 +9,8 @@
     ".": {
       "types": "./types/index.d.ts",
       "default": "./src/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
@@ -45,7 +46,13 @@
     "calculus",
     "symbolic",
     "education",
-    "russian"
+    "russian",
+    "latex",
+    "solver",
+    "algebra",
+    "school",
+    "exam",
+    "i18n"
   ],
   "author": "legostin (https://legost.in)",
   "license": "MIT",
@@ -53,7 +60,10 @@
     "type": "git",
     "url": "git+https://github.com/legostin/stepcas.git"
   },
-  "homepage": "https://legost.in/utilities/math/canvas",
+  "bugs": {
+    "url": "https://github.com/legostin/stepcas/issues"
+  },
+  "homepage": "https://legostin.github.io/stepcas/",
   "sideEffects": false,
   "devDependencies": {
     "@eslint/js": "^10.0.1",

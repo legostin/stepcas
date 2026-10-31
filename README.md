@@ -31,6 +31,7 @@ generated tests that explain the answer as a teacher would on the board.
 - [Task generators](#task-generators)
 - [What you can type](#what-you-can-type)
 - [The bench](#the-bench)
+- [How it compares](#how-it-compares)
 - [Development](#development)
 
 ## Install
@@ -332,6 +333,30 @@ first-year university course, plus generated tasks. Every expected answer is che
 
 A wrong answer counts against the engine. A refusal only counts as unsolved. New methods check their answers by
 substituting them back.
+
+## How it compares
+
+The other open-source projects with step-by-step output, as their own READMEs describe them in November 2026:
+
+| | stepcas | [mathsteps](https://github.com/google/mathsteps) | [StepSolver](https://github.com/DavideGalilei/stepsolver) | [MathHook](https://docs.rs/crate/mathhook/latest) | [SymPy](https://www.sympy.org) |
+|---|---|---|---|---|---|
+| Language | JavaScript | JavaScript | Python | Rust, with Python bindings | Python |
+| Computes with | its own engine | its own engine | SymPy | its own engine | itself |
+| Runs in a page with no server | yes | yes | no | not documented | through Pyodide |
+| Steps for | algebra to first-year calculus, ODEs, series, matrices, number theory | simplifying, equations | a broad range, some steps not yet student-facing | simplification, expanding, derivatives | integrals only (`integral_steps`) |
+| Languages of the steps | Russian, English; more as catalogs | English | English | English | — |
+| Published accuracy | 1551 exam tasks, 0 wrong | — | — | — | — |
+| Status | active | archived in 2024 | early research software | first release December 2025 | mature |
+| License | MIT | Apache-2.0 | MIT | MIT or Apache-2.0 | BSD |
+
+What only stepcas does among them: school methods as they are taught (the domain, the method of intervals, tasks with
+a parameter, picking roots on a segment), steps in more than one language with the texts kept apart from the code,
+a measured score on real exam tasks, and task generators that build a task from its answer.
+
+Pick something else when you need raw power: SymPy and Maxima are far stronger computer algebra systems, with
+multiple integrals, PDEs, Gröbner bases and much more, and stepcas is not a replacement for them. Wolfram Alpha,
+Symbolab and Photomath show steps for more kinds of tasks, but they are closed services that you cannot embed or
+inspect.
 
 ## Development
 
